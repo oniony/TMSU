@@ -1,8 +1,6 @@
-tmsu:
-	mkdir -p obj
-	8g -o obj/tmsu.8 src/main.go
-	mkdir -p bin
-	8l -o bin/tmsu obj/tmsu.8
+include /home/paul/go/src/Make.inc
 
-clean:
-	rm -f bin obj
+TARG=tmsu
+GOFILES=src/main.go
+
+include /home/paul/go/src/Make.cmd

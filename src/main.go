@@ -5,6 +5,10 @@ import (
 	"flag"
 )
 
+type Command interface {
+	Execute()
+}
+
 func main() {
 	flag.Parse()
 

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"flag"
-	"./obj/commands"
 )
 
 type Command interface {
@@ -14,12 +13,10 @@ func main() {
 	flag.Parse()
 
 	commands := map[string] Command {
-		"help" : new(commands.HelpCommand),
+		"help" : new(HelpCommand),
 	}
 
-	for name, command := range commands {
-		fmt.Println("Command: ", name)
-
+	for _, command := range commands {
 		command.Execute()
 	}
 

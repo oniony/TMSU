@@ -1,4 +1,4 @@
-package commands
+package main
 
 import (
 	"fmt"
@@ -7,5 +7,6 @@ import (
 type HelpCommand struct {}
 
 func (HelpCommand) Execute() {
-	fmt.Println("Help!")
+	fmt.Println("TMSU")
+	fmt.Println();
 }

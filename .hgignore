@@ -1,3 +1,7 @@
 ^bin$
 ^obj$
-^src/go-fuse
+\.git$
+\.out$
+\.a$
+\.8$
+\.6$

@@ -1,26 +1,32 @@
 package main
 
 import (
-	"fmt"
 	"flag"
+	"fmt"
+	"os"
 )
 
-type Command interface {
-	Execute()
-}
-
 func main() {
+//    debug := flag.Bool("debug", false, "Enable debugging")
 	flag.Parse()
 
-	commands := map[string] Command {
-		"help" : new(HelpCommand),
-	}
+    command := flag.Arg(0)
+    switch command {
+        case "help": fmt.Println("Help")
+        case "mount": fmt.Println("Mount")
+        case "": noCommand()
+        default: invalidCommand(command)
+    }
+}
 
-	for _, command := range commands {
-		command.Execute()
-	}
+func noCommand() {
+    fmt.Fprintf(os.Stderr, "No command specified.\n")
+    flag.Usage()
+    os.Exit(1)
+}
 
-	for i := 0; i < flag.NArg(); i += 1 {
-		fmt.Println(flag.Args()[i])
-	}
+func invalidCommand(command string) {
+    fmt.Fprintf(os.Stderr, "No such command '%v'.\n", command)
+    flag.Usage()
+    os.Exit(1)
 }

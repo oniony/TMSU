@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"gosqlite.googlecode.com/hg/sqlite"
 )
 
 func main() {
@@ -12,14 +13,27 @@ func main() {
 
     command := flag.Arg(0)
     switch command {
-        case "help": fmt.Println("Help")
-        case "mount": fmt.Println("Mount")
-        case "": noCommand()
+        case "help": showHelp()
+        case "mount": mount()
+        case "": missingCommand()
         default: invalidCommand(command)
     }
 }
 
-func noCommand() {
+func showHelp() {
+    flag.Usage()
+}
+
+func mount() {
+    //TODO create vfs
+
+    conn, error := sqlite.Open("/home/paul/tmsu.db")
+    defer conn.Close() 
+
+    fmt.Println("Conn: ", conn, " Error: ", error)
+}
+
+func missingCommand() {
     fmt.Fprintf(os.Stderr, "No command specified.\n")
     flag.Usage()
     os.Exit(1)

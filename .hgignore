@@ -1,7 +1,6 @@
-^bin$
-^obj$
 \.git$
 \.out$
 \.a$
 \.8$
 \.6$
+^src/tmsu/tmsu$

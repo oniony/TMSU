@@ -4,7 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"gosqlite.googlecode.com/hg/sqlite"
+	"oniony.com/tmsu/db"
 )
 
 func main() {
@@ -25,12 +25,10 @@ func showHelp() {
 }
 
 func mount() {
-    //TODO create vfs
+    db := db.Open("/home/paul/tmsu.db")
+    defer db.Close() 
 
-    conn, error := sqlite.Open("/home/paul/tmsu.db")
-    defer conn.Close() 
-
-    fmt.Println("Conn: ", conn, " Error: ", error)
+    fmt.Println("DB: ", db)
 }
 
 func missingCommand() {

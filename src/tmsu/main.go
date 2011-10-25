@@ -15,6 +15,7 @@ func main() {
     switch command {
         case "help": showHelp()
         case "mount": mount()
+        case "tags" : tags()
         case "": missingCommand()
         default: invalidCommand(command)
     }
@@ -25,10 +26,22 @@ func showHelp() {
 }
 
 func mount() {
-    db := db.Open("/home/paul/tmsu.db")
-    defer db.Close() 
+}
 
-    fmt.Println("DB: ", db)
+func tags() {
+    db := db.Open("/home/paul/tmsu.db")
+    defer db.Close()
+
+    tags, error := db.Tags()
+
+    if (error != nil) {
+        fmt.Fprintf(os.Stderr, "Could not retrieve tags.", error)
+        os.Exit(2)
+    }
+
+    for _, tag := range tags {
+        fmt.Println(tag.Name)
+    }
 }
 
 func missingCommand() {

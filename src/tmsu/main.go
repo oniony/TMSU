@@ -26,6 +26,7 @@ func showHelp() {
 }
 
 func mount() {
+    //TODO start fuse
 }
 
 func tags() {
@@ -35,7 +36,7 @@ func tags() {
     tags, error := db.Tags()
 
     if (error != nil) {
-        fmt.Fprintf(os.Stderr, "Could not retrieve tags.", error)
+        fmt.Fprintf(os.Stderr, "Could not retrieve tags.\nReason: %v\n", error.String())
         os.Exit(2)
     }
 

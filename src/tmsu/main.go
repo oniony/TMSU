@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"oniony.com/tmsu/db"
+	"oniony.com/tmsu/vfs"
 )
 
 func main() {
@@ -26,7 +27,14 @@ func showHelp() {
 }
 
 func mount() {
-    //TODO start fuse
+    vfs, error := vfs.Mount("./mountpoint")
+
+    if (error != nil) {
+        fmt.Fprintf(os.Stderr, "Could not mount filesystem.\nReason: %v\n", error.String())
+        os.Exit(3)
+    }
+
+    vfs.Loop()
 }
 
 func tags() {

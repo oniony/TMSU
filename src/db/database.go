@@ -10,18 +10,22 @@ type Database struct {
     connection  *sqlite.Conn
 }
 
-func Open(path string) *Database {
+// factories
+
+func Open(path string) (*Database, os.Error) {
     connection, error := sqlite.Open(path)
 
     if (error != nil) {
         fmt.Fprintf(os.Stderr, "Could not open database: %v.", error)
-        return nil
+        return nil, error
     }
 
     database := Database{connection}
 
-    return &database
+    return &database, nil
 }
+
+// api
 
 func (this *Database) Close() {
     this.connection.Close()

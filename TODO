@@ -1,0 +1,20 @@
+MUST
+
+Bug: File can be tagged with the same tag multiple times.
+Bug: Extenionless files not handled properly.
+Bug: Handle long filenames when making link name.
+Bug: Prevent files in the VFS from being added.
+
+o Auto-create mount directory.
+o Auto-create database.
+o Renamed tags.
+o Merge tags.
+o Unmount command.
+o Untag command.
+o Untagging via 'tag file -tagname'
+o Tag deletion.
+o File removal.
+o List file tags.
+o Tagging, untagging and removal via VFS paths.
+
+o Handle SIGINT.

@@ -11,17 +11,73 @@ import (
 func main() {
 	flag.Parse()
 
-    checkDatabase()
-
     command := flag.Arg(0)
+    args := flag.Args()[1:]
+    if command == "help" { help() }
+
     switch command {
-        case "help": showUsage()
-        case "mount": mount(flag.Args())
-        case "tags" : tags(flag.Args())
+        case "mount": mount(args)
+        case "add": add(args)
+        case "remove": remove(args)
+        case "tag": tag(args)
+        case "untag": untag(args)
+        case "tags" : tags(args)
         case "": missingCommand()
         default: invalidCommand(command)
     }
 }
+
+// commands
+
+func help() {
+    showUsage()
+    os.Exit(0)
+}
+
+func mount(args []string) {
+    if (len(args) == 0) { die("No mountpoint specified.") }
+
+    mountPath := args[0]
+
+    vfs, error := vfs.Mount(mountPath)
+    if (error != nil) { die("Could not mount filesystem: %v", error.String()) }
+    defer vfs.Unmount()
+
+    fmt.Printf("Database '%v' mounted at '%v'.\n", DatabasePath(), mountPath)
+
+    vfs.Loop()
+}
+
+func add(args []string) {
+    fmt.Println("Not implemented.")
+}
+
+func remove(args []string) {
+    fmt.Println("Not implemented.")
+}
+
+func tag(args []string) {
+    fmt.Println("Not implemented.")
+}
+
+func untag(args []string) {
+    fmt.Println("Not implemented.")
+}
+
+func tags(args []string) {
+    db, error := db.Open(DatabasePath())
+    if (error != nil) { die("Could not open database: %v", error.String()) }
+    defer db.Close()
+
+    tags, error := db.Tags()
+    if (error != nil) { die("Could not retrieve tags: %v", error.String()) }
+
+    for _, tag := range tags {
+        fmt.Println(tag.Name)
+    }
+}
+
+// other stuff
 
 func die(format string, a ...interface{}) {
     fmt.Fprintf(os.Stderr, format + "\n", a...)
@@ -37,42 +93,6 @@ func showUsage() {
     fmt.Println(" add        add a file to the VFS without applying tags")
     fmt.Println(" tag        add a file (if necessary) and apply tags")
     fmt.Println(" tags       list all tags or tags for a given file")
-    os.Exit(0)
-}
-
-func checkDatabase() {
-    databasePath := DatabasePath()
-    _, error := os.Open(databasePath)
-
-    if (error == nil) { return }
-
-    switch error.(type) {
-        case *os.PathError:
-            switch error.(*os.PathError).Error {
-                case os.ENOENT: die("No database at '%v'.", databasePath)
-                default: die("(PathError) Could not open database '%v': %v", databasePath, error.(*os.PathError))
-            }
-        default: die("Could not open database '%v': %v", databasePath, error)
-    }
-}
-
-func mount(args []string) {
-    vfs, error := vfs.Mount("./mountpoint")
-    if (error != nil) { die("Could not mount filesystem: %v", error.String()) }
-
-    vfs.Loop()
-}
-
-func tags(args []string) {
-    db := db.Open(DatabasePath())
-    defer db.Close()
-
-    tags, error := db.Tags()
-    if (error != nil) { die("Could not retrieve tags: %v", error.String()) }
-
-    for _, tag := range tags {
-        fmt.Println(tag.Name)
-    }
 }
 
 func missingCommand() {

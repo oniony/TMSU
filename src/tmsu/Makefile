@@ -1,7 +1,8 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=tmsu
-GOFILES=main.go
+GOFILES=main.go \
+		config.go
 
 DEPS=../vfs ../db
 

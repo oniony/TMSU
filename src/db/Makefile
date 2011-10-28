@@ -1,7 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=oniony.com/tmsu/db
-GOFILES=db.go \
+GOFILES=database.go \
 		tag.go
 
 include $(GOROOT)/src/Make.pkg

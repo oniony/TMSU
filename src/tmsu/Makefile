@@ -1,9 +1,11 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=tmsu
-GOFILES=main.go \
-		config.go
-
-DEPS=../vfs ../db
+GOFILES=common.go \
+		config.go \
+		main.go \
+		database.go \
+		tag.go \
+		fusefs.go
 
 include $(GOROOT)/src/Make.cmd

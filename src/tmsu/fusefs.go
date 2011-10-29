@@ -1,4 +1,4 @@
-package vfs
+package main
 
 import (
     "fmt"
@@ -11,9 +11,7 @@ type FuseVfs struct {
     state *fuse.MountState
 }
 
-// factories
-
-func Mount(path string) (*FuseVfs, os.Error) {
+func MountVfs(path string) (*FuseVfs, os.Error) {
     fuseVfs := FuseVfs{}
 
     state, _, error := fuse.MountPathFileSystem(path, &fuseVfs, nil)
@@ -23,8 +21,6 @@ func Mount(path string) (*FuseVfs, os.Error) {
 
     return &fuseVfs, nil
 }
-
-// api
 
 func (this *FuseVfs) Unmount() {
     this.state.Unmount()
@@ -38,6 +34,15 @@ func (this *FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, 
     fmt.Println("GetAttr", name)
 
     switch (name) {
+        case "tags":
+            fallthrough
+        case "untagged":
+            return &os.FileInfo{
+                                  Mode: fuse.S_IFDIR | 0755,
+                               }, fuse.OK
+            return &os.FileInfo{
+                                  Mode: fuse.S_IFDIR | 0755,
+                               }, fuse.OK
         case "file.txt":
             return &os.FileInfo{
                                    Mode: fuse.S_IFREG | 0644,
@@ -92,10 +97,17 @@ func (this *FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 func (this *FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
     fmt.Println("tagDirectories")
 
-    channel := make(chan fuse.DirEntry, 1)
-    //TODO query db
-    //channel <- fuse.DirEntry{ Name: "test1", Mode: fuse.S_IFDIR }
-    //channel <- fuse.DirEntry{ Name: "test2", Mode: fuse.S_IFDIR }
+    db, error := OpenDatabase(DatabasePath())
+    if error != nil { die("Could not open database: %v", error.String()) }
+    defer db.Close()
+
+    tags, error := db.Tags()
+    if error != nil { die("Could not retrieve tags: %v", error.String()) }
+
+    channel := make(chan fuse.DirEntry, len(tags))
+    for _, tag := range tags {
+        channel <- fuse.DirEntry{ Name: tag.Name, Mode: fuse.S_IFREG }
+    }
     close(channel)
 
     fmt.Println("/tagDirectories")

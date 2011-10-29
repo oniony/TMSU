@@ -1,4 +1,4 @@
-package db
+package main
 
 type Tag struct {
     Id int

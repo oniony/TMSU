@@ -5,8 +5,6 @@ import (
     "path/filepath"
 )
 
-const defaultDatabaseName = ".tmsu/db"
-
 func DatabasePath() string {
     path, error := os.Getenverror("TMSU_DB")
     if (error == nil) { return path }
@@ -16,3 +14,5 @@ func DatabasePath() string {
 
     return filepath.Join(homePath, defaultDatabaseName)
 }
+
+const defaultDatabaseName = ".tmsu/db"

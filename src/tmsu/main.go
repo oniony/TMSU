@@ -4,12 +4,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
-	"oniony.com/tmsu/db"
-	"oniony.com/tmsu/vfs"
 )
 
 func main() {
 	flag.Parse()
+
+    if flag.NArg() == 0 { missingCommand() }
 
     command := flag.Arg(0)
     args := flag.Args()[1:]
@@ -22,7 +22,6 @@ func main() {
         case "tag": tag(args)
         case "untag": untag(args)
         case "tags" : tags(args)
-        case "": missingCommand()
         default: invalidCommand(command)
     }
 }
@@ -39,7 +38,7 @@ func mount(args []string) {
 
     mountPath := args[0]
 
-    vfs, error := vfs.Mount(mountPath)
+    vfs, error := MountVfs(mountPath)
     if (error != nil) { die("Could not mount filesystem: %v", error.String()) }
     defer vfs.Unmount()
 
@@ -65,12 +64,12 @@ func untag(args []string) {
 }
 
 func tags(args []string) {
-    db, error := db.Open(DatabasePath())
-    if (error != nil) { die("Could not open database: %v", error.String()) }
+    db, error := OpenDatabase(DatabasePath())
+    if error != nil { die("Could not open database: %v", error.String()) }
     defer db.Close()
 
     tags, error := db.Tags()
-    if (error != nil) { die("Could not retrieve tags: %v", error.String()) }
+    if error != nil { die("Could not retrieve tags: %v", error.String()) }
 
     for _, tag := range tags {
         fmt.Println(tag.Name)
@@ -78,11 +77,6 @@ func tags(args []string) {
 }
 
 // other stuff
-
-func die(format string, a ...interface{}) {
-    fmt.Fprintf(os.Stderr, format + "\n", a...)
-    os.Exit(1)
-}
 
 func showUsage() {
     fmt.Println("usage: tmsu <command> [<args>]")

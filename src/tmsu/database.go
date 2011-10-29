@@ -1,4 +1,4 @@
-package db
+package main
 
 import (
     "fmt"
@@ -10,9 +10,7 @@ type Database struct {
     connection  *sqlite.Conn
 }
 
-// factories
-
-func Open(path string) (*Database, os.Error) {
+func OpenDatabase(path string) (*Database, os.Error) {
     connection, error := sqlite.Open(path)
 
     if (error != nil) {
@@ -24,8 +22,6 @@ func Open(path string) (*Database, os.Error) {
 
     return &database, nil
 }
-
-// api
 
 func (this *Database) Close() {
     this.connection.Close()

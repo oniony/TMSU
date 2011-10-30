@@ -3,6 +3,7 @@ package main
 import (
     "fmt"
     "os"
+    "strings"
     "github.com/hanwen/go-fuse/fuse"
 )
 
@@ -34,25 +35,15 @@ func (this *FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, 
     fmt.Println("GetAttr", name)
 
     switch (name) {
-        case "tags":
-            fallthrough
-        case "untagged":
-            return &os.FileInfo{
-                                  Mode: fuse.S_IFDIR | 0755,
-                               }, fuse.OK
-            return &os.FileInfo{
-                                  Mode: fuse.S_IFDIR | 0755,
-                               }, fuse.OK
-        case "file.txt":
-            return &os.FileInfo{
-                                   Mode: fuse.S_IFREG | 0644,
-                                   Size: int64(len(name)),
-                               }, fuse.OK
-        case "":
-            return &os.FileInfo{
-                                   Mode: fuse.S_IFDIR | 0755,
-                               }, fuse.OK
+        case "tags": fallthrough
+        case "untagged": fallthrough
+        case "query": fallthrough
+        case "": return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
     }
+
+    if strings.HasPrefix(name, "tags/") { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    fmt.Fprintf(os.Stderr, "Unknown entry '%v'.\n", name)
 
     return nil, fuse.ENOENT
 }
@@ -62,6 +53,7 @@ func (this *FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirE
 
     switch name {
         case "": return this.topDirectories()
+        case "query": return this.dynamicQuery()
         case "tags": return this.tagDirectories()
         case "untagged": return this.untaggedFiles()
     }
@@ -84,12 +76,21 @@ func (this *FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fus
 func (this *FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
     fmt.Println("topDirectories")
 
-    channel := make(chan fuse.DirEntry, 2)
+    channel := make(chan fuse.DirEntry, 3)
     channel <- fuse.DirEntry{ Name: "tags", Mode: fuse.S_IFDIR }
     channel <- fuse.DirEntry{ Name: "untagged", Mode: fuse.S_IFDIR }
+    channel <- fuse.DirEntry{ Name: "query", Mode: fuse.S_IFDIR }
     close(channel)
 
     fmt.Println("/topDirectories")
+
+    return channel, fuse.OK
+}
+
+func (this *FuseVfs) dynamicQuery() (chan fuse.DirEntry, fuse.Status) {
+    channel := make(chan fuse.DirEntry, 0)
+    //TODO dynamic query
+    close(channel)
 
     return channel, fuse.OK
 }

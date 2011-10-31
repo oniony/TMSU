@@ -44,3 +44,7 @@ func (this *Database) Tags() ([]Tag, os.Error) {
 
     return tags, nil
 }
+
+func (this *Database) Tagged(tag string) ([]string, os.Error) {
+    return nil, nil
+}

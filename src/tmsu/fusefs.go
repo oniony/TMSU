@@ -1,9 +1,11 @@
 package main
 
 import (
-    "fmt"
+    "path/filepath"
+    "log"
     "os"
     "strings"
+    "strconv"
     "github.com/hanwen/go-fuse/fuse"
 )
 
@@ -32,37 +34,51 @@ func (this *FuseVfs) Loop() {
 }
 
 func (this *FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, fuse.Status) {
-    fmt.Println("GetAttr", name)
+    log.Printf(">GetAttr(%v)", name)
+    defer log.Printf("<GetAttr(%v)", name)
 
-    switch (name) {
-        case "tags": fallthrough
-        case "untagged": fallthrough
-        case "query": fallthrough
-        case "": return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
+    if name == "" { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    path := strings.Split(name, string(filepath.Separator))
+    log.Printf(" GetAttr(%v): path[0] = '%v'", name, path[0])
+
+    switch (path[0]) {
+        case "tags": return getTaggedEntryAttr(path[1:])
+        case "untagged": return getUntaggedEntryAttr(path)
+        case "view": return getViewEntryAttr(path)
     }
 
-    if strings.HasPrefix(name, "tags/") { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
-
-    fmt.Fprintf(os.Stderr, "Unknown entry '%v'.\n", name)
+    log.Printf(" GetAttr(%v): unknown entry", name)
 
     return nil, fuse.ENOENT
 }
 
 func (this *FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
-    fmt.Println("Open dir", name)
+    log.Printf(">OpenDir(%v)", name)
+    defer log.Printf("<OpenDir(%v)", name)
 
     switch name {
-        case "": return this.topDirectories()
-        case "query": return this.dynamicQuery()
-        case "tags": return this.tagDirectories()
-        case "untagged": return this.untaggedFiles()
+        case "": return topDirectories()
+        case "view": return viewDirectories()
+        case "tags": return tagDirectories()
+        case "untagged": return untaggedFiles()
+    }
+
+    path := strings.Split(name, string(filepath.Separator))
+    log.Printf(" OpenDir(%v): path[0] = '%v'", name, path[0])
+
+    switch (path[0]) {
+        case "tags": return getTaggedEntryAttr(path[1:])
+        case "untagged": return getUntaggedEntryAttr(path)
+        case "view": return getViewEntryAttr(path)
     }
 
     return nil, fuse.ENOENT
 }
 
 func (this *FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
-    fmt.Println("Open", name)
+    log.Printf(">Open(%v)", name)
+    defer log.Printf("<OpenDir(%v)", name)
 
     if name != "file.txt" { return nil, fuse.ENOENT }
 
@@ -73,37 +89,40 @@ func (this *FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fus
 
 // implementation
 
-func (this *FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
-    fmt.Println("topDirectories")
+func topDirectories() (chan fuse.DirEntry, fuse.Status) {
+    log.Printf(">topDirectories()")
+    defer log.Printf("<topDirectories()")
 
     channel := make(chan fuse.DirEntry, 3)
     channel <- fuse.DirEntry{ Name: "tags", Mode: fuse.S_IFDIR }
     channel <- fuse.DirEntry{ Name: "untagged", Mode: fuse.S_IFDIR }
-    channel <- fuse.DirEntry{ Name: "query", Mode: fuse.S_IFDIR }
+    channel <- fuse.DirEntry{ Name: "view", Mode: fuse.S_IFDIR }
     close(channel)
-
-    fmt.Println("/topDirectories")
 
     return channel, fuse.OK
 }
 
-func (this *FuseVfs) dynamicQuery() (chan fuse.DirEntry, fuse.Status) {
+func viewDirectories() (chan fuse.DirEntry, fuse.Status) {
+    log.Printf(">viewDirectories()")
+    defer log.Printf("<viewDirectories()")
+
     channel := make(chan fuse.DirEntry, 0)
-    //TODO dynamic query
+    //TODO dynamic view
     close(channel)
 
     return channel, fuse.OK
 }
 
-func (this *FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
-    fmt.Println("tagDirectories")
+func tagDirectories() (chan fuse.DirEntry, fuse.Status) {
+    log.Printf(">tagDirectories()")
+    defer log.Printf("<tagDirectories()")
 
     db, error := OpenDatabase(DatabasePath())
-    if error != nil { die("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatal("Could not open database: %v", error.String()) }
     defer db.Close()
 
     tags, error := db.Tags()
-    if error != nil { die("Could not retrieve tags: %v", error.String()) }
+    if error != nil { log.Fatal("Could not retrieve tags: %v", error.String()) }
 
     channel := make(chan fuse.DirEntry, len(tags))
     for _, tag := range tags {
@@ -111,19 +130,77 @@ func (this *FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
     }
     close(channel)
 
-    fmt.Println("/tagDirectories")
-
     return channel, fuse.OK
 }
 
-func (this *FuseVfs) untaggedFiles() (chan fuse.DirEntry, fuse.Status) {
-    fmt.Println("untaggedFiles")
+func untaggedFiles() (chan fuse.DirEntry, fuse.Status) {
+    log.Printf(">untaggedFiles()")
+    defer log.Printf("<untaggedFiles()")
 
     channel := make(chan fuse.DirEntry, 1)
     //TODO query db
     close(channel)
 
-    fmt.Println("/untaggedFiles")
-
     return channel, fuse.OK
+}
+
+func parseFilePathId(name string) (uint, os.Error) {
+    // ORIGINAL FILENAME | STORED AS             | ID
+    // ------------------+-----------------------+----
+    // somefile          | somefile.123          | 123
+    // somefile.ext      | somefile.123.ext      | 123
+    // somefile.blah     | somefile.blah.123     | 123
+    // somefile.blah.ext | somefile.blah.123.ext | 123
+    // somefile.456      | somefile.123.456      | 123
+    // somefile.777.888  | somefile.777.123.888  | 123
+
+    parts := strings.Split(name, ".")
+    count := len(parts)
+
+    if count == 1 { return 0, nil }
+
+    id, error := strconv.Atoui(parts[count - 2])
+    if error != nil { id, error = strconv.Atoui(parts[count - 1]) }
+    if error != nil { return 0, error }
+
+    return id, nil
+}
+
+func getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
+    log.Printf(">getTaggedEntryAttr(%v)", path)
+    defer log.Printf("<getTaggedEntryAttr(%v)", path)
+
+    pathLength := len(path)
+    if pathLength == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    name := path[pathLength - 1]
+
+    log.Printf(" getTaggedEntryAttr(%v): name '%v'", path, name)
+
+    filePathId, error := parseFilePathId(name)
+    if error != nil { log.Fatalf("Could not parse file-path identifier: %v", error) }
+
+    log.Printf(" getTaggedEntryAtry(%v): id %v", path, filePathId)
+
+    if filePathId == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
+}
+
+func getUntaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
+    log.Printf(">getUntaggedEntryAttr(%v)", path)
+    defer log.Printf("<getUntaggedEntryAttr(%v)", path)
+
+    if len(path) == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
+}
+
+func getViewEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
+    log.Printf(">getViewEntryAttr(%v)", path)
+    defer log.Printf("<getViewEntryAttr(%v)", path)
+
+    if len(path) == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+
+    return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
 }

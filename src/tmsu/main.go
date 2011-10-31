@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -34,42 +35,42 @@ func help() {
 }
 
 func mount(args []string) {
-    if (len(args) == 0) { die("No mountpoint specified.") }
+    if (len(args) == 0) { log.Fatal("No mountpoint specified.") }
 
     mountPath := args[0]
 
     vfs, error := MountVfs(mountPath)
-    if (error != nil) { die("Could not mount filesystem: %v", error.String()) }
+    if (error != nil) { log.Fatalf("Could not mount filesystem: %v", error.String()) }
     defer vfs.Unmount()
 
-    fmt.Printf("Database '%v' mounted at '%v'.\n", DatabasePath(), mountPath)
+    log.Printf("Database '%v' mounted at '%v'.\n", DatabasePath(), mountPath)
 
     vfs.Loop()
 }
 
 func add(args []string) {
-    fmt.Println("Not implemented.")
+    log.Fatal("Not implemented.")
 }
 
 func remove(args []string) {
-    fmt.Println("Not implemented.")
+    log.Fatal("Not implemented.")
 }
 
 func tag(args []string) {
-    fmt.Println("Not implemented.")
+    log.Fatal("Not implemented.")
 }
 
 func untag(args []string) {
-    fmt.Println("Not implemented.")
+    log.Fatal("Not implemented.")
 }
 
 func tags(args []string) {
     db, error := OpenDatabase(DatabasePath())
-    if error != nil { die("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
     defer db.Close()
 
     tags, error := db.Tags()
-    if error != nil { die("Could not retrieve tags: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not retrieve tags: %v", error.String()) }
 
     for _, tag := range tags {
         fmt.Println(tag.Name)
@@ -90,9 +91,9 @@ func showUsage() {
 }
 
 func missingCommand() {
-    die("No command specified.")
+    log.Fatal("No command specified.")
 }
 
 func invalidCommand(command string) {
-    die("No such command '%v'.", command)
+    log.Fatalf("No such command '%v'.", command)
 }

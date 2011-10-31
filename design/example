@@ -1,0 +1,25 @@
+1 apple: red
+2 book: square
+3 kite: red, square
+4 banana: 
+5 postboxes: red
+
++-o tags
+| +-o red
+| | +-o postboxes.5
+| | +-o apple.1.doc
+| | +-o kite.3.doc
+| | +-o square
+| |   +-o kite.3.doc
+| +-o square
+|   +-o book.2.doc
+|   +-o kite.3.doc
+|   +-o red
+|   | +- kite.3.doc
+|   +-o -red
+|     +-o book.2.doc
++-o untagged
+|  +-o banana.4.doc
++-o view
+  +-o "square -red"
+    +-o book.2.doc

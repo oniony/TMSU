@@ -1,0 +1,3 @@
+#!/usr/bin/env sh
+fusermount -u mountpoint
+./tmsu mount mountpoint

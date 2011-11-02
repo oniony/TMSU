@@ -1,12 +1,20 @@
-INSERT INTO tag (id, name) VALUES (1, 'inside');
-INSERT INTO tag (id, name) VALUES (2, 'outside');
+insert into tag (name) values ('red');
+insert into tag (name) values ('square');
 
-INSERT INTO file (id, fingerprint) VALUES (1, '1a2b3c4d');
-INSERT INTO file (id, fingerprint) VALUES (2, '5e6f7a8b');
+insert into file (fingerprint) values('1');
+insert into file (fingerprint) values('2');
+insert into file (fingerprint) values('3');
+insert into file (fingerprint) values('4');
+insert into file (fingerprint) values('5');
 
-INSERT INTO file_path (id, file_id, path) VALUES (1, 1, '/tmp/file1a');
-INSERT INTO file_path (id, file_id, path) VALUES (2, 1, '/tmp/file1b');
-INSERT INTO file_path (id, file_id, path) VALUES (3, 2, '/tmp/file2');
+insert into file_path (file_id, path) values(1, 'apple');
+insert into file_path (file_id, path) values(2, 'book');
+insert into file_path (file_id, path) values(3, 'kite');
+insert into file_path (file_id, path) values(4, 'banana');
+insert into file_path (file_id, path) values(5, 'postbox');
 
-INSERT INTO file_tag (id, file_id, tag_id) VALUES (1, 1, 1);
-INSERT INTO file_tag (id, file_id, tag_id) VALUES (2, 2, 2);
+insert into file_path_tag (file_path_id, tag_id) values(1, 1);
+insert into file_path_tag (file_path_id, tag_id) values(2, 2);
+insert into file_path_tag (file_path_id, tag_id) values(3, 1);
+insert into file_path_tag (file_path_id, tag_id) values(3, 2);
+insert into file_path_tag (file_path_id, tag_id) values(5, 1);

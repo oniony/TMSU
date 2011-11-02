@@ -1,8 +1,8 @@
 package main
 
 import (
-    "path/filepath"
     "log"
+    "path/filepath"
     "os"
     "strings"
     "strconv"
@@ -11,6 +11,8 @@ import (
 
 type FuseVfs struct {
     fuse.DefaultFileSystem
+
+    path string
     state *fuse.MountState
 }
 
@@ -20,6 +22,7 @@ func MountVfs(path string) (*FuseVfs, os.Error) {
     state, _, error := fuse.MountPathFileSystem(path, &fuseVfs, nil)
     if error != nil { return nil, error }
 
+    fuseVfs.path = path
     fuseVfs.state = state
 
     return &fuseVfs, nil
@@ -42,14 +45,10 @@ func (this *FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, 
         case "tags": return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK
     }
 
-    path := strings.Split(name, string(filepath.Separator))
-    log.Printf(" GetAttr(%v): path[0] = '%v'", name, path[0])
-
+    path := splitPath(name)
     switch (path[0]) {
         case "tags": return getTaggedEntryAttr(path[1:])
     }
-
-    log.Printf(" GetAttr(%v): unknown entry", name)
 
     return nil, fuse.ENOENT
 }
@@ -63,9 +62,7 @@ func (this *FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirE
         case "tags": return tagDirectories()
     }
 
-    path := strings.Split(name, string(filepath.Separator))
-    log.Printf(" OpenDir(%v): path[0] = '%v'", name, path[0])
-
+    path := splitPath(name)
     switch (path[0]) {
         case "tags": return openTaggedEntryDir(path[1:])
     }
@@ -75,27 +72,54 @@ func (this *FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirE
 
 func (this *FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
     log.Printf(">Open(%v)", name)
-    defer log.Printf("<OpenDir(%v)", name)
+    defer log.Printf("<Open(%v)", name)
 
-    if name != "file.txt" { return nil, fuse.ENOENT }
+    //if flags & fuse.O_ANYWRITE != 0 { return nil, fuse.EPERM }
 
-    if flags & fuse.O_ANYWRITE != 0 { return nil, fuse.EPERM }
-
-    return fuse.NewDataFile([]byte(name)), fuse.OK
+    return fuse.NewDataFile([]byte("tmsu (c) 2011 Paul Ruane\n")), fuse.OK
 }
 
 func (this *FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
-    //TODO
-    return "/some/path", fuse.OK
+    log.Printf(">Readlink(%v)", name)
+    defer log.Printf("<Readlink(%v)", name)
+
+    path := splitPath(name)
+    switch (path[0]) {
+        case "tags": return readTaggedEntryLink(path[1:])
+    }
+
+    return "", fuse.ENOENT
 }
 
 // implementation
+
+func splitPath(path string) []string {
+    return strings.Split(path, string(filepath.Separator))
+}
+
+func parseFilePathId(name string) (uint, os.Error) {
+    log.Printf(">parseFilePathId(%v)", name)
+    defer log.Printf("<parseFilePathId(%v)", name)
+
+    parts := strings.Split(name, ".")
+    count := len(parts)
+
+    if count == 1 { return 0, nil }
+
+    id, error := strconv.Atoui(parts[count - 2])
+    if error != nil { id, error = strconv.Atoui(parts[count - 1]) }
+    if error != nil { return 0, error }
+
+    log.Printf(" parseFilePathId(%v): %v", name, id)
+
+    return id, nil
+}
 
 func topDirectories() (chan fuse.DirEntry, fuse.Status) {
     log.Printf(">topDirectories()")
     defer log.Printf("<topDirectories()")
 
-    channel := make(chan fuse.DirEntry, 1)
+    channel := make(chan fuse.DirEntry, 2)
     channel <- fuse.DirEntry{ Name: "tags", Mode: fuse.S_IFDIR }
     close(channel)
 
@@ -122,33 +146,6 @@ func tagDirectories() (chan fuse.DirEntry, fuse.Status) {
     return channel, fuse.OK
 }
 
-func parseFilePathId(name string) (uint, os.Error) {
-    log.Printf(">parseFilePathId(%v)", name)
-    defer log.Printf("<parseFilePathId(%v)", name)
-
-    // ORIGINAL FILENAME | STORED AS             | ID
-    // ------------------+-----------------------+----
-    // somefile          | somefile.123          | 123
-    // somefile.ext      | somefile.123.ext      | 123
-    // somefile.blah     | somefile.blah.123     | 123
-    // somefile.blah.ext | somefile.blah.123.ext | 123
-    // somefile.456      | somefile.123.456      | 123
-    // somefile.777.888  | somefile.777.123.888  | 123
-
-    parts := strings.Split(name, ".")
-    count := len(parts)
-
-    if count == 1 { return 0, nil }
-
-    id, error := strconv.Atoui(parts[count - 2])
-    if error != nil { id, error = strconv.Atoui(parts[count - 1]) }
-    if error != nil { return 0, error }
-
-    log.Printf(" parseFilePathId(%v): %v", name, id)
-
-    return id, nil
-}
-
 func getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
     log.Printf(">getTaggedEntryAttr(%v)", path)
     defer log.Printf("<getTaggedEntryAttr(%v)", path)
@@ -173,17 +170,44 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
     defer log.Printf("<openTaggedEntryDir(%v)", path)
 
     db, error := OpenDatabase(DatabasePath())
-    if error != nil { log.Fatal("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
     defer db.Close()
 
-    //TODO get tags from path elements
+    //TODO assumption that all path dirs are tags
 
-    _, error = db.Tagged("sometag")
-    if error != nil { log.Fatal("Could not retrieve files tagged: %v", error.String()) }
+    filePaths, error := db.Tagged(path)
+    if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error.String()) }
 
-    channel := make(chan fuse.DirEntry, 1)
-    //TODO
+    channel := make(chan fuse.DirEntry, len(filePaths))
+    for _, filePath := range filePaths {
+        channel <- fuse.DirEntry { Name: "file" + strconv.Uitoa(filePath.Id), Mode: fuse.S_IFLNK }
+    }
     close(channel)
 
     return channel, fuse.OK
+}
+
+func readTaggedEntryLink(path []string) (string, fuse.Status) {
+    log.Printf(">readTaggedEntryLink(%v)", path)
+    defer log.Printf("<readTaggedEntryLink(%v)", path)
+
+    name := path[len(path) - 1]
+
+    log.Printf(" readTaggedEntryLink(%v): name '%v'", path, name)
+
+    filePathId, error := parseFilePathId(name)
+    if error != nil { log.Fatalf("Could not parse file-path identifier: %v", error) }
+
+    log.Printf(" readTaggedEntryLink(%v): id %v", path, filePathId)
+
+    if filePathId == 0 { return "", fuse.ENOENT }
+
+    db, error := OpenDatabase(DatabasePath())
+    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
+    defer db.Close()
+
+    filePath, error := db.FilePath(filePathId)
+    if error != nil { log.Fatalf("Could not find file-path %v in database.", filePathId) }
+
+    return filePath.Path, fuse.OK
 }

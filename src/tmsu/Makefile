@@ -4,7 +4,8 @@ TARG=tmsu
 GOFILES=config.go \
 		main.go \
 		database.go \
+		fusefs.go \
 		tag.go \
-		fusefs.go
+		filepath.go
 
 include $(GOROOT)/src/Make.cmd

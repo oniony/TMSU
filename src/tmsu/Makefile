@@ -6,6 +6,8 @@ GOFILES=config.go \
 		database.go \
 		fusefs.go \
 		tag.go \
-		filepath.go
+		file.go \
+		filepath.go \
+		fingerprinter.go
 
 include $(GOROOT)/src/Make.cmd

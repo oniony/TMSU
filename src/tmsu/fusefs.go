@@ -130,7 +130,7 @@ func tagDirectories() (chan fuse.DirEntry, fuse.Status) {
     log.Printf(">tagDirectories()")
     defer log.Printf("<tagDirectories()")
 
-    db, error := OpenDatabase(DatabasePath())
+    db, error := OpenDatabase(databasePath())
     if error != nil { log.Fatal("Could not open database: %v", error.String()) }
     defer db.Close()
 
@@ -169,7 +169,7 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
     log.Printf(">openTaggedEntryDir(%v)", path)
     defer log.Printf("<openTaggedEntryDir(%v)", path)
 
-    db, error := OpenDatabase(DatabasePath())
+    db, error := OpenDatabase(databasePath())
     if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
     defer db.Close()
 
@@ -180,7 +180,7 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
 
     channel := make(chan fuse.DirEntry, len(filePaths))
     for _, filePath := range filePaths {
-        channel <- fuse.DirEntry { Name: "file" + strconv.Uitoa(filePath.Id), Mode: fuse.S_IFLNK }
+        channel <- fuse.DirEntry { Name: "file." + strconv.Uitoa(filePath.Id), Mode: fuse.S_IFLNK }
     }
     close(channel)
 
@@ -202,7 +202,7 @@ func readTaggedEntryLink(path []string) (string, fuse.Status) {
 
     if filePathId == 0 { return "", fuse.ENOENT }
 
-    db, error := OpenDatabase(DatabasePath())
+    db, error := OpenDatabase(databasePath())
     if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
     defer db.Close()
 

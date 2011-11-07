@@ -5,7 +5,7 @@ import (
     "path/filepath"
 )
 
-func DatabasePath() string {
+func databasePath() string {
     path, error := os.Getenverror("TMSU_DB")
     if (error == nil) { return path }
 

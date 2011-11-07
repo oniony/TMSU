@@ -1,6 +1,5 @@
 package main
 
-
 import (
     "fmt"
     "os"
@@ -31,19 +30,18 @@ func (this *Database) Close() {
 }
 
 func (this *Database) Tags() ([]Tag, os.Error) {
-    sql := "SELECT * FROM tag"
+    sql := "SELECT id, name FROM tag"
 
     statement, error := this.connection.Prepare(sql)
-
     if error != nil { return nil, error }
 
     tags := make([]Tag, 0, 10)
     for statement.Next() {
-        var rowId int
+        var id int
         var tag string
-        statement.Scan(&rowId, &tag)
+        statement.Scan(&id, &tag)
 
-        tags = append(tags, Tag{ rowId, tag })
+        tags = append(tags, Tag{ id, tag })
     }
 
     return tags, nil
@@ -87,6 +85,22 @@ func (this *Database) Tagged(tagNames []string) ([]FilePath, os.Error) {
     return filePaths, nil
 }
 
+func (this *Database) File(fingerprint string) (*File, os.Error) {
+    sql := "SELECT id FROM file WHERE fingerprint = ?"
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return nil, error }
+
+    error = statement.Exec(fingerprint)
+    if error != nil { return nil, error }
+    if !statement.Next() { return nil, nil }
+
+    var id int
+    statement.Scan(&id)
+
+    return &File{id, fingerprint}, nil
+}
+
 func (this *Database) FilePath(filePathId uint) (*FilePath, os.Error) {
     sql := `SELECT file_id, path
             FROM file_path
@@ -97,7 +111,7 @@ func (this *Database) FilePath(filePathId uint) (*FilePath, os.Error) {
 
     error = statement.Exec(filePathId)
     if error != nil { return nil, error }
-    if !statement.Next() { return nil, os.NewError("No such file-path") }
+    if !statement.Next() { return nil, nil }
 
     var fileId int
     var path string

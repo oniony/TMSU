@@ -6,7 +6,7 @@ import (
            "os"
        )
 
-func Fingerprint(path string) (string, os.Error) {
+func Fingerprint(path string) (string, error) {
     file, error := os.Open(path)
     if error != nil { return "", error }
     defer file.Close()

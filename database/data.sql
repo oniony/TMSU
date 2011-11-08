@@ -13,8 +13,8 @@ insert into file_path (file_id, path) values(3, 'kite');
 insert into file_path (file_id, path) values(4, 'banana');
 insert into file_path (file_id, path) values(5, 'postbox');
 
-insert into file_path_tag (file_path_id, tag_id) values(1, 1);
-insert into file_path_tag (file_path_id, tag_id) values(2, 2);
-insert into file_path_tag (file_path_id, tag_id) values(3, 1);
-insert into file_path_tag (file_path_id, tag_id) values(3, 2);
-insert into file_path_tag (file_path_id, tag_id) values(5, 1);
+insert into file_tag (file_id, tag_id) values(1, 1);
+insert into file_tag (file_id, tag_id) values(2, 2);
+insert into file_tag (file_id, tag_id) values(3, 1);
+insert into file_tag (file_id, tag_id) values(3, 2);
+insert into file_tag (file_id, tag_id) values(5, 1);

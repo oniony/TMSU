@@ -16,7 +16,7 @@ type FuseVfs struct {
     state *fuse.MountState
 }
 
-func MountVfs(path string) (*FuseVfs, os.Error) {
+func MountVfs(path string) (*FuseVfs, error) {
     fuseVfs := FuseVfs{}
 
     state, _, error := fuse.MountPathFileSystem(path, &fuseVfs, nil)
@@ -97,7 +97,7 @@ func splitPath(path string) []string {
     return strings.Split(path, string(filepath.Separator))
 }
 
-func parseFilePathId(name string) (uint, os.Error) {
+func parseFilePathId(name string) (uint, error) {
     log.Printf(">parseFilePathId(%v)", name)
     defer log.Printf("<parseFilePathId(%v)", name)
 
@@ -131,11 +131,11 @@ func tagDirectories() (chan fuse.DirEntry, fuse.Status) {
     defer log.Printf("<tagDirectories()")
 
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatal("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatal("Could not open database: %v", error) }
     defer db.Close()
 
     tags, error := db.Tags()
-    if error != nil { log.Fatal("Could not retrieve tags: %v", error.String()) }
+    if error != nil { log.Fatal("Could not retrieve tags: %v", error) }
 
     channel := make(chan fuse.DirEntry, len(tags))
     for _, tag := range tags {
@@ -170,13 +170,13 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
     defer log.Printf("<openTaggedEntryDir(%v)", path)
 
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not open database: %v", error) }
     defer db.Close()
 
     //TODO assumption that all path dirs are tags
 
-    filePaths, error := db.Tagged(path)
-    if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error.String()) }
+    filePaths, error := db.FilePathsByTag(path)
+    if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error) }
 
     channel := make(chan fuse.DirEntry, len(filePaths))
     for _, filePath := range filePaths {
@@ -203,10 +203,10 @@ func readTaggedEntryLink(path []string) (string, fuse.Status) {
     if filePathId == 0 { return "", fuse.ENOENT }
 
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not open database: %v", error) }
     defer db.Close()
 
-    filePath, error := db.FilePath(filePathId)
+    filePath, error := db.FilePathById(filePathId)
     if error != nil { log.Fatalf("Could not find file-path %v in database.", filePathId) }
 
     return filePath.Path, fuse.OK

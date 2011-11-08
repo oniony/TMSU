@@ -35,15 +35,15 @@ CREATE TABLE file_path
     path TEXT UNIQUE NOT NULL
 );
 
--------------------
--- file path tag --
--------------------
+--------------
+-- file-tag --
+--------------
 
-DROP TABLE IF EXISTS file_path_tag;
+DROP TABLE IF EXISTS file_tag;
 
-CREATE TABLE file_path_tag
+CREATE TABLE file_tag
 (
     id INTEGER PRIMARY KEY,
-    file_path_id INTEGER NOT NULL,
+    file_id INTEGER NOT NULL,
     tag_id INTEGER NOT NULL
 );

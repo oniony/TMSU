@@ -41,7 +41,7 @@ func mount(args []string) {
     mountPath := args[0]
 
     vfs, error := MountVfs(mountPath)
-    if (error != nil) { log.Fatalf("Could not mount filesystem: %v", error.String()) }
+    if (error != nil) { log.Fatalf("Could not mount filesystem: %v", error) }
     defer vfs.Unmount()
 
     log.Printf("Database '%v' mounted at '%v'.\n", databasePath(), mountPath)
@@ -50,28 +50,28 @@ func mount(args []string) {
 }
 
 func add(paths []string) {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { log.Fatalf("Could not open database: %v", err) }
     defer db.Close()
 
     for _, path := range paths {
         absPath, error := filepath.Abs(path)
-        if error != nil { log.Fatalf("Could resolve path '%v': %v", path, error.String()) }
+        if error != nil { log.Fatalf("Could resolve path '%v': %v", path, error) }
 
         fingerprint, error := Fingerprint(absPath)
-        if error != nil { log.Fatalf("Could not fingerprint '%v': %v", path, error.String()) }
+        if error != nil { log.Fatalf("Could not fingerprint '%v': %v", path, error) }
 
-        file, error := db.File(fingerprint)
-        if error != nil { log.Fatalf("Could not determine whether file '%v' exists in the database: %v", path, error.String()) }
+        file, error := db.FileByFingerprint(fingerprint)
+        if error == NOT_FOUND { file, error = db.AddFile(fingerprint) }
+        if error != nil { log.Fatalf("Could not determine whether file '%v' exists in the database: %v", path, error) }
 
-        if file == nil {
-            //file, error = db.AddFile(fingerprint)
+        filePath, error := db.FilePathByPath(absPath)
+        if error == NOT_FOUND { filePath, error = db.AddFilePath(file.Id, absPath) }
+        if error != nil { log.Fatalf("Could not determine whether file path '%v' exists in the database: %v", path, error) }
+
+        if filePath.FileId != file.Id {
+            //TODO update
         }
-
-        //filePath := db.GetFilePath(absPath)
-        //if filePath != nil continue
-
-        //db.Add
     }
 }
 
@@ -89,11 +89,11 @@ func untag(args []string) {
 
 func tags(args []string) {
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not open database: %v", error) }
     defer db.Close()
 
     tags, error := db.Tags()
-    if error != nil { log.Fatalf("Could not retrieve tags: %v", error.String()) }
+    if error != nil { log.Fatalf("Could not retrieve tags: %v", error) }
 
     for _, tag := range tags {
         fmt.Println(tag.Name)

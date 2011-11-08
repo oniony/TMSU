@@ -5,6 +5,9 @@ Bug: Extenionless files not handled properly.
 Bug: Handle long filenames when making link name.
 Bug: Prevent files in the VFS from being added.
 
+o Tag aliasing.
+o Command framework.
+o Option to allow merge on tag rename.
 o Auto-create mount directory.
 o Auto-create database.
 o Renamed tags.

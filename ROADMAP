@@ -2,27 +2,27 @@ V1
 
 o Automatic database creation.                          [ ]
 
-o Mount the VFS.                                        [ ]
+o Mount the VFS.                                        [X]
     >tmsu mount somedir
 o Unmount the VFS.                                      [ ]
     >tmsu unmount
 
-o Add files to the VFS.                                 [ ]
+o Add files to the VFS.                                 [X]
     >tmsu add realfile
-o Remove files from the VFS.                            [ ]
+o Remove files from the VFS.                            [X]
     >tmsu remove realfile
-o Add one or more tags to a file.                       [ ]
+o Add one or more tags to a file.                       [X]
     >tmsu tag file tag1 tag2
 o Remove one or more tags from a file.                  [ ]
     >tmsu untag file tag1 tag2
     >tmsu tag file -tag1 -tag2
 
-o List tags for a particular file (outside VFS).        [ ]
-    >tmsu tags somefile
+o List tags for a particular file.                      [ ]
+    >tmsu tags realfile
 
-o View files for single tag.                            [ ]
+o View files for single tag.                            [X]
     >cd tags/tag1; ls
-o View files for multiple tags (AND operation only).    [ ]
+o View files for multiple tags (AND operation only).    [X]
     >cd tags/tag1/tag2/tag3; ls
 o View untagged files.                                  [ ]
     >cd untagged; ls

@@ -8,6 +8,7 @@ GOFILES=config.go \
 		tag.go \
 		file.go \
 		filepath.go \
+		filetag.go \
 		fingerprinter.go
 
 include $(GOROOT)/src/Make.cmd

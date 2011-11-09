@@ -4,7 +4,7 @@ o Automatic database creation.                          [ ]
 
 o Mount the VFS.                                        [X]
     >tmsu mount somedir
-o Unmount the VFS.                                      [ ]
+o Unmount the VFS.                                      [X]
     >tmsu unmount
 
 o Add files to the VFS.                                 [X]

@@ -31,7 +31,7 @@ func (this *Database) Close() {
 
 // tags
 
-func (this *Database) Tags() ([]*Tag, error) {
+func (this Database) Tags() ([]*Tag, error) {
     sql := `SELECT id, name FROM tag`
 
     statement, error := this.connection.Prepare(sql)
@@ -50,7 +50,7 @@ func (this *Database) Tags() ([]*Tag, error) {
     return tags, nil
 }
 
-func (this *Database) TagByName(name string) (*Tag, error) {
+func (this Database) TagByName(name string) (*Tag, error) {
     sql := `SELECT id FROM tag WHERE name = ?`
 
     statement, error := this.connection.Prepare(sql)
@@ -67,7 +67,7 @@ func (this *Database) TagByName(name string) (*Tag, error) {
     return &Tag{ uint(id), name }, nil
 }
 
-func (this *Database) TagsByFile(fileId uint) ([]*Tag, error) {
+func (this Database) TagsByFile(fileId uint) ([]*Tag, error) {
     sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -95,7 +95,7 @@ func (this *Database) TagsByFile(fileId uint) ([]*Tag, error) {
     return tags, error
 }
 
-func (this *Database) AddTag(name string) (*Tag, error) {
+func (this Database) AddTag(name string) (*Tag, error) {
     sql := `INSERT INTO tag (name) VALUES (?)`
 
     statement, error := this.connection.Prepare(sql)
@@ -111,7 +111,7 @@ func (this *Database) AddTag(name string) (*Tag, error) {
     return &Tag{ uint(id), name }, nil
 }
 
-func (this *Database) RenameTag(tagId uint, name string) (*Tag, error) {
+func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
     sql := `UPDATE tag SET name = ? WHERE id = ?`
 
     statement, error := this.connection.Prepare(sql)
@@ -125,7 +125,7 @@ func (this *Database) RenameTag(tagId uint, name string) (*Tag, error) {
     return &Tag{ tagId, name }, nil
 }
 
-func (this *Database) DeleteTag(tagId uint) (error) {
+func (this Database) DeleteTag(tagId uint) (error) {
     sql := `DELETE FROM tag WHERE id = ?`
 
     statement, error := this.connection.Prepare(sql)
@@ -141,7 +141,7 @@ func (this *Database) DeleteTag(tagId uint) (error) {
 
 // files
 
-func (this *Database) FileByFingerprint(fingerprint string) (*File, error) {
+func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
     sql := `SELECT id FROM file WHERE fingerprint = ?`
 
     statement, error := this.connection.Prepare(sql)
@@ -158,7 +158,7 @@ func (this *Database) FileByFingerprint(fingerprint string) (*File, error) {
     return &File{uint(id), fingerprint}, nil
 }
 
-func (this *Database) AddFile(fingerprint string) (*File, error) {
+func (this Database) AddFile(fingerprint string) (*File, error) {
     sql := `INSERT INTO file (fingerprint) VALUES (?)`
 
     statement, error := this.connection.Prepare(sql)
@@ -176,7 +176,7 @@ func (this *Database) AddFile(fingerprint string) (*File, error) {
 
 // file-paths
 
-func (this *Database) FilePathById(filePathId uint) (*FilePath, error) {
+func (this Database) FilePathById(filePathId uint) (*FilePath, error) {
     sql := `SELECT file_id, path
             FROM file_path
             WHERE id = ?`
@@ -196,7 +196,7 @@ func (this *Database) FilePathById(filePathId uint) (*FilePath, error) {
     return &FilePath{ filePathId, uint(fileId), path }, nil
 }
 
-func (this *Database) FilePathByPath(path string) (*FilePath, error) {
+func (this Database) FilePathByPath(path string) (*FilePath, error) {
     sql := `SELECT id, file_id
             FROM file_path
             WHERE path = ?`
@@ -216,7 +216,7 @@ func (this *Database) FilePathByPath(path string) (*FilePath, error) {
     return &FilePath{ uint(id), uint(fileId), path }, nil
 }
 
-func (this *Database) FilePathsByTag(tagNames []string) ([]FilePath, error) {
+func (this Database) FilePathsByTag(tagNames []string) ([]FilePath, error) {
     sql := `SELECT id, file_id, path
             FROM file_path
             WHERE file_id IN (
@@ -255,7 +255,7 @@ func (this *Database) FilePathsByTag(tagNames []string) ([]FilePath, error) {
     return filePaths, nil
 }
 
-func (this *Database) AddFilePath(fileId uint, path string) (*FilePath, error) {
+func (this Database) AddFilePath(fileId uint, path string) (*FilePath, error) {
     sql := `INSERT INTO file_path (file_id, path) VALUES (?, ?)`
 
     statement, error := this.connection.Prepare(sql)
@@ -273,7 +273,7 @@ func (this *Database) AddFilePath(fileId uint, path string) (*FilePath, error) {
 
 // file-tags
 
-func (this *Database) FileTagByFileAndTag(fileId uint, tagId uint) (*FileTag, error) {
+func (this Database) FileTagByFileAndTag(fileId uint, tagId uint) (*FileTag, error) {
     sql := `SELECT id FROM file_tag WHERE file_id = ? AND tag_id = ?`
 
     statement, error := this.connection.Prepare(sql)
@@ -290,7 +290,7 @@ func (this *Database) FileTagByFileAndTag(fileId uint, tagId uint) (*FileTag, er
     return &FileTag{ uint(fileTagId), fileId, tagId }, nil
 }
 
-func (this *Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
+func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
     sql := `INSERT INTO file_tag (file_id, tag_id) VALUES (?, ?)`
 
     statement, error := this.connection.Prepare(sql)
@@ -306,7 +306,7 @@ func (this *Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
     return &FileTag{ uint(id), fileId, tagId }, nil
 }
 
-func (this *Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
+func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
     sql := `UPDATE file_tag SET tag_id = ? WHERE tag_id = ?`
 
     statement, error := this.connection.Prepare(sql)

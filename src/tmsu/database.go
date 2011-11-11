@@ -31,20 +31,22 @@ func (this *Database) Close() {
 
 // tags
 
-func (this Database) Tags() ([]*Tag, error) {
-    sql := `SELECT id, name FROM tag`
+func (this Database) Tags() ([]Tag, error) {
+    sql := `SELECT id, name
+            FROM tag
+            ORDER BY name`
 
     statement, error := this.connection.Prepare(sql)
     if error != nil { return nil, error }
     defer statement.Finalize()
 
-    tags := make([]*Tag, 0, 10)
+    tags := make([]Tag, 0, 10)
     for statement.Next() {
         var id int
         var name string
         statement.Scan(&id, &name)
 
-        tags = append(tags, &Tag{ uint(id), name })
+        tags = append(tags, Tag{ uint(id), name })
     }
 
     return tags, nil
@@ -67,14 +69,15 @@ func (this Database) TagByName(name string) (*Tag, error) {
     return &Tag{ uint(id), name }, nil
 }
 
-func (this Database) TagsByFile(fileId uint) ([]*Tag, error) {
+func (this Database) TagsByFile(fileId uint) ([]Tag, error) {
     sql := `SELECT id, name
             FROM tag
             WHERE id IN (
                           SELECT tag_id
                           FROM file_tag
                           WHERE file_id = ?
-                        )`
+                        )
+            ORDER BY name`
 
     statement, error := this.connection.Prepare(sql)
     if error != nil { return nil, error }
@@ -83,16 +86,69 @@ func (this Database) TagsByFile(fileId uint) ([]*Tag, error) {
     error = statement.Exec(int(fileId))
     if error != nil { return nil, error }
 
-    tags := make([]*Tag, 0, 10)
+    tags := make([]Tag, 0, 10)
     for statement.Next() {
         var tagId int
         var tagName string
         statement.Scan(&tagId, &tagName)
 
-        tags = append(tags, &Tag{ uint(tagId), tagName })
+        tags = append(tags, Tag{ uint(tagId), tagName })
     }
 
     return tags, error
+}
+
+func (this Database) TagsForTags(tagNames []string) ([]Tag, error) {
+    sql := `SELECT id, name
+            FROM tag
+            WHERE id IN (
+                SELECT distinct(tag_id)
+                FROM file_tag
+                WHERE file_id IN (
+                    SELECT file_id
+                    FROM file_tag
+                    WHERE tag_id IN (
+                        SELECT id
+                        FROM tag
+                        WHERE name IN (` + strings.Repeat("?,", len(tagNames) - 1) + `?)
+                    )
+                    GROUP BY file_id
+                    HAVING count(*) = ` + strconv.Itoa(len(tagNames)) + `
+                )
+            )
+            ORDER BY name`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return nil, error }
+    defer statement.Finalize()
+
+    // convert string array to empty-interface array
+    castTagNames := make([]interface{}, len(tagNames))
+    for index, tagName := range tagNames { castTagNames[index] = tagName }
+
+    error = statement.Exec(castTagNames...)
+    if error != nil { return nil, error }
+
+    tags := make([]Tag, 0, 10)
+    for statement.Next() {
+        var tagId int
+        var tagName string
+        statement.Scan(&tagId, &tagName)
+
+        if (!contains(tagNames, tagName)) {
+            tags = append(tags, Tag{ uint(tagId), tagName })
+        }
+    }
+
+    return tags, nil
+}
+
+func contains(list []string, str string) bool {
+    for _, current := range list {
+        if current == str { return true }
+    }
+
+    return false
 }
 
 func (this Database) AddTag(name string) (*Tag, error) {
@@ -216,7 +272,7 @@ func (this Database) FilePathByPath(path string) (*FilePath, error) {
     return &FilePath{ uint(id), uint(fileId), path }, nil
 }
 
-func (this Database) FilePathsByTag(tagNames []string) ([]FilePath, error) {
+func (this Database) FilePathsWithTags(tagNames []string) ([]FilePath, error) {
     sql := `SELECT id, file_id, path
             FROM file_path
             WHERE file_id IN (
@@ -271,6 +327,20 @@ func (this Database) AddFilePath(fileId uint, path string) (*FilePath, error) {
     return &FilePath{ uint(id), fileId, path }, nil
 }
 
+func (this Database) DeleteFilePath(path string) error {
+    sql := `DELETE FROM file_path WHERE path = ?`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return error }
+    defer statement.Finalize()
+
+    error = statement.Exec(path)
+    if error != nil { return error }
+    statement.Next()
+
+    return nil
+}
+
 // file-tags
 
 func (this Database) FileTagByFileAndTag(fileId uint, tagId uint) (*FileTag, error) {
@@ -304,6 +374,20 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
     id := this.connection.LastInsertRowId()
 
     return &FileTag{ uint(id), fileId, tagId }, nil
+}
+
+func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
+    sql := `DELETE FROM file_tag WHERE fileId = ? AND tagId = ?`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return error }
+    defer statement.Finalize()
+
+    error = statement.Exec(int(fileId), int(tagId))
+    if error != nil { return error }
+    statement.Next()
+
+    return nil
 }
 
 func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {

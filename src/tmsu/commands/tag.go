@@ -49,6 +49,7 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     if error != nil { return nil, nil, error }
 
     if tag == nil {
+        fmt.Printf("New tag '%v'\n", tagName)
         tag, error = db.AddTag(tagName)
         if error != nil { return nil, nil, error }
     }
@@ -57,8 +58,6 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     if error != nil { return nil, nil, error }
 
     if fileTag == nil {
-        fmt.Printf("Tagged file '%v' with '%v'.\n", path, tagName)
-
         _, error := db.AddFileTag(fileId, tag.Id)
         if error != nil { return nil, nil, error }
     } else {

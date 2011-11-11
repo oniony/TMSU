@@ -8,7 +8,10 @@ GOFILES=config.go \
 		commands/mount.go \
 		commands/unmount.go \
 		commands/add.go \
+		commands/remove.go \
+		commands/tags.go \
 		commands/tag.go \
+		commands/untag.go \
 		commands/rename.go \
 		database.go \
 		fusefs.go \

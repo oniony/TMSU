@@ -1,10 +1,10 @@
 package main
 
 import (
-         "errors"
-         "fmt"
-         "log"
-         "path/filepath"
+           "errors"
+           "fmt"
+           "log"
+           "path/filepath"
        )
 
 type AddCommand struct {}
@@ -14,13 +14,13 @@ func (this AddCommand) Name() string {
 }
 
 func (this AddCommand) Description() string {
-    return "adds a file with applying tags"
+    return "adds a file without applying any tags"
 }
 
 func (this AddCommand) Exec(args []string) error {
     if len(args) < 1 { return errors.New("At least one file to add must be specified.") }
 
-    error := this.addPaths(args[:])
+    error := this.addPaths(args)
     if error != nil { return error }
 
     return nil
@@ -67,7 +67,7 @@ func (this AddCommand) addPath(db *Database, path string) (*File, *FilePath, err
             filePath, error = db.AddFilePath(file.Id, absPath)
             if error != nil { return nil, nil, error }
         case uniquePath:
-            fmt.Printf("Adding file '%v' (duplicate of a previously added file).\n", path)
+            fmt.Printf("Adding file '%v'.\n", path)
 
             filePath, error = db.AddFilePath(file.Id, absPath)
             if error != nil { return nil, nil, error }

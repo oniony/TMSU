@@ -141,11 +141,21 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
     defer db.Close()
 
     //TODO assumption that all path dirs are tags
+    tags := path
 
-    filePaths, error := db.FilePathsByTag(path)
+    furtherTags, error := db.TagsForTags(tags)
+    if error != nil { log.Fatalf("Could not retrieve tags for tags: %v", error)  }
+
+    filePaths, error := db.FilePathsWithTags(path)
     if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error) }
 
-    channel := make(chan fuse.DirEntry, len(filePaths))
+    channel := make(chan fuse.DirEntry, len(filePaths) + len(furtherTags))
+    defer close(channel)
+
+    for _, tag := range furtherTags {
+        channel <- fuse.DirEntry { Name: tag.Name, Mode: fuse.S_IFDIR | 0755 }
+    }
+
     for _, filePath := range filePaths {
         extension := filepath.Ext(filePath.Path)
         fileName := filepath.Base(filePath.Path)
@@ -153,7 +163,6 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
 
         channel <- fuse.DirEntry { Name: fileName + "." + strconv.Uitoa(filePath.Id) + extension, Mode: fuse.S_IFLNK }
     }
-    close(channel)
 
     return channel, fuse.OK
 }

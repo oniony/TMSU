@@ -1,0 +1,64 @@
+package main
+
+import (
+         "errors"
+         "fmt"
+       )
+
+type UntagCommand struct {}
+
+func (this UntagCommand) Name() string {
+    return "untag"
+}
+
+func (this UntagCommand) Description() string {
+    return "removes tags from a file"
+}
+
+func (this UntagCommand) Exec(args []string) error {
+    if len(args) < 2 { return errors.New("File to untag and tags to remove must be specified.") }
+
+    error := this.untagPath(args[0], args[1:])
+    if error != nil { return error }
+
+    return nil
+}
+
+// implementation
+
+func (this UntagCommand) untagPath(path string, tagNames []string) error {
+    db, error := OpenDatabase(databasePath())
+    if error != nil { return error }
+    defer db.Close()
+
+    filePath, error := db.FilePathByPath(path)
+    if error != nil { return error }
+
+    for _, tagName := range tagNames {
+        error = this.unapplyTag(db, path, filePath.FileId, tagName)
+        if error != nil { return error }
+    }
+
+    return nil
+}
+
+func (this UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagName string) error {
+    tag, error := db.TagByName(tagName)
+    if error != nil { return error }
+    if tag == nil { errors.New("No such tag" + tagName) }
+
+    fileTag, error := db.FileTagByFileAndTag(fileId, tag.Id)
+    if error != nil { return error }
+    if fileTag == nil { errors.New(fmt.Sprintf("File '%v' is not tagged '%v'.", path, tagName)) }
+
+    if fileTag != nil {
+        error := db.RemoveFileTag(fileId, tag.Id)
+        if error != nil { return error }
+
+        fmt.Printf("Untagged file '%v' with '%v'.\n", path, tagName)
+    } else {
+        fmt.Printf("File '%v' is not tagged '%v'.\n", path, tagName)
+    }
+
+    return nil
+}

@@ -5,6 +5,10 @@ Bug: Extenionless files not handled properly.
 Bug: Handle long filenames when making link name.
 Bug: Prevent files in the VFS from being added.
 
+o Status command
+o Clean-up command
+o VFS dates
+o Tidy up error handling in fusefs
 o Tag aliasing.
 o Command framework.
 o Option to allow merge on tag rename.

@@ -21,9 +21,6 @@ func (this UnmountCommand) Exec(args []string) error {
 
     path := args[0]
 
-    _, error := os.Stat(path)
-    if error != nil { return error }
-
     fusermountPath, error := exec.LookPath("fusermount")
     if error != nil { return error }
 

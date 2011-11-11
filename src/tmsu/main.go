@@ -4,7 +4,6 @@ import (
 	       "flag"
 	       "fmt"
 	       "log"
-	       "path/filepath"
        )
 
 var commands map [string] Command
@@ -15,7 +14,10 @@ func main() {
                                  MountCommand{},
                                  UnmountCommand{},
                                  AddCommand{},
+                                 RemoveCommand{},
+                                 TagsCommand{},
                                  TagCommand{},
+                                 UntagCommand{},
                                  RenameCommand{},
                              }
 
@@ -23,7 +25,7 @@ func main() {
     for _, command := range commandArray { commands[command.Name()] = command }
 
 	flag.Parse()
-    if flag.NArg() == 0 { missingCommand() }
+    if flag.NArg() == 0 { showUsage() }
     commandName := flag.Arg(0)
     args := flag.Args()[1:]
 
@@ -32,36 +34,6 @@ func main() {
 
     error := command.Exec(args)
     if error != nil { log.Fatal(error) }
-}
-
-// commands
-
-func remove(args []string) {
-    log.Fatal("Not implemented.")
-}
-
-func untag(args []string) {
-    log.Fatal("Not implemented.")
-}
-
-func tags(args []string) {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error) }
-    defer db.Close()
-
-    switch len(args) {
-        case 0: listAllTags(db)
-        case 1: listTagsForPath(db, args[0])
-        default:
-            for _, path := range args {
-                fmt.Println(path)
-                listTagsForPath(db, path)
-            }
-    }
-}
-
-func dupes(args []string) {
-    log.Fatal("Not implemented.")
 }
 
 // other stuff
@@ -81,40 +53,3 @@ func showUsage() {
     fmt.Println(" dupes      list duplicate files")
 }
 
-func missingCommand() {
-    log.Fatal("No command specified.")
-}
-
-func invalidCommand(command string) {
-    log.Fatalf("No such command '%v'.", command)
-}
-
-func listAllTags(db *Database) {
-    tags, error := db.Tags()
-    if error != nil { log.Fatalf("Could not retrieve tags: %v", error) }
-
-    for _, tag := range tags {
-        fmt.Println(tag.Name)
-    }
-}
-
-func listTagsForPath(db *Database, path string) error {
-    absPath, error := filepath.Abs(path)
-    if error != nil { log.Fatalf("Could resolve path '%v': %v", path, error) }
-
-    fingerprint, error := Fingerprint(absPath)
-    if error != nil { return error }
-
-    file, error := db.FileByFingerprint(fingerprint)
-    if error != nil { return error }
-    if file == nil { return nil }
-
-    tags, error := db.TagsByFile(file.Id)
-    if error != nil { return error }
-
-    for _, tag := range tags {
-        fmt.Printf("  %v\n", tag.Name)
-    }
-
-    return nil
-}

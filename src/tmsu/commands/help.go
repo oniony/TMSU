@@ -2,6 +2,8 @@ package main
 
 import (
            "fmt"
+           "math"
+           "strconv"
        )
 
 type HelpCommand struct {}
@@ -15,13 +17,20 @@ func (this HelpCommand) Description() string {
 }
 
 func (this HelpCommand) Exec(args []string) error {
-    fmt.Println("TMSU")
+    fmt.Println("tmsu")
     fmt.Println()
 
-    //TODO work out max width of command names and use in formatting
+    var maxWidth uint = 0
     for _, command := range commands {
-        fmt.Printf("    %10v    %v\n", command.Name(), command.Description())
+        maxWidth = uint(math.Max(float64(maxWidth), float64(len(command.Name()))))
     }
+
+    for _, command := range commands {
+        fmt.Printf("  %-" + strconv.Uitoa(maxWidth) + "v  %v\n", command.Name(), command.Description())
+    }
+
+    fmt.Println()
+    fmt.Println("Copyright (C) 2011 Paul Ruane")
 
     return nil
 }

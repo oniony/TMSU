@@ -2,6 +2,7 @@ package main
 
 type Command interface {
     Name() string
-    Description() string
+    Summary() string
+    Help() string
     Exec(args []string) error
 }

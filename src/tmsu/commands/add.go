@@ -13,8 +13,14 @@ func (this AddCommand) Name() string {
     return "add"
 }
 
-func (this AddCommand) Description() string {
+func (this AddCommand) Summary() string {
     return "adds a file without applying any tags"
+}
+
+func (this AddCommand) Help() string {
+    return `  tmsu add FILE...
+
+Adds the files specified without applying any tags.`
 }
 
 func (this AddCommand) Exec(args []string) error {
@@ -76,8 +82,6 @@ func (this AddCommand) addPath(db *Database, path string) (*File, *FilePath, err
 
             //TODO contents have changed, update file-path
             log.Fatalf("Not implemented.")
-        default:
-            fmt.Printf("File '%v' is already added.\n", path)
     }
 
     return file, filePath, nil

@@ -1,33 +1,36 @@
-V1
+V0.1
 
 o Automatic database creation.                          [ ]
-
+o Default database directory overriding                 [X]
 o Mount the VFS.                                        [X]
-    >tmsu mount somedir
+    >tmsu mount SOMEDIR
 o Unmount the VFS.                                      [X]
-    >tmsu unmount
-
+    >tmsu unmount SOMEDIR
 o Add files to the VFS.                                 [X]
-    >tmsu add realfile
+    >tmsu add REALFILE...
 o Remove files from the VFS.                            [X]
-    >tmsu remove realfile
+    >tmsu remove REALFILE...
 o Add one or more tags to a file.                       [X]
-    >tmsu tag file tag1 tag2
-o Remove one or more tags from a file.                  [ ]
-    >tmsu untag file tag1 tag2
-    >tmsu tag file -tag1 -tag2
-
-o List tags for a particular file.                      [ ]
-    >tmsu tags realfile
-
+    >tmsu tag REALFILE tag...
+o Remove one or more tags from a file.                  [X]
+    >tmsu untag REALFILE TAG...
+o List all tags                                         [X]
+    >tmsu tags
+o List tags for a particular file.                      [X]
+    >tmsu tags REALFILE...
 o View files for single tag.                            [X]
-    >cd tags/tag1; ls
-o View files for multiple tags (AND operation only).    [X]
-    >cd tags/tag1/tag2/tag3; ls
+    >ls mountpoint/tags/tag1
+o View files with multiple tags
+    >ls mountpoint/tags/tag1/tag2/...
 o View untagged files.                                  [ ]
-    >cd untagged; ls
+    >ls untagged
+o Rename tag.                                           [X]
+    >tmsu rename OLD NEW
+o Rename tag (merge with existing)                      [X]
+    >tmsu rename OLD NEW
+o Database import/export
 
-V2
+V0.2
 
 o Duplicate file handling.                              [ ]
     TODO
@@ -37,7 +40,7 @@ o Clean command.                                        [ ]
 o View files for multiple tags (OR operation).          [ ]
     >cd tags/tag1+tag2+tag3
 
-V3
+V0.3
 
 o Custom views                                          [ ]
     >tmsu view somename "(tag1 or tag2) and tag3"; ls views/somename

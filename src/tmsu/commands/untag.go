@@ -11,8 +11,14 @@ func (this UntagCommand) Name() string {
     return "untag"
 }
 
-func (this UntagCommand) Description() string {
+func (this UntagCommand) Summary() string {
     return "removes tags from a file"
+}
+
+func (this UntagCommand) Help() string {
+    return `  tmsu untag FILE TAG...
+
+Disassociates the specified file FILE with the tag(s) specified.`
 }
 
 func (this UntagCommand) Exec(args []string) error {

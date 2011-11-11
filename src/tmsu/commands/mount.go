@@ -11,8 +11,15 @@ func (this MountCommand) Name() string {
     return "mount"
 }
 
-func (this MountCommand) Description() string {
+func (this MountCommand) Summary() string {
     return "mounts the virtual file-system"
+}
+
+func (this MountCommand) Help() string {
+    return `  tmsu mount MOUNTPOINT
+
+Mounts the virtual file-system (VFS) at the mountpoint directory specified.
+The default database at '$HOME/.tmsu/db' will be mounted unless overridden with the 'TMSU_DB' environment variable.`
 }
 
 func (this MountCommand) Exec(args []string) error {

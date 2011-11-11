@@ -2,6 +2,7 @@ package main
 
 import (
            "errors"
+           "fmt"
            "log"
        )
 
@@ -11,8 +12,17 @@ func (this RenameCommand) Name() string {
     return "rename"
 }
 
-func (this RenameCommand) Description() string {
+func (this RenameCommand) Summary() string {
     return "renames a tag"
+}
+
+func (this RenameCommand) Help() string {
+    return `  tmsu rename OLD NEW
+
+Renames a tag from OLD to NEW.
+
+Attempting to rename a tag with a new name for which a tag already exists will result in an error.
+To merge tags use the 'merge' command instead.`
 }
 
 func (this RenameCommand) Exec(args []string) error {
@@ -20,28 +30,19 @@ func (this RenameCommand) Exec(args []string) error {
     if error != nil { log.Fatalf("Could not open database: %v", error) }
     defer db.Close()
 
-    currentName := args[0]
-    newName := args[1]
+    sourceTagName := args[0]
+    destTagName := args[1]
 
-    tag, error := db.TagByName(currentName)
+    sourceTag, error := db.TagByName(sourceTagName)
     if error != nil { return error }
-    if tag == nil { errors.New("No such tag '" + currentName + "'.") }
+    if sourceTag == nil { return errors.New(fmt.Sprintf("No such tag '%v'.", sourceTagName)) }
 
-    newTag, error := db.TagByName(newName)
+    destTag, error := db.TagByName(destTagName)
     if error != nil { return error }
+    if destTag != nil { return errors.New(fmt.Sprintf("A tag with name '%v' already exists.", destTagName)) }
 
-    //TODO only merge if flag set
-
-    if newTag == nil {
-        _, error = db.RenameTag(tag.Id, newName)
-        if error != nil { return error }
-    } else {
-        error = db.MigrateFileTags(tag.Id, newTag.Id)
-        if error != nil { return error }
-
-        error = db.DeleteTag(tag.Id)
-        if error != nil { return error }
-    }
+    _, error = db.RenameTag(sourceTag.Id, destTagName)
+    if error != nil { return error }
 
     return nil
 }

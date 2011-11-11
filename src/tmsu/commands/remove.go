@@ -12,8 +12,14 @@ func (this RemoveCommand) Name() string {
     return "remove"
 }
 
-func (this RemoveCommand) Description() string {
+func (this RemoveCommand) Summary() string {
     return "removes a previously added file"
+}
+
+func (this RemoveCommand) Help() string {
+    return `  tmsu remove FILE...
+
+Removes the specified file(s).`
 }
 
 func (this RemoveCommand) Exec(args []string) error {

@@ -128,7 +128,7 @@ func getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
     name := path[pathLength - 1]
 
     filePathId, error := parseFilePathId(name)
-    if error != nil { log.Fatalf("Could not parse file-path identifier: %v", error) }
+    if error != nil { return nil, fuse.ENOENT }
 
     if filePathId == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
 

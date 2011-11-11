@@ -13,8 +13,14 @@ func (this TagCommand) Name() string {
     return "tag"
 }
 
-func (this TagCommand) Description() string {
+func (this TagCommand) Summary() string {
     return "applies one or more tags to a file"
+}
+
+func (this TagCommand) Help() string {
+    return `  tmsu tag FILE TAG...
+
+Tags the file FILE with the tag(s) specified.`
 }
 
 func (this TagCommand) Exec(args []string) error {
@@ -60,8 +66,6 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     if fileTag == nil {
         _, error := db.AddFileTag(fileId, tag.Id)
         if error != nil { return nil, nil, error }
-    } else {
-        fmt.Printf("File '%v' is already tagged '%v'.\n", path, tagName)
     }
 
     return tag, fileTag, nil

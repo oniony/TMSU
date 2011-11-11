@@ -12,8 +12,19 @@ func (this TagsCommand) Name() string {
     return "tags"
 }
 
-func (this TagsCommand) Description() string {
+func (this TagsCommand) Summary() string {
     return "lists all tags or tags applied to a file or files"
+}
+
+func (this TagsCommand) Help() string {
+    return `  tmsu tags
+  tmsu tags FILE...
+
+Without any filenames, shows the complete list of tags.
+
+With a single filename, lists the tags applied to that file.
+
+With multiple filenames, lists the names of these that have tags applied and the list of applied tags.`
 }
 
 func (this TagsCommand) Exec(args []string) error {
@@ -43,12 +54,10 @@ func (this TagsCommand) Exec(args []string) error {
                 tags, error := this.tagsForPath(db, path)
                 if error != nil { log.Fatalf("Could not retrieve tags for '%v': %v", path, error) }
 
-                if len(tags) > 0 {
-                    fmt.Println(path)
+                fmt.Println(path)
 
-                    for _, tag := range tags {
-                        fmt.Println("  " + tag.Name)
-                    }
+                for _, tag := range tags {
+                    fmt.Println("  " + tag.Name)
                 }
             }
     }

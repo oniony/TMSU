@@ -12,13 +12,12 @@ func main() {
                                  HelpCommand{},
                                  MountCommand{},
                                  UnmountCommand{},
-                                 AddCommand{},
-                                 RemoveCommand{},
                                  TagsCommand{},
                                  TagCommand{},
                                  UntagCommand{},
                                  RenameCommand{},
                                  MergeCommand{},
+                                 DeleteCommand{},
                              }
 
     commands = make(map [string] Command, len(commandArray))

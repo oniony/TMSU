@@ -85,7 +85,7 @@ func splitPath(path string) []string {
     return strings.Split(path, string(filepath.Separator))
 }
 
-func parseFilePathId(name string) (uint, error) {
+func parseFileId(name string) (uint, error) {
     parts := strings.Split(name, ".")
     count := len(parts)
 
@@ -127,10 +127,10 @@ func getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
     pathLength := len(path)
     name := path[pathLength - 1]
 
-    filePathId, error := parseFilePathId(name)
+    fileId, error := parseFileId(name)
     if error != nil { return nil, fuse.ENOENT }
 
-    if filePathId == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
+    if fileId == 0 { return &os.FileInfo{ Mode: fuse.S_IFDIR | 0755 }, fuse.OK }
 
     return &os.FileInfo{ Mode: fuse.S_IFLNK | 0755, Size: int64(10) }, fuse.OK
 }
@@ -146,22 +146,22 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
     furtherTags, error := db.TagsForTags(tags)
     if error != nil { log.Fatalf("Could not retrieve tags for tags: %v", error)  }
 
-    filePaths, error := db.FilePathsWithTags(path)
+    files, error := db.FilesWithTags(path)
     if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error) }
 
-    channel := make(chan fuse.DirEntry, len(filePaths) + len(furtherTags))
+    channel := make(chan fuse.DirEntry, len(files) + len(furtherTags))
     defer close(channel)
 
     for _, tag := range furtherTags {
         channel <- fuse.DirEntry { Name: tag.Name, Mode: fuse.S_IFDIR | 0755 }
     }
 
-    for _, filePath := range filePaths {
-        extension := filepath.Ext(filePath.Path)
-        fileName := filepath.Base(filePath.Path)
+    for _, file := range files {
+        extension := filepath.Ext(file.Path)
+        fileName := filepath.Base(file.Path)
         fileName = fileName[0:len(fileName) - len(extension)]
 
-        channel <- fuse.DirEntry { Name: fileName + "." + strconv.Uitoa(filePath.Id) + extension, Mode: fuse.S_IFLNK }
+        channel <- fuse.DirEntry { Name: fileName + "." + strconv.Uitoa(file.Id) + extension, Mode: fuse.S_IFLNK }
     }
 
     return channel, fuse.OK
@@ -170,16 +170,16 @@ func openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
 func readTaggedEntryLink(path []string) (string, fuse.Status) {
     name := path[len(path) - 1]
 
-    filePathId, error := parseFilePathId(name)
-    if error != nil { log.Fatalf("Could not parse file-path identifier: %v", error) }
-    if filePathId == 0 { return "", fuse.ENOENT }
-
     db, error := OpenDatabase(databasePath())
     if error != nil { log.Fatalf("Could not open database: %v", error) }
     defer db.Close()
 
-    filePath, error := db.FilePathById(filePathId)
-    if error != nil { log.Fatalf("Could not find file-path %v in database.", filePathId) }
+    fileId, error := parseFileId(name)
+    if error != nil { log.Fatalf("Could not parse file identifier: %v", error) }
+    if fileId == 0 { return "", fuse.ENOENT }
 
-    return filePath.Path, fuse.OK
+    file, error := db.File(fileId)
+    if error != nil { log.Fatalf("Could not find file %v in database.", fileId) }
+
+    return file.Path, fuse.OK
 }

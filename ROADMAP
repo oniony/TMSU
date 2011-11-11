@@ -20,15 +20,15 @@ o List tags for a particular file.                      [X]
     >tmsu tags REALFILE...
 o View files for single tag.                            [X]
     >ls mountpoint/tags/tag1
-o View files with multiple tags
+o View files with multiple tags                         [X]
     >ls mountpoint/tags/tag1/tag2/...
-o View untagged files.                                  [ ]
-    >ls untagged
+o View file status.                                     [ ]
+    >tmsu status
 o Rename tag.                                           [X]
     >tmsu rename OLD NEW
-o Rename tag (merge with existing)                      [X]
-    >tmsu rename OLD NEW
-o Database import/export
+o Merge two tags                                        [X]
+    >tmsu merge SRC DEST 
+o Database import/export                                [X]
 
 V0.2
 

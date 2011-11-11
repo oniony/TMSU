@@ -19,20 +19,8 @@ DROP TABLE IF EXISTS file;
 CREATE TABLE file
 (
     id INTEGER PRIMARY KEY,
-    fingerprint TEXT UNIQUE NOT NULL
-);
-
----------------
--- file-path --
----------------
-
-DROP TABLE IF EXISTS file_path;
-
-CREATE TABLE file_path
-(
-    id INTEGER PRIMARY KEY,
-    file_id INTEGER NOT NULL,
-    path TEXT UNIQUE NOT NULL
+    path TEXT UNIQUE NOT NULL,
+    fingerprint TEXT NOT NULL
 );
 
 --------------

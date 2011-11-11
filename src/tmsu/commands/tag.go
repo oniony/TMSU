@@ -2,12 +2,11 @@ package main
 
 import (
          "errors"
+         "path/filepath"
          "fmt"
        )
 
-type TagCommand struct {
-    AddCommand
-}
+type TagCommand struct {}
 
 func (this TagCommand) Name() string {
     return "tag"
@@ -39,7 +38,10 @@ func (this TagCommand) tagPath(path string, tagNames []string) error {
     if error != nil { return error }
     defer db.Close()
 
-    file, _, error := this.addPath(db, path)
+    absPath, error := filepath.Abs(path)
+    if error != nil { return error }
+
+    file, error := this.addFile(db, absPath)
     if error != nil { return error }
 
     for _, tagName := range tagNames {
@@ -69,4 +71,23 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     }
 
     return tag, fileTag, nil
+}
+
+func (this TagCommand) addFile(db *Database, path string) (*File, error) {
+    fingerprint, error := Fingerprint(path)
+    if error != nil { return nil, error }
+
+    file, error := db.FileByPath(path)
+    if error != nil { return nil, error }
+
+    if file == nil {
+        fmt.Printf("Adding new file '%v'.\n", path)
+
+        file, error = db.AddFile(path, fingerprint)
+        if error != nil { return nil, error }
+    } else {
+        //TODO check if modified
+    }
+
+    return file, nil
 }

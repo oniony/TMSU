@@ -7,18 +7,16 @@ GOFILES=config.go \
 		commands/help.go \
 		commands/mount.go \
 		commands/unmount.go \
-		commands/add.go \
-		commands/remove.go \
 		commands/tags.go \
 		commands/tag.go \
 		commands/untag.go \
 		commands/rename.go \
 		commands/merge.go \
+		commands/delete.go \
 		database.go \
 		fusefs.go \
 		tag.go \
 		file.go \
-		filepath.go \
 		filetag.go \
 		fingerprinter.go
 

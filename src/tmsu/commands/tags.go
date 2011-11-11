@@ -78,10 +78,10 @@ func (this TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
     absPath, error := filepath.Abs(path)
     if error != nil { return nil, error }
 
-    filePath, error := db.FilePathByPath(absPath)
+    file, error := db.FileByPath(absPath)
     if error != nil { return nil, error }
 
-    tags, error := db.TagsByFile(filePath.FileId)
+    tags, error := db.TagsByFileId(file.Id)
     if error != nil { return nil, error }
 
     return tags, error

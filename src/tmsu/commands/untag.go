@@ -37,12 +37,14 @@ func (this UntagCommand) untagPath(path string, tagNames []string) error {
     if error != nil { return error }
     defer db.Close()
 
-    filePath, error := db.FilePathByPath(path)
+    file, error := db.FileByPath(path)
     if error != nil { return error }
 
     for _, tagName := range tagNames {
-        error = this.unapplyTag(db, path, filePath.FileId, tagName)
+        error = this.unapplyTag(db, path, file.Id, tagName)
         if error != nil { return error }
+
+        //TODO remove the file if has no tags
     }
 
     return nil

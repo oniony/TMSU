@@ -1,5 +1,6 @@
 MUST
 
+* When performing 'delete' or 'untag' that leave file with no tags then remove it from the database.
 * Auto-create database.
 * Handle modified files.
 * Handle long filenames when making link name.

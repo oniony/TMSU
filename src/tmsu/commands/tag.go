@@ -86,7 +86,11 @@ func (this TagCommand) addFile(db *Database, path string) (*File, error) {
         file, error = db.AddFile(path, fingerprint)
         if error != nil { return nil, error }
     } else {
-        //TODO check if modified
+        if file.Fingerprint != fingerprint {
+            fmt.Printf("Updating file '%v' fingerprint.\n", path)
+
+            db.UpdateFileFingerprint(file.Id, fingerprint)
+        }
     }
 
     return file, nil

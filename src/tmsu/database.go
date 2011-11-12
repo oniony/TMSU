@@ -308,6 +308,20 @@ func (this Database) FilesWithTags(tagNames []string) ([]File, error) {
     return files, nil
 }
 
+func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) error {
+    sql := `UPDATE file SET fingerprint = ? WHERE id = ?`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return error }
+    defer statement.Finalize()
+
+    error = statement.Exec(fingerprint, int(fileId))
+    if error != nil { return error }
+    statement.Next()
+
+    return nil
+}
+
 // file-tags
 
 func (this Database) FileTagByFileAndTag(fileId uint, tagId uint) (*FileTag, error) {

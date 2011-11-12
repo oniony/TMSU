@@ -12,7 +12,7 @@ func (this MergeCommand) Name() string {
 }
 
 func (this MergeCommand) Summary() string {
-    return "merges a tag with another"
+    return "merges two tags together"
 }
 
 func (this MergeCommand) Help() string {

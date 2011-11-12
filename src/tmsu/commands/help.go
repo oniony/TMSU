@@ -3,6 +3,7 @@ package main
 import (
            "fmt"
            "math"
+           "sort"
            "strconv"
        )
 
@@ -41,11 +42,17 @@ func (this HelpCommand) overview() {
     fmt.Println()
 
     var maxWidth uint = 0
-    for _, command := range commands {
-        maxWidth = uint(math.Max(float64(maxWidth), float64(len(command.Name()))))
+    commandNames := make([]string, 0, len(commands))
+    for commandName, _ := range commands {
+        maxWidth = uint(math.Max(float64(maxWidth), float64(len(commandName))))
+        commandNames = append(commandNames, commandName)
     }
 
-    for _, command := range commands {
+    sort.Strings(commandNames)
+
+    for _, commandName := range commandNames {
+        command, ok := commands[commandName]
+        if !ok { fmt.Printf("Odd, could not find command '%v'.", commandName) }
         fmt.Printf("  %-" + strconv.Uitoa(maxWidth) + "v  %v\n", command.Name(), command.Summary())
     }
 

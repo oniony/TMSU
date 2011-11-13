@@ -337,6 +337,29 @@ func (this Database) RemoveFile(fileId uint) error {
 
 // file-tags
 
+func (this Database) FileTags() (*[]FileTag, error) {
+    sql := `SELECT id, file_id, tag_id FROM file_tag`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return nil, error }
+    defer statement.Finalize()
+
+    error = statement.Exec()
+    if error != nil { return nil, error }
+
+    fileTags := make([]FileTag, 0, 10)
+    for statement.Next() {
+        var fileTagId int
+        var fileId int
+        var tagId int
+        statement.Scan(&fileTagId, &fileId, &tagId)
+
+        fileTags = append(fileTags, FileTag{ uint(fileTagId), uint(fileId), uint(tagId) })
+    }
+
+    return &fileTags, nil
+}
+
 func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
     sql := `SELECT id FROM file_tag WHERE file_id = ? AND tag_id = ?`
 

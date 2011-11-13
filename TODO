@@ -1,5 +1,6 @@
 MUST
 
+* Optimize for cases where we only use count.
 * Use tag directory size to list number of entries.
 * Use date of real file.
 * Auto-create database on start.

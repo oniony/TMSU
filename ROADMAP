@@ -29,6 +29,8 @@ o Rename tag.                                           [X]
 o Merge two tags                                        [X]
     >tmsu merge SRC DEST 
 o Database import/export                                [X]
+o Export to text                                        [X]
+o Import from text                                      [X]
 
 V0.2
 

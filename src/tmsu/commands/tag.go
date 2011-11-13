@@ -62,7 +62,7 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
         if error != nil { return nil, nil, error }
     }
 
-    fileTag, error := db.FileTagByFileAndTag(fileId, tag.Id)
+    fileTag, error := db.FileTagByFileIdAndTagId(fileId, tag.Id)
     if error != nil { return nil, nil, error }
 
     if fileTag == nil {

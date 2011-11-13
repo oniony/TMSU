@@ -4,6 +4,7 @@ import (
            "fmt"
            "log"
            "path/filepath"
+           "strings"
        )
 
 type TagsCommand struct {}
@@ -37,7 +38,7 @@ func (this TagsCommand) Exec(args []string) error {
             tags, error := this.allTags(db)
             if error != nil { log.Fatalf("Could not retrieve tags: %v", error) }
 
-            for _, tag := range tags {
+            for _, tag := range *tags {
                 fmt.Println(tag.Name)
             }
         case 1:
@@ -46,18 +47,22 @@ func (this TagsCommand) Exec(args []string) error {
             tags, error := this.tagsForPath(db, path)
             if error != nil { log.Fatalf("Could not retrieve tags for '%v': %v", path, error) }
 
-            for _, tag := range tags {
+            for _, tag := range *tags {
                 fmt.Println(tag.Name)
             }
         default:
             for _, path := range args {
                 tags, error := this.tagsForPath(db, path)
                 if error != nil { log.Fatalf("Could not retrieve tags for '%v': %v", path, error) }
+                if tags == nil { continue }
 
-                fmt.Println(path)
+                if len(*tags) > 0 {
+                    tagNames := make([]string, 0, len(*tags))
+                    for _, tag := range *tags {
+                        tagNames = append(tagNames, tag.Name)
+                    }
 
-                for _, tag := range tags {
-                    fmt.Println("  " + tag.Name)
+                    fmt.Printf("%v: %v\n", path, strings.Join(tagNames, ", "))
                 }
             }
     }
@@ -67,14 +72,14 @@ func (this TagsCommand) Exec(args []string) error {
 
 // implementation
 
-func (this TagsCommand) allTags(db *Database) ([]Tag, error) {
+func (this TagsCommand) allTags(db *Database) (*[]Tag, error) {
     tags, error := db.Tags()
     if error != nil { return nil, error }
 
     return tags, nil
 }
 
-func (this TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
+func (this TagsCommand) tagsForPath(db *Database, path string) (*[]Tag, error) {
     absPath, error := filepath.Abs(path)
     if error != nil { return nil, error }
 

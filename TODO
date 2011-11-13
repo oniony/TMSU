@@ -1,22 +1,17 @@
 MUST
 
-* When performing 'delete' or 'untag' that leave file with no tags then remove it from the database.
-* Auto-create database.
-* Handle modified files.
+* Use tag directory size to list number of entries.
+* Use date of real file.
+* Auto-create database on start.
 * Handle long filenames when making link name.
 * Tagging, untagging and removal via VFS paths.
 * Status command
     >./tmsu status
     ? somefile.blah
     ? blahdeblah
-    M hello
-        blah,greeting
-    U fred 
-        person,blah,tree
-* Clean-up command
-* VFS dates
+    M hello.txt: blah, greeting, hello
+    U fred.jpg: person, blah, tree
 * Tag aliasing.
-* File removal when all tags removed.
 
 MAYBE
 

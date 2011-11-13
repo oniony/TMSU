@@ -3,6 +3,7 @@ package main
 import (
          "errors"
          "fmt"
+         "path/filepath"
        )
 
 type UntagCommand struct {}
@@ -12,13 +13,16 @@ func (this UntagCommand) Name() string {
 }
 
 func (this UntagCommand) Summary() string {
-    return "removes tags from a file"
+    return "removes all tags or specific tags from a file"
 }
 
 func (this UntagCommand) Help() string {
     return `  tmsu untag FILE TAG...
+  tmsu untag FILE
 
-Disassociates the specified file FILE with the tag(s) specified.`
+Disassociates the specified file FILE with the tag(s) specified.
+
+If no tags are specified then the file will be stripped of all tags.`
 }
 
 func (this UntagCommand) Exec(args []string) error {
@@ -33,18 +37,28 @@ func (this UntagCommand) Exec(args []string) error {
 // implementation
 
 func (this UntagCommand) untagPath(path string, tagNames []string) error {
+    absPath, error := filepath.Abs(path)
+    if error != nil { return error }
+
     db, error := OpenDatabase(databasePath())
     if error != nil { return error }
     defer db.Close()
 
-    file, error := db.FileByPath(path)
+    file, error := db.FileByPath(absPath)
     if error != nil { return error }
+    if file == nil { return errors.New(fmt.Sprintf("No such file '%v'.", path)) }
 
     for _, tagName := range tagNames {
         error = this.unapplyTag(db, path, file.Id, tagName)
         if error != nil { return error }
+    }
 
-        //TODO remove the file if has no tags
+    tags, error := db.TagsByFileId(file.Id)
+    if error != nil { return error}
+
+    if len(*tags) == 0 {
+        db.RemoveFileTagsByFileId(file.Id)
+        db.RemoveFile(file.Id)
     }
 
     return nil
@@ -55,7 +69,7 @@ func (this UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagN
     if error != nil { return error }
     if tag == nil { errors.New("No such tag" + tagName) }
 
-    fileTag, error := db.FileTagByFileAndTag(fileId, tag.Id)
+    fileTag, error := db.FileTagByFileIdAndTagId(fileId, tag.Id)
     if error != nil { return error }
     if fileTag == nil { errors.New(fmt.Sprintf("File '%v' is not tagged '%v'.", path, tagName)) }
 

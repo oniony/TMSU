@@ -39,11 +39,24 @@ func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
     tag, error := db.TagByName(tagName)
     if error != nil { return error }
 
+    fileTags, error := db.FileTagsByTagId(tag.Id)
+    if error != nil { return error }
+
     error = db.RemoveFileTagsByTagId(tag.Id)
     if error != nil { return error }
 
     error = db.DeleteTag(tag.Id)
     if error != nil { return error }
+
+    for _, fileTag := range *fileTags {
+        tags, error := db.TagsByFileId(fileTag.FileId)
+        if error != nil { return error }
+
+        if len(*tags) == 0 {
+            db.RemoveFileTagsByFileId(fileTag.FileId)
+            db.RemoveFile(fileTag.FileId)
+        }
+    }
 
     return nil
 }

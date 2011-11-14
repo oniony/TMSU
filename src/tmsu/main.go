@@ -40,7 +40,7 @@ func main() {
 
 	command := commands[commandName]
 	if command == nil {
-		fmt.Printf("No such command, '%v'.", commandName)
+		fmt.Printf("No such command, '%v'.\n", commandName)
 		os.Exit(1)
 	}
 

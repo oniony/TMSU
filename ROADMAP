@@ -1,6 +1,7 @@
 V0.1
+----
 
-o Automatic database creation.                          [ ]
+o Automatic database creation.                          [X]
 o Default database directory overriding                 [X]
 o Mount the VFS.                                        [X]
     >tmsu mount SOMEDIR
@@ -11,7 +12,9 @@ o Add files to the VFS.                                 [X]
 o Remove files from the VFS.                            [X]
     >tmsu remove REALFILE...
 o Add one or more tags to a file.                       [X]
-    >tmsu tag REALFILE tag...
+    >tmsu tag REALFILE TAG...
+o Add one or more tags to multiple files.               [ ]
+    >tmsu tag REALFILE... "TAG,..."
 o Remove one or more tags from a file.                  [X]
     >tmsu untag REALFILE TAG...
 o List all tags                                         [X]
@@ -22,18 +25,18 @@ o View files for single tag.                            [X]
     >ls mountpoint/tags/tag1
 o View files with multiple tags                         [X]
     >ls mountpoint/tags/tag1/tag2/...
-o View file status.                                     [ ]
-    >tmsu status
 o Rename tag.                                           [X]
     >tmsu rename OLD NEW
 o Merge two tags                                        [X]
     >tmsu merge SRC DEST 
-o Database import/export                                [X]
 o Export to text                                        [X]
-o Import from text                                      [X]
+o Import from text                                      [ ]
 
 V0.2
+----
 
+o Tag aliasing                                          [ ]
+    >tmsu alias ALIAS TAG
 o Duplicate file handling.                              [ ]
     TODO
 o Clean command.                                        [ ]

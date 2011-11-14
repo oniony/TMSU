@@ -33,5 +33,7 @@ CREATE TABLE file_tag
 (
     id INTEGER PRIMARY KEY,
     file_id INTEGER NOT NULL,
-    tag_id INTEGER NOT NULL
+    tag_id INTEGER NOT NULL,
+    FOREIGN KEY (file_id) REFERENCES file(id),
+    FOREIGN KEY (tag_id) REFERENCES tag(id)
 );

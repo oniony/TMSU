@@ -18,6 +18,7 @@ func main() {
                                  RenameCommand{},
                                  MergeCommand{},
                                  DeleteCommand{},
+                                 ExportCommand{},
                              }
 
     commands = make(map [string] Command, len(commandArray))

@@ -81,7 +81,14 @@ func (this TagCommand) addFile(db *Database, path string) (*File, error) {
     if error != nil { return nil, error }
 
     if file == nil {
-        fmt.Printf("Adding new file '%v'.\n", path)
+        file, error = db.FileByFingerprint(fingerprint)
+        if error != nil { return nil, error }
+
+        if file != nil {
+            fmt.Printf("Adding new file '%v' (duplicate).\n", path)
+        } else {
+            fmt.Printf("Adding new file '%v'.\n", path)
+        }
 
         file, error = db.AddFile(path, fingerprint)
         if error != nil { return nil, error }

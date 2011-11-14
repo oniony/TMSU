@@ -13,6 +13,7 @@ GOFILES=config.go \
 		commands/rename.go \
 		commands/merge.go \
 		commands/delete.go \
+		commands/export.go \
 		database.go \
 		fusefs.go \
 		tag.go \

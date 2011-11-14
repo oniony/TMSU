@@ -38,6 +38,7 @@ func (this DeleteCommand) Exec(args []string) error {
 func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
     tag, error := db.TagByName(tagName)
     if error != nil { return error }
+    if tag == nil { return errors.New("No such tag '" + tagName + "'.") }
 
     fileTags, error := db.FileTagsByTagId(tag.Id)
     if error != nil { return error }

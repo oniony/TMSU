@@ -13,8 +13,6 @@ type Database struct {
 }
 
 func OpenDatabase(path string) (*Database, error) {
-    //TODO check if database file exists and auto-create
-
     connection, error := sqlite.Open(path)
 
     if (error != nil) {
@@ -24,11 +22,25 @@ func OpenDatabase(path string) (*Database, error) {
 
     database := Database{connection}
 
+    database.CreateSchema()
+
     return &database, nil
 }
 
 func (this *Database) Close() {
     this.connection.Close()
+}
+
+func (this *Database) exec(sql string) error {
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return error }
+    defer statement.Finalize()
+
+    error = statement.Exec()
+    if error != nil { return error }
+    statement.Next()
+
+    return nil
 }
 
 // tags
@@ -199,6 +211,29 @@ func (this Database) DeleteTag(tagId uint) (error) {
 
 // files
 
+func (this Database) Files() (*[]File, error) {
+    sql := `SELECT id, path, fingerprint FROM file`
+
+    statement, error := this.connection.Prepare(sql)
+    if error != nil { return nil, error }
+    defer statement.Finalize()
+
+    error = statement.Exec()
+    if error != nil { return nil, error }
+
+    files := make([]File, 0, 10)
+    for statement.Next() {
+        var fileId int
+        var path string
+        var fingerprint string
+        statement.Scan(&fileId, &path, &fingerprint)
+
+        files = append(files, File{ uint(fileId), path, fingerprint})
+    }
+
+    return &files, nil
+}
+
 func (this Database) File(id uint) (*File, error) {
     sql := `SELECT path, fingerprint FROM file WHERE id = ?`
 
@@ -219,6 +254,7 @@ func (this Database) File(id uint) (*File, error) {
 
 func (this Database) FileByPath(path string) (*File, error) {
     sql := `SELECT id, fingerprint FROM file WHERE path = ?`
+
 
     statement, error := this.connection.Prepare(sql)
     if error != nil { return nil, error }
@@ -467,6 +503,40 @@ func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
     error = statement.Exec(int(newTagId), int(oldTagId))
     if error != nil { return error }
     statement.Next()
+
+    return nil
+}
+
+// schema
+
+func (this Database) CreateSchema() error {
+    //TODO for now we assume any any is because it already exists
+
+    error := this.exec(`CREATE TABLE IF NOT EXISTS tag (
+                            id INTEGER PRIMARY KEY,
+                            name TEXT NOT NULL
+                        )`)
+    if error != nil { return error }
+
+    error = this.exec(`CREATE TABLE IF NOT EXISTS file (
+                           id INTEGER PRIMARY KEY,
+                           path TEXT UNIQUE NOT NULL,
+                           fingerprint TEXT NOT NULL
+                       )`)
+    if error != nil { return error }
+
+    error = this.exec(`CREATE TABLE IF NOT EXISTS file_tag (
+                           id INTEGER PRIMARY KEY,
+                           file_id INTEGER NOT NULL,
+                           tag_id INTEGER NOT NULL,
+                           FOREIGN KEY (file_id) REFERENCES file(id),
+                           FOREIGN KEY (tag_id) REFERENCES tag(id)
+                       )`)
+    if error != nil { return error }
+
+    error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_fingerprint
+                       ON file(fingerprint)`)
+    if error != nil { return error }
 
     return nil
 }

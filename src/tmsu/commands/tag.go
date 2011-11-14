@@ -2,8 +2,8 @@ package main
 
 import (
          "errors"
-         "path/filepath"
          "fmt"
+         "path/filepath"
        )
 
 type TagCommand struct {}
@@ -85,17 +85,13 @@ func (this TagCommand) addFile(db *Database, path string) (*File, error) {
         if error != nil { return nil, error }
 
         if file != nil {
-            fmt.Printf("Adding new file '%v' (duplicate).\n", path)
-        } else {
-            fmt.Printf("Adding new file '%v'.\n", path)
+            fmt.Printf("Warning: file is a duplicate of a previously tagged file.\n")
         }
 
         file, error = db.AddFile(path, fingerprint)
         if error != nil { return nil, error }
     } else {
         if file.Fingerprint != fingerprint {
-            fmt.Printf("Updating file '%v' fingerprint.\n", path)
-
             db.UpdateFileFingerprint(file.Id, fingerprint)
         }
     }

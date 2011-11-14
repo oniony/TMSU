@@ -2,7 +2,6 @@ package main
 
 import (
          "errors"
-         "fmt"
          "path/filepath"
        )
 
@@ -46,7 +45,7 @@ func (this UntagCommand) untagPath(path string, tagNames []string) error {
 
     file, error := db.FileByPath(absPath)
     if error != nil { return error }
-    if file == nil { return errors.New(fmt.Sprintf("No such file '%v'.", path)) }
+    if file == nil { return errors.New("No such file '" + path + "'.") }
 
     for _, tagName := range tagNames {
         error = this.unapplyTag(db, path, file.Id, tagName)
@@ -71,15 +70,13 @@ func (this UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagN
 
     fileTag, error := db.FileTagByFileIdAndTagId(fileId, tag.Id)
     if error != nil { return error }
-    if fileTag == nil { errors.New(fmt.Sprintf("File '%v' is not tagged '%v'.", path, tagName)) }
+    if fileTag == nil { errors.New("File '" + path + "' is not tagged '" + tagName + "'.") }
 
     if fileTag != nil {
         error := db.RemoveFileTag(fileId, tag.Id)
         if error != nil { return error }
-
-        fmt.Printf("Untagged file '%v' with '%v'.\n", path, tagName)
     } else {
-        fmt.Printf("File '%v' is not tagged '%v'.\n", path, tagName)
+        return errors.New("File '" + path + "' is not tagged '" + tagName + "'.\n")
     }
 
     return nil

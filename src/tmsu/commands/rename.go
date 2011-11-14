@@ -3,7 +3,6 @@ package main
 import (
            "errors"
            "fmt"
-           "log"
        )
 
 type RenameCommand struct {}
@@ -27,7 +26,7 @@ To merge tags use the 'merge' command instead.`
 
 func (this RenameCommand) Exec(args []string) error {
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error) }
+    if error != nil { return error }
     defer db.Close()
 
     sourceTagName := args[0]
@@ -35,11 +34,11 @@ func (this RenameCommand) Exec(args []string) error {
 
     sourceTag, error := db.TagByName(sourceTagName)
     if error != nil { return error }
-    if sourceTag == nil { return errors.New(fmt.Sprintf("No such tag '%v'.", sourceTagName)) }
+    if sourceTag == nil { return errors.New("No such tag '" + sourceTagName + "'.") }
 
     destTag, error := db.TagByName(destTagName)
     if error != nil { return error }
-    if destTag != nil { return errors.New(fmt.Sprintf("A tag with name '%v' already exists.", destTagName)) }
+    if destTag != nil { return errors.New("A tag with name '" + destTagName + "' already exists.") }
 
     _, error = db.RenameTag(sourceTag.Id, destTagName)
     if error != nil { return error }

@@ -2,7 +2,6 @@ package main
 
 import (
            "errors"
-           "log"
        )
 
 type MergeCommand struct {}
@@ -23,7 +22,7 @@ Merges SRC into DEST resulting in a single tag of name DEST.`
 
 func (this MergeCommand) Exec(args []string) error {
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error) }
+    if error != nil { return error }
     defer db.Close()
 
     sourceTagName := args[0]

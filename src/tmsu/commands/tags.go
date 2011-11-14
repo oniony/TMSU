@@ -30,13 +30,13 @@ With multiple filenames, lists the names of these that have tags applied and the
 
 func (this TagsCommand) Exec(args []string) error {
     db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatalf("Could not open database: %v", error) }
+    if error != nil { return error }
     defer db.Close()
 
     switch len(args) {
         case 0:
             tags, error := this.allTags(db)
-            if error != nil { log.Fatalf("Could not retrieve tags: %v", error) }
+            if error != nil { return error }
 
             for _, tag := range *tags {
                 fmt.Println(tag.Name)

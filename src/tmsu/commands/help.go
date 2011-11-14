@@ -51,11 +51,14 @@ func (this HelpCommand) overview() {
 	sort.Strings(commandNames)
 
 	for _, commandName := range commandNames {
-		command, ok := commands[commandName]
-		if !ok {
-			fmt.Printf("Odd, could not find command '%v'.", commandName)
+		command, _ := commands[commandName]
+
+		commandSummary := command.Summary()
+		if commandSummary == "" {
+			continue
 		}
-		fmt.Printf("  %-"+strconv.Uitoa(maxWidth)+"v  %v\n", command.Name(), command.Summary())
+
+		fmt.Printf("  %-"+strconv.Uitoa(maxWidth)+"v  %v\n", command.Name(), commandSummary)
 	}
 
 	fmt.Println()

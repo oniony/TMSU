@@ -2,7 +2,9 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
+	"os"
 )
 
 var commands map[string]Command
@@ -19,6 +21,7 @@ func main() {
 		MergeCommand{},
 		DeleteCommand{},
 		ExportCommand{},
+		VfsCommand{},
 	}
 
 	commands = make(map[string]Command, len(commandArray))
@@ -35,16 +38,17 @@ func main() {
 		commandName = "help"
 	}
 
+	command := commands[commandName]
+	if command == nil {
+		fmt.Printf("No such command, '%v'.", commandName)
+		os.Exit(1)
+	}
+
 	var args []string
 	if flag.NArg() > 1 {
 		args = flag.Args()[1:]
 	} else {
 		args = []string{}
-	}
-
-	command := commands[commandName]
-	if command == nil {
-		log.Fatalf("No such command, '%v'.", commandName)
 	}
 
 	error := command.Exec(args)

@@ -2,6 +2,8 @@ package main
 
 import (
 	"errors"
+	"os"
+	"exec"
 )
 
 type MountCommand struct{}
@@ -22,19 +24,22 @@ The default database at '$HOME/.tmsu/db' will be mounted unless overridden with 
 }
 
 func (this MountCommand) Exec(args []string) error {
-	if len(args) == 0 {
-		errors.New("Mountpoint not specified.")
+	if len(args) < 1 {
+		errors.New("No mountpoint specified.")
+	}
+	if len(args) > 1 {
+		errors.New("Extraneous arguments.")
 	}
 
-	mountPath := args[0]
+	//TODO support for explicit database
 
-	vfs, error := MountVfs(mountPath)
+	mountPath := args[0]
+	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)
+
+	error := command.Start()
 	if error != nil {
 		return error
 	}
-	defer vfs.Unmount()
-
-	vfs.Loop()
 
 	return nil
 }

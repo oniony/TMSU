@@ -14,6 +14,7 @@ GOFILES=config.go \
 		commands/merge.go \
 		commands/delete.go \
 		commands/export.go \
+		commands/vfs.go \
 		database.go \
 		fusefs.go \
 		tag.go \

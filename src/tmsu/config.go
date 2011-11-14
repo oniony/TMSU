@@ -1,18 +1,22 @@
 package main
 
 import (
-    "os"
-    "path/filepath"
+	"os"
+	"path/filepath"
 )
 
 func databasePath() string {
-    path, error := os.Getenverror("TMSU_DB")
-    if (error == nil) { return path }
+	path, error := os.Getenverror("TMSU_DB")
+	if error == nil {
+		return path
+	}
 
-    homePath, error := os.Getenverror("HOME")
-    if (error != nil) { panic("No home directory.") }
+	homePath, error := os.Getenverror("HOME")
+	if error != nil {
+		panic("No home directory.")
+	}
 
-    return filepath.Join(homePath, defaultDatabaseName)
+	return filepath.Join(homePath, defaultDatabaseName)
 }
 
 const defaultDatabaseName = ".tmsu/db"

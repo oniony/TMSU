@@ -1,41 +1,51 @@
 package main
 
 import (
-          "errors"
-          "exec"
-          "os"
-       )
+	"errors"
+	"exec"
+	"os"
+)
 
-type UnmountCommand struct {}
+type UnmountCommand struct{}
 
 func (this UnmountCommand) Name() string {
-    return "unmount"
+	return "unmount"
 }
 
 func (this UnmountCommand) Summary() string {
-    return "unmounts the virtual file-system"
+	return "unmounts the virtual file-system"
 }
 
 func (this UnmountCommand) Help() string {
-    return `  tags unount MOUNTPOINT
+	return `  tags unount MOUNTPOINT
 
 Unmounts a previously mounted virtual file-system at the mountpoint specified.`
 }
 
 func (this UnmountCommand) Exec(args []string) error {
-    if len(args) < 1 { errors.New("Path to unmount not speciified.") }
+	if len(args) < 1 {
+		errors.New("Path to unmount not speciified.")
+	}
 
-    path := args[0]
+	path := args[0]
 
-    fusermountPath, error := exec.LookPath("fusermount")
-    if error != nil { return error }
+	fusermountPath, error := exec.LookPath("fusermount")
+	if error != nil {
+		return error
+	}
 
-    process, error := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
-    if error != nil { return error }
+	process, error := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
+	if error != nil {
+		return error
+	}
 
-    message, error := os.Wait(process.Pid, 0)
-    if error != nil { return error }
-    if message.ExitStatus() != 0 { return errors.New("Could not unmount.") }
+	message, error := os.Wait(process.Pid, 0)
+	if error != nil {
+		return error
+	}
+	if message.ExitStatus() != 0 {
+		return errors.New("Could not unmount.")
+	}
 
-    return nil
+	return nil
 }

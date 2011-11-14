@@ -1,6 +1,6 @@
 package main
 
 type Tag struct {
-    Id uint
-    Name string
+	Id   uint
+	Name string
 }

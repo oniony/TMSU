@@ -1,22 +1,22 @@
 package main
 
 import (
-           "errors"
-           "fmt"
-       )
+	"errors"
+	"fmt"
+)
 
-type RenameCommand struct {}
+type RenameCommand struct{}
 
 func (this RenameCommand) Name() string {
-    return "rename"
+	return "rename"
 }
 
 func (this RenameCommand) Summary() string {
-    return "renames a tag"
+	return "renames a tag"
 }
 
 func (this RenameCommand) Help() string {
-    return `  tmsu rename OLD NEW
+	return `  tmsu rename OLD NEW
 
 Renames a tag from OLD to NEW.
 
@@ -25,23 +25,35 @@ To merge tags use the 'merge' command instead.`
 }
 
 func (this RenameCommand) Exec(args []string) error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
-    defer db.Close()
+	db, error := OpenDatabase(databasePath())
+	if error != nil {
+		return error
+	}
+	defer db.Close()
 
-    sourceTagName := args[0]
-    destTagName := args[1]
+	sourceTagName := args[0]
+	destTagName := args[1]
 
-    sourceTag, error := db.TagByName(sourceTagName)
-    if error != nil { return error }
-    if sourceTag == nil { return errors.New("No such tag '" + sourceTagName + "'.") }
+	sourceTag, error := db.TagByName(sourceTagName)
+	if error != nil {
+		return error
+	}
+	if sourceTag == nil {
+		return errors.New("No such tag '" + sourceTagName + "'.")
+	}
 
-    destTag, error := db.TagByName(destTagName)
-    if error != nil { return error }
-    if destTag != nil { return errors.New("A tag with name '" + destTagName + "' already exists.") }
+	destTag, error := db.TagByName(destTagName)
+	if error != nil {
+		return error
+	}
+	if destTag != nil {
+		return errors.New("A tag with name '" + destTagName + "' already exists.")
+	}
 
-    _, error = db.RenameTag(sourceTag.Id, destTagName)
-    if error != nil { return error }
+	_, error = db.RenameTag(sourceTag.Id, destTagName)
+	if error != nil {
+		return error
+	}
 
-    return nil
+	return nil
 }

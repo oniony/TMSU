@@ -1,24 +1,24 @@
 package main
 
 import (
-           "fmt"
-           "log"
-           "path/filepath"
-           "strings"
-       )
+	"fmt"
+	"log"
+	"path/filepath"
+	"strings"
+)
 
-type TagsCommand struct {}
+type TagsCommand struct{}
 
 func (this TagsCommand) Name() string {
-    return "tags"
+	return "tags"
 }
 
 func (this TagsCommand) Summary() string {
-    return "lists all tags or tags applied to a file or files"
+	return "lists all tags or tags applied to a file or files"
 }
 
 func (this TagsCommand) Help() string {
-    return `  tmsu tags
+	return `  tmsu tags
   tmsu tags FILE...
 
 Without any filenames, shows the complete list of tags.
@@ -29,66 +29,86 @@ With multiple filenames, lists the names of these that have tags applied and the
 }
 
 func (this TagsCommand) Exec(args []string) error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
-    defer db.Close()
+	db, error := OpenDatabase(databasePath())
+	if error != nil {
+		return error
+	}
+	defer db.Close()
 
-    switch len(args) {
-        case 0:
-            tags, error := this.allTags(db)
-            if error != nil { return error }
+	switch len(args) {
+	case 0:
+		tags, error := this.allTags(db)
+		if error != nil {
+			return error
+		}
 
-            for _, tag := range *tags {
-                fmt.Println(tag.Name)
-            }
-        case 1:
-            path := args[0]
+		for _, tag := range *tags {
+			fmt.Println(tag.Name)
+		}
+	case 1:
+		path := args[0]
 
-            tags, error := this.tagsForPath(db, path)
-            if error != nil { log.Fatalf("Could not retrieve tags for '%v': %v", path, error) }
+		tags, error := this.tagsForPath(db, path)
+		if error != nil {
+			log.Fatalf("Could not retrieve tags for '%v': %v", path, error)
+		}
 
-            for _, tag := range *tags {
-                fmt.Println(tag.Name)
-            }
-        default:
-            for _, path := range args {
-                tags, error := this.tagsForPath(db, path)
-                if error != nil { log.Fatalf("Could not retrieve tags for '%v': %v", path, error) }
-                if tags == nil { continue }
+		for _, tag := range *tags {
+			fmt.Println(tag.Name)
+		}
+	default:
+		for _, path := range args {
+			tags, error := this.tagsForPath(db, path)
+			if error != nil {
+				log.Fatalf("Could not retrieve tags for '%v': %v", path, error)
+			}
+			if tags == nil {
+				continue
+			}
 
-                if len(*tags) > 0 {
-                    tagNames := make([]string, 0, len(*tags))
-                    for _, tag := range *tags {
-                        tagNames = append(tagNames, tag.Name)
-                    }
+			if len(*tags) > 0 {
+				tagNames := make([]string, 0, len(*tags))
+				for _, tag := range *tags {
+					tagNames = append(tagNames, tag.Name)
+				}
 
-                    fmt.Printf("%v: %v\n", path, strings.Join(tagNames, ", "))
-                }
-            }
-    }
+				fmt.Printf("%v: %v\n", path, strings.Join(tagNames, ", "))
+			}
+		}
+	}
 
-    return nil
+	return nil
 }
 
 // implementation
 
 func (this TagsCommand) allTags(db *Database) (*[]Tag, error) {
-    tags, error := db.Tags()
-    if error != nil { return nil, error }
+	tags, error := db.Tags()
+	if error != nil {
+		return nil, error
+	}
 
-    return tags, nil
+	return tags, nil
 }
 
 func (this TagsCommand) tagsForPath(db *Database, path string) (*[]Tag, error) {
-    absPath, error := filepath.Abs(path)
-    if error != nil { return nil, error }
+	absPath, error := filepath.Abs(path)
+	if error != nil {
+		return nil, error
+	}
 
-    file, error := db.FileByPath(absPath)
-    if error != nil { return nil, error }
-    if file == nil { return nil, nil }
+	file, error := db.FileByPath(absPath)
+	if error != nil {
+		return nil, error
+	}
+	if file == nil {
+		return nil, nil
+	}
 
-    tags, error := db.TagsByFileId(file.Id)
-    if error != nil { return nil, error }
+	tags, error := db.TagsByFileId(file.Id)
+	if error != nil {
+		return nil, error
+	}
 
-    return tags, error
+	return tags, error
 }

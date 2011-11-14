@@ -66,12 +66,12 @@ func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
 	}
 
 	for _, fileTag := range *fileTags {
-		tags, error := db.TagsByFileId(fileTag.FileId)
+		tagCount, error := db.TagCountByFileId(fileTag.FileId)
 		if error != nil {
 			return error
 		}
 
-		if len(*tags) == 0 {
+		if tagCount == 0 {
 			db.RemoveFileTagsByFileId(fileTag.FileId)
 			db.RemoveFile(fileTag.FileId)
 		}

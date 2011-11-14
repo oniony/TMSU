@@ -128,6 +128,35 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 	return &tags, error
 }
 
+func (this Database) TagCountByFileId(fileId uint) (int, error) {
+	sql := `SELECT count(*)
+            FROM tag
+            WHERE id IN (
+                          SELECT tag_id
+                          FROM file_tag
+                          WHERE file_id = ?
+                        )
+            ORDER BY name`
+
+	statement, error := this.connection.Prepare(sql)
+	if error != nil {
+		return 0, error
+	}
+	defer statement.Finalize()
+
+	error = statement.Exec(int(fileId))
+	if error != nil {
+		return 0, error
+	}
+	if !statement.Next() {
+	    return 0, error
+    }
+
+	var count int
+	statement.Scan(&count)
+
+	return count, error
+}
 func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 	sql := `SELECT id, name
             FROM tag

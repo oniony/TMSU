@@ -66,12 +66,12 @@ func (this UntagCommand) untagPath(path string, tagNames []string) error {
 		}
 	}
 
-	tags, error := db.TagsByFileId(file.Id)
+	tagCount, error := db.TagCountByFileId(file.Id)
 	if error != nil {
 		return error
 	}
 
-	if len(*tags) == 0 {
+	if tagCount == 0 {
 		db.RemoveFileTagsByFileId(file.Id)
 		db.RemoveFile(file.Id)
 	}

@@ -1,6 +1,6 @@
 MUST
 
-* Improve messages.
+* Support for VFS functions, e.g. rm, ln -s, &c. 
 * Optimize for cases where only count is used.
 * Use tag directory size to list number of entries.
 * Use date of real file.

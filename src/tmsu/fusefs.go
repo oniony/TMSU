@@ -6,6 +6,7 @@ import (
 	"os"
 	"strings"
 	"strconv"
+	"time"
 	"github.com/hanwen/go-fuse/fuse"
 )
 
@@ -45,7 +46,8 @@ func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, f
 	case "":
 		fallthrough
 	case "tags":
-		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+        now := time.Nanoseconds()
+		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755, Atime_ns: now, Mtime_ns: now, Ctime_ns: now}, fuse.OK
 	}
 
 	path := this.splitPath(name)
@@ -75,9 +77,7 @@ func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEn
 }
 
 func (this FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
-	//TODO
-	//if flags & fuse.O_ANYWRITE != 0 { return nil, fuse.EPERM }
-
+    //TODO
 	return fuse.NewDataFile([]byte("tmsu (c) 2011 Paul Ruane\n")), fuse.OK
 }
 
@@ -138,7 +138,7 @@ func (this FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 
 	channel := make(chan fuse.DirEntry, len(*tags))
 	for _, tag := range *tags {
-		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFREG}
+		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 	close(channel)
 
@@ -155,10 +155,37 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status
 	}
 
 	if fileId == 0 {
-		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+        now := time.Nanoseconds()
+		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755, Atime_ns: now, Mtime_ns: now, Ctime_ns: now}, fuse.OK
 	}
 
-	return &os.FileInfo{Mode: fuse.S_IFLNK | 0755, Size: int64(10)}, fuse.OK
+	db, error := OpenDatabase(this.databasePath)
+	if error != nil {
+		log.Fatalf("Could not open database: %v", error)
+	}
+	defer db.Close()
+
+    file, error := db.File(fileId)
+    if error != nil {
+        log.Fatalf("Could not retrieve file #%v: %v", fileId, error)
+    }
+
+    fileInfo, error := os.Stat(file.Path)
+    var atime, mtime, ctime, size int64
+    if error == nil {
+        atime = fileInfo.Atime_ns
+        mtime = fileInfo.Mtime_ns
+        ctime = fileInfo.Ctime_ns
+        size = fileInfo.Size
+    } else {
+        now := time.Nanoseconds()
+        atime = now
+        mtime = now
+        ctime = now
+        size = 0
+    }
+
+	return &os.FileInfo{Mode: fuse.S_IFLNK | 0755, Atime_ns: atime, Mtime_ns: mtime, Ctime_ns: ctime, Size: size}, fuse.OK
 }
 
 func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
@@ -176,7 +203,7 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 		log.Fatalf("Could not retrieve tags for tags: %v", error)
 	}
 
-	files, error := db.FilesWithTags(path)
+	files, error := db.FilesWithTags(tags)
 	if error != nil {
 		log.Fatalf("Could not retrieve tagged files: %v", error)
 	}

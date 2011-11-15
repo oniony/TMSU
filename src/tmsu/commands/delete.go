@@ -46,6 +46,7 @@ func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
 	if error != nil {
 		return error
 	}
+
 	if tag == nil {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
@@ -66,13 +67,12 @@ func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
 	}
 
 	for _, fileTag := range *fileTags {
-		tagCount, error := db.TagCountByFileId(fileTag.FileId)
+		hasTags, error := db.AnyFileTagsForFile(fileTag.FileId)
 		if error != nil {
 			return error
 		}
 
-		if tagCount == 0 {
-			db.RemoveFileTagsByFileId(fileTag.FileId)
+		if !hasTags {
 			db.RemoveFile(fileTag.FileId)
 		}
 	}

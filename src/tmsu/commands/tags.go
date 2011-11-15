@@ -72,7 +72,7 @@ func (this TagsCommand) Exec(args []string) error {
 					tagNames = append(tagNames, tag.Name)
 				}
 
-				fmt.Printf("%v: %v\n", path, strings.Join(tagNames, ", "))
+				fmt.Printf("%v: %v\n", path, strings.Join(tagNames, " "))
 			}
 		}
 	}

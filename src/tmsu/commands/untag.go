@@ -56,7 +56,7 @@ func (this UntagCommand) untagPath(path string, tagNames []string) error {
 		return error
 	}
 	if file == nil {
-		return errors.New("No such file '" + path + "'.")
+		return errors.New("File '" + path + "' is not tagged.")
 	}
 
 	for _, tagName := range tagNames {
@@ -66,13 +66,12 @@ func (this UntagCommand) untagPath(path string, tagNames []string) error {
 		}
 	}
 
-	tagCount, error := db.TagCountByFileId(file.Id)
+	hasTags, error := db.AnyFileTagsForFile(file.Id)
 	if error != nil {
 		return error
 	}
 
-	if tagCount == 0 {
-		db.RemoveFileTagsByFileId(file.Id)
+	if !hasTags {
 		db.RemoveFile(file.Id)
 	}
 

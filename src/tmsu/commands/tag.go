@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
+	"strings"
 )
 
 type TagCommand struct{}
@@ -65,6 +66,10 @@ func (this TagCommand) tagPath(path string, tagNames []string) error {
 }
 
 func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName string) (*Tag, *FileTag, error) {
+	if strings.Index(tagName, ",") != -1 {
+	    return nil, nil, errors.New("Tag names cannot contain a comma.")
+    }
+
 	tag, error := db.TagByName(tagName)
 	if error != nil {
 		return nil, nil, error

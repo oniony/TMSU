@@ -39,7 +39,7 @@ func (this ExportCommand) Exec(args []string) error {
 	}
 
 	for _, file := range *files {
-		fmt.Printf("%v,", file.Path)
+		fmt.Printf("%v,%v,", file.Path, file.Fingerprint)
 
 		tags, error := db.TagsByFileId(file.Id)
 		if error != nil {
@@ -47,9 +47,11 @@ func (this ExportCommand) Exec(args []string) error {
 		}
 
 		tagNames := make([]string, 0, len(*tags))
+
 		for _, tag := range *tags {
 			tagNames = append(tagNames, tag.Name)
 		}
+
 		fmt.Println(strings.Join(tagNames, ","))
 	}
 

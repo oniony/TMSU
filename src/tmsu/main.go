@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"fmt"
-	"log"
 	"os"
 )
 
@@ -53,6 +52,7 @@ func main() {
 
 	error := command.Exec(args)
 	if error != nil {
-		log.Fatal(error)
+	    fmt.Fprintln(os.Stderr, error.Error())
+	    os.Exit(1)
 	}
 }

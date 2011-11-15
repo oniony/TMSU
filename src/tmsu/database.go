@@ -128,35 +128,6 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 	return &tags, error
 }
 
-func (this Database) TagCountByFileId(fileId uint) (int, error) {
-	sql := `SELECT count(*)
-            FROM tag
-            WHERE id IN (
-                          SELECT tag_id
-                          FROM file_tag
-                          WHERE file_id = ?
-                        )
-            ORDER BY name`
-
-	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return 0, error
-	}
-	defer statement.Finalize()
-
-	error = statement.Exec(int(fileId))
-	if error != nil {
-		return 0, error
-	}
-	if !statement.Next() {
-	    return 0, error
-    }
-
-	var count int
-	statement.Scan(&count)
-
-	return count, error
-}
 func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
@@ -553,6 +524,23 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 	return &fileTags, nil
 }
 
+func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
+    sql := `SELECT 1 FROM file_tag WHERE file_id = ? LIMIT 1`
+
+	statement, error := this.connection.Prepare(sql)
+	if error != nil {
+		return false, error
+	}
+	defer statement.Finalize()
+
+	error = statement.Exec(int(fileId))
+	if error != nil {
+		return false, error
+	}
+
+    return statement.Next(), nil
+}
+
 func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	sql := `INSERT INTO file_tag (file_id, tag_id) VALUES (?, ?)`
 
@@ -650,7 +638,7 @@ func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
 // schema
 
 func (this Database) CreateSchema() error {
-	//TODO for now we assume any any is because it already exists
+    // table tag
 
 	error := this.exec(`CREATE TABLE IF NOT EXISTS tag (
                             id INTEGER PRIMARY KEY,
@@ -660,6 +648,14 @@ func (this Database) CreateSchema() error {
 		return error
 	}
 
+	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_tag_name
+                       ON tag(name)`)
+	if error != nil {
+		return error
+	}
+
+    // table file
+
 	error = this.exec(`CREATE TABLE IF NOT EXISTS file (
                            id INTEGER PRIMARY KEY,
                            path TEXT UNIQUE NOT NULL,
@@ -668,6 +664,20 @@ func (this Database) CreateSchema() error {
 	if error != nil {
 		return error
 	}
+
+	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_fingerprint
+                       ON file(fingerprint)`)
+	if error != nil {
+		return error
+	}
+
+	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_path
+                       ON file(path)`)
+	if error != nil {
+		return error
+	}
+
+    // table file_tag
 
 	error = this.exec(`CREATE TABLE IF NOT EXISTS file_tag (
                            id INTEGER PRIMARY KEY,
@@ -680,8 +690,14 @@ func (this Database) CreateSchema() error {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_fingerprint
-                       ON file(fingerprint)`)
+	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
+                       ON file_tag(file_id)`)
+	if error != nil {
+		return error
+	}
+
+	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
+                       ON file_tag(tag_id)`)
 	if error != nil {
 		return error
 	}

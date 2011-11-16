@@ -1,10 +1,11 @@
 MUST
 
-* Support for VFS functions, e.g. rm, ln -s, &c. 
-* Use tag directory size to list number of entries.
-* Handle long filenames when making link name.
-* Tagging, untagging and removal via VFS paths.
+1 Add multiple tags to multiple files in one command.
+1 Import command.
+1 Tagging, untagging and removal via VFS paths.
+2 Use tag directory size to list number of entries.
+3 Handle long filenames when making link name.
 
 MAYBE
 
-* Handle SIGINT.
+4 Support for VFS functions, e.g. rm, ln -s, &c. 

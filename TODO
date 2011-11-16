@@ -4,7 +4,6 @@ MUST
 * Use tag directory size to list number of entries.
 * Handle long filenames when making link name.
 * Tagging, untagging and removal via VFS paths.
-* When untagging, delete tag if nothing else uses it.
 
 MAYBE
 

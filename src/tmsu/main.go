@@ -1,7 +1,6 @@
 package main
 
 import (
-	"flag"
 	"fmt"
 	"os"
 )
@@ -28,11 +27,9 @@ func main() {
 		commands[command.Name()] = command
 	}
 
-	flag.Parse()
-
 	var commandName string
-	if flag.NArg() > 0 {
-		commandName = flag.Arg(0)
+	if len(os.Args) > 0 {
+		commandName = os.Args[0]
 	} else {
 		commandName = "help"
 	}
@@ -44,8 +41,8 @@ func main() {
 	}
 
 	var args []string
-	if flag.NArg() > 1 {
-		args = flag.Args()[1:]
+	if len(os.Args) > 1 {
+		args = os.Args[1:]
 	} else {
 		args = []string{}
 	}

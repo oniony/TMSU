@@ -15,11 +15,11 @@ GOFILES=config.go \
 		commands/delete.go \
 		commands/export.go \
 		commands/vfs.go \
+		entities/tag.go \
+		entities/file.go \
+		entities/filetag.go \
 		database.go \
 		fusefs.go \
-		tag.go \
-		file.go \
-		filetag.go \
 		fingerprinter.go
 
 include $(GOROOT)/src/Make.cmd

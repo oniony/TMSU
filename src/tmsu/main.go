@@ -28,8 +28,8 @@ func main() {
 	}
 
 	var commandName string
-	if len(os.Args) > 0 {
-		commandName = os.Args[0]
+	if len(os.Args) > 1 {
+		commandName = os.Args[1]
 	} else {
 		commandName = "help"
 	}
@@ -41,8 +41,8 @@ func main() {
 	}
 
 	var args []string
-	if len(os.Args) > 1 {
-		args = os.Args[1:]
+	if len(os.Args) > 2 {
+		args = os.Args[2:]
 	} else {
 		args = []string{}
 	}

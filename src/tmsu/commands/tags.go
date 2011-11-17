@@ -2,7 +2,6 @@ package main
 
 import (
 	"fmt"
-	"log"
 	"path/filepath"
 	"strings"
 )
@@ -50,8 +49,11 @@ func (this TagsCommand) Exec(args []string) error {
 
 		tags, error := this.tagsForPath(db, path)
 		if error != nil {
-			log.Fatalf("Could not retrieve tags for '%v': %v", path, error)
+			return error
 		}
+		if tags == nil {
+		    return nil
+        }
 
 		for _, tag := range *tags {
 			fmt.Println(tag.Name)
@@ -60,7 +62,7 @@ func (this TagsCommand) Exec(args []string) error {
 		for _, path := range args {
 			tags, error := this.tagsForPath(db, path)
 			if error != nil {
-				log.Fatalf("Could not retrieve tags for '%v': %v", path, error)
+				return error
 			}
 			if tags == nil {
 				continue

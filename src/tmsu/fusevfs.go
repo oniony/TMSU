@@ -41,6 +41,13 @@ func (this FuseVfs) Loop() {
 	this.state.Loop()
 }
 
+func (this FuseVfs) Link(oldName string, newName string, context *fuse.Context) fuse.Status {
+    log.Println("Old name:", oldName)
+    log.Println("New name:", newName)
+
+    return fuse.OK
+}
+
 func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, fuse.Status) {
 	switch name {
 	case "":
@@ -76,11 +83,6 @@ func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEn
 	return nil, fuse.ENOENT
 }
 
-func (this FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
-    //TODO
-	return fuse.NewDataFile([]byte("tmsu (c) 2011 Paul Ruane\n")), fuse.OK
-}
-
 func (this FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
 	path := this.splitPath(name)
 	switch path[0] {
@@ -110,7 +112,7 @@ func (this FuseVfs) parseFileId(name string) (uint, error) {
 		id, error = strconv.Atoui(parts[count-1])
 	}
 	if error != nil {
-		return 0, error
+		return 0, nil
 	}
 
 	return id, nil
@@ -155,6 +157,7 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status
 	}
 
 	if fileId == 0 {
+	    // if no file ID then it is a tag directory
         now := time.Nanoseconds()
 		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755, Atime_ns: now, Mtime_ns: now, Ctime_ns: now}, fuse.OK
 	}
@@ -168,6 +171,9 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status
     file, error := db.File(fileId)
     if error != nil {
         log.Fatalf("Could not retrieve file #%v: %v", fileId, error)
+    }
+    if file == nil {
+        return &os.FileInfo{Mode: fuse.S_IFREG}, fuse.ENOENT
     }
 
     fileInfo, error := os.Stat(file.Path)

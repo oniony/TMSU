@@ -19,7 +19,7 @@ GOFILES=config.go \
 		entities/file.go \
 		entities/filetag.go \
 		database.go \
-		fusefs.go \
+		fusevfs.go \
 		fingerprinter.go
 
 include $(GOROOT)/src/Make.cmd

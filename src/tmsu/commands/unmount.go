@@ -24,7 +24,7 @@ Unmounts a previously mounted virtual file-system at the mountpoint specified.`
 
 func (this UnmountCommand) Exec(args []string) error {
 	if len(args) < 1 {
-		errors.New("Path to unmount not speciified.")
+		return errors.New("Path to unmount not speciified.")
 	}
 
 	path := args[0]

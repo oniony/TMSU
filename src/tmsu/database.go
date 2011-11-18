@@ -14,14 +14,12 @@ type Database struct {
 
 func OpenDatabase(path string) (*Database, error) {
 	connection, error := sqlite.Open(path)
-
 	if error != nil {
 		fmt.Fprintf(os.Stderr, "Could not open database: %v.", error)
 		return nil, error
 	}
 
 	database := Database{connection}
-
 	database.CreateSchema()
 
 	return &database, nil
@@ -29,22 +27,6 @@ func OpenDatabase(path string) (*Database, error) {
 
 func (this *Database) Close() {
 	this.connection.Close()
-}
-
-func (this *Database) exec(sql string) error {
-	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
-	defer statement.Finalize()
-
-	error = statement.Exec()
-	if error != nil {
-		return error
-	}
-	statement.Next()
-
-	return nil
 }
 
 // tags
@@ -62,7 +44,7 @@ func (this Database) Tags() (*[]Tag, error) {
 
 	tags := make([]Tag, 0, 10)
 	for statement.Next() {
-		var id int
+		var id int 
 		var name string
 		statement.Scan(&id, &name)
 
@@ -73,7 +55,9 @@ func (this Database) Tags() (*[]Tag, error) {
 }
 
 func (this Database) TagByName(name string) (*Tag, error) {
-	sql := `SELECT id FROM tag WHERE name = ?`
+	sql := `SELECT id
+	        FROM tag
+	        WHERE name = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -85,6 +69,7 @@ func (this Database) TagByName(name string) (*Tag, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
 		return nil, nil
 	}
@@ -99,10 +84,10 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
-                          SELECT tag_id
-                          FROM file_tag
-                          WHERE file_id = ?
-                        )
+                SELECT tag_id
+                FROM file_tag
+                WHERE file_id = ?
+            )
             ORDER BY name`
 
 	statement, error := this.connection.Prepare(sql)
@@ -179,18 +164,9 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 	return &tags, nil
 }
 
-func (this Database) contains(list []string, str string) bool {
-	for _, current := range list {
-		if current == str {
-			return true
-		}
-	}
-
-	return false
-}
-
 func (this Database) AddTag(name string) (*Tag, error) {
-	sql := `INSERT INTO tag (name) VALUES (?)`
+	sql := `INSERT INTO tag (name)
+	        VALUES (?)`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -210,7 +186,9 @@ func (this Database) AddTag(name string) (*Tag, error) {
 }
 
 func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
-	sql := `UPDATE tag SET name = ? WHERE id = ?`
+	sql := `UPDATE tag
+	        SET name = ?
+	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -228,7 +206,8 @@ func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
 }
 
 func (this Database) DeleteTag(tagId uint) error {
-	sql := `DELETE FROM tag WHERE id = ?`
+	sql := `DELETE FROM tag
+	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -248,7 +227,8 @@ func (this Database) DeleteTag(tagId uint) error {
 // files
 
 func (this Database) Files() (*[]File, error) {
-	sql := `SELECT id, path, fingerprint FROM file`
+	sql := `SELECT id, path, fingerprint
+	        FROM file`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -275,7 +255,9 @@ func (this Database) Files() (*[]File, error) {
 }
 
 func (this Database) File(id uint) (*File, error) {
-	sql := `SELECT path, fingerprint FROM file WHERE id = ?`
+	sql := `SELECT path, fingerprint
+	        FROM file
+	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -299,7 +281,9 @@ func (this Database) File(id uint) (*File, error) {
 }
 
 func (this Database) FileByPath(path string) (*File, error) {
-	sql := `SELECT id, fingerprint FROM file WHERE path = ?`
+	sql := `SELECT id, fingerprint
+	        FROM file
+	        WHERE path = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -323,7 +307,9 @@ func (this Database) FileByPath(path string) (*File, error) {
 }
 
 func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
-	sql := `SELECT id, path FROM file WHERE fingerprint = ?`
+	sql := `SELECT id, path
+	        FROM file
+	        WHERE fingerprint = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -347,7 +333,8 @@ func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
 }
 
 func (this Database) AddFile(path string, fingerprint string) (*File, error) {
-	sql := `INSERT INTO file (path, fingerprint) VALUES (?,?)`
+	sql := `INSERT INTO file (path, fingerprint)
+	        VALUES (?,?)`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -412,7 +399,9 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 }
 
 func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) error {
-	sql := `UPDATE file SET fingerprint = ? WHERE id = ?`
+	sql := `UPDATE file
+	        SET fingerprint = ?
+	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -430,7 +419,9 @@ func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) erro
 }
 
 func (this Database) RemoveFile(fileId uint) error {
-	sql := `DELETE FROM file WHERE id = ?`
+	sql := `DELETE FROM file
+	        WHERE id = ?`
+
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
 		return error
@@ -446,10 +437,9 @@ func (this Database) RemoveFile(fileId uint) error {
 	return nil
 }
 
-// file-tags
-
 func (this Database) FileTags() (*[]FileTag, error) {
-	sql := `SELECT id, file_id, tag_id FROM file_tag`
+	sql := `SELECT id, file_id, tag_id
+	        FROM file_tag`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -476,7 +466,10 @@ func (this Database) FileTags() (*[]FileTag, error) {
 }
 
 func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
-	sql := `SELECT id FROM file_tag WHERE file_id = ? AND tag_id = ?`
+	sql := `SELECT id
+	        FROM file_tag
+	        WHERE file_id = ?
+	        AND tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -499,7 +492,9 @@ func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag,
 }
 
 func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
-	sql := `SELECT id, file_id FROM file_tag WHERE tag_id = ?`
+	sql := `SELECT id, file_id
+	        FROM file_tag
+	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -525,7 +520,10 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 }
 
 func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
-    sql := `SELECT 1 FROM file_tag WHERE file_id = ? LIMIT 1`
+    sql := `SELECT 1
+            FROM file_tag
+            WHERE file_id = ?
+            LIMIT 1`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -542,7 +540,8 @@ func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
 }
 
 func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
-	sql := `INSERT INTO file_tag (file_id, tag_id) VALUES (?, ?)`
+	sql := `INSERT INTO file_tag (file_id, tag_id)
+	        VALUES (?, ?)`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -554,6 +553,7 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
 		return nil, nil
 	}
@@ -564,7 +564,9 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 }
 
 func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
-	sql := `DELETE FROM file_tag WHERE file_id = ? AND tag_id = ?`
+	sql := `DELETE FROM file_tag
+	        WHERE file_id = ?
+	        AND tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -576,13 +578,15 @@ func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
 
 	return nil
 }
 
 func (this Database) RemoveFileTagsByFileId(fileId uint) error {
-	sql := `DELETE FROM file_tag WHERE file_id = ?`
+	sql := `DELETE FROM file_tag
+	        WHERE file_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -594,13 +598,15 @@ func (this Database) RemoveFileTagsByFileId(fileId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
 
 	return nil
 }
 
 func (this Database) RemoveFileTagsByTagId(tagId uint) error {
-	sql := `DELETE FROM file_tag WHERE tag_id = ?`
+	sql := `DELETE FROM file_tag
+	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -612,13 +618,16 @@ func (this Database) RemoveFileTagsByTagId(tagId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
 
 	return nil
 }
 
 func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
-	sql := `UPDATE file_tag SET tag_id = ? WHERE tag_id = ?`
+	sql := `UPDATE file_tag
+	        SET tag_id = ?
+	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
 	if error != nil {
@@ -630,77 +639,116 @@ func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
 
 	return nil
 }
 
-// schema
-
 func (this Database) CreateSchema() error {
-    // table tag
+    sql := `CREATE TABLE IF NOT EXISTS tag (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            )`
 
-	error := this.exec(`CREATE TABLE IF NOT EXISTS tag (
-                            id INTEGER PRIMARY KEY,
-                            name TEXT NOT NULL
-                        )`)
+	error := this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_tag_name
-                       ON tag(name)`)
+    sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
+           ON tag(name)`
+
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-    // table file
+    sql = `CREATE TABLE IF NOT EXISTS file (
+               id INTEGER PRIMARY KEY,
+               path TEXT UNIQUE NOT NULL,
+               fingerprint TEXT NOT NULL
+           )`
 
-	error = this.exec(`CREATE TABLE IF NOT EXISTS file (
-                           id INTEGER PRIMARY KEY,
-                           path TEXT UNIQUE NOT NULL,
-                           fingerprint TEXT NOT NULL
-                       )`)
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_fingerprint
-                       ON file(fingerprint)`)
+    sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
+           ON file(fingerprint)`
+
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_path
-                       ON file(path)`)
+    sql = `CREATE INDEX IF NOT EXISTS idx_file_path
+           ON file(path)`
+
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-    // table file_tag
+    sql = `CREATE TABLE IF NOT EXISTS file_tag (
+               id INTEGER PRIMARY KEY,
+               file_id INTEGER NOT NULL,
+               tag_id INTEGER NOT NULL,
+               FOREIGN KEY (file_id) REFERENCES file(id),
+               FOREIGN KEY (tag_id) REFERENCES tag(id)
+           )`
 
-	error = this.exec(`CREATE TABLE IF NOT EXISTS file_tag (
-                           id INTEGER PRIMARY KEY,
-                           file_id INTEGER NOT NULL,
-                           tag_id INTEGER NOT NULL,
-                           FOREIGN KEY (file_id) REFERENCES file(id),
-                           FOREIGN KEY (tag_id) REFERENCES tag(id)
-                       )`)
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
-                       ON file_tag(file_id)`)
+    sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
+           ON file_tag(file_id)`
+
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
-	error = this.exec(`CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
-                       ON file_tag(tag_id)`)
+    sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
+           ON file_tag(tag_id)`
+
+	error = this.exec(sql)
 	if error != nil {
 		return error
 	}
 
 	return nil
 }
+
+// private
+
+func (this Database) contains(list []string, str string) bool {
+	for _, current := range list {
+		if current == str {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (this *Database) exec(sql string) error {
+	statement, error := this.connection.Prepare(sql)
+	if error != nil {
+		return error
+	}
+	defer statement.Finalize()
+
+	error = statement.Exec()
+	if error != nil {
+		return error
+	}
+
+	statement.Next()
+
+	return nil
+}
+

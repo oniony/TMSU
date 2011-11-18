@@ -18,6 +18,7 @@ type FuseVfs struct {
 	state        *fuse.MountState
 }
 
+// Mount the VFS.
 func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
 
@@ -33,6 +34,7 @@ func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	return &fuseVfs, nil
 }
 
+// Unmount the VFS.
 func (this FuseVfs) Unmount() {
 	this.state.Unmount()
 }
@@ -41,13 +43,7 @@ func (this FuseVfs) Loop() {
 	this.state.Loop()
 }
 
-func (this FuseVfs) Link(oldName string, newName string, context *fuse.Context) fuse.Status {
-    log.Println("Old name:", oldName)
-    log.Println("New name:", newName)
-
-    return fuse.OK
-}
-
+// Get entry attributes.
 func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, fuse.Status) {
 	switch name {
 	case "":
@@ -66,6 +62,45 @@ func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, f
 	return nil, fuse.ENOENT
 }
 
+// Unlink entry.
+func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
+    fileId, error := this.parseFileId(name)
+    if error != nil {
+        log.Fatalf("Could not unlink: %v", error)
+    }
+
+    if fileId == 0 {
+        // cannot unlink tag directories
+        return fuse.EPERM
+    }
+
+    path := this.splitPath(name)
+    tagNames := path[1:len(path) - 1]
+
+    db, error := OpenDatabase(databasePath())
+    if error != nil {
+        log.Fatal(error)
+    }
+
+    for _, tagName := range tagNames {
+        tag, error := db.TagByName(tagName)
+        if error != nil {
+            log.Fatal(error)
+        }
+        if tag == nil {
+            log.Fatalf("Could not retrieve tag '%v'.", tagName)
+        }
+
+        error = db.RemoveFileTag(fileId, tag.Id)
+        if error != nil {
+            log.Fatal(error)
+        }
+    }
+
+    return fuse.OK
+}
+
+// Enumerate directory.
 func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
 	switch name {
 	case "":
@@ -83,6 +118,7 @@ func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEn
 	return nil, fuse.ENOENT
 }
 
+// Read symbolic link target.
 func (this FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
 	path := this.splitPath(name)
 	switch path[0] {

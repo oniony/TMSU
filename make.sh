@@ -1,5 +1,5 @@
 #!/usr/bin/env sh
-VER=0.2
+VER=0.1-2
 
 # compile
 pushd src/tmsu

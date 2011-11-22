@@ -45,7 +45,7 @@ func (this StatusCommand) Exec(args []string) error {
     }
 
     for _, path := range untagged {
-        fmt.Printf("? %v\n", path)
+        fmt.Printf("U %v\n", path)
     }
 
     return nil
@@ -68,20 +68,23 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
             return nil, nil, error
         }
 
-        file, error := db.FileByPath(absPath)
-        if error != nil {
-            return nil, nil, error
-        }
+        if fileInfo.IsRegular() || fileInfo.IsSymlink() {
+            file, error := db.FileByPath(absPath)
+            if error != nil {
+                return nil, nil, error
+            }
 
-        //TODO show file type (dir, reg, lnk) &c
-        if file == nil {
-            untagged = append(untagged, path)
-        } else {
-            tagged = append(tagged, path)
-        }
-
-        if fileInfo.IsDirectory() {
-            this.statusChildren(absPath, tagged, untagged)
+            //TODO show file type (dir, reg, lnk) &c
+            if file == nil {
+                untagged = append(untagged, absPath)
+            } else {
+                tagged = append(tagged, absPath)
+            }
+        } else if fileInfo.IsDirectory() {
+            tagged, untagged, error = this.statusChildren(absPath, tagged, untagged)
+            if error != nil {
+                return nil, nil, error
+            }
         }
     }
 

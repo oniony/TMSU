@@ -15,6 +15,7 @@ GOFILES=config.go \
 		commands/delete.go \
 		commands/export.go \
 		commands/vfs.go \
+		commands/status.go \
 		entities/tag.go \
 		entities/file.go \
 		entities/filetag.go \

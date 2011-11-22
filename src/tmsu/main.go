@@ -22,6 +22,7 @@ func main() {
 		DeleteCommand{},
 		ExportCommand{},
 		VfsCommand{},
+		StatusCommand{},
 	}
 
 	commands = make(map[string]Command, len(commandArray))

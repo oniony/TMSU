@@ -27,8 +27,8 @@ func OpenDatabase(path string) (*Database, error) {
 	return &database, nil
 }
 
-func (this *Database) Close() {
-	this.connection.Close()
+func (this *Database) Close() error {
+	return this.connection.Close()
 }
 
 // tags
@@ -46,7 +46,7 @@ func (this Database) Tags() (*[]Tag, error) {
 
 	tags := make([]Tag, 0, 10)
 	for statement.Next() {
-		var id int 
+		var id int
 		var name string
 		statement.Scan(&id, &name)
 
@@ -73,6 +73,10 @@ func (this Database) TagByName(name string) (*Tag, error) {
 	}
 
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -111,6 +115,10 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 
 		tags = append(tags, Tag{uint(tagId), tagName})
 	}
+
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
 
 	return &tags, error
 }
@@ -163,6 +171,10 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 		}
 	}
 
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
+
 	return &tags, nil
 }
 
@@ -180,7 +192,11 @@ func (this Database) AddTag(name string) (*Tag, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
 
 	id := this.connection.LastInsertRowId()
 
@@ -202,7 +218,11 @@ func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
 
 	return &Tag{tagId, name}, nil
 }
@@ -221,7 +241,11 @@ func (this Database) DeleteTag(tagId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -253,6 +277,10 @@ func (this Database) Files() (*[]File, error) {
 		files = append(files, File{uint(fileId), path, fingerprint})
 	}
 
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
+
 	return &files, nil
 }
 
@@ -271,7 +299,12 @@ func (this Database) File(id uint) (*File, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -297,7 +330,12 @@ func (this Database) FileByPath(path string) (*File, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -323,7 +361,12 @@ func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -348,7 +391,11 @@ func (this Database) AddFile(path string, fingerprint string) (*File, error) {
 	if error != nil {
 		return nil, error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
 
 	id := this.connection.LastInsertRowId()
 
@@ -397,6 +444,10 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 		files = append(files, File{uint(fileId), path, fingerprint})
 	}
 
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
+
 	return &files, nil
 }
 
@@ -415,7 +466,11 @@ func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) erro
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -434,7 +489,11 @@ func (this Database) RemoveFile(fileId uint) error {
 	if error != nil {
 		return error
 	}
+
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -464,6 +523,10 @@ func (this Database) FileTags() (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{uint(fileTagId), uint(fileId), uint(tagId)})
 	}
 
+	if statement.Error() != nil {
+	    return nil, statement.Error()
+    }
+
 	return &fileTags, nil
 }
 
@@ -483,7 +546,12 @@ func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag,
 	if error != nil {
 		return nil, error
 	}
+
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -518,6 +586,10 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{uint(fileTagId), uint(fileId), tagId})
 	}
 
+    if statement.Error() != nil {
+        return nil, statement.Error()
+    }
+
 	return &fileTags, nil
 }
 
@@ -538,7 +610,15 @@ func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
 		return false, error
 	}
 
-    return statement.Next(), nil
+    if statement.Next() {
+        return true, nil
+    }
+
+    if statement.Error() != nil {
+        return false, statement.Error()
+    }
+
+    return false, nil
 }
 
 func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
@@ -557,6 +637,10 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	}
 
 	if !statement.Next() {
+	    if statement.Error() != nil {
+	        return nil, statement.Error()
+        }
+
 		return nil, nil
 	}
 
@@ -582,6 +666,9 @@ func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
 	}
 
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -602,6 +689,9 @@ func (this Database) RemoveFileTagsByFileId(fileId uint) error {
 	}
 
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -622,6 +712,9 @@ func (this Database) RemoveFileTagsByTagId(tagId uint) error {
 	}
 
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -643,6 +736,9 @@ func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
 	}
 
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }
@@ -750,6 +846,9 @@ func (this *Database) exec(sql string) error {
 	}
 
 	statement.Next()
+	if statement.Error() != nil {
+	    return statement.Error()
+    }
 
 	return nil
 }

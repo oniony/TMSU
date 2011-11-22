@@ -27,7 +27,7 @@ func (this MergeCommand) Exec(args []string) error {
 	if error != nil {
 		return error
 	}
-	defer db.Close()
+	//defer db.Close()
 
 	sourceTagName := args[0]
 	destTagName := args[1]
@@ -57,6 +57,11 @@ func (this MergeCommand) Exec(args []string) error {
 	if error != nil {
 		return error
 	}
+
+	error = db.Close()
+	if error != nil {
+	    return error
+    }
 
 	return nil
 }

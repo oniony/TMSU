@@ -73,7 +73,7 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     }
 
     if strings.Index(tagName, "=") != -1 {
-        return nil, nil, errors.New("Tag names cannot contain equals sign.")
+        return nil, nil, errors.New("Tag names cannot contain '='.")
     }
 
     if strings.Index(tagName, " ") != -1 {

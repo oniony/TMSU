@@ -5,3 +5,4 @@
 \.6$
 ^src/tmsu/tmsu$
 \.tgz$
+^src/tmsu/version.go

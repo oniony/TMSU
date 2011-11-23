@@ -4,8 +4,8 @@ package main
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
-	"strings"
 )
 
 type TagsCommand struct{}
@@ -19,80 +19,134 @@ func (this TagsCommand) Summary() string {
 }
 
 func (this TagsCommand) Help() string {
-	return `  tmsu tags
-  tmsu tags FILE...
+	return `  tmsu tags --all
+  tmsu tags [FILE]...
 
-Without any filenames, shows the complete list of tags.
+Lists the tags applied to FILEs (the current directory by default).
 
-With a single filename, lists the tags applied to that file.
-
-With multiple filenames, lists the names of these that have tags applied and the list of applied tags.`
+  --all    show the complete set of tags`
 }
 
 func (this TagsCommand) Exec(args []string) error {
+    argCount := len(args)
+
+    if argCount == 0 {
+        return this.listTags(".")
+    } else if argCount == 1 && args[0] == "--all" {
+        return this.listAllTags()
+    } else {
+	    this.listTags(args...)
+	}
+
+	return nil
+}
+
+func (this TagsCommand) listAllTags() error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil {
 		return error
 	}
 	defer db.Close()
 
-	switch len(args) {
-	case 0:
-		tags, error := this.allTags(db)
-		if error != nil {
-			return error
-		}
+	tags, error := db.Tags()
+	if error != nil {
+		return error
+	}
 
-		for _, tag := range *tags {
-			fmt.Println(tag.Name)
-		}
-	case 1:
-		path := args[0]
-
-		tags, error := this.tagsForPath(db, path)
-		if error != nil {
-			return error
-		}
-		if tags == nil {
-		    return nil
-        }
-
-		for _, tag := range *tags {
-			fmt.Println(tag.Name)
-		}
-	default:
-		for _, path := range args {
-			tags, error := this.tagsForPath(db, path)
-			if error != nil {
-				return error
-			}
-			if tags == nil {
-				continue
-			}
-
-			if len(*tags) > 0 {
-				tagNames := make([]string, 0, len(*tags))
-				for _, tag := range *tags {
-					tagNames = append(tagNames, tag.Name)
-				}
-
-				fmt.Printf("%v: %v\n", path, strings.Join(tagNames, " "))
-			}
-		}
+	for _, tag := range *tags {
+		fmt.Println(tag.Name)
 	}
 
 	return nil
 }
 
-// implementation
-
-func (this TagsCommand) allTags(db *Database) (*[]Tag, error) {
-	tags, error := db.Tags()
+func (this TagsCommand) listTags(paths ...string) error {
+	db, error := OpenDatabase(databasePath())
 	if error != nil {
-		return nil, error
+		return error
 	}
+	defer db.Close()
 
-	return tags, nil
+    if len(paths) == 1 {
+        fileInfo, error := os.Lstat(paths[0])
+        if error != nil {
+            return error
+        }
+
+        if fileInfo.IsRegular() {
+            tags, error := this.tagsForPath(db, paths[0])
+            if error != nil {
+                return error
+            }
+            if tags == nil {
+                return nil
+            }
+
+            for _, tag := range *tags {
+                fmt.Println(tag.Name)
+            }
+
+            return nil
+        }
+    }
+
+    return this.listTagsRecursive(db, paths)
+}
+
+func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
+    for _, path := range paths {
+        fileInfo, error := os.Lstat(path)
+        if error != nil {
+            return error
+        }
+
+        if fileInfo.IsRegular() {
+            tags, error := this.tagsForPath(db, path)
+            if error != nil {
+                return error
+            }
+            if tags == nil {
+                continue
+            }
+
+            if len(*tags) > 0 {
+                fmt.Printf("%v: ", path)
+
+                for index, tag := range *tags {
+                    if index > 0 {
+                        fmt.Print(" ")
+                    }
+
+                    fmt.Print(tag.Name)
+                }
+
+                fmt.Println()
+            }
+        } else if fileInfo.IsDirectory() {
+            file, error := os.Open(path)
+            if error != nil {
+                return error
+            }
+            defer file.Close()
+
+            dirNames, error := file.Readdirnames(0)
+            if error != nil {
+                return error
+            }
+
+            childPaths := make([]string, len(dirNames))
+            for index, dirName := range dirNames {
+                childPaths[index] = filepath.Join(path, dirName)
+            }
+
+            error = this.listTagsRecursive(db, childPaths)
+            if error != nil {
+                return error
+            }
+        }
+    }
+
+    return nil
 }
 
 func (this TagsCommand) tagsForPath(db *Database, path string) (*[]Tag, error) {

@@ -40,7 +40,7 @@ func (this HelpCommand) Exec(args []string) error {
 // implementation
 
 func (this HelpCommand) overview() {
-	fmt.Println("tmsu v0.1 (alpha)")
+	fmt.Println("tmsu", version)
 	fmt.Println()
 
 	var maxWidth uint = 0

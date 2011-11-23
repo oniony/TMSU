@@ -1,7 +1,5 @@
 package main
 
-//TODO show modified files
-
 import (
     "path/filepath"
     "fmt"
@@ -31,7 +29,7 @@ func (this StatusCommand) Exec(args []string) error {
     var error error
 
     if len(args) == 0 {
-        tagged, untagged, error = this.statusChildren(".", tagged, untagged)
+        tagged, untagged, error = this.status([]string{"."}, tagged, untagged)
     } else {
         tagged, untagged, error = this.status(args, tagged, untagged)
     }
@@ -57,31 +55,50 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
         return nil, nil, error
     }
 
+    return this.statusRecursive(db, paths, tagged, untagged)
+}
+
+func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged []string, untagged []string) ([]string, []string, error) {
     for _, path := range paths {
-        absPath, error := filepath.Abs(path)
+        fileInfo, error := os.Lstat(path)
         if error != nil {
             return nil, nil, error
         }
 
-        fileInfo, error := os.Stat(absPath)
-        if error != nil {
-            return nil, nil, error
-        }
+        if fileInfo.IsRegular() {
+            absPath, error := filepath.Abs(path)
+            if error != nil {
+                return nil, nil, error
+            }
 
-        if fileInfo.IsRegular() || fileInfo.IsSymlink() {
             file, error := db.FileByPath(absPath)
             if error != nil {
                 return nil, nil, error
             }
 
-            //TODO show file type (dir, reg, lnk) &c
             if file == nil {
                 untagged = append(untagged, absPath)
             } else {
                 tagged = append(tagged, absPath)
             }
         } else if fileInfo.IsDirectory() {
-            tagged, untagged, error = this.statusChildren(absPath, tagged, untagged)
+            file, error := os.Open(path)
+            if error != nil {
+                return nil, nil, error
+            }
+            defer file.Close()
+
+            dirNames, error := file.Readdirnames(0)
+            if error != nil {
+                return nil, nil, error
+            }
+
+            childPaths := make([]string, len(dirNames))
+            for index, dirName := range dirNames {
+                childPaths[index] = filepath.Join(path, dirName)
+            }
+
+            tagged, untagged, error = this.statusRecursive(db, childPaths, tagged, untagged)
             if error != nil {
                 return nil, nil, error
             }
@@ -90,29 +107,3 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
 
     return tagged, untagged, nil
 }
-
-func (this StatusCommand) statusChildren(path string, tagged []string, untagged []string) ([]string, []string, error) {
-    file, error := os.Open(path)
-    if error != nil {
-        return nil, nil, error
-    }
-    defer file.Close()
-
-    dirNames, error := file.Readdirnames(0)
-    if error != nil {
-        return nil, nil, error
-    }
-
-    childPaths := make([]string, len(dirNames))
-    for index, dirName := range dirNames {
-        childPaths[index] = filepath.Join(path, dirName)
-    }
-
-    tagged, untagged, error = this.status(childPaths, tagged, untagged)
-    if error != nil {
-        return nil, nil, error
-    }
-
-    return tagged, untagged, nil
-}
-

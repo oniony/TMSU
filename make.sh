@@ -1,6 +1,9 @@
 #!/usr/bin/env sh
 VER=0.1-2
 
+# version
+echo "package main; var version = \"$VER\"" >src/tmsu/version.go
+
 # compile
 pushd src/tmsu
 gomake

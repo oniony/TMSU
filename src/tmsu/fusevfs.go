@@ -261,10 +261,15 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 
 	for _, file := range *files {
 		extension := filepath.Ext(file.Path)
-		fileName := filepath.Base(file.Path)
-		fileName = fileName[0 : len(fileName)-len(extension)]
+		targetFileName := filepath.Base(file.Path)
+		fileName := targetFileName[0 : len(targetFileName)-len(extension)]
+		suffix := "." + strconv.Uitoa(file.Id) + extension
 
-		channel <- fuse.DirEntry{Name: fileName + "." + strconv.Uitoa(file.Id) + extension, Mode: fuse.S_IFLNK}
+		if len(fileName) + len(suffix) > 255 {
+		    fileName = fileName[0 : 255 - len(suffix)]
+        }
+
+		channel <- fuse.DirEntry{Name: fileName + suffix, Mode: fuse.S_IFLNK}
 	}
 
 	return channel, fuse.OK

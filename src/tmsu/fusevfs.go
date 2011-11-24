@@ -260,16 +260,8 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 	}
 
 	for _, file := range *files {
-		extension := filepath.Ext(file.Path)
-		targetFileName := filepath.Base(file.Path)
-		fileName := targetFileName[0 : len(targetFileName)-len(extension)]
-		suffix := "." + strconv.Uitoa(file.Id) + extension
-
-		if len(fileName) + len(suffix) > 255 {
-		    fileName = fileName[0 : 255 - len(suffix)]
-        }
-
-		channel <- fuse.DirEntry{Name: fileName + suffix, Mode: fuse.S_IFLNK}
+        linkName := this.getLinkName(file)
+		channel <- fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}
 
 	return channel, fuse.OK
@@ -298,4 +290,17 @@ func (this FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	}
 
 	return file.Path, fuse.OK
+}
+
+func (this FuseVfs) getLinkName(file File) string {
+    extension := filepath.Ext(file.Path)
+    fileName := filepath.Base(file.Path)
+    linkName := fileName[0 : len(fileName) - len(extension)]
+    suffix := "." + strconv.Uitoa(file.Id) + extension
+
+    if len(linkName) + len(suffix) > 255 {
+        linkName = linkName[0 : 255 - len(suffix)]
+    }
+
+    return linkName + suffix
 }

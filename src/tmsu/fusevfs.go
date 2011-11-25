@@ -239,7 +239,6 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 	}
 	defer db.Close()
 
-	//TODO assumption that all path dirs are tags
 	tags := path
 
 	furtherTags, error := db.TagsForTags(tags)

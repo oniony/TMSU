@@ -4,9 +4,12 @@ package main
 
 import (
 	"errors"
-	"os"
 	"exec"
+	"os"
+	"time"
 )
+
+const HALF_SECOND = 500000000
 
 type MountCommand struct{}
 
@@ -33,15 +36,42 @@ func (this MountCommand) Exec(args []string) error {
 		errors.New("Extraneous arguments.")
 	}
 
-	//TODO support for explicit database
+    //TODO check the mount-point exists
+    //TODO check the mount-point permissions
+    //TODO check the database exists
+    //TODO check the database permissions
 
 	mountPath := args[0]
 	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)
 
-	error := command.Start()
+	errorPipe, error := command.StderrPipe()
+	if error != nil {
+	    return error
+    }
+
+	error = command.Start()
 	if error != nil {
 		return error
 	}
+
+    time.Sleep(HALF_SECOND)
+
+    waitMessage, error := command.Process.Wait(os.WNOHANG)
+    if error != nil {
+        return error
+    }
+
+    if waitMessage.WaitStatus.Exited() {
+        if waitMessage.WaitStatus.ExitStatus() != 0 {
+            buffer := make([]byte, 1024)
+            count, error := errorPipe.Read(buffer)
+            if error != nil {
+                return error
+            }
+
+            return errors.New("Could not mount VFS: " + string(buffer[0:count]))
+        }
+    }
 
 	return nil
 }

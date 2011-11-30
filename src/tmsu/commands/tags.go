@@ -59,15 +59,11 @@ func (this TagsCommand) Exec(args []string) error {
 
 func (this TagsCommand) listAllTags() error {
 	db, error := OpenDatabase(databasePath())
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer db.Close()
 
 	tags, error := db.Tags()
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	for _, tag := range *tags {
 		fmt.Println(tag.Name)
@@ -78,25 +74,17 @@ func (this TagsCommand) listAllTags() error {
 
 func (this TagsCommand) listTags(paths ...string) error {
 	db, error := OpenDatabase(databasePath())
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer db.Close()
 
     if len(paths) == 1 {
         fileInfo, error := os.Lstat(paths[0])
-        if error != nil {
-            return error
-        }
+        if error != nil { return error }
 
         if fileInfo.IsRegular() {
             tags, error := this.tagsForPath(db, paths[0])
-            if error != nil {
-                return error
-            }
-            if tags == nil {
-                return nil
-            }
+            if error != nil { return error }
+            if tags == nil { return nil }
 
             for _, tag := range *tags {
                 fmt.Println(tag.Name)
@@ -112,18 +100,12 @@ func (this TagsCommand) listTags(paths ...string) error {
 func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
     for _, path := range paths {
         fileInfo, error := os.Lstat(path)
-        if error != nil {
-            return error
-        }
+        if error != nil { return error }
 
         if fileInfo.IsRegular() {
             tags, error := this.tagsForPath(db, path)
-            if error != nil {
-                return error
-            }
-            if tags == nil {
-                continue
-            }
+            if error != nil { return error }
+            if tags == nil { continue }
 
             if len(*tags) > 0 {
                 fmt.Printf("%v: ", path)
@@ -140,15 +122,11 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
             }
         } else if fileInfo.IsDirectory() {
             file, error := os.Open(path)
-            if error != nil {
-                return error
-            }
+            if error != nil { return error }
             defer file.Close()
 
             dirNames, error := file.Readdirnames(0)
-            if error != nil {
-                return error
-            }
+            if error != nil { return error }
 
             childPaths := make([]string, len(dirNames))
             for index, dirName := range dirNames {
@@ -156,9 +134,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
             }
 
             error = this.listTagsRecursive(db, childPaths)
-            if error != nil {
-                return error
-            }
+            if error != nil { return error }
         }
     }
 
@@ -167,22 +143,14 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
 
 func (this TagsCommand) tagsForPath(db *Database, path string) (*[]Tag, error) {
 	absPath, error := filepath.Abs(path)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	file, error := db.FileByPath(absPath)
-	if error != nil {
-		return nil, error
-	}
-	if file == nil {
-		return nil, nil
-	}
+	if error != nil { return nil, error }
+	if file == nil { return nil, nil }
 
 	tags, error := db.TagsByFileId(file.Id)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	return tags, error
 }

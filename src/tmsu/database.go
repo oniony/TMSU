@@ -13,8 +13,9 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-package main
 */
+
+package main
 
 import (
 	"fmt"
@@ -30,10 +31,7 @@ type Database struct {
 
 func OpenDatabase(path string) (*Database, error) {
 	connection, error := sqlite.Open(path)
-	if error != nil {
-		fmt.Fprintf(os.Stderr, "Could not open database: %v.", error)
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	database := Database{connection}
 	database.CreateSchema()
@@ -45,17 +43,13 @@ func (this *Database) Close() error {
 	return this.connection.Close()
 }
 
-// tags
-
 func (this Database) Tags() (*[]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	tags := make([]Tag, 0, 10)
@@ -76,15 +70,11 @@ func (this Database) TagByName(name string) (*Tag, error) {
 	        WHERE name = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(name)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
 	    if statement.Error() != nil {
@@ -111,15 +101,11 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
             ORDER BY name`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	tags := make([]Tag, 0, 10)
 	for statement.Next() {
@@ -130,9 +116,7 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 		tags = append(tags, Tag{uint(tagId), tagName})
 	}
 
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &tags, error
 }
@@ -158,9 +142,7 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
             ORDER BY name`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	// convert string array to empty-interface array
@@ -170,9 +152,7 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 	}
 
 	error = statement.Exec(castTagNames...)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	tags := make([]Tag, 0, 10)
 	for statement.Next() {
@@ -185,9 +165,7 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 		}
 	}
 
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &tags, nil
 }
@@ -197,20 +175,14 @@ func (this Database) AddTag(name string) (*Tag, error) {
 	        VALUES (?)`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(name)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	id := this.connection.LastInsertRowId()
 
@@ -223,20 +195,14 @@ func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(name, int(tagId))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &Tag{tagId, name}, nil
 }
@@ -246,40 +212,28 @@ func (this Database) DeleteTag(tagId uint) error {
 	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(tagId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
-
-// files
 
 func (this Database) Files() (*[]File, error) {
 	sql := `SELECT id, path, fingerprint
 	        FROM file`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec()
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	files := make([]File, 0, 10)
 	for statement.Next() {
@@ -291,9 +245,7 @@ func (this Database) Files() (*[]File, error) {
 		files = append(files, File{uint(fileId), path, fingerprint})
 	}
 
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &files, nil
 }
@@ -304,15 +256,11 @@ func (this Database) File(id uint) (*File, error) {
 	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(id))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
 	    if statement.Error() != nil {
@@ -335,20 +283,14 @@ func (this Database) FileByPath(path string) (*File, error) {
 	        WHERE path = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(path)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
-	    if statement.Error() != nil {
-	        return nil, statement.Error()
-        }
+	    if statement.Error() != nil { return nil, statement.Error() }
 
 		return nil, nil
 	}
@@ -366,20 +308,14 @@ func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
 	        WHERE fingerprint = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(fingerprint)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
-	    if statement.Error() != nil {
-	        return nil, statement.Error()
-        }
+	    if statement.Error() != nil { return nil, statement.Error() }
 
 		return nil, nil
 	}
@@ -396,20 +332,14 @@ func (this Database) AddFile(path string, fingerprint string) (*File, error) {
 	        VALUES (?,?)`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(path, fingerprint)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	id := this.connection.LastInsertRowId()
 
@@ -432,9 +362,7 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
             )`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	// convert string array to empty-interface array
@@ -444,9 +372,7 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 	}
 
 	error = statement.Exec(castTagNames...)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	files := make([]File, 0, 10)
 	for statement.Next() {
@@ -458,9 +384,7 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 		files = append(files, File{uint(fileId), path, fingerprint})
 	}
 
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &files, nil
 }
@@ -471,20 +395,14 @@ func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) erro
 	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(fingerprint, int(fileId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -494,20 +412,14 @@ func (this Database) RemoveFile(fileId uint) error {
 	        WHERE id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -517,15 +429,11 @@ func (this Database) FileTags() (*[]FileTag, error) {
 	        FROM file_tag`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec()
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	fileTags := make([]FileTag, 0, 10)
 	for statement.Next() {
@@ -537,9 +445,7 @@ func (this Database) FileTags() (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{uint(fileTagId), uint(fileId), uint(tagId)})
 	}
 
-	if statement.Error() != nil {
-	    return nil, statement.Error()
-    }
+	if statement.Error() != nil { return nil, statement.Error() }
 
 	return &fileTags, nil
 }
@@ -551,20 +457,14 @@ func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag,
 	        AND tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId), int(tagId))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
-	    if statement.Error() != nil {
-	        return nil, statement.Error()
-        }
+	    if statement.Error() != nil { return nil, statement.Error() }
 
 		return nil, nil
 	}
@@ -581,15 +481,11 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(tagId))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	fileTags := make([]FileTag, 0, 10)
 	for statement.Next() {
@@ -600,9 +496,7 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{uint(fileTagId), uint(fileId), tagId})
 	}
 
-    if statement.Error() != nil {
-        return nil, statement.Error()
-    }
+    if statement.Error() != nil { return nil, statement.Error() }
 
 	return &fileTags, nil
 }
@@ -614,23 +508,13 @@ func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
             LIMIT 1`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return false, error
-	}
+	if error != nil { return false, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId))
-	if error != nil {
-		return false, error
-	}
-
-    if statement.Next() {
-        return true, nil
-    }
-
-    if statement.Error() != nil {
-        return false, statement.Error()
-    }
+	if error != nil { return false, error }
+    if statement.Next() { return true, nil }
+    if statement.Error() != nil { return false, statement.Error() }
 
     return false, nil
 }
@@ -640,20 +524,14 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	        VALUES (?, ?)`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId), int(tagId))
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if !statement.Next() {
-	    if statement.Error() != nil {
-	        return nil, statement.Error()
-        }
+	    if statement.Error() != nil { return nil, statement.Error() }
 
 		return nil, nil
 	}
@@ -669,20 +547,14 @@ func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
 	        AND tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId), int(tagId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -692,20 +564,14 @@ func (this Database) RemoveFileTagsByFileId(fileId uint) error {
 	        WHERE file_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(fileId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -715,20 +581,14 @@ func (this Database) RemoveFileTagsByTagId(tagId uint) error {
 	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(tagId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -739,20 +599,14 @@ func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
 	        WHERE tag_id = ?`
 
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec(int(newTagId), int(oldTagId))
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
@@ -764,17 +618,13 @@ func (this Database) CreateSchema() error {
             )`
 
 	error := this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
            ON tag(name)`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE TABLE IF NOT EXISTS file (
                id INTEGER PRIMARY KEY,
@@ -783,25 +633,19 @@ func (this Database) CreateSchema() error {
            )`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
            ON file(fingerprint)`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_path
            ON file(path)`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE TABLE IF NOT EXISTS file_tag (
                id INTEGER PRIMARY KEY,
@@ -812,30 +656,22 @@ func (this Database) CreateSchema() error {
            )`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
            ON file_tag(file_id)`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
            ON file_tag(tag_id)`
 
 	error = this.exec(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	return nil
 }
-
-// private
 
 func (this Database) contains(list []string, str string) bool {
 	for _, current := range list {
@@ -849,21 +685,14 @@ func (this Database) contains(list []string, str string) bool {
 
 func (this *Database) exec(sql string) error {
 	statement, error := this.connection.Prepare(sql)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer statement.Finalize()
 
 	error = statement.Exec()
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	statement.Next()
-	if statement.Error() != nil {
-	    return statement.Error()
-    }
+	if statement.Error() != nil { return statement.Error() }
 
 	return nil
 }
-

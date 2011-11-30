@@ -26,9 +26,7 @@ import (
 
 func Fingerprint(path string) (string, error) {
 	file, error := os.Open(path)
-	if error != nil {
-		return "", error
-	}
+	if error != nil { return "", error }
 	defer file.Close()
 
 	hash := sha256.New()

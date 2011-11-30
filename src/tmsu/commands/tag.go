@@ -47,9 +47,7 @@ func (this TagCommand) Exec(args []string) error {
 	}
 
 	error := this.tagPath(args[0], args[1:])
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	return nil
 }
@@ -58,26 +56,18 @@ func (this TagCommand) Exec(args []string) error {
 
 func (this TagCommand) tagPath(path string, tagNames []string) error {
 	db, error := OpenDatabase(databasePath())
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	defer db.Close()
 
 	absPath, error := filepath.Abs(path)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	file, error := this.addFile(db, absPath)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	for _, tagName := range tagNames {
 		_, _, error = this.applyTag(db, path, file.Id, tagName)
-		if error != nil {
-			return error
-		}
+		if error != nil { return error }
 	}
 
 	return nil
@@ -97,28 +87,20 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
     }
 
 	tag, error := db.TagByName(tagName)
-	if error != nil {
-		return nil, nil, error
-	}
+	if error != nil { return nil, nil, error }
 
 	if tag == nil {
 		fmt.Printf("New tag '%v'\n", tagName)
 		tag, error = db.AddTag(tagName)
-		if error != nil {
-			return nil, nil, error
-		}
+		if error != nil { return nil, nil, error }
 	}
 
 	fileTag, error := db.FileTagByFileIdAndTagId(fileId, tag.Id)
-	if error != nil {
-		return nil, nil, error
-	}
+	if error != nil { return nil, nil, error }
 
 	if fileTag == nil {
 		_, error := db.AddFileTag(fileId, tag.Id)
-		if error != nil {
-			return nil, nil, error
-		}
+		if error != nil { return nil, nil, error }
 	}
 
 	return tag, fileTag, nil
@@ -126,29 +108,21 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
 
 func (this TagCommand) addFile(db *Database, path string) (*File, error) {
 	fingerprint, error := Fingerprint(path)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	file, error := db.FileByPath(path)
-	if error != nil {
-		return nil, error
-	}
+	if error != nil { return nil, error }
 
 	if file == nil {
 		file, error = db.FileByFingerprint(fingerprint)
-		if error != nil {
-			return nil, error
-		}
+		if error != nil { return nil, error }
 
 		if file != nil {
 			fmt.Printf("Warning: file is a duplicate of a previously tagged file.\n")
 		}
 
 		file, error = db.AddFile(path, fingerprint)
-		if error != nil {
-			return nil, error
-		}
+		if error != nil { return nil, error }
 	} else {
 		if file.Fingerprint != fingerprint {
 			db.UpdateFileFingerprint(file.Id, fingerprint)

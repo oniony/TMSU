@@ -45,45 +45,35 @@ The default database at '$HOME/.tmsu/db' will be mounted unless overridden with 
 }
 
 func (this MountCommand) Exec(args []string) error {
-	if len(args) < 1 {
-		errors.New("No mountpoint specified.")
-	}
-	if len(args) > 1 {
-		errors.New("Extraneous arguments.")
-	}
+	if len(args) < 1 { errors.New("No mountpoint specified.") }
+	if len(args) > 1 { errors.New("Extraneous arguments.") }
 
-    //TODO check the mount-point exists
-    //TODO check the mount-point permissions
-    //TODO check the database exists
-    //TODO check the database permissions
+    path := args[0]
+
+    fileInfo, error := os.Stat(path)
+    if error != nil { return error }
+    if fileInfo == nil { return error.New("Mount point '" + path + "' does not exist.") }
+    if !fileInfo.IsDirectory() { return error.New("Mount point '" + path + "' is not a directory.") }
 
 	mountPath := args[0]
 	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)
 
 	errorPipe, error := command.StderrPipe()
-	if error != nil {
-	    return error
-    }
+	if error != nil { return error }
 
 	error = command.Start()
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
     time.Sleep(HALF_SECOND)
 
     waitMessage, error := command.Process.Wait(os.WNOHANG)
-    if error != nil {
-        return error
-    }
+    if error != nil { return error }
 
     if waitMessage.WaitStatus.Exited() {
         if waitMessage.WaitStatus.ExitStatus() != 0 {
             buffer := make([]byte, 1024)
             count, error := errorPipe.Read(buffer)
-            if error != nil {
-                return error
-            }
+            if error != nil { return error }
 
             return errors.New("Could not mount VFS: " + string(buffer[0:count]))
         }

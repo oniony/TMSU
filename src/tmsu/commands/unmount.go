@@ -48,19 +48,13 @@ func (this UnmountCommand) Exec(args []string) error {
 	path := args[0]
 
 	fusermountPath, error := exec.LookPath("fusermount")
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	process, error := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 
 	message, error := os.Wait(process.Pid, 0)
-	if error != nil {
-		return error
-	}
+	if error != nil { return error }
 	if message.ExitStatus() != 0 {
 		return errors.New("Could not unmount.")
 	}

@@ -1,4 +1,4 @@
-VER=0.1.3
+VER=0.0.3
 
 compile: clean version
 	cd src/tmsu; gomake

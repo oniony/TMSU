@@ -6,7 +6,7 @@ compile: clean version
 	cp src/tmsu/tmsu bin
 
 version:
-	echo "package main; var version = \"$VER\"" >src/tmsu/version.go
+	echo "package main; var version = \"$(VER)\"" >src/tmsu/version.go
 
 package: compile
 	mkdir tmsu-$(VER)

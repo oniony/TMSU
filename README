@@ -1,7 +1,8 @@
-     .
-    -+- |\/| (  | | 
-     |  |  |  ) |_|
 
+ .
+-+- |\/| (  | |
+ |  |  |  ) |_|
+ 
 Overview
 --------
 
@@ -21,6 +22,8 @@ A command overview and details on how to use each command are available via the
 integrated help:
 
     > tmsu help
+
+Full documentation is maintained online at http://bitbucket.org/oniony/tmsu.
 
 Compiling
 ---------

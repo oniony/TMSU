@@ -83,7 +83,7 @@ func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged [
             return nil, nil, error
         }
 
-        if fileInfo.IsRegular() {
+        if fileInfo.Mode() & os.ModeType == 0 {
             absPath, error := filepath.Abs(path)
             if error != nil {
                 return nil, nil, error
@@ -99,7 +99,7 @@ func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged [
             } else {
                 tagged = append(tagged, absPath)
             }
-        } else if fileInfo.IsDirectory() {
+        } else if fileInfo.IsDir() {
             file, error := os.Open(path)
             if error != nil {
                 return nil, nil, error

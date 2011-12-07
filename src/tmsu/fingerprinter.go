@@ -36,7 +36,7 @@ func Fingerprint(path string) (string, error) {
 		hash.Write(buffer[:count])
 	}
 
-	sum := hash.Sum()
+	sum := hash.Sum(make([]byte, 0, 64))
 	fingerprint := hex.EncodeToString(sum)
 
 	return fingerprint, nil

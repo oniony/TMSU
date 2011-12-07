@@ -20,8 +20,8 @@ package main
 
 import (
 	"errors"
-	"exec"
 	"os"
+	"os/exec"
 )
 
 type UnmountCommand struct{}

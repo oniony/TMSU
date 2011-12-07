@@ -59,10 +59,10 @@ func (this HelpCommand) overview() {
 	fmt.Println("tmsu")
 	fmt.Println()
 
-	var maxWidth uint = 0
+	var maxWidth int = 0
 	commandNames := make([]string, 0, len(commands))
 	for commandName, _ := range commands {
-		maxWidth = uint(math.Max(float64(maxWidth), float64(len(commandName))))
+		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
 	}
 
@@ -76,7 +76,7 @@ func (this HelpCommand) overview() {
 			continue
 		}
 
-		fmt.Printf("  %-"+strconv.Uitoa(maxWidth)+"v  %v\n", command.Name(), commandSummary)
+		fmt.Printf("  %-" + strconv.Itoa(maxWidth) + "v  %v\n", command.Name(), commandSummary)
 	}
 }
 

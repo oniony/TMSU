@@ -81,7 +81,7 @@ func (this TagsCommand) listTags(paths ...string) error {
         fileInfo, error := os.Lstat(paths[0])
         if error != nil { return error }
 
-        if fileInfo.IsRegular() {
+        if fileInfo.Mode() & os.ModeType == 0 {
             tags, error := this.tagsForPath(db, paths[0])
             if error != nil { return error }
             if tags == nil { return nil }
@@ -102,7 +102,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
         fileInfo, error := os.Lstat(path)
         if error != nil { return error }
 
-        if fileInfo.IsRegular() {
+        if fileInfo.Mode() & os.ModeType == 0 {
             tags, error := this.tagsForPath(db, path)
             if error != nil { return error }
             if tags == nil { continue }
@@ -120,7 +120,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
 
                 fmt.Println()
             }
-        } else if fileInfo.IsDirectory() {
+        } else if fileInfo.IsDir() {
             file, error := os.Open(path)
             if error != nil { return error }
             defer file.Close()

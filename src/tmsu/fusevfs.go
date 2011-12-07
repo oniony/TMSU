@@ -24,7 +24,6 @@ import (
 	"os"
 	"strings"
 	"strconv"
-	"time"
 	"github.com/hanwen/go-fuse/fuse"
 )
 
@@ -39,8 +38,8 @@ type FuseVfs struct {
 // Mount the VFS.
 func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
-
-	state, _, error := fuse.MountPathFileSystem(mountPath, &fuseVfs, nil)
+    pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
+	state, _, error := fuse.MountNodeFileSystem(mountPath, pathNodeFs, nil)
 	if error != nil { return nil, error }
 
 	fuseVfs.databasePath = databasePath
@@ -60,13 +59,12 @@ func (this FuseVfs) Loop() {
 }
 
 // Get entry attributes.
-func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*os.FileInfo, fuse.Status) {
+func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	switch name {
 	case "":
 		fallthrough
 	case "tags":
-        now := time.Nanoseconds()
-		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755, Atime_ns: now, Mtime_ns: now, Ctime_ns: now}, fuse.OK
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 
 	path := this.splitPath(name)
@@ -143,8 +141,8 @@ func (this FuseVfs) parseFileId(name string) (uint, error) {
 
 	if count == 1 { return 0, nil }
 
-	id, error := strconv.Atoui(parts[count-2])
-	if error != nil { id, error = strconv.Atoui(parts[count-1]) }
+	id, error := Atoui(parts[count - 2])
+	if error != nil { id, error = Atoui(parts[count - 1]) }
 	if error != nil { return 0, nil }
 
 	return id, nil
@@ -175,7 +173,7 @@ func (this FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	return channel, fuse.OK
 }
 
-func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status) {
+func (this FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
@@ -184,8 +182,7 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status
 
 	if fileId == 0 {
 	    // if no file ID then it is a tag directory
-        now := time.Nanoseconds()
-		return &os.FileInfo{Mode: fuse.S_IFDIR | 0755, Atime_ns: now, Mtime_ns: now, Ctime_ns: now}, fuse.OK
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 
 	db, error := OpenDatabase(this.databasePath)
@@ -194,24 +191,17 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*os.FileInfo, fuse.Status
 
     file, error := db.File(fileId)
     if error != nil { log.Fatalf("Could not retrieve file #%v: %v", fileId, error) }
-    if file == nil { return &os.FileInfo{Mode: fuse.S_IFREG}, fuse.ENOENT }
+    if file == nil { return &fuse.Attr{Mode: fuse.S_IFREG}, fuse.ENOENT }
 
     fileInfo, error := os.Stat(file.Path)
-    var atime, mtime, ctime, size int64
+    var size int64
     if error == nil {
-        atime = fileInfo.Atime_ns
-        mtime = fileInfo.Mtime_ns
-        ctime = fileInfo.Ctime_ns
-        size = fileInfo.Size
+        size = fileInfo.Size()
     } else {
-        now := time.Nanoseconds()
-        atime = now
-        mtime = now
-        ctime = now
         size = 0
     }
 
-	return &os.FileInfo{Mode: fuse.S_IFLNK | 0755, Atime_ns: atime, Mtime_ns: mtime, Ctime_ns: ctime, Size: size}, fuse.OK
+	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(size)}, fuse.OK
 }
 
 func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
@@ -263,11 +253,20 @@ func (this FuseVfs) getLinkName(file File) string {
     extension := filepath.Ext(file.Path)
     fileName := filepath.Base(file.Path)
     linkName := fileName[0 : len(fileName) - len(extension)]
-    suffix := "." + strconv.Uitoa(file.Id) + extension
+    suffix := "." + Uitoa(file.Id) + extension
 
     if len(linkName) + len(suffix) > 255 {
         linkName = linkName[0 : 255 - len(suffix)]
     }
 
     return linkName + suffix
+}
+
+func Uitoa(ui uint) string {
+    return strconv.FormatUint(uint64(ui), 10)
+}
+
+func Atoui(str string) (uint, error) {
+    ui64, error := strconv.ParseUint(str, 10, 0)
+    return uint(ui64), error
 }

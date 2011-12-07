@@ -1,15 +1,18 @@
+SHELL=/bin/sh
 VER=0.0.3
 
-compile: clean version
+all: clean generate compile
+
+compile: generate
 	cd src/tmsu; gomake
-	mkdir bin
+	mkdir -p bin
 	cp src/tmsu/tmsu bin
 
-version:
+generate:
 	echo "package main; var version = \"$(VER)\"" >src/tmsu/version.go
 
-package: compile
-	mkdir tmsu-$(VER)
+dist: compile
+	mkdir -p tmsu-$(VER)
 	cp -R bin tmsu-$(VER)
 	cp LICENSE README tmsu-$(VER)
 	tar czf tmsu-$(VER).tgz tmsu-$(VER)
@@ -18,4 +21,5 @@ package: compile
 clean:
 	rm -f src/tmsu/version.go
 	rm -Rf bin
-	rm -f tmsu-$(VER).tgz
+	rm -Rf tmsu-$(VER)
+	rm -Rf tmsu-$(VER).tgz

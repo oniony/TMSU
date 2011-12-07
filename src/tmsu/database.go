@@ -303,7 +303,7 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 		castTagNames[index] = tagName
 	}
 
-	rows, error := this.connection.Query(sql, castTagNames)
+	rows, error := this.connection.Query(sql, castTagNames...)
 	if error != nil { return nil, error }
 	defer rows.Close()
 

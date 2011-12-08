@@ -43,7 +43,7 @@ func (this *Database) Close() error {
 	return this.connection.Close()
 }
 
-func (this Database) Tags() (*[]Tag, error) {
+func (this Database) Tags() ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -64,7 +64,7 @@ func (this Database) Tags() (*[]Tag, error) {
 		tags = append(tags, Tag{id, name})
 	}
 
-	return &tags, nil
+	return tags, nil
 }
 
 func (this Database) TagByName(name string) (*Tag, error) {
@@ -86,7 +86,7 @@ func (this Database) TagByName(name string) (*Tag, error) {
 	return &Tag{id, name}, nil
 }
 
-func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
+func (this Database) TagsByFileId(fileId uint) ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -112,10 +112,10 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 		tags = append(tags, Tag{tagId, tagName})
 	}
 
-	return &tags, nil
+	return tags, nil
 }
 
-func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
+func (this Database) TagsForTags(tagNames []string) ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -159,7 +159,7 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 		}
 	}
 
-	return &tags, nil
+	return tags, nil
 }
 
 func (this Database) AddTag(name string) (*Tag, error) {
@@ -309,7 +309,7 @@ func (this Database) AddFile(path string, fingerprint string) (*File, error) {
 	return &File{uint(id), path, fingerprint}, nil
 }
 
-func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
+func (this Database) FilesWithTags(tagNames []string) ([]File, error) {
 	sql := `SELECT id, path, fingerprint
             FROM file
             WHERE id IN (
@@ -347,7 +347,7 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 		files = append(files, File{fileId, path, fingerprint})
 	}
 
-	return &files, nil
+	return files, nil
 }
 
 func (this Database) UpdateFileFingerprint(fileId uint, fingerprint string) error {
@@ -375,7 +375,7 @@ func (this Database) RemoveFile(fileId uint) error {
 	return nil
 }
 
-func (this Database) FileTags() (*[]FileTag, error) {
+func (this Database) FileTags() ([]FileTag, error) {
 	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag`
 
@@ -396,7 +396,7 @@ func (this Database) FileTags() (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
 
-	return &fileTags, nil
+	return fileTags, nil
 }
 
 func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
@@ -419,7 +419,7 @@ func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag,
 	return &FileTag{fileTagId, fileId, tagId}, nil
 }
 
-func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
+func (this Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
 	sql := `SELECT id, file_id
 	        FROM file_tag
 	        WHERE tag_id = ?`
@@ -440,7 +440,7 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
 
-	return &fileTags, nil
+	return fileTags, nil
 }
 
 func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {

@@ -65,7 +65,7 @@ func (this TagsCommand) listAllTags() error {
 	tags, error := db.Tags()
 	if error != nil { return error }
 
-	for _, tag := range *tags {
+	for _, tag := range tags {
 		fmt.Println(tag.Name)
 	}
 
@@ -86,7 +86,7 @@ func (this TagsCommand) listTags(paths ...string) error {
             if error != nil { return error }
             if tags == nil { return nil }
 
-            for _, tag := range *tags {
+            for _, tag := range tags {
                 fmt.Println(tag.Name)
             }
 
@@ -107,10 +107,10 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
             if error != nil { return error }
             if tags == nil { continue }
 
-            if len(*tags) > 0 {
+            if len(tags) > 0 {
                 fmt.Printf("%v: ", path)
 
-                for index, tag := range *tags {
+                for index, tag := range tags {
                     if index > 0 {
                         fmt.Print(" ")
                     }
@@ -141,7 +141,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
     return nil
 }
 
-func (this TagsCommand) tagsForPath(db *Database, path string) (*[]Tag, error) {
+func (this TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
 	absPath, error := filepath.Abs(path)
 	if error != nil { return nil, error }
 

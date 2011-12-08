@@ -57,7 +57,7 @@ func (this MergeCommand) Exec(args []string) error {
     fileTags, error := db.FileTagsByTagId(sourceTag.Id)
     if error != nil { return error }
 
-    for _, fileTag := range *fileTags {
+    for _, fileTag := range fileTags {
         destFileTag, error := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
         if error != nil { return error }
         if destFileTag != nil { continue }

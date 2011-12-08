@@ -72,7 +72,7 @@ func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
 	error = db.DeleteTag(tag.Id)
 	if error != nil { return error }
 
-	for _, fileTag := range *fileTags {
+	for _, fileTag := range fileTags {
 		hasTags, error := db.AnyFileTagsForFile(fileTag.FileId)
 		if error != nil { return error }
 

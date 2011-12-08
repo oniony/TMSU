@@ -158,8 +158,8 @@ func (this FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	tags, error := db.Tags()
 	if error != nil { log.Fatal("Could not retrieve tags: %v", error) }
 
-	channel := make(chan fuse.DirEntry, len(*tags))
-	for _, tag := range *tags {
+	channel := make(chan fuse.DirEntry, len(tags))
+	for _, tag := range tags {
 		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 	close(channel)
@@ -211,14 +211,14 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 	files, error := db.FilesWithTags(tags)
 	if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error) }
 
-	channel := make(chan fuse.DirEntry, len(*files)+len(*furtherTags))
+	channel := make(chan fuse.DirEntry, len(files) + len(furtherTags))
 	defer close(channel)
 
-	for _, tag := range *furtherTags {
+	for _, tag := range furtherTags {
 		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
 	}
 
-	for _, file := range *files {
+	for _, file := range files {
         linkName := this.getLinkName(file)
 		channel <- fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}

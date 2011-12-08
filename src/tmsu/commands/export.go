@@ -64,9 +64,9 @@ func (this ExportCommand) Exec(args []string) error {
 			return error
 		}
 
-		tagNames := make([]string, 0, len(*tags))
+		tagNames := make([]string, 0, len(tags))
 
-		for _, tag := range *tags {
+		for _, tag := range tags {
 			tagNames = append(tagNames, tag.Name)
 		}
 

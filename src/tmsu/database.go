@@ -25,8 +25,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//TODO check rows affected
-
 type Database struct {
 	connection *sql.DB
 }

@@ -54,7 +54,6 @@ func (this MountCommand) Exec(args []string) error {
     if error != nil { return error }
     if fileInfo == nil { return errors.New("Mount point '" + path + "' does not exist.") }
     if !fileInfo.IsDir() { return errors.New("Mount point '" + path + "' is not a directory.") }
-    //TODO check permissions on mount path
 
 	mountPath := args[0]
 	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)

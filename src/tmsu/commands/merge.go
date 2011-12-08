@@ -48,18 +48,26 @@ func (this MergeCommand) Exec(args []string) error {
 
 	sourceTag, error := db.TagByName(sourceTagName)
 	if error != nil { return error }
-	if sourceTag == nil {
-		return errors.New("No such tag '" + sourceTagName + "'.")
-	}
+	if sourceTag == nil { return errors.New("No such tag '" + sourceTagName + "'.") }
 
 	destTag, error := db.TagByName(destTagName)
 	if error != nil { return error }
-	if destTag == nil {
-		return errors.New("No such tag '" + destTagName + "'.")
-	}
+	if destTag == nil { return errors.New("No such tag '" + destTagName + "'.") }
 
-	error = db.MigrateFileTags(sourceTag.Id, destTag.Id)
-	if error != nil { return error }
+    fileTags, error := db.FileTagsByTagId(sourceTag.Id)
+    if error != nil { return error }
+
+    for _, fileTag := range *fileTags {
+        destFileTag, error := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+        if error != nil { return error }
+        if destFileTag != nil { continue }
+
+        _, error = db.AddFileTag(fileTag.FileId, destTag.Id)
+        if error != nil { return error }
+    }
+
+    error = db.RemoveFileTagsByTagId(sourceTag.Id)
+    if error != nil { return error }
 
 	error = db.DeleteTag(sourceTag.Id)
 	if error != nil { return error }

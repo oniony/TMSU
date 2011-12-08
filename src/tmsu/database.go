@@ -19,13 +19,12 @@ package main
 
 import (
     "exp/sql"
+    "errors"
 	"strconv"
 	"strings"
 	_ "github.com/mattn/go-sqlite3"
 )
 
-//TODO handle iteration errors
-//TODO handle scan errors
 //TODO check rows affected
 
 type Database struct {
@@ -57,9 +56,12 @@ func (this Database) Tags() (*[]Tag, error) {
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
+	    if rows.Err() != nil { return nil, error }
+
 		var id uint
 		var name string
-		rows.Scan(&id, &name)
+		error = rows.Scan(&id, &name)
+		if error != nil { return nil, error }
 
 		tags = append(tags, Tag{id, name})
 	}
@@ -77,9 +79,11 @@ func (this Database) TagByName(name string) (*Tag, error) {
 	defer rows.Close()
 
 	if !rows.Next() { return nil, nil }
+	if rows.Err() != nil { return nil, error }
 
 	var id uint
-	rows.Scan(&id)
+	error = rows.Scan(&id)
+	if error != nil { return nil, error }
 
 	return &Tag{id, name}, nil
 }
@@ -100,9 +104,12 @@ func (this Database) TagsByFileId(fileId uint) (*[]Tag, error) {
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var tagId uint
 		var tagName string
-		rows.Scan(&tagId, &tagName)
+		error = rows.Scan(&tagId, &tagName)
+		if error != nil { return nil, error }
 
 		tags = append(tags, Tag{tagId, tagName})
 	}
@@ -142,9 +149,12 @@ func (this Database) TagsForTags(tagNames []string) (*[]Tag, error) {
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var tagId uint
 		var tagName string
-		rows.Scan(&tagId, &tagName)
+		error = rows.Scan(&tagId, &tagName)
+		if error != nil { return nil, error }
 
 		if !this.contains(tagNames, tagName) {
 			tags = append(tags, Tag{tagId, tagName})
@@ -164,6 +174,10 @@ func (this Database) AddTag(name string) (*Tag, error) {
 	id, error := result.LastInsertId()
 	if error != nil { return nil, error }
 
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return nil, error }
+	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
+
 	return &Tag{uint(id), name}, nil
 }
 
@@ -172,8 +186,12 @@ func (this Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	        SET name = ?
 	        WHERE id = ?`
 
-	_, error := this.connection.Exec(sql, name, tagId)
+	result, error := this.connection.Exec(sql, name, tagId)
 	if error != nil { return nil, error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return nil, error }
+	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &Tag{tagId, name}, nil
 }
@@ -182,8 +200,12 @@ func (this Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
-	_, error := this.connection.Exec(sql, tagId)
+	result, error := this.connection.Exec(sql, tagId)
 	if error != nil { return error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return error }
+	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
 }
@@ -198,10 +220,13 @@ func (this Database) Files() (*[]File, error) {
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var fileId uint
 		var path string
 		var fingerprint string
-		rows.Scan(&fileId, &path, &fingerprint)
+		error = rows.Scan(&fileId, &path, &fingerprint)
+		if error != nil { return nil, error }
 
 		files = append(files, File{fileId, path, fingerprint})
 	}
@@ -218,13 +243,13 @@ func (this Database) File(id uint) (*File, error) {
 	if error != nil { return nil, error }
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
+	if !rows.Next() { return nil, nil }
+	if rows.Err() != nil { return nil, error }
 
 	var path string
 	var fingerprint string
-	rows.Scan(&path, &fingerprint)
+	error = rows.Scan(&path, &fingerprint)
+	if error != nil { return nil, error }
 
 	return &File{id, path, fingerprint}, nil
 }
@@ -238,13 +263,13 @@ func (this Database) FileByPath(path string) (*File, error) {
 	if error != nil { return nil, error }
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
+	if !rows.Next() { return nil, nil }
+	if rows.Err() != nil { return nil, error }
 
 	var id uint
 	var fingerprint string
-	rows.Scan(&id, &fingerprint)
+	error = rows.Scan(&id, &fingerprint)
+	if error != nil { return nil, error }
 
 	return &File{id, path, fingerprint}, nil
 }
@@ -258,13 +283,13 @@ func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
 	if error != nil { return nil, error }
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
+	if !rows.Next() { return nil, nil }
+	if rows.Err() != nil { return nil, error }
 
 	var id uint
 	var path string
-	rows.Scan(&id, &path)
+	error = rows.Scan(&id, &path)
+	if error != nil { return nil, error }
 
 	return &File{id, path, fingerprint}, nil
 }
@@ -278,6 +303,10 @@ func (this Database) AddFile(path string, fingerprint string) (*File, error) {
 
 	id, error := result.LastInsertId()
 	if error != nil { return nil, error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return nil, error }
+	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &File{uint(id), path, fingerprint}, nil
 }
@@ -309,10 +338,13 @@ func (this Database) FilesWithTags(tagNames []string) (*[]File, error) {
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var fileId uint
 		var path string
 		var fingerprint string
-		rows.Scan(&fileId, &path, &fingerprint)
+		error = rows.Scan(&fileId, &path, &fingerprint)
+		if error != nil { return nil, error }
 
 		files = append(files, File{fileId, path, fingerprint})
 	}
@@ -335,8 +367,12 @@ func (this Database) RemoveFile(fileId uint) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
-	_, error := this.connection.Exec(sql, fileId)
+	result, error := this.connection.Exec(sql, fileId)
 	if error != nil { return error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return error }
+	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
 }
@@ -351,10 +387,13 @@ func (this Database) FileTags() (*[]FileTag, error) {
 
 	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var fileTagId uint
 		var fileId uint
 		var tagId uint
-		rows.Scan(&fileTagId, &fileId, &tagId)
+		error = rows.Scan(&fileTagId, &fileId, &tagId)
+		if error != nil { return nil, error }
 
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
@@ -372,12 +411,12 @@ func (this Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag,
 	if error != nil { return nil, error }
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
+	if !rows.Next() { return nil, nil }
+	if rows.Err() != nil { return nil, error }
 
 	var fileTagId uint
-	rows.Scan(&fileTagId)
+	error = rows.Scan(&fileTagId)
+    if error != nil { return nil, error }
 
 	return &FileTag{fileTagId, fileId, tagId}, nil
 }
@@ -393,9 +432,12 @@ func (this Database) FileTagsByTagId(tagId uint) (*[]FileTag, error) {
 
 	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
 		var fileTagId uint
 		var fileId uint
-		rows.Scan(&fileTagId, &fileId)
+		error = rows.Scan(&fileTagId, &fileId)
+		if error != nil { return nil, error }
 
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
@@ -414,6 +456,7 @@ func (this Database) AnyFileTagsForFile(fileId uint) (bool, error) {
 	defer rows.Close()
 
     if rows.Next() { return true, nil }
+	if rows.Err() != nil { return false, error }
 
     return false, nil
 }
@@ -428,6 +471,10 @@ func (this Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	id, error := result.LastInsertId()
 	if error != nil { return nil, error }
 
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return nil, error }
+	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
+
 	return &FileTag{uint(id), fileId, tagId}, nil
 }
 
@@ -436,8 +483,12 @@ func (this Database) RemoveFileTag(fileId uint, tagId uint) error {
 	        WHERE file_id = ?
 	        AND tag_id = ?`
 
-	_, error := this.connection.Exec(sql, fileId, tagId)
+	result, error := this.connection.Exec(sql, fileId, tagId)
 	if error != nil { return error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return error }
+	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
 }
@@ -462,13 +513,17 @@ func (this Database) RemoveFileTagsByTagId(tagId uint) error {
 	return nil
 }
 
-func (this Database) MigrateFileTags(oldTagId uint, newTagId uint) error {
+func (this Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
 	sql := `UPDATE file_tag
 	        SET tag_id = ?
 	        WHERE tag_id = ?`
 
-	_, error := this.connection.Exec(sql, newTagId, oldTagId)
+	result, error := this.connection.Exec(sql, newTagId, oldTagId)
 	if error != nil { return error }
+
+	rowsAffected, error := result.RowsAffected()
+	if error != nil { return error }
+	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
 }

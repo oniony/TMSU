@@ -35,7 +35,6 @@ type FuseVfs struct {
 	state        *fuse.MountState
 }
 
-// Mount the VFS.
 func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
     pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
@@ -49,7 +48,6 @@ func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	return &fuseVfs, nil
 }
 
-// Unmount the VFS.
 func (this FuseVfs) Unmount() {
 	this.state.Unmount()
 }
@@ -58,7 +56,6 @@ func (this FuseVfs) Loop() {
 	this.state.Loop()
 }
 
-// Get entry attributes.
 func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	switch name {
 	case "":
@@ -76,7 +73,6 @@ func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fus
 	return nil, fuse.ENOENT
 }
 
-// Unlink entry.
 func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
     fileId, error := this.parseFileId(name)
     if error != nil { log.Fatalf("Could not unlink: %v", error) }
@@ -104,7 +100,6 @@ func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
     return fuse.OK
 }
 
-// Enumerate directory.
 func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
 	switch name {
         case "": return this.topDirectories()
@@ -119,7 +114,6 @@ func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEn
 	return nil, fuse.ENOENT
 }
 
-// Read symbolic link target.
 func (this FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
 	path := this.splitPath(name)
 	switch path[0] {

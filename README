@@ -28,8 +28,11 @@ Full documentation is maintained online at http://bitbucket.org/oniony/tmsu.
 Compiling
 ---------
 
+The following steps are for compiling from source. Compiled binaries for some
+platforms are available from the tmsu project page on Bitbucket.
+
 tmsu is written in Go (http://www.golang.org/). To compile from source you
-must first install Go and the Go packages that tmsu depends upon.
+must first install Go and the packages that tmsu depends upon.
 
 1. Installing Go
 
@@ -37,18 +40,34 @@ Go can be installed per the instructions at http://golang.org/doc/install.html
 or it may be available in the package management system that comes with your
 operating system (if any).
 
-tmsu is currently built against the Go weekly builds (see `VERSIONS`).
+tmsu is currently built against the Go weekly builds (see `VERSIONS` for exact
+revision numbers).
 
 2. Install the dependent packages
 
-    > goinstall gosqlite.googlecode.com/hg/sqlite
+    > goinstall github.com/mattn/go-sqlite3
     > goinstall github.com/hanwen/go-fuse/fuse
 
-3. Make the project
+At the time of writing the go-fuse project does not have a Makefile so must
+be compiled manually:
 
+    > cd $GOROOT/src/pkg/github.com/hanwen/go-fuse
+    > ./all.bash
+
+3. Checkout the tmsu source code:
+
+    > hg co https://bitbucket.org/oniony/tmsu
+
+4. Make the project
+
+    > cd tmsu
     > make
 
-This will produce a bin directory containing the resultant binary.
+This will compile to 'bin/tmsu' within the working directory.
+
+5. Install the project
+
+    > sudo make install
 
 - - -
 

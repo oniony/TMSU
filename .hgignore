@@ -3,7 +3,7 @@
 \.a$
 \.8$
 \.6$
-^src/tmsu/tmsu$
+^src/main/tmsu$
 \.tgz$
-^src/tmsu/version.go
+^src/main/version.gen.go
 ^bin

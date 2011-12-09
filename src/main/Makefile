@@ -3,7 +3,7 @@ include $(GOROOT)/src/Make.inc
 TARG=tmsu
 GOFILES=config.go \
 		main.go \
-		version.go \
+		version.gen.go \
 		command.go \
 		commands/help.go \
 		commands/mount.go \

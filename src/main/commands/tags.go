@@ -31,14 +31,14 @@ func (this TagsCommand) Name() string {
 }
 
 func (this TagsCommand) Summary() string {
-	return "lists all tags or tags applied to a file or files"
+	return "lists all tags or tags applied to files"
 }
 
 func (this TagsCommand) Help() string {
 	return `  tmsu tags --all
   tmsu tags [FILE]...
 
-Lists the tags applied to FILEs (the current directory by default).
+Lists the tags applied to FILEs (files in the current directory by default).
 
   --all    show the complete set of tags`
 }
@@ -46,9 +46,7 @@ Lists the tags applied to FILEs (the current directory by default).
 func (this TagsCommand) Exec(args []string) error {
     argCount := len(args)
 
-    if argCount == 0 {
-        return this.listTags(".")
-    } else if argCount == 1 && args[0] == "--all" {
+    if argCount == 1 && args[0] == "--all" {
         return this.listAllTags()
     } else {
 	    this.listTags(args...)
@@ -77,19 +75,27 @@ func (this TagsCommand) listTags(paths ...string) error {
 	if error != nil { return error }
 	defer db.Close()
 
-    if len(paths) == 1 {
-        tags, error := this.tagsForPath(db, paths[0])
-        if error != nil { return error }
-        if tags == nil { return nil }
-
-        for _, tag := range tags {
-            fmt.Println(tag.Name)
-        }
-
-        return nil
+    switch len(paths) {
+        case 0:
+            return this.listTagsRecursive(db, []string { "." })
+        case 1:
+            return this.listTagsForPath(db, paths[0])
+        default:
+            return this.listTagsRecursive(db, paths)
     }
 
     return this.listTagsRecursive(db, paths)
+}
+
+func (this TagsCommand) listTagsForPath(db *Database, path string) error {
+    tags, error := this.tagsForPath(db, path)
+    if error != nil { return error }
+
+    for _, tag := range tags {
+        fmt.Println(tag.Name)
+    }
+
+    return nil
 }
 
 func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {

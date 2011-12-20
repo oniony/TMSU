@@ -67,8 +67,10 @@ func (this DupesCommand) findDuplicates() error {
     for index, fileSet := range fileSets {
         if index > 0 { fmt.Println() }
 
+        fmt.Printf("%v duplicate files:\n", len(fileSet))
+
         for _, file := range fileSet {
-            fmt.Println(file.Path)
+            fmt.Printf("  %v\n", file.Path)
         }
     }
 

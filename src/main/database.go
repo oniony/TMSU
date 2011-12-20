@@ -368,7 +368,7 @@ func (this Database) DuplicateFiles() ([][]File, error) {
 	}
 
     // ensure last file set is added
-    fileSets = append(fileSets, fileSet)
+    if len(fileSet) > 0 { fileSets = append(fileSets, fileSet) }
 
 	return fileSets, nil
 }

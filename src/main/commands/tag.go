@@ -117,8 +117,12 @@ func (this TagCommand) addFile(db *Database, path string) (*File, error) {
 		files, error := db.FilesByFingerprint(fingerprint)
 		if error != nil { return nil, error }
 
-		if files != nil {
-			fmt.Printf("Warning: file is a duplicate of a previously tagged file.\n")
+		if len(files) > 0 {
+			fmt.Printf("Warning: file is a duplicate of previously tagged files.\n")
+
+			for _, duplicateFile := range files {
+			    fmt.Printf("  %v\n", duplicateFile.Path)
+            }
 		}
 
 		file, error = db.AddFile(path, fingerprint)

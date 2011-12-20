@@ -35,11 +35,11 @@ func (this UntagCommand) Summary() string {
 
 func (this UntagCommand) Help() string {
 	return `  tmsu untag FILE TAG...
-  tmsu untag --all FILE
+  tmsu untag --all FILE...
 
 Disassociates FILE with the TAGs specified.
 
-If the --all option is specified then the file will be stripped of all tags.`
+  --all    strip each FILE of all tags`
 }
 
 func (this UntagCommand) Exec(args []string) error {
@@ -48,9 +48,9 @@ func (this UntagCommand) Exec(args []string) error {
 	}
 
     if args[0] == "--all" {
-        if len(args) > 1 { return errors.New("Too many arguments.") }
+        if len(args) < 2 { return errors.New("Files to untag must be specified.") }
 
-        error := this.removeFile(args[1])
+        error := this.removeFiles(args[1:])
         if error != nil { return error }
     } else {
         if len(args) < 2 { return errors.New("Tags to remove must be specified.") }
@@ -65,27 +65,29 @@ func (this UntagCommand) Exec(args []string) error {
 
 // implementation
 
-func (this UntagCommand) removeFile(path string) error {
-	absPath, error := filepath.Abs(path)
-	if error != nil {
-		return error
-	}
+func (this UntagCommand) removeFiles(paths []string) error {
+    db, error := OpenDatabase(databasePath())
+    if error != nil {
+        return error
+    }
+    defer db.Close()
 
-	db, error := OpenDatabase(databasePath())
-	if error != nil {
-		return error
-	}
-	defer db.Close()
+    for _, path := range paths {
+        absPath, error := filepath.Abs(path)
+        if error != nil {
+            return error
+        }
 
-	file, error := db.FileByPath(absPath)
-	if error != nil { return error }
-	if file == nil { return errors.New("File '" + path + "' is not tagged.") }
+        file, error := db.FileByPath(absPath)
+        if error != nil { return error }
+        if file == nil { return errors.New("File '" + path + "' is not tagged.") }
 
-    error = db.RemoveFileTagsByFileId(file.Id)
-    if error != nil { return error }
+        error = db.RemoveFileTagsByFileId(file.Id)
+        if error != nil { return error }
 
-	error = db.RemoveFile(file.Id)
-    if error != nil { return error }
+        error = db.RemoveFile(file.Id)
+        if error != nil { return error }
+    }
 
     return nil
 }

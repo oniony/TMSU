@@ -1,10 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=tmsu
-GOFILES=config.go \
-		main.go \
-		version.gen.go \
-		command.go \
+GOFILES=command.go \
 		commands/delete.go \
 		commands/dupes.go \
 		commands/export.go \
@@ -20,11 +17,15 @@ GOFILES=config.go \
 		commands/untag.go \
 		commands/version.go \
 		commands/vfs.go \
-		entities/tag.go \
+		config.go \
+		database.go \
 		entities/file.go \
 		entities/filetag.go \
-		database.go \
+		entities/tag.go \
+		fingerprinter.go \
 		fusevfs.go \
-		fingerprinter.go
+		main.go \
+		os.go \
+		version.gen.go \
 
 include $(GOROOT)/src/Make.cmd

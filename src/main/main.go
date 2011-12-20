@@ -27,19 +27,21 @@ var commands map[string]Command
 
 func main() {
 	commandArray := []Command{
-		HelpCommand{},
-		MountCommand{},
-		UnmountCommand{},
-		TagsCommand{},
-		TagCommand{},
-		UntagCommand{},
-		RenameCommand{},
-		MergeCommand{},
 		DeleteCommand{},
+		DupesCommand{},
 		ExportCommand{},
-		VfsCommand{},
+		HelpCommand{},
+		MergeCommand{},
+		MountCommand{},
+		RenameCommand{},
+		StatsCommand{},
 		StatusCommand{},
+		TagCommand{},
+		TagsCommand{},
+		UnmountCommand{},
+		UntagCommand{},
 		VersionCommand{},
+		VfsCommand{},
 	}
 
 	commands = make(map[string]Command, len(commandArray))

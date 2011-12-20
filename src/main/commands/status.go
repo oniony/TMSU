@@ -69,9 +69,8 @@ func (this StatusCommand) Exec(args []string) error {
 
 func (this StatusCommand) status(paths []string, tagged []string, untagged []string) ([]string, []string, error) {
     db, error := OpenDatabase(databasePath())
-    if error != nil {
-        return nil, nil, error
-    }
+    if error != nil { return nil, nil, error }
+    defer db.Close()
 
     return this.statusRecursive(db, paths, tagged, untagged)
 }
@@ -79,20 +78,14 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
 func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged []string, untagged []string) ([]string, []string, error) {
     for _, path := range paths {
         fileInfo, error := os.Lstat(path)
-        if error != nil {
-            return nil, nil, error
-        }
+        if error != nil { return nil, nil, error }
 
         if fileInfo.Mode() & os.ModeType == 0 {
             absPath, error := filepath.Abs(path)
-            if error != nil {
-                return nil, nil, error
-            }
+            if error != nil { return nil, nil, error }
 
             file, error := db.FileByPath(absPath)
-            if error != nil {
-                return nil, nil, error
-            }
+            if error != nil { return nil, nil, error }
 
             if file == nil {
                 untagged = append(untagged, absPath)
@@ -101,15 +94,13 @@ func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged [
             }
         } else if fileInfo.IsDir() {
             file, error := os.Open(path)
-            if error != nil {
-                return nil, nil, error
-            }
-            defer file.Close()
+            if error != nil { return nil, nil, error }
 
             dirNames, error := file.Readdirnames(0)
-            if error != nil {
-                return nil, nil, error
-            }
+            if error != nil { return nil, nil, error }
+
+            error = file.Close()
+            if error != nil { return nil, nil, error }
 
             childPaths := make([]string, len(dirNames))
             for index, dirName := range dirNames {
@@ -117,9 +108,7 @@ func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged [
             }
 
             tagged, untagged, error = this.statusRecursive(db, childPaths, tagged, untagged)
-            if error != nil {
-                return nil, nil, error
-            }
+            if error != nil { return nil, nil, error }
         }
     }
 

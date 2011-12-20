@@ -78,20 +78,15 @@ func (this TagsCommand) listTags(paths ...string) error {
 	defer db.Close()
 
     if len(paths) == 1 {
-        fileInfo, error := os.Lstat(paths[0])
+        tags, error := this.tagsForPath(db, paths[0])
         if error != nil { return error }
+        if tags == nil { return nil }
 
-        if fileInfo.Mode() & os.ModeType == 0 {
-            tags, error := this.tagsForPath(db, paths[0])
-            if error != nil { return error }
-            if tags == nil { return nil }
-
-            for _, tag := range tags {
-                fmt.Println(tag.Name)
-            }
-
-            return nil
+        for _, tag := range tags {
+            fmt.Println(tag.Name)
         }
+
+        return nil
     }
 
     return this.listTagsRecursive(db, paths)

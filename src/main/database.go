@@ -43,6 +43,24 @@ func (this *Database) Close() error {
 	return this.connection.Close()
 }
 
+func (this Database) TagCount() (uint, error) {
+	sql := `SELECT count(1)
+			FROM tag`
+
+	rows, error := this.connection.Query(sql)
+	if error != nil { return 0, error }
+	defer rows.Close()
+
+	if !rows.Next() { return 0, errors.New("Could not get tag count.") }
+	if rows.Err() != nil { return 0, error }
+
+	var count uint
+	error = rows.Scan(&count)
+	if error != nil { return 0, error }
+
+	return count, nil
+}
+
 func (this Database) Tags() ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
@@ -208,6 +226,24 @@ func (this Database) DeleteTag(tagId uint) error {
 	return nil
 }
 
+func (this Database) FileCount() (uint, error) {
+	sql := `SELECT count(1)
+			FROM file`
+
+	rows, error := this.connection.Query(sql)
+	if error != nil { return 0, error }
+	defer rows.Close()
+
+	if !rows.Next() { return 0, errors.New("Could not get file count.") }
+	if rows.Err() != nil { return 0, error }
+
+	var count uint
+	error = rows.Scan(&count)
+	if error != nil { return 0, error }
+
+	return count, nil
+}
+
 func (this Database) Files() (*[]File, error) {
 	sql := `SELECT id, path, fingerprint
 	        FROM file`
@@ -272,7 +308,7 @@ func (this Database) FileByPath(path string) (*File, error) {
 	return &File{id, path, fingerprint}, nil
 }
 
-func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
+func (this Database) FilesByFingerprint(fingerprint string) ([]File, error) {
 	sql := `SELECT id, path
 	        FROM file
 	        WHERE fingerprint = ?`
@@ -281,15 +317,60 @@ func (this Database) FileByFingerprint(fingerprint string) (*File, error) {
 	if error != nil { return nil, error }
 	defer rows.Close()
 
-	if !rows.Next() { return nil, nil }
-	if rows.Err() != nil { return nil, error }
+	files := make([]File, 0, 10)
+	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
 
-	var id uint
-	var path string
-	error = rows.Scan(&id, &path)
+		var fileId uint
+		var path string
+		error = rows.Scan(&fileId, &path)
+		if error != nil { return nil, error }
+
+		files = append(files, File{fileId, path, fingerprint})
+	}
+
+	return files, nil
+}
+
+func (this Database) DuplicateFiles() ([][]File, error) {
+    sql := `SELECT id, path, fingerprint
+            FROM file
+            WHERE fingerprint IN (SELECT fingerprint
+                                FROM file
+                                GROUP BY fingerprint
+                                HAVING count(1) > 1)
+            ORDER BY fingerprint`
+
+	rows, error := this.connection.Query(sql)
 	if error != nil { return nil, error }
+	defer rows.Close()
 
-	return &File{id, path, fingerprint}, nil
+    fileSets := make([][]File, 0, 10)
+    var fileSet []File
+    var previousFingerprint string
+
+	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
+		var fileId uint
+		var path string
+		var fingerprint string
+		error = rows.Scan(&fileId, &path, &fingerprint)
+		if error != nil { return nil, error }
+
+	    if fingerprint != previousFingerprint {
+	        if fileSet != nil { fileSets = append(fileSets, fileSet) }
+            fileSet = make([]File, 0, 10)
+            previousFingerprint = fingerprint
+        }
+
+		fileSet = append(fileSet, File{fileId, path, fingerprint})
+	}
+
+    // ensure last file set is added
+    fileSets = append(fileSets, fileSet)
+
+	return fileSets, nil
 }
 
 func (this Database) AddFile(path string, fingerprint string) (*File, error) {
@@ -373,6 +454,24 @@ func (this Database) RemoveFile(fileId uint) error {
 	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
+}
+
+func (this Database) FileTagCount() (uint, error) {
+	sql := `SELECT count(1)
+			FROM file_tag`
+
+	rows, error := this.connection.Query(sql)
+	if error != nil { return 0, error }
+	defer rows.Close()
+
+	if !rows.Next() { return 0, errors.New("Could not get file-tag count.") }
+	if rows.Err() != nil { return 0, error }
+
+	var count uint
+	error = rows.Scan(&count)
+	if error != nil { return 0, error }
+
+	return count, nil
 }
 
 func (this Database) FileTags() ([]FileTag, error) {

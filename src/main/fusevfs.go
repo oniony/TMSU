@@ -187,7 +187,7 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) 
     if error != nil { log.Fatalf("Could not retrieve file #%v: %v", fileId, error) }
     if file == nil { return &fuse.Attr{Mode: fuse.S_IFREG}, fuse.ENOENT }
 
-    fileInfo, error := os.Stat(file.Path)
+    fileInfo, error := os.Stat(file.Path())
     var size int64
     if error == nil {
         size = fileInfo.Size()
@@ -240,12 +240,12 @@ func (this FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	file, error := db.File(fileId)
 	if error != nil { log.Fatalf("Could not find file %v in database.", fileId) }
 
-	return file.Path, fuse.OK
+	return file.Path(), fuse.OK
 }
 
 func (this FuseVfs) getLinkName(file File) string {
-    extension := filepath.Ext(file.Path)
-    fileName := filepath.Base(file.Path)
+    extension := filepath.Ext(file.Path())
+    fileName := filepath.Base(file.Path())
     linkName := fileName[0 : len(fileName) - len(extension)]
     suffix := "." + Uitoa(file.Id) + extension
 

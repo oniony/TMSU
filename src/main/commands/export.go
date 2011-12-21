@@ -57,7 +57,7 @@ func (this ExportCommand) Exec(args []string) error {
 	}
 
 	for _, file := range *files {
-		fmt.Printf("%v,%v,", file.Path, file.Fingerprint)
+		fmt.Printf("%v,%v,", file.Path(), file.Fingerprint)
 
 		tags, error := db.TagsByFileId(file.Id)
 		if error != nil {

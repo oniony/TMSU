@@ -13,13 +13,21 @@ GNU General Public License for more details.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
-package main
 */
 
 package main
 
+import (
+    "path/filepath"
+)
+
 type File struct {
-	Id          uint
-	Path        string
+	Id uint
+	Directory string
+	Name string
 	Fingerprint string
+}
+
+func (this File) Path() string {
+    return filepath.Join(this.Directory, this.Name)
 }

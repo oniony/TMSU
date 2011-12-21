@@ -20,6 +20,7 @@ package main
 import (
     "exp/sql"
     "errors"
+    "path/filepath"
 	"strconv"
 	"strings"
 	_ "github.com/mattn/go-sqlite3"
@@ -34,7 +35,9 @@ func OpenDatabase(path string) (*Database, error) {
 	if error != nil { return nil, error }
 
 	database := Database{connection}
-	database.CreateSchema()
+
+	error = database.CreateSchema()
+	if error != nil { return nil, error }
 
 	return &database, nil
 }
@@ -245,7 +248,7 @@ func (this Database) FileCount() (uint, error) {
 }
 
 func (this Database) Files() (*[]File, error) {
-	sql := `SELECT id, path, fingerprint
+	sql := `SELECT id, directory, name, fingerprint
 	        FROM file`
 
 	rows, error := this.connection.Query(sql)
@@ -257,19 +260,20 @@ func (this Database) Files() (*[]File, error) {
         if rows.Err() != nil { return nil, error }
 
 		var fileId uint
-		var path string
+		var directory string
+		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &path, &fingerprint)
+		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if error != nil { return nil, error }
 
-		files = append(files, File{fileId, path, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return &files, nil
 }
 
 func (this Database) File(id uint) (*File, error) {
-	sql := `SELECT path, fingerprint
+	sql := `SELECT directory, name, fingerprint
 	        FROM file
 	        WHERE id = ?`
 
@@ -280,20 +284,23 @@ func (this Database) File(id uint) (*File, error) {
 	if !rows.Next() { return nil, nil }
 	if rows.Err() != nil { return nil, error }
 
-	var path string
+	var directory string
+	var name string
 	var fingerprint string
-	error = rows.Scan(&path, &fingerprint)
+	error = rows.Scan(&directory, &name, &fingerprint)
 	if error != nil { return nil, error }
 
-	return &File{id, path, fingerprint}, nil
+	return &File{id, directory, name, fingerprint}, nil
 }
 
 func (this Database) FileByPath(path string) (*File, error) {
+    directory, name := filepath.Split(path)
+
 	sql := `SELECT id, fingerprint
 	        FROM file
-	        WHERE path = ?`
+	        WHERE directory = ? AND name = ?`
 
-	rows, error := this.connection.Query(sql, path)
+	rows, error := this.connection.Query(sql, directory, name)
 	if error != nil { return nil, error }
 	defer rows.Close()
 
@@ -305,11 +312,11 @@ func (this Database) FileByPath(path string) (*File, error) {
 	error = rows.Scan(&id, &fingerprint)
 	if error != nil { return nil, error }
 
-	return &File{id, path, fingerprint}, nil
+	return &File{id, directory, name, fingerprint}, nil
 }
 
 func (this Database) FilesByFingerprint(fingerprint string) ([]File, error) {
-	sql := `SELECT id, path
+	sql := `SELECT id, directory, name
 	        FROM file
 	        WHERE fingerprint = ?`
 
@@ -322,18 +329,19 @@ func (this Database) FilesByFingerprint(fingerprint string) ([]File, error) {
         if rows.Err() != nil { return nil, error }
 
 		var fileId uint
-		var path string
-		error = rows.Scan(&fileId, &path)
+		var directory string
+		var name string
+		error = rows.Scan(&fileId, &directory, &name)
 		if error != nil { return nil, error }
 
-		files = append(files, File{fileId, path, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
 }
 
 func (this Database) DuplicateFiles() ([][]File, error) {
-    sql := `SELECT id, path, fingerprint
+    sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
                                 FROM file
@@ -353,9 +361,10 @@ func (this Database) DuplicateFiles() ([][]File, error) {
         if rows.Err() != nil { return nil, error }
 
 		var fileId uint
-		var path string
+		var directory string
+		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &path, &fingerprint)
+		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if error != nil { return nil, error }
 
 	    if fingerprint != previousFingerprint {
@@ -364,7 +373,7 @@ func (this Database) DuplicateFiles() ([][]File, error) {
             previousFingerprint = fingerprint
         }
 
-		fileSet = append(fileSet, File{fileId, path, fingerprint})
+		fileSet = append(fileSet, File{fileId, directory, name, fingerprint})
 	}
 
     // ensure last file set is added
@@ -374,10 +383,13 @@ func (this Database) DuplicateFiles() ([][]File, error) {
 }
 
 func (this Database) AddFile(path string, fingerprint string) (*File, error) {
-	sql := `INSERT INTO file (path, fingerprint)
-	        VALUES (?,?)`
+    directory, name := filepath.Split(path)
+    directory = filepath.Clean(directory)
 
-	result, error := this.connection.Exec(sql, path, fingerprint)
+	sql := `INSERT INTO file (directory, name, fingerprint)
+	        VALUES (?, ?, ?)`
+
+	result, error := this.connection.Exec(sql, directory, name, fingerprint)
 	if error != nil { return nil, error }
 
 	id, error := result.LastInsertId()
@@ -387,11 +399,11 @@ func (this Database) AddFile(path string, fingerprint string) (*File, error) {
 	if error != nil { return nil, error }
 	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
-	return &File{uint(id), path, fingerprint}, nil
+	return &File{uint(id), directory, name, fingerprint}, nil
 }
 
 func (this Database) FilesWithTags(tagNames []string) ([]File, error) {
-	sql := `SELECT id, path, fingerprint
+	sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE id IN (
                 SELECT file_id
@@ -420,12 +432,13 @@ func (this Database) FilesWithTags(tagNames []string) ([]File, error) {
         if rows.Err() != nil { return nil, error }
 
 		var fileId uint
-		var path string
+		var directory string
+		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &path, &fingerprint)
+		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if error != nil { return nil, error }
 
-		files = append(files, File{fileId, path, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
@@ -642,8 +655,10 @@ func (this Database) CreateSchema() error {
 
     sql = `CREATE TABLE IF NOT EXISTS file (
                id INTEGER PRIMARY KEY,
-               path TEXT UNIQUE NOT NULL,
-               fingerprint TEXT NOT NULL
+               directory TEXT NOT NULL,
+               name TEXT NOT NULL,
+               fingerprint TEXT NOT NULL,
+               CONSTRAINT con_file_path UNIQUE (directory, name)
            )`
 
 	_, error = this.connection.Exec(sql)
@@ -656,7 +671,7 @@ func (this Database) CreateSchema() error {
 	if error != nil { return error }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_path
-           ON file(path)`
+           ON file(directory, name)`
 
 	_, error = this.connection.Exec(sql)
 	if error != nil { return error }

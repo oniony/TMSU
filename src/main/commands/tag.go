@@ -121,7 +121,7 @@ func (this TagCommand) addFile(db *Database, path string) (*File, error) {
 			fmt.Printf("Warning: file is a duplicate of previously tagged files.\n")
 
 			for _, duplicateFile := range files {
-			    fmt.Printf("  %v\n", duplicateFile.Path)
+			    fmt.Printf("  %v\n", duplicateFile.Path())
             }
 		}
 

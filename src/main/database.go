@@ -384,7 +384,7 @@ func (this Database) DuplicateFiles() ([][]File, error) {
 
 func (this Database) AddFile(path string, fingerprint string) (*File, error) {
     directory, name := filepath.Split(path)
-    directory = filepath.Clean(directory)
+    directory = filepath.Clean(directory) //TODO remove when patched
 
 	sql := `INSERT INTO file (directory, name, fingerprint)
 	        VALUES (?, ?, ?)`

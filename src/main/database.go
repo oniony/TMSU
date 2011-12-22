@@ -247,7 +247,7 @@ func (this Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (this Database) Files() (*[]File, error) {
+func (this Database) Files() ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
 	        FROM file`
 
@@ -269,7 +269,7 @@ func (this Database) Files() (*[]File, error) {
 		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
-	return &files, nil
+	return files, nil
 }
 
 func (this Database) File(id uint) (*File, error) {
@@ -295,6 +295,7 @@ func (this Database) File(id uint) (*File, error) {
 
 func (this Database) FileByPath(path string) (*File, error) {
     directory, name := filepath.Split(path)
+    directory = filepath.Clean(directory)
 
 	sql := `SELECT id, fingerprint
 	        FROM file
@@ -313,6 +314,31 @@ func (this Database) FileByPath(path string) (*File, error) {
 	if error != nil { return nil, error }
 
 	return &File{id, directory, name, fingerprint}, nil
+}
+
+func (this Database) FilesByDirectory(directory string) ([]File, error) {
+	sql := `SELECT id, name, fingerprint
+	        FROM file
+	        WHERE directory = ?`
+
+	rows, error := this.connection.Query(sql, directory)
+	if error != nil { return nil, error }
+	defer rows.Close()
+
+	files := make([]File, 0, 10)
+	for rows.Next() {
+        if rows.Err() != nil { return nil, error }
+
+		var fileId uint
+		var name string
+		var fingerprint string
+		error = rows.Scan(&fileId, &name, &fingerprint)
+		if error != nil { return nil, error }
+
+		files = append(files, File{fileId, directory, name, fingerprint})
+	}
+
+	return files, nil
 }
 
 func (this Database) FilesByFingerprint(fingerprint string) ([]File, error) {

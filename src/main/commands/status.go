@@ -60,8 +60,12 @@ func (this StatusCommand) Exec(args []string) error {
         fmt.Printf("T %v\n", path)
     }
 
+    for _, path := range missing {
+        fmt.Printf("! %v\n", path)
+    }
+
     for _, path := range untagged {
-        fmt.Printf("U %v\n", path)
+        fmt.Printf("? %v\n", path)
     }
 
     return nil
@@ -88,12 +92,26 @@ func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged [
             if error != nil { return nil, nil, nil, error }
 
             if file == nil {
-                untagged = append(untagged, absPath)
+                untagged = append(untagged, path)
             } else {
-                tagged = append(tagged, absPath)
+                tagged = append(tagged, path)
             }
         } else if fileInfo.IsDir() {
-            //TODO find missing files
+            files, error := db.FilesByDirectory(absPath)
+            if error != nil { return nil, nil, nil, error }
+
+            for _, file := range files {
+                _, error := os.Lstat(file.Path())
+
+                if error != nil {
+                    if error.(*os.PathError).Err == os.ENOENT {
+                        missingFilePath := filepath.Join(path, file.Name)
+                        missing = append(missing, missingFilePath)
+                    } else {
+                        return nil, nil, nil, error
+                    }
+                }
+            }
 
             childPaths, error := directoryEntries(path)
             if error != nil { return nil, nil, nil, error }

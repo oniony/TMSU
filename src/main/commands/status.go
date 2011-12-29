@@ -44,17 +44,21 @@ func (this StatusCommand) Exec(args []string) error {
     tagged := make([]string, 0, 10)
     untagged := make([]string, 0, 10)
     missing := make([]string, 0, 10)
+    allFiles := false
     var error error
 
-    if len(args) == 0 {
-        tagged, untagged, missing, error = this.status([]string { "." }, tagged, untagged, missing)
-    } else {
-        tagged, untagged, missing, error = this.status(args, tagged, untagged, missing)
+    if len(args) > 0 && args[0] == "--all" {
+        allFiles = true
+        args = args[1:]
     }
 
-    if error != nil {
-        return error
+    if len(args) == 0 {
+        tagged, untagged, missing, error = this.status([]string { "." }, tagged, untagged, missing, allFiles)
+    } else {
+        tagged, untagged, missing, error = this.status(args, tagged, untagged, missing, allFiles)
     }
+
+    if error != nil { return error }
 
     for _, absPath := range tagged {
         path, error := makeRelative(absPath)
@@ -80,12 +84,12 @@ func (this StatusCommand) Exec(args []string) error {
     return nil
 }
 
-func (this StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string) ([]string, []string, []string, error) {
+func (this StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
     for _, path := range paths {
         databaseEntries, error := this.getDatabaseEntries(path)
         if error != nil { return nil, nil, nil, error }
 
-        fileSystemEntries, error := this.getFileSystemEntries(path)
+        fileSystemEntries, error := this.getFileSystemEntries(path, allFiles)
         if error != nil { return nil, nil, nil, error }
 
         for _, entry := range databaseEntries {
@@ -107,11 +111,11 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
     return tagged, untagged, missing, nil
 }
 
-func (this StatusCommand) getFileSystemEntries(path string) ([]string, error) {
-    return this.getFileSystemEntriesRecursive(path, make([]string, 0, 10))
+func (this StatusCommand) getFileSystemEntries(path string, allFiles bool) ([]string, error) {
+    return this.getFileSystemEntriesRecursive(path, make([]string, 0, 10), allFiles)
 }
 
-func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []string) ([]string, error) {
+func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []string, allFiles bool) ([]string, error) {
     fileInfo, error := os.Lstat(path)
     if error != nil { return nil, error }
 
@@ -120,7 +124,7 @@ func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []s
 
     basename := filepath.Base(absPath)
 
-    if basename[0] != '.' {
+    if basename[0] != '.' || allFiles {
         if isRegular(fileInfo)  {
             entries = append(entries, absPath)
         } else if fileInfo.IsDir() {
@@ -128,7 +132,7 @@ func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []s
             if error != nil { return nil, error }
 
             for _, entry := range childEntries {
-                entries, error = this.getFileSystemEntriesRecursive(entry, entries)
+                entries, error = this.getFileSystemEntriesRecursive(entry, entries, allFiles)
                 if error != nil { return nil, error }
             }
         }

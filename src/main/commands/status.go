@@ -118,15 +118,19 @@ func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []s
     absPath, error := filepath.Abs(path)
     if error != nil { return nil, error }
 
-    if isRegular(fileInfo)  {
-        entries = append(entries, absPath)
-    } else if fileInfo.IsDir() {
-        childEntries, error := directoryEntries(absPath)
-        if error != nil { return nil, error }
+    basename := filepath.Base(absPath)
 
-        for _, entry := range childEntries {
-            entries, error = this.getFileSystemEntriesRecursive(entry, entries)
+    if basename[0] != '.' {
+        if isRegular(fileInfo)  {
+            entries = append(entries, absPath)
+        } else if fileInfo.IsDir() {
+            childEntries, error := directoryEntries(absPath)
             if error != nil { return nil, error }
+
+            for _, entry := range childEntries {
+                entries, error = this.getFileSystemEntriesRecursive(entry, entries)
+                if error != nil { return nil, error }
+            }
         }
     }
 

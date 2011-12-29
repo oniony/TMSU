@@ -317,11 +317,11 @@ func (this Database) FileByPath(path string) (*File, error) {
 }
 
 func (this Database) FilesByDirectory(directory string) ([]File, error) {
-	sql := `SELECT id, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint
 	        FROM file
-	        WHERE directory = ?`
+	        WHERE directory = ? OR directory like ?`
 
-	rows, error := this.connection.Query(sql, directory)
+	rows, error := this.connection.Query(sql, directory, directory + "/%")
 	if error != nil { return nil, error }
 	defer rows.Close()
 
@@ -330,12 +330,13 @@ func (this Database) FilesByDirectory(directory string) ([]File, error) {
         if rows.Err() != nil { return nil, error }
 
 		var fileId uint
+		var dir string
 		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &name, &fingerprint)
+		error = rows.Scan(&fileId, &dir, &name, &fingerprint)
 		if error != nil { return nil, error }
 
-		files = append(files, File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, dir, name, fingerprint})
 	}
 
 	return files, nil

@@ -56,15 +56,24 @@ func (this StatusCommand) Exec(args []string) error {
         return error
     }
 
-    for _, path := range tagged {
+    for _, absPath := range tagged {
+        path, error := makeRelative(absPath)
+        if error != nil { return error }
+
         fmt.Printf("T %v\n", path)
     }
 
-    for _, path := range missing {
+    for _, absPath := range missing {
+        path, error := makeRelative(absPath)
+        if error != nil { return error }
+
         fmt.Printf("! %v\n", path)
     }
 
-    for _, path := range untagged {
+    for _, absPath := range untagged {
+        path, error := makeRelative(absPath)
+        if error != nil { return error }
+
         fmt.Printf("? %v\n", path)
     }
 
@@ -72,54 +81,91 @@ func (this StatusCommand) Exec(args []string) error {
 }
 
 func (this StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string) ([]string, []string, []string, error) {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return nil, nil, nil, error }
-    defer db.Close()
-
-    return this.statusRecursive(db, paths, tagged, untagged, missing)
-}
-
-func (this StatusCommand) statusRecursive(db *Database, paths []string, tagged []string, untagged []string, missing []string) ([]string, []string, []string, error) {
     for _, path := range paths {
-        fileInfo, error := os.Lstat(path)
+        databaseEntries, error := this.getDatabaseEntries(path)
         if error != nil { return nil, nil, nil, error }
 
-        absPath, error := filepath.Abs(path)
+        fileSystemEntries, error := this.getFileSystemEntries(path)
         if error != nil { return nil, nil, nil, error }
 
-        if isRegular(fileInfo)  {
-            file, error := db.FileByPath(absPath)
-            if error != nil { return nil, nil, nil, error }
-
-            if file == nil {
-                untagged = append(untagged, path)
+        for _, entry := range databaseEntries {
+            fmt.Printf("Searching FS entries for '%v'\n", entry)
+            if contains(fileSystemEntries, entry) {
+                tagged = append(tagged, entry)
             } else {
-                tagged = append(tagged, path)
+                missing = append(missing, entry)
             }
-        } else if fileInfo.IsDir() {
-            files, error := db.FilesByDirectory(absPath)
-            if error != nil { return nil, nil, nil, error }
+        }
 
-            for _, file := range files {
-                _, error := os.Lstat(file.Path())
-
-                if error != nil {
-                    if error.(*os.PathError).Err == os.ENOENT {
-                        missingFilePath := filepath.Join(path, file.Name)
-                        missing = append(missing, missingFilePath)
-                    } else {
-                        return nil, nil, nil, error
-                    }
-                }
+        for _, entry := range fileSystemEntries {
+            if !contains(databaseEntries, entry) {
+                untagged = append(untagged, entry)
             }
-
-            childPaths, error := directoryEntries(path)
-            if error != nil { return nil, nil, nil, error }
-
-            tagged, untagged, missing, error = this.statusRecursive(db, childPaths, tagged, untagged, missing)
-            if error != nil { return nil, nil, nil, error }
         }
     }
 
     return tagged, untagged, missing, nil
+}
+
+func (this StatusCommand) getFileSystemEntries(path string) ([]string, error) {
+    return this.getFileSystemEntriesRecursive(path, make([]string, 0, 10))
+}
+
+func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []string) ([]string, error) {
+    fileInfo, error := os.Lstat(path)
+    if error != nil { return nil, error }
+
+    absPath, error := filepath.Abs(path)
+    if error != nil { return nil, error }
+
+    if isRegular(fileInfo)  {
+        entries = append(entries, absPath)
+    } else if fileInfo.IsDir() {
+        childEntries, error := directoryEntries(absPath)
+        if error != nil { return nil, error }
+
+        for _, entry := range childEntries {
+            entries, error = this.getFileSystemEntriesRecursive(entry, entries)
+            if error != nil { return nil, error }
+        }
+    }
+
+    return entries, nil
+}
+
+func (this StatusCommand) getDatabaseEntries(path string) ([]string, error) {
+    db, error := OpenDatabase(databasePath())
+    if error != nil { return nil, error }
+    defer db.Close()
+
+    absPath, error := filepath.Abs(path)
+    if error != nil { return nil, error }
+
+    files, error := db.FilesByDirectory(absPath)
+    if error != nil { return nil, error }
+
+    entries := make([]string, 0, len(files))
+    for _, file := range files {
+        entries = append(entries, file.Path())
+    }
+
+    return entries, nil
+}
+
+func contains(strings []string, find string) bool {
+    for _, str := range strings {
+        if str == find { return true }
+    }
+
+    return false
+}
+
+func makeRelative(path string) (string, error) {
+    workingDirectory, error := os.Getwd()
+    if error != nil { return "", error }
+
+    relPath, error := filepath.Rel(workingDirectory, path)
+    if error != nil { return path, nil }
+
+    return relPath, nil
 }

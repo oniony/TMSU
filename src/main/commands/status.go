@@ -21,6 +21,7 @@ import (
     "path/filepath"
     "fmt"
     "os"
+    "strings"
 )
 
 type StatusCommand struct {}
@@ -93,7 +94,6 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
         if error != nil { return nil, nil, nil, error }
 
         for _, entry := range databaseEntries {
-            fmt.Printf("Searching FS entries for '%v'\n", entry)
             if contains(fileSystemEntries, entry) {
                 tagged = append(tagged, entry)
             } else {
@@ -172,8 +172,11 @@ func makeRelative(path string) (string, error) {
     workingDirectory, error := os.Getwd()
     if error != nil { return "", error }
 
-    relPath, error := filepath.Rel(workingDirectory, path)
-    if error != nil { return path, nil }
+    workingDirectory += string(filepath.Separator)
 
-    return relPath, nil
+    if strings.HasPrefix(path, workingDirectory) {
+        return path[len(workingDirectory):], nil
+    }
+
+    return path, nil
 }

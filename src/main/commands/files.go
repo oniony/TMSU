@@ -73,6 +73,12 @@ func (FilesCommand) listFiles(tagNames []string) error {
     if error != nil { return error }
     defer db.Close()
 
+    for _, tagName := range tagNames {
+        tag, error := db.TagByName(tagName)
+        if error != nil { return error }
+        if tag == nil { return errors.New("No such tag '" + tagName + "'.") }
+    }
+
     files, error := db.FilesWithTags(tagNames)
     if error != nil { return error }
 

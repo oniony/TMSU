@@ -23,15 +23,15 @@ import (
 
 type RenameCommand struct{}
 
-func (this RenameCommand) Name() string {
+func (RenameCommand) Name() string {
 	return "rename"
 }
 
-func (this RenameCommand) Summary() string {
+func (RenameCommand) Summary() string {
 	return "renames a tag"
 }
 
-func (this RenameCommand) Help() string {
+func (RenameCommand) Help() string {
 	return `  tmsu rename OLD NEW
 
 Renames a tag from OLD to NEW.
@@ -40,7 +40,7 @@ Attempting to rename a tag with a new name for which a tag already exists will r
 To merge tags use the 'merge' command instead.`
 }
 
-func (this RenameCommand) Exec(args []string) error {
+func (RenameCommand) Exec(args []string) error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	defer db.Close()

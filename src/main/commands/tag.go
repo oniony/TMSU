@@ -26,34 +26,32 @@ import (
 
 type TagCommand struct{}
 
-func (this TagCommand) Name() string {
+func (TagCommand) Name() string {
 	return "tag"
 }
 
-func (this TagCommand) Summary() string {
+func (TagCommand) Summary() string {
 	return "applies one or more tags to a file"
 }
 
-func (this TagCommand) Help() string {
+func (TagCommand) Help() string {
 	return `  tmsu tag FILE TAG...
 
 Tags the file FILE with the tag(s) specified.`
 }
 
-func (this TagCommand) Exec(args []string) error {
+func (command TagCommand) Exec(args []string) error {
 	if len(args) < 2 {
 		return errors.New("File to tag and tags to apply must be specified.")
 	}
 
-	error := this.tagPath(args[0], args[1:])
+	error := command.tagPath(args[0], args[1:])
 	if error != nil { return error }
 
 	return nil
 }
 
-// implementation
-
-func (this TagCommand) tagPath(path string, tagNames []string) error {
+func (command TagCommand) tagPath(path string, tagNames []string) error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	defer db.Close()
@@ -61,18 +59,18 @@ func (this TagCommand) tagPath(path string, tagNames []string) error {
 	absPath, error := filepath.Abs(path)
 	if error != nil { return error }
 
-	file, error := this.addFile(db, absPath)
+	file, error := command.addFile(db, absPath)
 	if error != nil { return error }
 
 	for _, tagName := range tagNames {
-		_, _, error = this.applyTag(db, path, file.Id, tagName)
+		_, _, error = command.applyTag(db, path, file.Id, tagName)
 		if error != nil { return error }
 	}
 
 	return nil
 }
 
-func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName string) (*Tag, *FileTag, error) {
+func (TagCommand) applyTag(db *Database, path string, fileId uint, tagName string) (*Tag, *FileTag, error) {
 	if strings.Index(tagName, ",") != -1 {
 	    return nil, nil, errors.New("Tag names cannot contain commas.")
     }
@@ -105,7 +103,7 @@ func (this TagCommand) applyTag(db *Database, path string, fileId uint, tagName 
 	return tag, fileTag, nil
 }
 
-func (this TagCommand) addFile(db *Database, path string) (*File, error) {
+func (TagCommand) addFile(db *Database, path string) (*File, error) {
 	fingerprint, error := Fingerprint(path)
 	if error != nil { return nil, error }
 

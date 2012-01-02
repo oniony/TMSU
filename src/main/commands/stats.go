@@ -23,22 +23,22 @@ import (
 
 type StatsCommand struct {}
 
-func (this StatsCommand) Name() string {
+func (StatsCommand) Name() string {
     return "stats"
 }
 
-func (this StatsCommand) Summary() string {
+func (StatsCommand) Summary() string {
     return "shows database statistics"
 }
 
-func (this StatsCommand) Help() string {
+func (StatsCommand) Help() string {
     return `tmsu stats
 tmsu stats
 
 Shows the database statistics.`
 }
 
-func (this StatsCommand) Exec(args []string) error {
+func (StatsCommand) Exec(args []string) error {
     db, error := OpenDatabase(databasePath())
     if error != nil { return error }
     defer db.Close()

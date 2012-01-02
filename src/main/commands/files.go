@@ -24,15 +24,15 @@ import (
 
 type FilesCommand struct{}
 
-func (this FilesCommand) Name() string {
+func (FilesCommand) Name() string {
 	return "files"
 }
 
-func (this FilesCommand) Summary() string {
+func (FilesCommand) Summary() string {
 	return "lists files with particular tags"
 }
 
-func (this FilesCommand) Help() string {
+func (FilesCommand) Help() string {
 	return `  tmsu files TAG...
   tmsu files --all
 
@@ -41,17 +41,17 @@ Lists the files, if any, that have all of the TAGs specified.
   --all    show the complete set of tagged files`
 }
 
-func (this FilesCommand) Exec(args []string) error {
+func (command FilesCommand) Exec(args []string) error {
     argCount := len(args)
 
     if argCount == 1 && args[0] == "--all" {
-        return this.listAllFiles()
+        return command.listAllFiles()
     }
 
-    return this.listFiles(args)
+    return command.listFiles(args)
 }
 
-func (this FilesCommand) listAllFiles() error {
+func (FilesCommand) listAllFiles() error {
     db, error := OpenDatabase(databasePath())
     if error != nil { return error }
     defer db.Close()
@@ -66,7 +66,7 @@ func (this FilesCommand) listAllFiles() error {
     return nil
 }
 
-func (this FilesCommand) listFiles(tagNames []string) error {
+func (FilesCommand) listFiles(tagNames []string) error {
     if len(tagNames) == 0 { return errors.New("At least one tag must be specified.") }
 
     db, error := OpenDatabase(databasePath())

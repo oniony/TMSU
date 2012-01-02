@@ -25,23 +25,23 @@ import (
 
 type ExportCommand struct{}
 
-func (this ExportCommand) Name() string {
+func (ExportCommand) Name() string {
 	return "export"
 }
 
-func (this ExportCommand) Summary() string {
+func (ExportCommand) Summary() string {
 	return "exports the tag database"
 }
 
-func (this ExportCommand) Help() string {
+func (ExportCommand) Help() string {
 	return `tmsu export
         
 dumps the tag database to standard output as comma-separated values (CSV)`
 }
 
-func (this ExportCommand) Exec(args []string) error {
+func (command ExportCommand) Exec(args []string) error {
 	if len(args) != 0 {
-		return errors.New("Unpected argument to command '" + this.Name() + "'.")
+		return errors.New("Unpected argument to command '" + command.Name() + "'.")
 	}
 
 	db, error := OpenDatabase(databasePath())

@@ -23,21 +23,21 @@ import (
 
 type MergeCommand struct{}
 
-func (this MergeCommand) Name() string {
+func (MergeCommand) Name() string {
 	return "merge"
 }
 
-func (this MergeCommand) Summary() string {
+func (MergeCommand) Summary() string {
 	return "merges two tags together"
 }
 
-func (this MergeCommand) Help() string {
+func (MergeCommand) Help() string {
 	return `  tmsu merge SRC DEST
         
 Merges SRC into DEST resulting in a single tag of name DEST.`
 }
 
-func (this MergeCommand) Exec(args []string) error {
+func (MergeCommand) Exec(args []string) error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	//defer db.Close()

@@ -25,15 +25,15 @@ import (
 
 type DupesCommand struct{}
 
-func (this DupesCommand) Name() string {
+func (DupesCommand) Name() string {
 	return "dupes"
 }
 
-func (this DupesCommand) Summary() string {
+func (DupesCommand) Summary() string {
 	return "identifies any duplicate files"
 }
 
-func (this DupesCommand) Help() string {
+func (DupesCommand) Help() string {
 	return `  tmsu dupes [FILE]
 
 Identifies all files in the database that are exact duplicates of FILE.
@@ -41,21 +41,19 @@ Identifies all files in the database that are exact duplicates of FILE.
 When FILE is omitted duplicates within the database are identified.`
 }
 
-func (this DupesCommand) Exec(args []string) error {
+func (command DupesCommand) Exec(args []string) error {
     argCount := len(args)
     if argCount > 1 { errors.New("Only a single file can be specified.") }
 
     switch argCount {
-        case 0: return this.findDuplicates()
-        case 1: return this.findDuplicatesOf(args[0])
+        case 0: return command.findDuplicates()
+        case 1: return command.findDuplicatesOf(args[0])
     }
 
 	return nil
 }
 
-// implementation
-
-func (this DupesCommand) findDuplicates() error {
+func (DupesCommand) findDuplicates() error {
     db, error := OpenDatabase(databasePath())
     if error != nil { return error }
     defer db.Close()
@@ -76,7 +74,7 @@ func (this DupesCommand) findDuplicates() error {
     return nil
 }
 
-func (this DupesCommand) findDuplicatesOf(path string) error {
+func (DupesCommand) findDuplicatesOf(path string) error {
     db, error := OpenDatabase(databasePath())
     if error != nil { return error }
     defer db.Close()

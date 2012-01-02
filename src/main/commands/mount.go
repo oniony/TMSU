@@ -24,26 +24,24 @@ import (
 	"time"
 )
 
-const HALF_SECOND = 500000000
-
 type MountCommand struct{}
 
-func (this MountCommand) Name() string {
+func (MountCommand) Name() string {
 	return "mount"
 }
 
-func (this MountCommand) Summary() string {
+func (MountCommand) Summary() string {
 	return "mounts the virtual file-system"
 }
 
-func (this MountCommand) Help() string {
+func (MountCommand) Help() string {
 	return `  tmsu mount MOUNTPOINT
 
 Mounts the virtual file-system (VFS) at the mountpoint directory specified.
 The default database at '$HOME/.tmsu/db' will be mounted unless overridden with the 'TMSU_DB' environment variable.`
 }
 
-func (this MountCommand) Exec(args []string) error {
+func (MountCommand) Exec(args []string) error {
 	if len(args) < 1 { errors.New("No mountpoint specified.") }
 	if len(args) > 1 { errors.New("Extraneous arguments.") }
 
@@ -63,6 +61,7 @@ func (this MountCommand) Exec(args []string) error {
 	error = command.Start()
 	if error != nil { return error }
 
+    const HALF_SECOND = 500000000
     time.Sleep(HALF_SECOND)
 
     waitMessage, error := command.Process.Wait(os.WNOHANG)

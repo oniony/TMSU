@@ -28,6 +28,6 @@ type File struct {
 	Fingerprint string
 }
 
-func (this File) Path() string {
-    return filepath.Join(this.Directory, this.Name)
+func (file File) Path() string {
+    return filepath.Join(file.Directory, file.Name)
 }

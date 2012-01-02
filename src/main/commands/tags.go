@@ -25,15 +25,15 @@ import (
 
 type TagsCommand struct{}
 
-func (this TagsCommand) Name() string {
+func (TagsCommand) Name() string {
 	return "tags"
 }
 
-func (this TagsCommand) Summary() string {
+func (TagsCommand) Summary() string {
 	return "lists all tags or tags applied to files"
 }
 
-func (this TagsCommand) Help() string {
+func (TagsCommand) Help() string {
 	return `  tmsu tags [FILE]...
   tmsu tags --all
 
@@ -42,17 +42,17 @@ Lists the tags applied to FILEs (files in the current directory by default).
   --all    show the complete set of tags`
 }
 
-func (this TagsCommand) Exec(args []string) error {
+func (command TagsCommand) Exec(args []string) error {
     argCount := len(args)
 
     if argCount == 1 && args[0] == "--all" {
-        return this.listAllTags()
+        return command.listAllTags()
     }
 
-	return this.listTags(args)
+	return command.listTags(args)
 }
 
-func (this TagsCommand) listAllTags() error {
+func (TagsCommand) listAllTags() error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	defer db.Close()
@@ -67,25 +67,25 @@ func (this TagsCommand) listAllTags() error {
 	return nil
 }
 
-func (this TagsCommand) listTags(paths []string) error {
+func (command TagsCommand) listTags(paths []string) error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	defer db.Close()
 
     switch len(paths) {
         case 0:
-            return this.listTagsRecursive(db, []string { "." })
+            return command.listTagsRecursive(db, []string { "." })
         case 1:
-            return this.listTagsForPath(db, paths[0])
+            return command.listTagsForPath(db, paths[0])
         default:
-            return this.listTagsRecursive(db, paths)
+            return command.listTagsRecursive(db, paths)
     }
 
-    return this.listTagsRecursive(db, paths)
+    return command.listTagsRecursive(db, paths)
 }
 
-func (this TagsCommand) listTagsForPath(db *Database, path string) error {
-    tags, error := this.tagsForPath(db, path)
+func (command TagsCommand) listTagsForPath(db *Database, path string) error {
+    tags, error := command.tagsForPath(db, path)
     if error != nil { return error }
 
     for _, tag := range tags {
@@ -95,13 +95,13 @@ func (this TagsCommand) listTagsForPath(db *Database, path string) error {
     return nil
 }
 
-func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
+func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error {
     for _, path := range paths {
         fileInfo, error := os.Lstat(path)
         if error != nil { return error }
 
         if fileInfo.Mode() & os.ModeType == 0 {
-            tags, error := this.tagsForPath(db, path)
+            tags, error := command.tagsForPath(db, path)
             if error != nil { return error }
             if tags == nil { continue }
 
@@ -131,7 +131,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
                 childPaths[index] = filepath.Join(path, dirName)
             }
 
-            error = this.listTagsRecursive(db, childPaths)
+            error = command.listTagsRecursive(db, childPaths)
             if error != nil { return error }
         }
     }
@@ -139,7 +139,7 @@ func (this TagsCommand) listTagsRecursive(db *Database, paths []string) error {
     return nil
 }
 
-func (this TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
+func (TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
 	absPath, error := filepath.Abs(path)
 	if error != nil { return nil, error }
 

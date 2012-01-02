@@ -26,35 +26,33 @@ import (
 
 type HelpCommand struct{}
 
-func (this HelpCommand) Name() string {
+func (HelpCommand) Name() string {
 	return "help"
 }
 
-func (this HelpCommand) Summary() string {
+func (HelpCommand) Summary() string {
 	return "lists commands or provides help for a particular command"
 }
 
-func (this HelpCommand) Help() string {
+func (HelpCommand) Help() string {
 	return `  tmsu help          lists commands
   tmsu help COMMAND  shows help for COMMAND
 
 Shows command summary or, when a command is specified, detailed help for that command.`
 }
 
-func (this HelpCommand) Exec(args []string) error {
+func (command HelpCommand) Exec(args []string) error {
 	switch len(args) {
 	case 0:
-		this.overview()
+		command.overview()
 	default:
-		this.commandHelp(args[0])
+		command.commandHelp(args[0])
 	}
 
 	return nil
 }
 
-// implementation
-
-func (this HelpCommand) overview() {
+func (HelpCommand) overview() {
 	fmt.Println("tmsu")
 	fmt.Println()
 
@@ -79,7 +77,7 @@ func (this HelpCommand) overview() {
 	}
 }
 
-func (this HelpCommand) commandHelp(commandName string) {
+func (HelpCommand) commandHelp(commandName string) {
 	command := commands[commandName]
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)

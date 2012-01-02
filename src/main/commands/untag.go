@@ -24,15 +24,15 @@ import (
 
 type UntagCommand struct{}
 
-func (this UntagCommand) Name() string {
+func (UntagCommand) Name() string {
 	return "untag"
 }
 
-func (this UntagCommand) Summary() string {
+func (UntagCommand) Summary() string {
 	return "removes all tags or specific tags from a file"
 }
 
-func (this UntagCommand) Help() string {
+func (UntagCommand) Help() string {
 	return `  tmsu untag FILE TAG...
   tmsu untag --all FILE...
 
@@ -41,7 +41,7 @@ Disassociates FILE with the TAGs specified.
   --all    strip each FILE of all tags`
 }
 
-func (this UntagCommand) Exec(args []string) error {
+func (command UntagCommand) Exec(args []string) error {
 	if len(args) < 1 {
 		return errors.New("No arguments specified.")
 	}
@@ -49,12 +49,12 @@ func (this UntagCommand) Exec(args []string) error {
     if args[0] == "--all" {
         if len(args) < 2 { return errors.New("Files to untag must be specified.") }
 
-        error := this.removeFiles(args[1:])
+        error := command.removeFiles(args[1:])
         if error != nil { return error }
     } else {
         if len(args) < 2 { return errors.New("Tags to remove must be specified.") }
 
-        error := this.untagFile(args[0], args[1:])
+        error := command.untagFile(args[0], args[1:])
         if error != nil { return error }
     }
 
@@ -62,9 +62,7 @@ func (this UntagCommand) Exec(args []string) error {
 	return nil
 }
 
-// implementation
-
-func (this UntagCommand) removeFiles(paths []string) error {
+func (UntagCommand) removeFiles(paths []string) error {
     db, error := OpenDatabase(databasePath())
     if error != nil {
         return error
@@ -91,7 +89,7 @@ func (this UntagCommand) removeFiles(paths []string) error {
     return nil
 }
 
-func (this UntagCommand) untagFile(path string, tagNames []string) error {
+func (command UntagCommand) untagFile(path string, tagNames []string) error {
 	absPath, error := filepath.Abs(path)
 	if error != nil { return error }
 
@@ -104,7 +102,7 @@ func (this UntagCommand) untagFile(path string, tagNames []string) error {
 	if file == nil { return errors.New("File '" + path + "' is not tagged.") }
 
     for _, tagName := range tagNames {
-        error = this.unapplyTag(db, path, file.Id, tagName)
+        error = command.unapplyTag(db, path, file.Id, tagName)
         if error != nil { return error }
     }
 
@@ -119,7 +117,7 @@ func (this UntagCommand) untagFile(path string, tagNames []string) error {
 	return nil
 }
 
-func (this UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagName string) error {
+func (UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagName string) error {
 	tag, error := db.TagByName(tagName)
 	if error != nil {
 		return error

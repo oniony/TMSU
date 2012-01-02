@@ -23,21 +23,21 @@ import (
 
 type DeleteCommand struct{}
 
-func (this DeleteCommand) Name() string {
+func (DeleteCommand) Name() string {
 	return "delete"
 }
 
-func (this DeleteCommand) Summary() string {
+func (DeleteCommand) Summary() string {
 	return "deletes one or more tags"
 }
 
-func (this DeleteCommand) Help() string {
+func (DeleteCommand) Help() string {
 	return `tmsu delete TAG...
 
 Permanently deletes the tag(s) specified.`
 }
 
-func (this DeleteCommand) Exec(args []string) error {
+func (command DeleteCommand) Exec(args []string) error {
 	if len(args) == 0 {
 		return errors.New("No tags to delete specified.")
 	}
@@ -47,14 +47,14 @@ func (this DeleteCommand) Exec(args []string) error {
 	defer db.Close()
 
 	for _, tagName := range args {
-		error = this.deleteTag(db, tagName)
+		error = command.deleteTag(db, tagName)
 		if error != nil { return error }
 	}
 
 	return nil
 }
 
-func (this DeleteCommand) deleteTag(db *Database, tagName string) error {
+func (DeleteCommand) deleteTag(db *Database, tagName string) error {
 	tag, error := db.TagByName(tagName)
 	if error != nil { return error }
 

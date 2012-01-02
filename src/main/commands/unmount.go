@@ -25,21 +25,21 @@ import (
 
 type UnmountCommand struct{}
 
-func (this UnmountCommand) Name() string {
+func (UnmountCommand) Name() string {
 	return "unmount"
 }
 
-func (this UnmountCommand) Summary() string {
+func (UnmountCommand) Summary() string {
 	return "unmounts the virtual file-system"
 }
 
-func (this UnmountCommand) Help() string {
+func (UnmountCommand) Help() string {
 	return `  tags unount MOUNTPOINT
 
 Unmounts a previously mounted virtual file-system at the mountpoint specified.`
 }
 
-func (this UnmountCommand) Exec(args []string) error {
+func (UnmountCommand) Exec(args []string) error {
 	if len(args) < 1 {
 		return errors.New("Path to unmount not speciified.")
 	}

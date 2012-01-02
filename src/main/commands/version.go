@@ -23,21 +23,21 @@ import (
 
 type VersionCommand struct{}
 
-func (this VersionCommand) Name() string {
+func (VersionCommand) Name() string {
 	return "version"
 }
 
-func (this VersionCommand) Summary() string {
+func (VersionCommand) Summary() string {
 	return "displays version and copyright information"
 }
 
-func (this VersionCommand) Help() string {
+func (VersionCommand) Help() string {
 	return `  tmsu version
 
 Displays version and copyright information.`
 }
 
-func (this VersionCommand) Exec(args []string) error {
+func (VersionCommand) Exec(args []string) error {
 	fmt.Println("tmsu", version)
 	fmt.Println()
 	fmt.Println(`Copyright 2011 Paul Ruane.

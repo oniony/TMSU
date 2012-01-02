@@ -47,15 +47,15 @@ func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	return &fuseVfs, nil
 }
 
-func (this FuseVfs) Unmount() {
-	this.state.Unmount()
+func (vfs FuseVfs) Unmount() {
+	vfs.state.Unmount()
 }
 
-func (this FuseVfs) Loop() {
-	this.state.Loop()
+func (vfs FuseVfs) Loop() {
+	vfs.state.Loop()
 }
 
-func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
+func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	switch name {
 	case "":
 		fallthrough
@@ -63,17 +63,17 @@ func (this FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fus
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 
-	path := this.splitPath(name)
+	path := vfs.splitPath(name)
 	switch path[0] {
 	case "tags":
-		return this.getTaggedEntryAttr(path[1:])
+		return vfs.getTaggedEntryAttr(path[1:])
 	}
 
 	return nil, fuse.ENOENT
 }
 
-func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
-    fileId, error := this.parseFileId(name)
+func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
+    fileId, error := vfs.parseFileId(name)
     if error != nil { log.Fatalf("Could not unlink: %v", error) }
 
     if fileId == 0 {
@@ -81,7 +81,7 @@ func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
         return fuse.EPERM
     }
 
-    path := this.splitPath(name)
+    path := vfs.splitPath(name)
     tagNames := path[1:len(path) - 1]
 
     db, error := OpenDatabase(databasePath())
@@ -99,24 +99,24 @@ func (this FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
     return fuse.OK
 }
 
-func (this FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
 	switch name {
-        case "": return this.topDirectories()
-        case "tags": return this.tagDirectories()
+        case "": return vfs.topDirectories()
+        case "tags": return vfs.tagDirectories()
 	}
 
-	path := this.splitPath(name)
+	path := vfs.splitPath(name)
 	switch path[0] {
-        case "tags": return this.openTaggedEntryDir(path[1:])
+        case "tags": return vfs.openTaggedEntryDir(path[1:])
 	}
 
 	return nil, fuse.ENOENT
 }
 
-func (this FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
-	path := this.splitPath(name)
+func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
+	path := vfs.splitPath(name)
 	switch path[0] {
-        case "tags": return this.readTaggedEntryLink(path[1:])
+        case "tags": return vfs.readTaggedEntryLink(path[1:])
 	}
 
 	return "", fuse.ENOENT
@@ -124,11 +124,11 @@ func (this FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.S
 
 // implementation
 
-func (this FuseVfs) splitPath(path string) []string {
+func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
 }
 
-func (this FuseVfs) parseFileId(name string) (uint, error) {
+func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 	parts := strings.Split(name, ".")
 	count := len(parts)
 
@@ -141,7 +141,7 @@ func (this FuseVfs) parseFileId(name string) (uint, error) {
 	return id, nil
 }
 
-func (this FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 	channel := make(chan fuse.DirEntry, 2)
 	channel <- fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR}
 	close(channel)
@@ -149,8 +149,8 @@ func (this FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 	return channel, fuse.OK
 }
 
-func (this FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
-	db, error := OpenDatabase(this.databasePath)
+func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
+	db, error := OpenDatabase(vfs.databasePath)
 	if error != nil { log.Fatal("Could not open database: %v", error) }
 	defer db.Close()
 
@@ -166,11 +166,11 @@ func (this FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	return channel, fuse.OK
 }
 
-func (this FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
+func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
-	fileId, error := this.parseFileId(name)
+	fileId, error := vfs.parseFileId(name)
 	if error != nil { return nil, fuse.ENOENT }
 
 	if fileId == 0 {
@@ -178,7 +178,7 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) 
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 
-	db, error := OpenDatabase(this.databasePath)
+	db, error := OpenDatabase(vfs.databasePath)
 	if error != nil { log.Fatalf("Could not open database: %v", error) }
 	defer db.Close()
 
@@ -197,8 +197,8 @@ func (this FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) 
 	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(size)}, fuse.OK
 }
 
-func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
-	db, error := OpenDatabase(this.databasePath)
+func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
+	db, error := OpenDatabase(vfs.databasePath)
 	if error != nil { log.Fatalf("Could not open database: %v", error) }
 	defer db.Close()
 
@@ -218,21 +218,21 @@ func (this FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.
 	}
 
 	for _, file := range files {
-        linkName := this.getLinkName(file)
+        linkName := vfs.getLinkName(file)
 		channel <- fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}
 
 	return channel, fuse.OK
 }
 
-func (this FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
+func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	name := path[len(path)-1]
 
-	db, error := OpenDatabase(this.databasePath)
+	db, error := OpenDatabase(vfs.databasePath)
 	if error != nil { log.Fatalf("Could not open database: %v", error) }
 	defer db.Close()
 
-	fileId, error := this.parseFileId(name)
+	fileId, error := vfs.parseFileId(name)
 	if error != nil { log.Fatalf("Could not parse file identifier: %v", error) }
 	if fileId == 0 { return "", fuse.ENOENT }
 
@@ -242,7 +242,7 @@ func (this FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	return file.Path(), fuse.OK
 }
 
-func (this FuseVfs) getLinkName(file File) string {
+func (vfs FuseVfs) getLinkName(file File) string {
     extension := filepath.Ext(file.Path())
     fileName := filepath.Base(file.Path())
     linkName := fileName[0 : len(fileName) - len(extension)]

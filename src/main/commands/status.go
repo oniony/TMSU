@@ -26,22 +26,22 @@ import (
 
 type StatusCommand struct {}
 
-func (this StatusCommand) Name() string {
+func (StatusCommand) Name() string {
     return "status"
 }
 
-func (this StatusCommand) Summary() string {
+func (StatusCommand) Summary() string {
     return "lists file status"
 }
 
-func (this StatusCommand) Help() string {
+func (StatusCommand) Help() string {
     return `tmsu status
 tmsu status FILE...
 
 Shows the status of files.`
 }
 
-func (this StatusCommand) Exec(args []string) error {
+func (command StatusCommand) Exec(args []string) error {
     tagged := make([]string, 0, 10)
     untagged := make([]string, 0, 10)
     missing := make([]string, 0, 10)
@@ -54,9 +54,9 @@ func (this StatusCommand) Exec(args []string) error {
     }
 
     if len(args) == 0 {
-        tagged, untagged, missing, error = this.status([]string { "." }, tagged, untagged, missing, allFiles)
+        tagged, untagged, missing, error = command.status([]string { "." }, tagged, untagged, missing, allFiles)
     } else {
-        tagged, untagged, missing, error = this.status(args, tagged, untagged, missing, allFiles)
+        tagged, untagged, missing, error = command.status(args, tagged, untagged, missing, allFiles)
     }
 
     if error != nil { return error }
@@ -85,12 +85,12 @@ func (this StatusCommand) Exec(args []string) error {
     return nil
 }
 
-func (this StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
+func (command StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
     for _, path := range paths {
-        databaseEntries, error := this.getDatabaseEntries(path)
+        databaseEntries, error := command.getDatabaseEntries(path)
         if error != nil { return nil, nil, nil, error }
 
-        fileSystemEntries, error := this.getFileSystemEntries(path, allFiles)
+        fileSystemEntries, error := command.getFileSystemEntries(path, allFiles)
         if error != nil { return nil, nil, nil, error }
 
         for _, entry := range databaseEntries {
@@ -111,11 +111,11 @@ func (this StatusCommand) status(paths []string, tagged []string, untagged []str
     return tagged, untagged, missing, nil
 }
 
-func (this StatusCommand) getFileSystemEntries(path string, allFiles bool) ([]string, error) {
-    return this.getFileSystemEntriesRecursive(path, make([]string, 0, 10), allFiles)
+func (command StatusCommand) getFileSystemEntries(path string, allFiles bool) ([]string, error) {
+    return command.getFileSystemEntriesRecursive(path, make([]string, 0, 10), allFiles)
 }
 
-func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []string, allFiles bool) ([]string, error) {
+func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries []string, allFiles bool) ([]string, error) {
     fileInfo, error := os.Lstat(path)
     if error != nil { return nil, error }
 
@@ -132,7 +132,7 @@ func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []s
             if error != nil { return nil, error }
 
             for _, entry := range childEntries {
-                entries, error = this.getFileSystemEntriesRecursive(entry, entries, allFiles)
+                entries, error = command.getFileSystemEntriesRecursive(entry, entries, allFiles)
                 if error != nil { return nil, error }
             }
         }
@@ -141,7 +141,7 @@ func (this StatusCommand) getFileSystemEntriesRecursive(path string, entries []s
     return entries, nil
 }
 
-func (this StatusCommand) getDatabaseEntries(path string) ([]string, error) {
+func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
     db, error := OpenDatabase(databasePath())
     if error != nil { return nil, error }
     defer db.Close()

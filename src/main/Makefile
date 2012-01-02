@@ -1,6 +1,7 @@
 include $(GOROOT)/src/Make.inc
 
 TARG=tmsu
+
 GOFILES=command.go \
 		commands/delete.go \
 		commands/dupes.go \
@@ -30,3 +31,6 @@ GOFILES=command.go \
 		version.gen.go \
 
 include $(GOROOT)/src/Make.cmd
+
+test:
+	gotest

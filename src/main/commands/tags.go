@@ -34,8 +34,8 @@ func (this TagsCommand) Summary() string {
 }
 
 func (this TagsCommand) Help() string {
-	return `  tmsu tags --all
-  tmsu tags [FILE]...
+	return `  tmsu tags [FILE]...
+  tmsu tags --all
 
 Lists the tags applied to FILEs (files in the current directory by default).
 
@@ -47,11 +47,9 @@ func (this TagsCommand) Exec(args []string) error {
 
     if argCount == 1 && args[0] == "--all" {
         return this.listAllTags()
-    } else {
-	    this.listTags(args...)
-	}
+    }
 
-	return nil
+	return this.listTags(args)
 }
 
 func (this TagsCommand) listAllTags() error {
@@ -69,7 +67,7 @@ func (this TagsCommand) listAllTags() error {
 	return nil
 }
 
-func (this TagsCommand) listTags(paths ...string) error {
+func (this TagsCommand) listTags(paths []string) error {
 	db, error := OpenDatabase(databasePath())
 	if error != nil { return error }
 	defer db.Close()

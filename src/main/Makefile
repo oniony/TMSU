@@ -5,6 +5,7 @@ GOFILES=command.go \
 		commands/delete.go \
 		commands/dupes.go \
 		commands/export.go \
+		commands/files.go \
 		commands/help.go \
 		commands/merge.go \
 		commands/mount.go \

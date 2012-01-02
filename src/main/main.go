@@ -29,6 +29,7 @@ func main() {
 		DeleteCommand{},
 		DupesCommand{},
 		ExportCommand{},
+		FilesCommand{},
 		HelpCommand{},
 		MergeCommand{},
 		MountCommand{},

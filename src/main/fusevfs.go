@@ -37,8 +37,8 @@ type FuseVfs struct {
 func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
     pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
-	state, _, error := fuse.MountNodeFileSystem(mountPath, pathNodeFs, nil)
-	if error != nil { return nil, error }
+	state, _, err := fuse.MountNodeFileSystem(mountPath, pathNodeFs, nil)
+	if err != nil { return nil, err }
 
 	fuseVfs.databasePath = databasePath
 	fuseVfs.mountPath = mountPath
@@ -73,8 +73,8 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 }
 
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
-    fileId, error := vfs.parseFileId(name)
-    if error != nil { log.Fatalf("Could not unlink: %v", error) }
+    fileId, err := vfs.parseFileId(name)
+    if err != nil { log.Fatalf("Could not unlink: %v", err) }
 
     if fileId == 0 {
         // cannot unlink tag directories
@@ -84,16 +84,16 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
     path := vfs.splitPath(name)
     tagNames := path[1:len(path) - 1]
 
-    db, error := OpenDatabase(databasePath())
-    if error != nil { log.Fatal(error) }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { log.Fatal(err) }
 
     for _, tagName := range tagNames {
-        tag, error := db.TagByName(tagName)
-        if error != nil { log.Fatal(error) }
+        tag, err := db.TagByName(tagName)
+        if err != nil { log.Fatal(err) }
         if tag == nil { log.Fatalf("Could not retrieve tag '%v'.", tagName) }
 
-        error = db.RemoveFileTag(fileId, tag.Id)
-        if error != nil { log.Fatal(error) }
+        err = db.RemoveFileTag(fileId, tag.Id)
+        if err != nil { log.Fatal(err) }
     }
 
     return fuse.OK
@@ -134,9 +134,9 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 
 	if count == 1 { return 0, nil }
 
-	id, error := Atoui(parts[count - 2])
-	if error != nil { id, error = Atoui(parts[count - 1]) }
-	if error != nil { return 0, nil }
+	id, err := Atoui(parts[count - 2])
+	if err != nil { id, err = Atoui(parts[count - 1]) }
+	if err != nil { return 0, nil }
 
 	return id, nil
 }
@@ -150,12 +150,12 @@ func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
-	db, error := OpenDatabase(vfs.databasePath)
-	if error != nil { log.Fatal("Could not open database: %v", error) }
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatal("Could not open database: %v", err) }
 	defer db.Close()
 
-	tags, error := db.Tags()
-	if error != nil { log.Fatal("Could not retrieve tags: %v", error) }
+	tags, err := db.Tags()
+	if err != nil { log.Fatal("Could not retrieve tags: %v", err) }
 
 	channel := make(chan fuse.DirEntry, len(tags))
 	for _, tag := range tags {
@@ -170,25 +170,25 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
-	fileId, error := vfs.parseFileId(name)
-	if error != nil { return nil, fuse.ENOENT }
+	fileId, err := vfs.parseFileId(name)
+	if err != nil { return nil, fuse.ENOENT }
 
 	if fileId == 0 {
 	    // if no file ID then it is a tag directory
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
 	}
 
-	db, error := OpenDatabase(vfs.databasePath)
-	if error != nil { log.Fatalf("Could not open database: %v", error) }
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatalf("Could not open database: %v", err) }
 	defer db.Close()
 
-    file, error := db.File(fileId)
-    if error != nil { log.Fatalf("Could not retrieve file #%v: %v", fileId, error) }
+    file, err := db.File(fileId)
+    if err != nil { log.Fatalf("Could not retrieve file #%v: %v", fileId, err) }
     if file == nil { return &fuse.Attr{Mode: fuse.S_IFREG}, fuse.ENOENT }
 
-    fileInfo, error := os.Stat(file.Path())
+    fileInfo, err := os.Stat(file.Path())
     var size int64
-    if error == nil {
+    if err == nil {
         size = fileInfo.Size()
     } else {
         size = 0
@@ -198,17 +198,17 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
-	db, error := OpenDatabase(vfs.databasePath)
-	if error != nil { log.Fatalf("Could not open database: %v", error) }
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatalf("Could not open database: %v", err) }
 	defer db.Close()
 
 	tags := path
 
-	furtherTags, error := db.TagsForTags(tags)
-	if error != nil { log.Fatalf("Could not retrieve tags for tags: %v", error) }
+	furtherTags, err := db.TagsForTags(tags)
+	if err != nil { log.Fatalf("Could not retrieve tags for tags: %v", err) }
 
-	files, error := db.FilesWithTags(tags)
-	if error != nil { log.Fatalf("Could not retrieve tagged files: %v", error) }
+	files, err := db.FilesWithTags(tags)
+	if err != nil { log.Fatalf("Could not retrieve tagged files: %v", err) }
 
 	channel := make(chan fuse.DirEntry, len(files) + len(furtherTags))
 	defer close(channel)
@@ -228,16 +228,16 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	name := path[len(path)-1]
 
-	db, error := OpenDatabase(vfs.databasePath)
-	if error != nil { log.Fatalf("Could not open database: %v", error) }
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatalf("Could not open database: %v", err) }
 	defer db.Close()
 
-	fileId, error := vfs.parseFileId(name)
-	if error != nil { log.Fatalf("Could not parse file identifier: %v", error) }
+	fileId, err := vfs.parseFileId(name)
+	if err != nil { log.Fatalf("Could not parse file identifier: %v", err) }
 	if fileId == 0 { return "", fuse.ENOENT }
 
-	file, error := db.File(fileId)
-	if error != nil { log.Fatalf("Could not find file %v in database.", fileId) }
+	file, err := db.File(fileId)
+	if err != nil { log.Fatalf("Could not find file %v in database.", fileId) }
 
 	return file.Path(), fuse.OK
 }
@@ -260,6 +260,6 @@ func Uitoa(ui uint) string {
 }
 
 func Atoui(str string) (uint, error) {
-    ui64, error := strconv.ParseUint(str, 10, 0)
-    return uint(ui64), error
+    ui64, err := strconv.ParseUint(str, 10, 0)
+    return uint(ui64), err
 }

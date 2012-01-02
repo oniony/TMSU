@@ -69,9 +69,9 @@ func main() {
 		args = []string{}
 	}
 
-	error := command.Exec(args)
-	if error != nil {
-	    fmt.Fprintln(os.Stderr, error.Error())
+	err := command.Exec(args)
+	if err != nil {
+	    fmt.Fprintln(os.Stderr, err.Error())
 	    os.Exit(1)
 	}
 }

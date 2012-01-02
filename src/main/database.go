@@ -31,13 +31,13 @@ type Database struct {
 }
 
 func OpenDatabase(path string) (*Database, error) {
-	connection, error := sql.Open("sqlite3", path)
-	if error != nil { return nil, error }
+	connection, err := sql.Open("sqlite3", path)
+	if err != nil { return nil, err }
 
 	database := Database{connection}
 
-	error = database.CreateSchema()
-	if error != nil { return nil, error }
+	err = database.CreateSchema()
+	if err != nil { return nil, err }
 
 	return &database, nil
 }
@@ -50,16 +50,16 @@ func (db Database) TagCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM tag`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return 0, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return 0, err }
 	defer rows.Close()
 
 	if !rows.Next() { return 0, errors.New("Could not get tag count.") }
-	if rows.Err() != nil { return 0, error }
+	if rows.Err() != nil { return 0, err }
 
 	var count uint
-	error = rows.Scan(&count)
-	if error != nil { return 0, error }
+	err = rows.Scan(&count)
+	if err != nil { return 0, err }
 
 	return count, nil
 }
@@ -69,18 +69,18 @@ func (db Database) Tags() ([]Tag, error) {
             FROM tag
             ORDER BY name`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
-	    if rows.Err() != nil { return nil, error }
+	    if rows.Err() != nil { return nil, err }
 
 		var id uint
 		var name string
-		error = rows.Scan(&id, &name)
-		if error != nil { return nil, error }
+		err = rows.Scan(&id, &name)
+		if err != nil { return nil, err }
 
 		tags = append(tags, Tag{id, name})
 	}
@@ -93,16 +93,16 @@ func (db Database) TagByName(name string) (*Tag, error) {
 	        FROM tag
 	        WHERE name = ?`
 
-	rows, error := db.connection.Query(sql, name)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, name)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	if !rows.Next() { return nil, nil }
-	if rows.Err() != nil { return nil, error }
+	if rows.Err() != nil { return nil, err }
 
 	var id uint
-	error = rows.Scan(&id)
-	if error != nil { return nil, error }
+	err = rows.Scan(&id)
+	if err != nil { return nil, err }
 
 	return &Tag{id, name}, nil
 }
@@ -117,18 +117,18 @@ func (db Database) TagsByFileId(fileId uint) ([]Tag, error) {
             )
             ORDER BY name`
 
-	rows, error := db.connection.Query(sql, fileId)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var tagId uint
 		var tagName string
-		error = rows.Scan(&tagId, &tagName)
-		if error != nil { return nil, error }
+		err = rows.Scan(&tagId, &tagName)
+		if err != nil { return nil, err }
 
 		tags = append(tags, Tag{tagId, tagName})
 	}
@@ -162,18 +162,18 @@ func (db Database) TagsForTags(tagNames []string) ([]Tag, error) {
 		castTagNames[index] = tagName
 	}
 
-	rows, error := db.connection.Query(sql, castTagNames...)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, castTagNames...)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	tags := make([]Tag, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var tagId uint
 		var tagName string
-		error = rows.Scan(&tagId, &tagName)
-		if error != nil { return nil, error }
+		err = rows.Scan(&tagId, &tagName)
+		if err != nil { return nil, err }
 
 		if !db.contains(tagNames, tagName) {
 			tags = append(tags, Tag{tagId, tagName})
@@ -187,14 +187,14 @@ func (db Database) AddTag(name string) (*Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
-	result, error := db.connection.Exec(sql, name)
-	if error != nil { return nil, error }
+	result, err := db.connection.Exec(sql, name)
+	if err != nil { return nil, err }
 
-	id, error := result.LastInsertId()
-	if error != nil { return nil, error }
+	id, err := result.LastInsertId()
+	if err != nil { return nil, err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return nil, error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return nil, err }
 	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &Tag{uint(id), name}, nil
@@ -205,11 +205,11 @@ func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	        SET name = ?
 	        WHERE id = ?`
 
-	result, error := db.connection.Exec(sql, name, tagId)
-	if error != nil { return nil, error }
+	result, err := db.connection.Exec(sql, name, tagId)
+	if err != nil { return nil, err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return nil, error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return nil, err }
 	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &Tag{tagId, name}, nil
@@ -219,11 +219,11 @@ func (db Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
-	result, error := db.connection.Exec(sql, tagId)
-	if error != nil { return error }
+	result, err := db.connection.Exec(sql, tagId)
+	if err != nil { return err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return err }
 	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
@@ -233,16 +233,16 @@ func (db Database) FileCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM file`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return 0, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return 0, err }
 	defer rows.Close()
 
 	if !rows.Next() { return 0, errors.New("Could not get file count.") }
-	if rows.Err() != nil { return 0, error }
+	if rows.Err() != nil { return 0, err }
 
 	var count uint
-	error = rows.Scan(&count)
-	if error != nil { return 0, error }
+	err = rows.Scan(&count)
+	if err != nil { return 0, err }
 
 	return count, nil
 }
@@ -251,20 +251,20 @@ func (db Database) Files() ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
 	        FROM file`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileId uint
 		var directory string
 		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		if err != nil { return nil, err }
 
 		files = append(files, File{fileId, directory, name, fingerprint})
 	}
@@ -277,18 +277,18 @@ func (db Database) File(id uint) (*File, error) {
 	        FROM file
 	        WHERE id = ?`
 
-	rows, error := db.connection.Query(sql, id)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, id)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	if !rows.Next() { return nil, nil }
-	if rows.Err() != nil { return nil, error }
+	if rows.Err() != nil { return nil, err }
 
 	var directory string
 	var name string
 	var fingerprint string
-	error = rows.Scan(&directory, &name, &fingerprint)
-	if error != nil { return nil, error }
+	err = rows.Scan(&directory, &name, &fingerprint)
+	if err != nil { return nil, err }
 
 	return &File{id, directory, name, fingerprint}, nil
 }
@@ -301,17 +301,17 @@ func (db Database) FileByPath(path string) (*File, error) {
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
-	rows, error := db.connection.Query(sql, directory, name)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, directory, name)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	if !rows.Next() { return nil, nil }
-	if rows.Err() != nil { return nil, error }
+	if rows.Err() != nil { return nil, err }
 
 	var id uint
 	var fingerprint string
-	error = rows.Scan(&id, &fingerprint)
-	if error != nil { return nil, error }
+	err = rows.Scan(&id, &fingerprint)
+	if err != nil { return nil, err }
 
 	return &File{id, directory, name, fingerprint}, nil
 }
@@ -321,20 +321,20 @@ func (db Database) FilesByDirectory(directory string) ([]File, error) {
 	        FROM file
 	        WHERE directory = ? OR directory like ?`
 
-	rows, error := db.connection.Query(sql, directory, directory + "/%")
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, directory, directory + "/%")
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileId uint
 		var dir string
 		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &dir, &name, &fingerprint)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileId, &dir, &name, &fingerprint)
+		if err != nil { return nil, err }
 
 		files = append(files, File{fileId, dir, name, fingerprint})
 	}
@@ -347,19 +347,19 @@ func (db Database) FilesByFingerprint(fingerprint string) ([]File, error) {
 	        FROM file
 	        WHERE fingerprint = ?`
 
-	rows, error := db.connection.Query(sql, fingerprint)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, fingerprint)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileId uint
 		var directory string
 		var name string
-		error = rows.Scan(&fileId, &directory, &name)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileId, &directory, &name)
+		if err != nil { return nil, err }
 
 		files = append(files, File{fileId, directory, name, fingerprint})
 	}
@@ -376,8 +376,8 @@ func (db Database) DuplicateFiles() ([][]File, error) {
                                 HAVING count(1) > 1)
             ORDER BY fingerprint`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
     fileSets := make([][]File, 0, 10)
@@ -385,14 +385,14 @@ func (db Database) DuplicateFiles() ([][]File, error) {
     var previousFingerprint string
 
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileId uint
 		var directory string
 		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		if err != nil { return nil, err }
 
 	    if fingerprint != previousFingerprint {
 	        if fileSet != nil { fileSets = append(fileSets, fileSet) }
@@ -416,14 +416,14 @@ func (db Database) AddFile(path string, fingerprint string) (*File, error) {
 	sql := `INSERT INTO file (directory, name, fingerprint)
 	        VALUES (?, ?, ?)`
 
-	result, error := db.connection.Exec(sql, directory, name, fingerprint)
-	if error != nil { return nil, error }
+	result, err := db.connection.Exec(sql, directory, name, fingerprint)
+	if err != nil { return nil, err }
 
-	id, error := result.LastInsertId()
-	if error != nil { return nil, error }
+	id, err := result.LastInsertId()
+	if err != nil { return nil, err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return nil, error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return nil, err }
 	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &File{uint(id), directory, name, fingerprint}, nil
@@ -450,20 +450,20 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 		castTagNames[index] = tagName
 	}
 
-	rows, error := db.connection.Query(sql, castTagNames...)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, castTagNames...)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	files := make([]File, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileId uint
 		var directory string
 		var name string
 		var fingerprint string
-		error = rows.Scan(&fileId, &directory, &name, &fingerprint)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		if err != nil { return nil, err }
 
 		files = append(files, File{fileId, directory, name, fingerprint})
 	}
@@ -476,8 +476,8 @@ func (db Database) UpdateFileFingerprint(fileId uint, fingerprint string) error 
 	        SET fingerprint = ?
 	        WHERE id = ?`
 
-	_, error := db.connection.Exec(sql, fingerprint, int(fileId))
-	if error != nil { return error }
+	_, err := db.connection.Exec(sql, fingerprint, int(fileId))
+	if err != nil { return err }
 
 	return nil
 }
@@ -486,11 +486,11 @@ func (db Database) RemoveFile(fileId uint) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
-	result, error := db.connection.Exec(sql, fileId)
-	if error != nil { return error }
+	result, err := db.connection.Exec(sql, fileId)
+	if err != nil { return err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return err }
 	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
@@ -500,16 +500,16 @@ func (db Database) FileTagCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM file_tag`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return 0, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return 0, err }
 	defer rows.Close()
 
 	if !rows.Next() { return 0, errors.New("Could not get file-tag count.") }
-	if rows.Err() != nil { return 0, error }
+	if rows.Err() != nil { return 0, err }
 
 	var count uint
-	error = rows.Scan(&count)
-	if error != nil { return 0, error }
+	err = rows.Scan(&count)
+	if err != nil { return 0, err }
 
 	return count, nil
 }
@@ -518,19 +518,19 @@ func (db Database) FileTags() ([]FileTag, error) {
 	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag`
 
-	rows, error := db.connection.Query(sql)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileTagId uint
 		var fileId uint
 		var tagId uint
-		error = rows.Scan(&fileTagId, &fileId, &tagId)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileTagId, &fileId, &tagId)
+		if err != nil { return nil, err }
 
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
@@ -544,16 +544,16 @@ func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, e
 	        WHERE file_id = ?
 	        AND tag_id = ?`
 
-	rows, error := db.connection.Query(sql, fileId, tagId)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, fileId, tagId)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	if !rows.Next() { return nil, nil }
-	if rows.Err() != nil { return nil, error }
+	if rows.Err() != nil { return nil, err }
 
 	var fileTagId uint
-	error = rows.Scan(&fileTagId)
-    if error != nil { return nil, error }
+	err = rows.Scan(&fileTagId)
+    if err != nil { return nil, err }
 
 	return &FileTag{fileTagId, fileId, tagId}, nil
 }
@@ -563,18 +563,18 @@ func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
 	        FROM file_tag
 	        WHERE tag_id = ?`
 
-	rows, error := db.connection.Query(sql, tagId)
-	if error != nil { return nil, error }
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil { return nil, err }
 	defer rows.Close()
 
 	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
-        if rows.Err() != nil { return nil, error }
+        if rows.Err() != nil { return nil, err }
 
 		var fileTagId uint
 		var fileId uint
-		error = rows.Scan(&fileTagId, &fileId)
-		if error != nil { return nil, error }
+		err = rows.Scan(&fileTagId, &fileId)
+		if err != nil { return nil, err }
 
 		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
@@ -588,12 +588,12 @@ func (db Database) AnyFileTagsForFile(fileId uint) (bool, error) {
             WHERE file_id = ?
             LIMIT 1`
 
-	rows, error := db.connection.Query(sql, fileId)
-	if error != nil { return false, error }
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil { return false, err }
 	defer rows.Close()
 
     if rows.Next() { return true, nil }
-	if rows.Err() != nil { return false, error }
+	if rows.Err() != nil { return false, err }
 
     return false, nil
 }
@@ -602,14 +602,14 @@ func (db Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	sql := `INSERT INTO file_tag (file_id, tag_id)
 	        VALUES (?, ?)`
 
-	result, error := db.connection.Exec(sql, fileId, tagId)
-	if error != nil { return nil, error }
+	result, err := db.connection.Exec(sql, fileId, tagId)
+	if err != nil { return nil, err }
 
-	id, error := result.LastInsertId()
-	if error != nil { return nil, error }
+	id, err := result.LastInsertId()
+	if err != nil { return nil, err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return nil, error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return nil, err }
 	if rowsAffected != 1 { return nil, errors.New("Expected exactly one row to be affected.") }
 
 	return &FileTag{uint(id), fileId, tagId}, nil
@@ -620,11 +620,11 @@ func (db Database) RemoveFileTag(fileId uint, tagId uint) error {
 	        WHERE file_id = ?
 	        AND tag_id = ?`
 
-	result, error := db.connection.Exec(sql, fileId, tagId)
-	if error != nil { return error }
+	result, err := db.connection.Exec(sql, fileId, tagId)
+	if err != nil { return err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return err }
 	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
@@ -634,8 +634,8 @@ func (db Database) RemoveFileTagsByFileId(fileId uint) error {
 	sql := `DELETE FROM file_tag
 	        WHERE file_id = ?`
 
-	_, error := db.connection.Exec(sql, fileId)
-	if error != nil { return error }
+	_, err := db.connection.Exec(sql, fileId)
+	if err != nil { return err }
 
 	return nil
 }
@@ -644,8 +644,8 @@ func (db Database) RemoveFileTagsByTagId(tagId uint) error {
 	sql := `DELETE FROM file_tag
 	        WHERE tag_id = ?`
 
-	_, error := db.connection.Exec(sql, tagId)
-	if error != nil { return error }
+	_, err := db.connection.Exec(sql, tagId)
+	if err != nil { return err }
 
 	return nil
 }
@@ -655,11 +655,11 @@ func (db Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
 	        SET tag_id = ?
 	        WHERE tag_id = ?`
 
-	result, error := db.connection.Exec(sql, newTagId, oldTagId)
-	if error != nil { return error }
+	result, err := db.connection.Exec(sql, newTagId, oldTagId)
+	if err != nil { return err }
 
-	rowsAffected, error := result.RowsAffected()
-	if error != nil { return error }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil { return err }
 	if rowsAffected != 1 { return errors.New("Expected exactly one row to be affected.") }
 
 	return nil
@@ -671,14 +671,14 @@ func (db Database) CreateSchema() error {
                 name TEXT NOT NULL
             )`
 
-	_, error := db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err := db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
            ON tag(name)`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE TABLE IF NOT EXISTS file (
                id INTEGER PRIMARY KEY,
@@ -688,20 +688,20 @@ func (db Database) CreateSchema() error {
                CONSTRAINT con_file_path UNIQUE (directory, name)
            )`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
            ON file(fingerprint)`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_path
            ON file(directory, name)`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE TABLE IF NOT EXISTS file_tag (
                id INTEGER PRIMARY KEY,
@@ -711,20 +711,20 @@ func (db Database) CreateSchema() error {
                FOREIGN KEY (tag_id) REFERENCES tag(id)
            )`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
            ON file_tag(file_id)`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
     sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
            ON file_tag(tag_id)`
 
-	_, error = db.connection.Exec(sql)
-	if error != nil { return error }
+	_, err = db.connection.Exec(sql)
+	if err != nil { return err }
 
 	return nil
 }

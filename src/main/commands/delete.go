@@ -42,38 +42,38 @@ func (command DeleteCommand) Exec(args []string) error {
 		return errors.New("No tags to delete specified.")
 	}
 
-	db, error := OpenDatabase(databasePath())
-	if error != nil { return error }
+	db, err := OpenDatabase(databasePath())
+	if err != nil { return err }
 	defer db.Close()
 
 	for _, tagName := range args {
-		error = command.deleteTag(db, tagName)
-		if error != nil { return error }
+		err = command.deleteTag(db, tagName)
+		if err != nil { return err }
 	}
 
 	return nil
 }
 
 func (DeleteCommand) deleteTag(db *Database, tagName string) error {
-	tag, error := db.TagByName(tagName)
-	if error != nil { return error }
+	tag, err := db.TagByName(tagName)
+	if err != nil { return err }
 
 	if tag == nil {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTags, error := db.FileTagsByTagId(tag.Id)
-	if error != nil { return error }
+	fileTags, err := db.FileTagsByTagId(tag.Id)
+	if err != nil { return err }
 
-	error = db.RemoveFileTagsByTagId(tag.Id)
-	if error != nil { return error }
+	err = db.RemoveFileTagsByTagId(tag.Id)
+	if err != nil { return err }
 
-	error = db.DeleteTag(tag.Id)
-	if error != nil { return error }
+	err = db.DeleteTag(tag.Id)
+	if err != nil { return err }
 
 	for _, fileTag := range fileTags {
-		hasTags, error := db.AnyFileTagsForFile(fileTag.FileId)
-		if error != nil { return error }
+		hasTags, err := db.AnyFileTagsForFile(fileTag.FileId)
+		if err != nil { return err }
 
 		if !hasTags {
 			db.RemoveFile(fileTag.FileId)

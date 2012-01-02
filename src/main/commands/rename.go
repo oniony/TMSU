@@ -41,27 +41,23 @@ To merge tags use the 'merge' command instead.`
 }
 
 func (RenameCommand) Exec(args []string) error {
-	db, error := OpenDatabase(databasePath())
-	if error != nil { return error }
+	db, err := OpenDatabase(databasePath())
+	if err != nil { return err }
 	defer db.Close()
 
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	sourceTag, error := db.TagByName(sourceTagName)
-	if error != nil { return error }
-	if sourceTag == nil {
-		return errors.New("No such tag '" + sourceTagName + "'.")
-	}
+	sourceTag, err := db.TagByName(sourceTagName)
+	if err != nil { return err }
+	if sourceTag == nil { return errors.New("No such tag '" + sourceTagName + "'.") }
 
-	destTag, error := db.TagByName(destTagName)
-	if error != nil { return error }
-	if destTag != nil {
-		return errors.New("A tag with name '" + destTagName + "' already exists.")
-	}
+	destTag, err := db.TagByName(destTagName)
+	if err != nil { return err }
+	if destTag != nil { return errors.New("A tag with name '" + destTagName + "' already exists.") }
 
-	_, error = db.RenameTag(sourceTag.Id, destTagName)
-	if error != nil { return error }
+	_, err = db.RenameTag(sourceTag.Id, destTagName)
+	if err != nil { return err }
 
 	return nil
 }

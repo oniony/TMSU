@@ -45,26 +45,26 @@ func (command TagCommand) Exec(args []string) error {
 		return errors.New("File to tag and tags to apply must be specified.")
 	}
 
-	error := command.tagPath(args[0], args[1:])
-	if error != nil { return error }
+	err := command.tagPath(args[0], args[1:])
+	if err != nil { return err }
 
 	return nil
 }
 
 func (command TagCommand) tagPath(path string, tagNames []string) error {
-	db, error := OpenDatabase(databasePath())
-	if error != nil { return error }
+	db, err := OpenDatabase(databasePath())
+	if err != nil { return err }
 	defer db.Close()
 
-	absPath, error := filepath.Abs(path)
-	if error != nil { return error }
+	absPath, err := filepath.Abs(path)
+	if err != nil { return err }
 
-	file, error := command.addFile(db, absPath)
-	if error != nil { return error }
+	file, err := command.addFile(db, absPath)
+	if err != nil { return err }
 
 	for _, tagName := range tagNames {
-		_, _, error = command.applyTag(db, path, file.Id, tagName)
-		if error != nil { return error }
+		_, _, err = command.applyTag(db, path, file.Id, tagName)
+		if err != nil { return err }
 	}
 
 	return nil
@@ -83,36 +83,36 @@ func (TagCommand) applyTag(db *Database, path string, fileId uint, tagName strin
         return nil, nil, errors.New("Tag names cannot contain spaces.")
     }
 
-	tag, error := db.TagByName(tagName)
-	if error != nil { return nil, nil, error }
+	tag, err := db.TagByName(tagName)
+	if err != nil { return nil, nil, err }
 
 	if tag == nil {
 		fmt.Printf("New tag '%v'\n", tagName)
-		tag, error = db.AddTag(tagName)
-		if error != nil { return nil, nil, error }
+		tag, err = db.AddTag(tagName)
+		if err != nil { return nil, nil, err }
 	}
 
-	fileTag, error := db.FileTagByFileIdAndTagId(fileId, tag.Id)
-	if error != nil { return nil, nil, error }
+	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)
+	if err != nil { return nil, nil, err }
 
 	if fileTag == nil {
-		_, error := db.AddFileTag(fileId, tag.Id)
-		if error != nil { return nil, nil, error }
+		_, err := db.AddFileTag(fileId, tag.Id)
+		if err != nil { return nil, nil, err }
 	}
 
 	return tag, fileTag, nil
 }
 
 func (TagCommand) addFile(db *Database, path string) (*File, error) {
-	fingerprint, error := Fingerprint(path)
-	if error != nil { return nil, error }
+	fingerprint, err := Fingerprint(path)
+	if err != nil { return nil, err }
 
-	file, error := db.FileByPath(path)
-	if error != nil { return nil, error }
+	file, err := db.FileByPath(path)
+	if err != nil { return nil, err }
 
 	if file == nil {
-		files, error := db.FilesByFingerprint(fingerprint)
-		if error != nil { return nil, error }
+		files, err := db.FilesByFingerprint(fingerprint)
+		if err != nil { return nil, err }
 
 		if len(files) > 0 {
 			fmt.Printf("Warning: file is a duplicate of previously tagged files.\n")
@@ -122,8 +122,8 @@ func (TagCommand) addFile(db *Database, path string) (*File, error) {
             }
 		}
 
-		file, error = db.AddFile(path, fingerprint)
-		if error != nil { return nil, error }
+		file, err = db.AddFile(path, fingerprint)
+		if err != nil { return nil, err }
 	} else {
 		if file.Fingerprint != fingerprint {
 			db.UpdateFileFingerprint(file.Id, fingerprint)

@@ -23,12 +23,12 @@ import (
 )
 
 func databasePath() string {
-	path, error := os.Getenverror("TMSU_DB")
-	if error == nil { return path }
+	path, err := os.Getenverror("TMSU_DB")
+	if err == nil { return path }
 
 	//TODO Windows support
-	homePath, error := os.Getenverror("HOME")
-	if error != nil { panic("Could not determine home directory: environment variable 'HOME' does not exist.") }
+	homePath, err := os.Getenverror("HOME")
+	if err != nil { panic("Could not determine home directory: environment variable 'HOME' does not exist.") }
 
 	return filepath.Join(homePath, defaultDatabaseName)
 }

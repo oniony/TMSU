@@ -52,12 +52,12 @@ func (command FilesCommand) Exec(args []string) error {
 }
 
 func (FilesCommand) listAllFiles() error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return err }
     defer db.Close()
 
-    files, error := db.Files()
-    if error != nil { return error }
+    files, err := db.Files()
+    if err != nil { return err }
 
     for _, file := range files {
         fmt.Println(file.Path())
@@ -69,18 +69,18 @@ func (FilesCommand) listAllFiles() error {
 func (FilesCommand) listFiles(tagNames []string) error {
     if len(tagNames) == 0 { return errors.New("At least one tag must be specified.") }
 
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return err }
     defer db.Close()
 
     for _, tagName := range tagNames {
-        tag, error := db.TagByName(tagName)
-        if error != nil { return error }
+        tag, err := db.TagByName(tagName)
+        if err != nil { return err }
         if tag == nil { return errors.New("No such tag '" + tagName + "'.") }
     }
 
-    files, error := db.FilesWithTags(tagNames)
-    if error != nil { return error }
+    files, err := db.FilesWithTags(tagNames)
+    if err != nil { return err }
 
     for _, file := range files {
         fmt.Println(file.Path())

@@ -24,14 +24,14 @@ import (
 )
 
 func Fingerprint(path string) (string, error) {
-	file, error := os.Open(path)
-	if error != nil { return "", error }
+	file, err := os.Open(path)
+	if err != nil { return "", err }
 	defer file.Close()
 
 	hash := sha256.New()
 
 	buffer := make([]byte, 1024)
-	for count := 0; error == nil; count, error = file.Read(buffer) {
+	for count := 0; err == nil; count, err = file.Read(buffer) {
 		hash.Write(buffer[:count])
 	}
 

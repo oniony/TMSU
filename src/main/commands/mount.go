@@ -42,36 +42,36 @@ The default database at '$HOME/.tmsu/db' will be mounted unless overridden with 
 }
 
 func (MountCommand) Exec(args []string) error {
-	if len(args) < 1 { errors.New("No mountpoint specified.") }
-	if len(args) > 1 { errors.New("Extraneous arguments.") }
+	if len(args) < 1 { return errors.New("No mountpoint specified.") }
+	if len(args) > 1 { return errors.New("Extraneous arguments.") }
 
     path := args[0]
 
-    fileInfo, error := os.Stat(path)
-    if error != nil { return error }
+    fileInfo, err := os.Stat(path)
+    if err != nil { return err }
     if fileInfo == nil { return errors.New("Mount point '" + path + "' does not exist.") }
     if !fileInfo.IsDir() { return errors.New("Mount point '" + path + "' is not a directory.") }
 
 	mountPath := args[0]
 	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)
 
-	errorPipe, error := command.StderrPipe()
-	if error != nil { return error }
+	errorPipe, err := command.StderrPipe()
+	if err != nil { return err }
 
-	error = command.Start()
-	if error != nil { return error }
+	err = command.Start()
+	if err != nil { return err }
 
     const HALF_SECOND = 500000000
     time.Sleep(HALF_SECOND)
 
-    waitMessage, error := command.Process.Wait(os.WNOHANG)
-    if error != nil { return error }
+    waitMessage, err := command.Process.Wait(os.WNOHANG)
+    if err != nil { return err }
 
     if waitMessage.WaitStatus.Exited() {
         if waitMessage.WaitStatus.ExitStatus() != 0 {
             buffer := make([]byte, 1024)
-            count, error := errorPipe.Read(buffer)
-            if error != nil { return error }
+            count, err := errorPipe.Read(buffer)
+            if err != nil { return err }
 
             return errors.New("Could not mount VFS: " + string(buffer[0:count]))
         }

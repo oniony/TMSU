@@ -54,12 +54,12 @@ func (command DupesCommand) Exec(args []string) error {
 }
 
 func (DupesCommand) findDuplicates() error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return err }
     defer db.Close()
 
-    fileSets, error := db.DuplicateFiles()
-    if error != nil { return error }
+    fileSets, err := db.DuplicateFiles()
+    if err != nil { return err }
 
     for index, fileSet := range fileSets {
         if index > 0 { fmt.Println() }
@@ -75,18 +75,18 @@ func (DupesCommand) findDuplicates() error {
 }
 
 func (DupesCommand) findDuplicatesOf(path string) error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return err }
     defer db.Close()
 
-    fingerprint, error := Fingerprint(path)
-    if error != nil { return error }
+    fingerprint, err := Fingerprint(path)
+    if err != nil { return err }
 
-    files, error := db.FilesByFingerprint(fingerprint)
-    if error != nil { return error }
+    files, err := db.FilesByFingerprint(fingerprint)
+    if err != nil { return err }
 
-    absPath, error := filepath.Abs(path)
-    if error != nil { return error }
+    absPath, err := filepath.Abs(path)
+    if err != nil { return err }
 
     for _, file := range files {
         if file.Path() == absPath { continue }

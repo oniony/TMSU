@@ -44,24 +44,18 @@ func (command ExportCommand) Exec(args []string) error {
 		return errors.New("Unpected argument to command '" + command.Name() + "'.")
 	}
 
-	db, error := OpenDatabase(databasePath())
-	if error != nil {
-		return error
-	}
+	db, err := OpenDatabase(databasePath())
+	if err != nil { return err }
 	defer db.Close()
 
-	files, error := db.Files()
-	if error != nil {
-		return error
-	}
+	files, err := db.Files()
+	if err != nil { return err }
 
 	for _, file := range files {
 		fmt.Printf("%v,%v,", file.Path(), file.Fingerprint)
 
-		tags, error := db.TagsByFileId(file.Id)
-		if error != nil {
-			return error
-		}
+		tags, err := db.TagsByFileId(file.Id)
+		if err != nil { return err }
 
 		tagNames := make([]string, 0, len(tags))
 
@@ -74,3 +68,4 @@ func (command ExportCommand) Exec(args []string) error {
 
 	return nil
 }
+

@@ -43,10 +43,8 @@ func (VfsCommand) Exec(args []string) error {
 	database := args[0]
 	mountPath := args[1]
 
-	vfs, error := MountVfs(database, mountPath)
-	if error != nil {
-		return error
-	}
+	vfs, err := MountVfs(database, mountPath)
+	if err != nil { return err }
 	defer vfs.Unmount()
 
 	vfs.Loop()

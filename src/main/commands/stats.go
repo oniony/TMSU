@@ -39,18 +39,18 @@ Shows the database statistics.`
 }
 
 func (StatsCommand) Exec(args []string) error {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return err }
     defer db.Close()
 
-    tagCount, error := db.TagCount()
-    if error != nil { return error }
+    tagCount, err := db.TagCount()
+    if err != nil { return err }
 
-    fileCount, error := db.FileCount()
-    if error != nil { return error }
+    fileCount, err := db.FileCount()
+    if err != nil { return err }
 
-    fileTagCount, error := db.FileTagCount()
-    if error != nil { return error }
+    fileTagCount, err := db.FileTagCount()
+    if err != nil { return err }
 
     fmt.Printf("Database Contents\n")
 

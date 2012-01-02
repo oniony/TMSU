@@ -27,12 +27,12 @@ func isRegular(fileInfo os.FileInfo) bool {
 }
 
 func directoryEntries(path string) ([]string, error) {
-    file, error := os.Open(path)
-    if error != nil { return nil, error }
+    file, err := os.Open(path)
+    if err != nil { return nil, err }
     defer file.Close()
 
-    entryNames, error := file.Readdirnames(0)
-    if error != nil { return nil, error }
+    entryNames, err := file.Readdirnames(0)
+    if err != nil { return nil, err }
 
     entryPaths := make([]string, len(entryNames))
     for index, entryName := range entryNames {

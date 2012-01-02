@@ -46,7 +46,7 @@ func (command StatusCommand) Exec(args []string) error {
     untagged := make([]string, 0, 10)
     missing := make([]string, 0, 10)
     allFiles := false
-    var error error
+    var err error
 
     if len(args) > 0 && args[0] == "--all" {
         allFiles = true
@@ -54,30 +54,30 @@ func (command StatusCommand) Exec(args []string) error {
     }
 
     if len(args) == 0 {
-        tagged, untagged, missing, error = command.status([]string { "." }, tagged, untagged, missing, allFiles)
+        tagged, untagged, missing, err = command.status([]string { "." }, tagged, untagged, missing, allFiles)
     } else {
-        tagged, untagged, missing, error = command.status(args, tagged, untagged, missing, allFiles)
+        tagged, untagged, missing, err = command.status(args, tagged, untagged, missing, allFiles)
     }
 
-    if error != nil { return error }
+    if err != nil { return err }
 
     for _, absPath := range tagged {
-        path, error := makeRelative(absPath)
-        if error != nil { return error }
+        path, err := makeRelative(absPath)
+        if err != nil { return err }
 
         fmt.Printf("T %v\n", path)
     }
 
     for _, absPath := range missing {
-        path, error := makeRelative(absPath)
-        if error != nil { return error }
+        path, err := makeRelative(absPath)
+        if err != nil { return err }
 
         fmt.Printf("! %v\n", path)
     }
 
     for _, absPath := range untagged {
-        path, error := makeRelative(absPath)
-        if error != nil { return error }
+        path, err := makeRelative(absPath)
+        if err != nil { return err }
 
         fmt.Printf("? %v\n", path)
     }
@@ -87,11 +87,11 @@ func (command StatusCommand) Exec(args []string) error {
 
 func (command StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
     for _, path := range paths {
-        databaseEntries, error := command.getDatabaseEntries(path)
-        if error != nil { return nil, nil, nil, error }
+        databaseEntries, err := command.getDatabaseEntries(path)
+        if err != nil { return nil, nil, nil, err }
 
-        fileSystemEntries, error := command.getFileSystemEntries(path, allFiles)
-        if error != nil { return nil, nil, nil, error }
+        fileSystemEntries, err := command.getFileSystemEntries(path, allFiles)
+        if err != nil { return nil, nil, nil, err }
 
         for _, entry := range databaseEntries {
             if contains(fileSystemEntries, entry) {
@@ -116,11 +116,11 @@ func (command StatusCommand) getFileSystemEntries(path string, allFiles bool) ([
 }
 
 func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries []string, allFiles bool) ([]string, error) {
-    fileInfo, error := os.Lstat(path)
-    if error != nil { return nil, error }
+    fileInfo, err := os.Lstat(path)
+    if err != nil { return nil, err }
 
-    absPath, error := filepath.Abs(path)
-    if error != nil { return nil, error }
+    absPath, err := filepath.Abs(path)
+    if err != nil { return nil, err }
 
     basename := filepath.Base(absPath)
 
@@ -128,12 +128,12 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
         if isRegular(fileInfo)  {
             entries = append(entries, absPath)
         } else if fileInfo.IsDir() {
-            childEntries, error := directoryEntries(absPath)
-            if error != nil { return nil, error }
+            childEntries, err := directoryEntries(absPath)
+            if err != nil { return nil, err }
 
             for _, entry := range childEntries {
-                entries, error = command.getFileSystemEntriesRecursive(entry, entries, allFiles)
-                if error != nil { return nil, error }
+                entries, err = command.getFileSystemEntriesRecursive(entry, entries, allFiles)
+                if err != nil { return nil, err }
             }
         }
     }
@@ -142,15 +142,15 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 }
 
 func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
-    db, error := OpenDatabase(databasePath())
-    if error != nil { return nil, error }
+    db, err := OpenDatabase(databasePath())
+    if err != nil { return nil, err }
     defer db.Close()
 
-    absPath, error := filepath.Abs(path)
-    if error != nil { return nil, error }
+    absPath, err := filepath.Abs(path)
+    if err != nil { return nil, err }
 
-    files, error := db.FilesByDirectory(absPath)
-    if error != nil { return nil, error }
+    files, err := db.FilesByDirectory(absPath)
+    if err != nil { return nil, err }
 
     entries := make([]string, 0, len(files))
     for _, file := range files {
@@ -169,8 +169,8 @@ func contains(strings []string, find string) bool {
 }
 
 func makeRelative(path string) (string, error) {
-    workingDirectory, error := os.Getwd()
-    if error != nil { return "", error }
+    workingDirectory, err := os.Getwd()
+    if err != nil { return "", err }
 
     workingDirectory += string(filepath.Separator)
 

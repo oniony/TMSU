@@ -429,6 +429,41 @@ func (db Database) AddFile(path string, fingerprint string) (*File, error) {
 	return &File{uint(id), directory, name, fingerprint}, nil
 }
 
+func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
+	sql := `SELECT count(1)
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM file_tag
+                WHERE tag_id IN (
+                    SELECT id
+                    FROM tag
+                    WHERE name IN (` + strings.Repeat("?,", len(tagNames) - 1) + `?)
+                )
+                GROUP BY file_id
+                HAVING count(1) = ` + strconv.Itoa(len(tagNames)) + `
+            )`
+
+	// convert string array to empty-interface array
+	castTagNames := make([]interface{}, len(tagNames))
+	for index, tagName := range tagNames {
+		castTagNames[index] = tagName
+	}
+
+	rows, err := db.connection.Query(sql, castTagNames...)
+	if err != nil { return 0, err }
+	defer rows.Close()
+
+	if !rows.Next() { return 0, errors.New("Count query returned no rows.") }
+	if rows.Err() != nil { return 0, err }
+
+    var fileCount uint
+	err = rows.Scan(&fileCount)
+	if err != nil { return 0, err }
+
+	return fileCount, nil
+}
+
 func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
             FROM file
@@ -438,10 +473,10 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
                 WHERE tag_id IN (
                     SELECT id
                     FROM tag
-                    WHERE name IN (` + strings.Repeat("?,", len(tagNames)-1) + `?)
+                    WHERE name IN (` + strings.Repeat("?,", len(tagNames) - 1) + `?)
                 )
                 GROUP BY file_id
-                HAVING count(*) = ` + strconv.Itoa(len(tagNames)) + `
+                HAVING count(1) = ` + strconv.Itoa(len(tagNames)) + `
             )`
 
 	// convert string array to empty-interface array

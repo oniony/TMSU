@@ -60,7 +60,7 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	case "":
 		fallthrough
 	case "tags":
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
+	    return vfs.getTagsAttr()
 	}
 
 	path := vfs.splitPath(name)
@@ -166,21 +166,35 @@ func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	return channel, fuse.OK
 }
 
+func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatalf("Could not open database: %v", err) }
+	defer db.Close()
+
+    tagCount, err := db.TagCount()
+    if err != nil { log.Fatalf("Could not get tag count: %v", err) }
+
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(tagCount) }, fuse.OK
+}
+
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
-	name := path[pathLength-1]
+	name := path[pathLength - 1]
+
+	db, err := OpenDatabase(vfs.databasePath)
+	if err != nil { log.Fatalf("Could not open database: %v", err) }
+	defer db.Close()
 
 	fileId, err := vfs.parseFileId(name)
 	if err != nil { return nil, fuse.ENOENT }
 
 	if fileId == 0 {
 	    // if no file ID then it is a tag directory
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755}, fuse.OK
-	}
+	    fileCount, error := db.FileCountWithTags(path)
+	    if error != nil { log.Fatalf("Could not retrieve count of files with tags: %v.", path) }
 
-	db, err := OpenDatabase(vfs.databasePath)
-	if err != nil { log.Fatalf("Could not open database: %v", err) }
-	defer db.Close()
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount) }, fuse.OK
+	}
 
     file, err := db.File(fileId)
     if err != nil { log.Fatalf("Could not retrieve file #%v: %v", fileId, err) }

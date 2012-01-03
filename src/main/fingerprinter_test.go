@@ -23,9 +23,8 @@ import (
     "testing"
 )
 
-func TestFingerprint(test *testing.T) {
-    tempDir := os.TempDir()
-    tempFilePath := filepath.Join(tempDir, "tmsu-fingerprint")
+func TestGeneration(test *testing.T) {
+    tempFilePath := filepath.Join(os.TempDir(), "tmsu-fingerprint")
 
     file, err := os.Create(tempFilePath)
     if err != nil { test.Fatal(err.Error()) }

@@ -13,7 +13,7 @@ DIST_FILE=tmsu-$(VER).tgz
 all: clean generate compile
 
 compile: generate
-	cd $(SRC_DIR); gomake
+	pushd $(SRC_DIR); gomake; popd
 	mkdir -p $(BIN_DIR)
 	cp $(SRC_DIR)/$(BIN_FILE) $(BIN_DIR)
 
@@ -28,9 +28,8 @@ dist: compile
 	rm -Rf $(DIST_DIR)
 
 clean:
+	pushd ${SRC_DIR}; gomake clean; popd
 	rm -f $(SRC_DIR)/$(VER_FILE)
-	rm -f $(SRC_DIR)/$(BIN_FILE)
-	rm -f $(SRC_DIR)/*.8
 	rm -Rf $(BIN_DIR)
 	rm -Rf $(DIST_DIR)
 	rm -Rf $(DIST_FILE)

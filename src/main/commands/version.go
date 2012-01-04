@@ -40,7 +40,7 @@ Displays version and copyright information.`
 func (VersionCommand) Exec(args []string) error {
 	fmt.Println("tmsu", version)
 	fmt.Println()
-	fmt.Println(`Copyright 2011 Paul Ruane.
+	fmt.Println(`Copyright © 2011 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

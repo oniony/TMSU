@@ -1,5 +1,5 @@
 SHELL=/bin/sh
-VER=0.0.3
+VER=0.0.4
 
 SRC_DIR=src/main
 BIN_DIR=bin

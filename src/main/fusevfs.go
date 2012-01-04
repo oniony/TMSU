@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 	"strconv"
+	"time"
 	"github.com/hanwen/go-fuse/fuse"
 )
 
@@ -174,7 +175,8 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
     tagCount, err := db.TagCount()
     if err != nil { log.Fatalf("Could not get tag count: %v", err) }
 
-	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(tagCount) }, fuse.OK
+    now := time.Now()
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(tagCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond()) }, fuse.OK
 }
 
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
@@ -193,7 +195,8 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	    fileCount, error := db.FileCountWithTags(path)
 	    if error != nil { log.Fatalf("Could not retrieve count of files with tags: %v.", path) }
 
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount) }, fuse.OK
+        now := time.Now()
+		return &fuse.Attr{ Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond()) }, fuse.OK
 	}
 
     file, err := db.File(fileId)
@@ -202,13 +205,16 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
     fileInfo, err := os.Stat(file.Path())
     var size int64
+    var modTime time.Time
     if err == nil {
         size = fileInfo.Size()
+        modTime = fileInfo.ModTime()
     } else {
         size = 0
+        modTime = time.Time{}
     }
 
-	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(size)}, fuse.OK
+	return &fuse.Attr{ Mode: fuse.S_IFLNK | 0755, Size: uint64(size), Mtime: uint64(modTime.Unix()), Mtimensec: uint32(modTime.Nanosecond()) }, fuse.OK
 }
 
 func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {

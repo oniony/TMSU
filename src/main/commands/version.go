@@ -38,7 +38,7 @@ Displays version and copyright information.`
 }
 
 func (VersionCommand) Exec(args []string) error {
-	fmt.Println("tmsu", version)
+	fmt.Println("TMSU", version)
 	fmt.Println()
 	fmt.Println(`Copyright © 2011 Paul Ruane.
 

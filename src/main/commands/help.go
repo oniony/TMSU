@@ -53,7 +53,7 @@ func (command HelpCommand) Exec(args []string) error {
 }
 
 func (HelpCommand) overview() {
-	fmt.Println("tmsu")
+	fmt.Println("TMSU")
 	fmt.Println()
 
 	var maxWidth int = 0

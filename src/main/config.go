@@ -25,33 +25,43 @@ import (
 const globalConfigPath = "/etc/tmsu.conf"
 const userConfigPath = "~/.config/tmsu.conf"
 
-struct DatabaseConfig {
+type DatabaseConfig struct {
     DatabasePath string
     MountPath string
 }
 
+func databasePath() string {
+    home := os.Getenv("HOME")
+
+    return filepath.Join(home, ".tmsu/default.db")
+}
+
 func configuredDatabases() ([]DatabaseConfig, error) {
-    configs := make([]DatabaseConfig, 0, 10)
+    //configs := make([]DatabaseConfig, 0, 10)
 
     //TODO read global configuration
 
     //TODO read user configuration
         //TODO if not exist, create
+
+    return nil, nil
 }
 
 func createConfigFile() error {
-    defaultConfig := `# TMSU configuration file
+    //defaultConfig := `# TMSU configuration file
 
-# The default database.
-database "default"
-	path=~/.tmsu/default.db
-	mountpoint=./tags
+//# The default database.
+//database "default"
+//	path=~/.tmsu/default.db
+//	mountpoint=./tags
 
-# An example database.
-database "example"
-	path=~/path/to/db
-	mountpoint=~/path/to/mountpoint
-    return nil`
+//# An example database.
+//database "example"
+//	path=~/path/to/db
+//	mountpoint=~/path/to/mountpoint
+//    return nil`
 
     //TODO write to user configuration path
+
+    return nil
 }

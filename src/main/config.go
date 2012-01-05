@@ -22,15 +22,36 @@ import (
 	"path/filepath"
 )
 
-func databasePath() string {
-	path, err := os.Getenverror("TMSU_DB")
-	if err == nil { return path }
+const globalConfigPath = "/etc/tmsu.conf"
+const userConfigPath = "~/.config/tmsu.conf"
 
-	//TODO Windows support
-	homePath, err := os.Getenverror("HOME")
-	if err != nil { panic("Could not determine home directory: environment variable 'HOME' does not exist.") }
-
-	return filepath.Join(homePath, defaultDatabaseName)
+struct DatabaseConfig {
+    DatabasePath string
+    MountPath string
 }
 
-const defaultDatabaseName = ".tmsu/db"
+func configuredDatabases() ([]DatabaseConfig, error) {
+    configs := make([]DatabaseConfig, 0, 10)
+
+    //TODO read global configuration
+
+    //TODO read user configuration
+        //TODO if not exist, create
+}
+
+func createConfigFile() error {
+    defaultConfig := `# TMSU configuration file
+
+# The default database.
+database "default"
+	path=~/.tmsu/default.db
+	mountpoint=./tags
+
+# An example database.
+database "example"
+	path=~/path/to/db
+	mountpoint=~/path/to/mountpoint
+    return nil`
+
+    //TODO write to user configuration path
+}

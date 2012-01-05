@@ -35,25 +35,40 @@ func (MountCommand) Summary() string {
 }
 
 func (MountCommand) Help() string {
-	return `  tmsu mount MOUNTPOINT
+	return `  tmsu mount NAME
+tmsu mount FILE MOUNTPOINT
 
-Mounts the virtual file-system (VFS) at the mountpoint directory specified.
-The default database at '$HOME/.tmsu/db' will be mounted unless overridden with the 'TMSU_DB' environment variable.`
+In its first form, mounts the database NAME using the database file path and
+mountpoint path configured in the application configuration file.
+
+In its second form, mounts the database FILE at the mountpoint MOUNTPOINT. (In
+this form the database need not be present in the configuration file.)`
 }
 
-func (MountCommand) Exec(args []string) error {
-	if len(args) < 1 { return errors.New("No mountpoint specified.") }
-	if len(args) > 1 { return errors.New("Extraneous arguments.") }
+func (command MountCommand) Exec(args []string) error {
+	if len(args) < 1 { return errors.New("Not enough arguments.") }
+	if len(args) > 2 { return errors.New("Too many arguments.") }
 
-    path := args[0]
+    if len(args) == 1 { return command.mountPreconfigured(args[0]) }
 
-    fileInfo, err := os.Stat(path)
+    return command.mount(args[0], args[1])
+}
+
+func (MountCommand) mountPreconfigured(name string) error {
+    //TODO read configuration file
+    //TODO find database with same name
+    //TODO     error if not found
+    //TODO chain to mount(string,string)
+    return nil
+}
+
+func (MountCommand) mount(databasePath string, mountPath string) error {
+    fileInfo, err := os.Stat(mountPath)
     if err != nil { return err }
-    if fileInfo == nil { return errors.New("Mount point '" + path + "' does not exist.") }
-    if !fileInfo.IsDir() { return errors.New("Mount point '" + path + "' is not a directory.") }
+    if fileInfo == nil { return errors.New("Mount point '" + mountPath + "' does not exist.") }
+    if !fileInfo.IsDir() { return errors.New("Mount point '" + mountPath + "' is not a directory.") }
 
-	mountPath := args[0]
-	command := exec.Command(os.Args[0], "vfs", databasePath(), mountPath)
+	command := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
 
 	errorPipe, err := command.StderrPipe()
 	if err != nil { return err }

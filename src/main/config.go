@@ -22,6 +22,7 @@ import (
     "bufio"
     "errors"
 	"fmt"
+	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -39,6 +40,13 @@ type DatabaseConfig struct {
     Name string
     DatabasePath string
     MountPath string
+}
+
+func databasePath() string {
+    path, err := resolvePath("~/.tmsu/default.db")
+    if err != nil { log.Fatal("Could not resolve default database path.") }
+
+    return path
 }
 
 func resolvePath(path string) (string, error) {

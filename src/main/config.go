@@ -1,4 +1,5 @@
 /*
+
 Copyright 2011 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
@@ -18,50 +19,94 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
+    "bufio"
+    "errors"
+	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
+	"strings"
 )
 
 const globalConfigPath = "/etc/tmsu.conf"
 const userConfigPath = "~/.config/tmsu.conf"
 
+type Config struct {
+    Databases []DatabaseConfig
+}
+
 type DatabaseConfig struct {
+    Name string
     DatabasePath string
     MountPath string
 }
 
-func databasePath() string {
-    home := os.Getenv("HOME")
+func resolvePath(path string) (string, error) {
+    if strings.HasPrefix(path, "~" + string(filepath.Separator)) {
+        homeDirectory, err := os.Getenverror("HOME")
+        if err != nil { return "", err }
 
-    return filepath.Join(home, ".tmsu/default.db")
+        path = strings.Join([]string { homeDirectory, path[2:] }, string(filepath.Separator))
+    }
+
+    return path, nil
 }
 
-func configuredDatabases() ([]DatabaseConfig, error) {
-    //configs := make([]DatabaseConfig, 0, 10)
+func readConfig() (*Config, error) {
+    configPath, err := resolvePath(userConfigPath)
+    if err != nil { return nil, err }
 
-    //TODO read global configuration
+    file, err := os.Open(configPath)
+    if err != nil { return nil, err }
+    defer file.Close()
 
-    //TODO read user configuration
-        //TODO if not exist, create
+    reader := bufio.NewReader(file)
 
-    return nil, nil
-}
+    databases := make([]DatabaseConfig, 0, 5)
+    var database *DatabaseConfig
 
-func createConfigFile() error {
-    //defaultConfig := `# TMSU configuration file
+    for lineBytes, _, err := reader.ReadLine(); err == nil; lineBytes, _, err = reader.ReadLine() {
+        line := string(lineBytes)
+        trimmedLine := strings.TrimLeft(line, " \t")
 
-//# The default database.
-//database "default"
-//	path=~/.tmsu/default.db
-//	mountpoint=./tags
+        if len(trimmedLine) == 0 { continue }
+        if strings.HasPrefix(trimmedLine, "#") { continue }
 
-//# An example database.
-//database "example"
-//	path=~/path/to/db
-//	mountpoint=~/path/to/mountpoint
-//    return nil`
+        var name, quotedValue string
+        count, err := fmt.Sscanf(trimmedLine, "%s %s", &name, &quotedValue)
+        if count < 2 { return nil, errors.New("Key and value must be specified.") }
+        if err != nil { return nil, err }
 
-    //TODO write to user configuration path
+        value, err := strconv.Unquote(quotedValue)
+        if err != nil { return nil, errors.New("Configuration error: values must be quoted.") }
 
-    return nil
+        switch name {
+            case "database":
+                if database != nil {
+                    databases = append(databases, *database)
+                }
+
+                database = &DatabaseConfig{}
+                database.Name = value
+                if err != nil { return nil, err }
+            case "path":
+                path, err := resolvePath(value)
+                if err != nil { return nil, err}
+
+                database.DatabasePath = path
+            case "mountpoint":
+                path, err := resolvePath(value)
+                if err != nil { return nil, err}
+
+                database.MountPath = path
+            default:
+                return nil, errors.New("Unrecognised configuration element name '" + name + "'.");
+        }
+    }
+
+    if database != nil {
+        databases = append(databases, *database)
+    }
+
+    return &Config{ databases }, nil
 }

@@ -19,6 +19,7 @@ package main
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"time"
@@ -46,27 +47,54 @@ this form the database need not be present in the configuration file.)`
 }
 
 func (command MountCommand) Exec(args []string) error {
-	if len(args) < 1 { return errors.New("Not enough arguments.") }
-	if len(args) > 2 { return errors.New("Too many arguments.") }
+    argCount := len(args)
 
-    if len(args) == 1 { return command.mountPreconfigured(args[0]) }
+	if argCount < 1 { return errors.New("Not enough arguments.") }
+	if argCount > 2 { return errors.New("Too many arguments.") }
 
-    return command.mount(args[0], args[1])
-}
+    switch argCount {
+        case 1:
+            err := command.mountPreconfigured(args[0])
+            if err != nil { return err }
+        case 2:
+            err := command.mountExplicit(args[0], args[1])
+            if err != nil { return err }
+        default:
+            panic("Unexpected number of arguments.")
+    }
 
-func (MountCommand) mountPreconfigured(name string) error {
-    //TODO read configuration file
-    //TODO find database with same name
-    //TODO     error if not found
-    //TODO chain to mount(string,string)
     return nil
 }
 
-func (MountCommand) mount(databasePath string, mountPath string) error {
+func (command MountCommand) mountPreconfigured(name string) error {
+    databaseConfig, err := command.findDatabaseConfig(name)
+    if err != nil { return err }
+    if databaseConfig == nil { return errors.New("No configured database called '" + name + "'.") }
+
+    err = command.mountExplicit(databaseConfig.DatabasePath, databaseConfig.MountPath)
+    if err != nil { return err }
+
+    return nil
+}
+
+func (MountCommand) findDatabaseConfig(name string) (*DatabaseConfig, error) {
+    config, err := readConfig()
+    if err != nil { return nil, err }
+
+    for _, databaseConfig := range config.Databases {
+        if databaseConfig.Name == name { return &databaseConfig, nil }
+    }
+
+    return nil, nil
+}
+
+func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
     fileInfo, err := os.Stat(mountPath)
     if err != nil { return err }
     if fileInfo == nil { return errors.New("Mount point '" + mountPath + "' does not exist.") }
     if !fileInfo.IsDir() { return errors.New("Mount point '" + mountPath + "' is not a directory.") }
+
+    fmt.Println("Mounting", databasePath, mountPath)
 
 	command := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
 

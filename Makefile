@@ -1,5 +1,6 @@
 SHELL=/bin/sh
 VER=0.0.4
+HGREV=$(shell hg id)
 
 SRC_DIR=src/main
 BIN_DIR=bin
@@ -18,7 +19,7 @@ compile: generate
 	cp $(SRC_DIR)/$(BIN_FILE) $(BIN_DIR)
 
 generate:
-	echo "package main; var version = \"$(VER)\"" >$(SRC_DIR)/$(VER_FILE)
+	echo "package main; var version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/$(VER_FILE)
 
 dist: compile
 	mkdir -p $(DIST_DIR)

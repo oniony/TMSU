@@ -19,7 +19,6 @@ package main
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"time"
@@ -36,56 +35,60 @@ func (MountCommand) Summary() string {
 }
 
 func (MountCommand) Help() string {
-	return `  tmsu mount NAME
-tmsu mount FILE MOUNTPOINT
+	return `tmsu mount [OPTION] MOUNTPOINT
 
-In its first form, mounts the database NAME using the database file path and
-mountpoint path configured in the application configuration file.
+Mounts the currently selected database at MOUNTPOINT.
 
-In its second form, mounts the database FILE at the mountpoint MOUNTPOINT. (In
-this form the database need not be present in the configuration file.)`
+  --name NAME   Mounts the configured database NAME instead.`
 }
 
 func (command MountCommand) Exec(args []string) error {
     argCount := len(args)
 
-	if argCount < 1 { return errors.New("Not enough arguments.") }
-	if argCount > 2 { return errors.New("Too many arguments.") }
+    if argCount < 1 { return errors.New("Mountpoint must be specified.") }
 
-    switch argCount {
-        case 1:
-            err := command.mountPreconfigured(args[0])
-            if err != nil { return err }
-        case 2:
-            err := command.mountExplicit(args[0], args[1])
-            if err != nil { return err }
-        default:
-            panic("Unexpected number of arguments.")
+    if argCount > 0 && args[0] == "--name" {
+        if argCount < 3 { return errors.New("Database name and mountpoint must be specified.") }
+        if argCount > 3 { return errors.New("Too many arguments.") }
+
+        name := args[1]
+        mountPath := args[2]
+
+        err := command.mountNamed(name, mountPath)
+        if err != nil { return errors.New("Could not mount database: " + err.Error()) }
+    } else {
+        if argCount < 1 { return errors.New("Mountpoint must be specified.") }
+        if argCount > 1 { return errors.New("Too many arguments.") }
+
+        mountPath := args[0]
+
+        err := command.mountSelected(mountPath)
+        if err != nil { return errors.New("Could not mount currently selected database: " + err.Error()) }
     }
 
     return nil
 }
 
-func (command MountCommand) mountPreconfigured(name string) error {
-    databaseConfig, err := command.findDatabaseConfig(name)
+func (command MountCommand) mountNamed(name, mountPath string) error {
+    config, err := GetDatabaseConfig(name)
     if err != nil { return err }
-    if databaseConfig == nil { return errors.New("No configured database called '" + name + "'.") }
+    if config == nil { return errors.New("No configured database called '" + name + "'.") }
 
-    err = command.mountExplicit(databaseConfig.DatabasePath, databaseConfig.MountPath)
+    err = command.mountExplicit(config.DatabasePath, mountPath)
     if err != nil { return err }
 
     return nil
 }
 
-func (MountCommand) findDatabaseConfig(name string) (*DatabaseConfig, error) {
-    config, err := readConfig()
-    if err != nil { return nil, err }
+func (command MountCommand) mountSelected(mountPath string) error {
+    config, err := GetSelectedDatabaseConfig()
+    if err != nil { return err }
+    if config == nil { return errors.New("Could not get selected database configuration.") }
 
-    for _, databaseConfig := range config.Databases {
-        if databaseConfig.Name == name { return &databaseConfig, nil }
-    }
+    err = command.mountExplicit(config.DatabasePath, mountPath)
+    if err != nil { return err }
 
-    return nil, nil
+    return nil
 }
 
 func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
@@ -94,7 +97,9 @@ func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
     if fileInfo == nil { return errors.New("Mount point '" + mountPath + "' does not exist.") }
     if !fileInfo.IsDir() { return errors.New("Mount point '" + mountPath + "' is not a directory.") }
 
-    fmt.Println("Mounting", databasePath, mountPath)
+    fileInfo, err = os.Stat(databasePath)
+    if err != nil { return err }
+    if fileInfo == nil { return errors.New("Database '" + databasePath + "' does not exist.") }
 
 	command := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
 

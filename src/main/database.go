@@ -30,7 +30,15 @@ type Database struct {
 	connection *sql.DB
 }
 
-func OpenDatabase(path string) (*Database, error) {
+func OpenDatabase() (*Database, error) {
+    config, err := GetSelectedDatabaseConfig()
+    if err != nil { return nil, errors.New("Could not get selected database: " + err.Error()) }
+    if config == nil { return nil, errors.New("No database is selected.") }
+
+    return OpenDatabaseAt(config.DatabasePath)
+}
+
+func OpenDatabaseAt(path string) (*Database, error) {
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil { return nil, err }
 

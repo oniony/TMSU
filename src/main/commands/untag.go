@@ -63,7 +63,7 @@ func (command UntagCommand) Exec(args []string) error {
 }
 
 func (UntagCommand) removeFiles(paths []string) error {
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 
@@ -89,7 +89,7 @@ func (command UntagCommand) untagFile(path string, tagNames []string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil { return err }
 
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 

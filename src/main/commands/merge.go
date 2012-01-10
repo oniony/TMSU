@@ -38,7 +38,7 @@ Merges SRC into DEST resulting in a single tag of name DEST.`
 }
 
 func (MergeCommand) Exec(args []string) error {
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	//defer db.Close()
 

@@ -52,7 +52,7 @@ func (command FilesCommand) Exec(args []string) error {
 }
 
 func (FilesCommand) listAllFiles() error {
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 
@@ -69,7 +69,7 @@ func (FilesCommand) listAllFiles() error {
 func (FilesCommand) listFiles(tagNames []string) error {
     if len(tagNames) == 0 { return errors.New("At least one tag must be specified.") }
 
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 

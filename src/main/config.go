@@ -22,7 +22,6 @@ import (
     "bufio"
     "errors"
 	"fmt"
-	"log"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -39,14 +38,26 @@ type Config struct {
 type DatabaseConfig struct {
     Name string
     DatabasePath string
-    MountPath string
 }
 
-func databasePath() string {
-    path, err := resolvePath("~/.tmsu/default.db")
-    if err != nil { log.Fatal("Could not resolve default database path.") }
+func GetSelectedDatabaseConfig() (*DatabaseConfig, error) {
+    //TODO actually use selected rather than just default
 
-    return path
+    path, err := resolvePath("~/.tmsu/default.db")
+    if err != nil { return nil, errors.New("Could not resolve default database path: " + err.Error()) }
+
+    return &DatabaseConfig{ "default", path }, nil
+}
+
+func GetDatabaseConfig(name string) (*DatabaseConfig, error) {
+    config, err := readConfig()
+    if err != nil { return nil, err }
+
+    for _, databaseConfig := range config.Databases {
+        if databaseConfig.Name == name { return &databaseConfig, nil }
+    }
+
+    return nil, nil
 }
 
 func resolvePath(path string) (string, error) {
@@ -102,11 +113,6 @@ func readConfig() (*Config, error) {
                 if err != nil { return nil, err}
 
                 database.DatabasePath = path
-            case "mountpoint":
-                path, err := resolvePath(value)
-                if err != nil { return nil, err}
-
-                database.MountPath = path
             default:
                 return nil, errors.New("Unrecognised configuration element name '" + name + "'.");
         }

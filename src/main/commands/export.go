@@ -44,7 +44,7 @@ func (command ExportCommand) Exec(args []string) error {
 		return errors.New("Unpected argument to command '" + command.Name() + "'.")
 	}
 
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 

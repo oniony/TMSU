@@ -34,15 +34,13 @@ func (UnmountCommand) Summary() string {
 }
 
 func (UnmountCommand) Help() string {
-	return `  tags unount MOUNTPOINT
+	return `tags unmount MOUNTPOINT
 
-Unmounts a previously mounted virtual file-system at the mountpoint specified.`
+Unmounts the virtual file-system at MOUNTPOINT.`
 }
 
 func (UnmountCommand) Exec(args []string) error {
-	if len(args) < 1 {
-		return errors.New("Path to unmount not speciified.")
-	}
+	if len(args) < 1 { return errors.New("Path to unmount not speciified.") }
 
 	path := args[0]
 

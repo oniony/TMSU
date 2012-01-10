@@ -42,7 +42,7 @@ func (command DeleteCommand) Exec(args []string) error {
 		return errors.New("No tags to delete specified.")
 	}
 
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 

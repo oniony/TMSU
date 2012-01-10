@@ -53,7 +53,7 @@ func (command TagsCommand) Exec(args []string) error {
 }
 
 func (TagsCommand) listAllTags() error {
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 
@@ -68,7 +68,7 @@ func (TagsCommand) listAllTags() error {
 }
 
 func (command TagsCommand) listTags(paths []string) error {
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 

@@ -77,7 +77,7 @@ func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
 }
 
 func (command TagCommand) tagPath(path string, tagNames []string) error {
-	db, err := OpenDatabase(databasePath())
+	db, err := OpenDatabase()
 	if err != nil { return err }
 	defer db.Close()
 

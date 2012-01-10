@@ -39,7 +39,7 @@ Shows the database statistics.`
 }
 
 func (StatsCommand) Exec(args []string) error {
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 

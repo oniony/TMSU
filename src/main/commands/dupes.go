@@ -54,7 +54,7 @@ func (command DupesCommand) Exec(args []string) error {
 }
 
 func (DupesCommand) findDuplicates() error {
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 
@@ -75,7 +75,7 @@ func (DupesCommand) findDuplicates() error {
 }
 
 func (DupesCommand) findDuplicatesOf(path string) error {
-    db, err := OpenDatabase(databasePath())
+    db, err := OpenDatabase()
     if err != nil { return err }
     defer db.Close()
 

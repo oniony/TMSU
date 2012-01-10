@@ -36,19 +36,44 @@ func (TagCommand) Summary() string {
 
 func (TagCommand) Help() string {
 	return `  tmsu tag FILE TAG...
+tmsu tag --tags "TAG..." FILE...
 
-Tags the file FILE with the tag(s) specified.`
+Tags the file FILE with the tag(s) specified.
+
+  -tags  Allows multiple files to be tagged with the same set of quoted tags.`
 }
 
 func (command TagCommand) Exec(args []string) error {
-	if len(args) < 2 {
-		return errors.New("File to tag and tags to apply must be specified.")
-	}
+    if len(args) < 1 { return errors.New("Too few arguments.") }
 
-	err := command.tagPath(args[0], args[1:])
-	if err != nil { return err }
+    if args[0] == "--tags" {
+        if len(args) < 3 { return errors.New("Quoted set of tags and at least one file to tag must be specified.") }
+
+        tagNames := strings.Fields(args[1])
+        paths := args[2:]
+
+        err := command.tagPaths(paths, tagNames)
+        if err != nil { return err }
+    } else {
+        if len(args) < 2 { return errors.New("File to tag and tags to apply must be specified.") }
+
+        path := args[0]
+        tagNames := args[1:]
+
+        err := command.tagPath(path, tagNames)
+        if err != nil { return err }
+    }
 
 	return nil
+}
+
+func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
+    for _, path := range paths {
+        err := command.tagPath(path, tagNames)
+        if err != nil { return err }
+    }
+
+    return nil
 }
 
 func (command TagCommand) tagPath(path string, tagNames []string) error {

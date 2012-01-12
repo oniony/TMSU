@@ -91,6 +91,11 @@ func readConfig() (*Config, error) {
         if len(trimmedLine) == 0 { continue }
         if strings.HasPrefix(trimmedLine, "#") { continue }
 
+        if line[0] != ' ' && line[0] != '\t' && database != nil {
+            databases = append(databases, *database)
+            database = nil
+        }
+
         var name, quotedValue string
         count, err := fmt.Sscanf(trimmedLine, "%s %s", &name, &quotedValue)
         if count < 2 { return nil, errors.New("Key and value must be specified.") }
@@ -101,10 +106,6 @@ func readConfig() (*Config, error) {
 
         switch name {
             case "database":
-                if database != nil {
-                    databases = append(databases, *database)
-                }
-
                 database = &DatabaseConfig{}
                 database.Name = value
                 if err != nil { return nil, err }

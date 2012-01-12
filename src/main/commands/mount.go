@@ -35,35 +35,33 @@ func (MountCommand) Summary() string {
 }
 
 func (MountCommand) Help() string {
-	return `tmsu mount [OPTION] MOUNTPOINT
+	return `tmsu mount [NAME] MOUNTPOINT
 
-Mounts the currently selected database at MOUNTPOINT.
+Mounts a at the path MOUNTPOINT.
 
-  --name NAME   Mounts the configured database NAME instead.`
+Where NAME is specified then the configured database NAME is mounted at the
+mountpoint specified. Otherwise the currently selecetd database is mounted.`
 }
 
 func (command MountCommand) Exec(args []string) error {
     argCount := len(args)
 
-    if argCount < 1 { return errors.New("Mountpoint must be specified.") }
+    switch (argCount) {
+        case 0:
+            return errors.New("Mountpoint must be specified.")
+        case 1:
+            mountPath := args[0]
 
-    if argCount > 0 && args[0] == "--name" {
-        if argCount < 3 { return errors.New("Database name and mountpoint must be specified.") }
-        if argCount > 3 { return errors.New("Too many arguments.") }
+            err := command.mountSelected(mountPath)
+            if err != nil { return errors.New("Could not mount database: " + err.Error()) }
+        case 2:
+            name := args[0]
+            mountPath := args[1]
 
-        name := args[1]
-        mountPath := args[2]
-
-        err := command.mountNamed(name, mountPath)
-        if err != nil { return errors.New("Could not mount database: " + err.Error()) }
-    } else {
-        if argCount < 1 { return errors.New("Mountpoint must be specified.") }
-        if argCount > 1 { return errors.New("Too many arguments.") }
-
-        mountPath := args[0]
-
-        err := command.mountSelected(mountPath)
-        if err != nil { return errors.New("Could not mount currently selected database: " + err.Error()) }
+            err := command.mountNamed(name, mountPath)
+            if err != nil { return errors.New("Could not mount database: " + err.Error()) }
+        default:
+            return errors.New("Too many arguments.")
     }
 
     return nil

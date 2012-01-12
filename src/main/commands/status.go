@@ -21,7 +21,6 @@ import (
     "path/filepath"
     "fmt"
     "os"
-    "strings"
 )
 
 type StatusCommand struct {}
@@ -166,17 +165,4 @@ func contains(strings []string, find string) bool {
     }
 
     return false
-}
-
-func makeRelative(path string) (string, error) {
-    workingDirectory, err := os.Getwd()
-    if err != nil { return "", err }
-
-    workingDirectory += string(filepath.Separator)
-
-    if strings.HasPrefix(path, workingDirectory) {
-        return path[len(workingDirectory):], nil
-    }
-
-    return path, nil
 }

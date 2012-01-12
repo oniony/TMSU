@@ -28,6 +28,7 @@ GOFILES=command.go \
 		fusevfs.go \
 		main.go \
 		os.go \
+		path.go \
 		version.gen.go \
 
 include $(GOROOT)/src/Make.cmd

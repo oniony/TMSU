@@ -85,7 +85,10 @@ func (FilesCommand) listFiles(tagNames []string) error {
 
     paths := make([]string, len(files))
     for index, file := range files {
-        paths[index] = file.Path()
+        relativePath, err := makeRelative(file.Path())
+        if err != nil { return err }
+
+        paths[index] = relativePath
     }
 
     sort.Strings(paths)

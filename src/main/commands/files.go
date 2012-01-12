@@ -20,6 +20,7 @@ package main
 import (
     "errors"
     "fmt"
+    "sort"
 )
 
 type FilesCommand struct{}
@@ -82,8 +83,14 @@ func (FilesCommand) listFiles(tagNames []string) error {
     files, err := db.FilesWithTags(tagNames)
     if err != nil { return err }
 
-    for _, file := range files {
-        fmt.Println(file.Path())
+    paths := make([]string, len(files))
+    for index, file := range files {
+        paths[index] = file.Path()
+    }
+
+    sort.Strings(paths)
+    for _, path := range paths {
+        fmt.Println(path)
     }
 
     return nil

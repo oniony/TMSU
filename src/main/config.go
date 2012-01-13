@@ -42,9 +42,10 @@ type DatabaseConfig struct {
 }
 
 func GetSelectedDatabaseConfig() (*DatabaseConfig, error) {
-    //TODO implement
+    path := os.Getenv("TMSU_DB")
+    if path == "" { return nil, nil }
 
-    return nil, nil
+    return &DatabaseConfig{ "", path }, nil
 }
 
 func GetDefaultDatabaseConfig() (*DatabaseConfig, error) {

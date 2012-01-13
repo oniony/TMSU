@@ -33,16 +33,20 @@ type Database struct {
 
 func OpenDatabase() (*Database, error) {
     config, err := GetSelectedDatabaseConfig()
-    if err != nil { return nil, errors.New("Could not get selected database: " + err.Error()) }
-    if config == nil { return nil, errors.New("No database is selected.") }
+    if err != nil { return nil, err }
+    if config == nil {
+        config, err = GetDefaultDatabaseConfig()
+        if err != nil { return nil, err }
+
+        // attempt to create default database directory
+        dir, _ := filepath.Split(config.DatabasePath)
+        os.MkdirAll(dir, uint32(os.ModeDir) | 0755)
+    }
 
     return OpenDatabaseAt(config.DatabasePath)
 }
 
 func OpenDatabaseAt(path string) (*Database, error) {
-    dir, _ := filepath.Split(path)
-    ensurePathExists(dir)
-
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil { return nil, errors.New("Could not open database: " + err.Error()) }
 
@@ -784,21 +788,4 @@ func (db Database) contains(list []string, str string) bool {
 	}
 
 	return false
-}
-
-func ensurePathExists(path string) error {
-    _, err := os.Stat(path)
-    if err == nil { return nil }
-
-    switch terr := err.(type) {
-    case *os.PathError:
-        switch terr.Err {
-        case os.ENOENT:
-            // create directory path if it doesn't exist
-            err = os.MkdirAll(path, uint32(os.ModeDir) | 0755)
-            if err != nil { return err }
-        }
-    }
-
-    return err
 }

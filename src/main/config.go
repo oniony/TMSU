@@ -42,8 +42,12 @@ type DatabaseConfig struct {
 }
 
 func GetSelectedDatabaseConfig() (*DatabaseConfig, error) {
-    //TODO actually use selected rather than just default
+    //TODO implement
 
+    return nil, nil
+}
+
+func GetDefaultDatabaseConfig() (*DatabaseConfig, error) {
     path, err := resolvePath(defaultDatabasePath)
     if err != nil { return nil, errors.New("Could not resolve default database path: " + err.Error()) }
 

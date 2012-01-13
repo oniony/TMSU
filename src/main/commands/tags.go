@@ -34,8 +34,8 @@ func (TagsCommand) Summary() string {
 }
 
 func (TagsCommand) Help() string {
-	return `  tmsu tags [FILE]...
-  tmsu tags --all
+	return `tmsu tags [FILE]...
+tmsu tags --all
 
 Lists the tags applied to FILEs (files in the current directory by default).
 

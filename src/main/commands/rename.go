@@ -32,7 +32,7 @@ func (RenameCommand) Summary() string {
 }
 
 func (RenameCommand) Help() string {
-	return `  tmsu rename OLD NEW
+	return `tmsu rename OLD NEW
 
 Renames a tag from OLD to NEW.
 

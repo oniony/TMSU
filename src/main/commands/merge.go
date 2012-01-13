@@ -32,7 +32,7 @@ func (MergeCommand) Summary() string {
 }
 
 func (MergeCommand) Help() string {
-	return `  tmsu merge SRC DEST
+	return `tmsu merge SRC DEST
         
 Merges SRC into DEST resulting in a single tag of name DEST.`
 }

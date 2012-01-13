@@ -34,7 +34,7 @@ func (DupesCommand) Summary() string {
 }
 
 func (DupesCommand) Help() string {
-	return `  tmsu dupes [FILE]
+	return `tmsu dupes [FILE]
 
 Identifies all files in the database that are exact duplicates of FILE.
 

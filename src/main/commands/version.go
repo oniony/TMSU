@@ -32,7 +32,7 @@ func (VersionCommand) Summary() string {
 }
 
 func (VersionCommand) Help() string {
-	return `  tmsu version
+	return `tmsu version
 
 Displays version and copyright information.`
 }

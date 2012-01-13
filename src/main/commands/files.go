@@ -34,8 +34,8 @@ func (FilesCommand) Summary() string {
 }
 
 func (FilesCommand) Help() string {
-	return `  tmsu files TAG...
-  tmsu files --all
+	return `tmsu files TAG...
+tmsu files --all
 
 Lists the files, if any, that have all of the TAGs specified.
 

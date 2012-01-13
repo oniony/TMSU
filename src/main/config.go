@@ -30,6 +30,7 @@ import (
 
 const globalConfigPath = "/etc/tmsu.conf"
 const userConfigPath = "~/.config/tmsu.conf"
+const defaultDatabasePath = "~/.tmsu/default.db"
 
 type Config struct {
     Databases []DatabaseConfig
@@ -43,14 +44,14 @@ type DatabaseConfig struct {
 func GetSelectedDatabaseConfig() (*DatabaseConfig, error) {
     //TODO actually use selected rather than just default
 
-    path, err := resolvePath("~/.tmsu/default.db")
+    path, err := resolvePath(defaultDatabasePath)
     if err != nil { return nil, errors.New("Could not resolve default database path: " + err.Error()) }
 
     return &DatabaseConfig{ "default", path }, nil
 }
 
 func GetDatabaseConfig(name string) (*DatabaseConfig, error) {
-    config, err := readConfig()
+    config, err := readConfig(userConfigPath)
     if err != nil { return nil, err }
 
     for _, databaseConfig := range config.Databases {
@@ -71,12 +72,26 @@ func resolvePath(path string) (string, error) {
     return path, nil
 }
 
-func readConfig() (*Config, error) {
-    configPath, err := resolvePath(userConfigPath)
-    if err != nil { return nil, err }
+func readConfig(path string) (*Config, error) {
+    configPath, err := resolvePath(path)
+    if err != nil { return nil, errors.New("Could not resolve configuration file path '" + path + "'.") }
 
     file, err := os.Open(configPath)
-    if err != nil { return nil, err }
+    if err != nil {
+        switch terr := err.(type) {
+            case *os.PathError: 
+                switch terr.Err {
+                    case os.ENOENT:
+                        return nil, nil // configuration file is missing
+                    case os.EACCES:
+                        return nil, errors.New("Permission denied.")
+                    default:
+                        return nil, terr
+                }
+            default:
+                return nil, err
+        }
+    }
     defer file.Close()
 
     reader := bufio.NewReader(file)

@@ -20,6 +20,7 @@ package main
 import (
     "exp/sql"
     "errors"
+    "os"
     "path/filepath"
 	"strconv"
 	"strings"
@@ -39,13 +40,16 @@ func OpenDatabase() (*Database, error) {
 }
 
 func OpenDatabaseAt(path string) (*Database, error) {
+    dir, _ := filepath.Split(path)
+    ensurePathExists(dir)
+
 	connection, err := sql.Open("sqlite3", path)
-	if err != nil { return nil, err }
+	if err != nil { return nil, errors.New("Could not open database: " + err.Error()) }
 
 	database := Database{connection}
 
 	err = database.CreateSchema()
-	if err != nil { return nil, err }
+	if err != nil { return nil, errors.New("Could not create database schema: " + err.Error()) }
 
 	return &database, nil
 }
@@ -780,4 +784,21 @@ func (db Database) contains(list []string, str string) bool {
 	}
 
 	return false
+}
+
+func ensurePathExists(path string) error {
+    _, err := os.Stat(path)
+    if err == nil { return nil }
+
+    switch terr := err.(type) {
+    case *os.PathError:
+        switch terr.Err {
+        case os.ENOENT:
+            // create directory path if it doesn't exist
+            err = os.MkdirAll(path, uint32(os.ModeDir) | 0755)
+            if err != nil { return err }
+        }
+    }
+
+    return err
 }

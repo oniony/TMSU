@@ -100,7 +100,7 @@ func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error
         fileInfo, err := os.Lstat(path)
         if err != nil { return err }
 
-        if fileInfo.Mode() & os.ModeType == 0 {
+        if err != nil || !fileInfo.IsDir() {
             tags, err := command.tagsForPath(db, path)
             if err != nil { return err }
             if tags == nil { continue }

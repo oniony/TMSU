@@ -39,7 +39,7 @@ func OpenDatabase() (*Database, error) {
         if err != nil { return nil, err }
 
         // attempt to create default database directory
-        dir, _ := filepath.Split(config.DatabasePath)
+        dir := filepath.Dir(config.DatabasePath)
         os.MkdirAll(dir, uint32(os.ModeDir) | 0755)
     }
 
@@ -310,8 +310,8 @@ func (db Database) File(id uint) (*File, error) {
 }
 
 func (db Database) FileByPath(path string) (*File, error) {
-    directory, name := filepath.Split(path)
-    directory = filepath.Clean(directory)
+    directory := filepath.Dir(path)
+    name := filepath.Base(path)
 
 	sql := `SELECT id, fingerprint
 	        FROM file
@@ -426,8 +426,8 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 }
 
 func (db Database) AddFile(path string, fingerprint string) (*File, error) {
-    directory, name := filepath.Split(path)
-    directory = filepath.Clean(directory) //TODO remove when patched
+    directory := filepath.Dir(path)
+    name := filepath.Base(path)
 
 	sql := `INSERT INTO file (directory, name, fingerprint)
 	        VALUES (?, ?, ?)`

@@ -128,7 +128,19 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
             entries = append(entries, absPath)
         } else if fileInfo.IsDir() {
             childEntries, err := directoryEntries(absPath)
-            if err != nil { return nil, err }
+            if err != nil {
+                switch terr := err.(type) {
+                case *os.PathError:
+                    switch terr.Err {
+                    case os.EACCES:
+                        logerr("'%v': permission denied.", path)
+                    default:
+                        return nil, err
+                    }
+                default:
+                    return nil, err
+                }
+            }
 
             for _, entry := range childEntries {
                 entries, err = command.getFileSystemEntriesRecursive(entry, entries, allFiles)

@@ -26,6 +26,7 @@ GOFILES=command.go \
 		entities/tag.go \
 		fingerprinter.go \
 		fusevfs.go \
+		log.go \
 		main.go \
 		os.go \
 		path.go \

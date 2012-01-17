@@ -112,7 +112,7 @@ func (TagCommand) applyTag(db *Database, path string, fileId uint, tagName strin
 	if err != nil { return nil, nil, err }
 
 	if tag == nil {
-		fmt.Printf("New tag '%v'\n", tagName)
+		fmt.Printf("New tag '%v'.\n", tagName)
 		tag, err = db.AddTag(tagName)
 		if err != nil { return nil, nil, err }
 	}
@@ -140,7 +140,7 @@ func (TagCommand) addFile(db *Database, path string) (*File, error) {
 		if err != nil { return nil, err }
 
 		if len(files) > 0 {
-			fmt.Printf("Warning: file is a duplicate of previously tagged files.\n")
+			fmt.Printf("File is a duplicate of previously tagged files.\n")
 
 			for _, duplicateFile := range files {
 			    fmt.Printf("  %v\n", duplicateFile.Path())

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"fmt"
 	"os"
 )
 
@@ -58,8 +57,7 @@ func main() {
 
 	command := commands[commandName]
 	if command == nil {
-		fmt.Printf("No such command, '%v'.\n", commandName)
-		os.Exit(1)
+		die("unknown command '%v'.", commandName)
 	}
 
 	var args []string
@@ -71,7 +69,6 @@ func main() {
 
 	err := command.Exec(args)
 	if err != nil {
-	    fmt.Fprintln(os.Stderr, err.Error())
-	    os.Exit(1)
+	    die(err.Error())
 	}
 }

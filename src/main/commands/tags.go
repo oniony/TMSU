@@ -120,7 +120,20 @@ func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error
             }
         } else if fileInfo.IsDir() {
             file, err := os.Open(path)
-            if err != nil { return err }
+            if err != nil {
+                switch terr := err.(type) {
+                case *os.PathError:
+                    switch terr.Err {
+                    case os.EACCES:
+                        logerr("'%v': permission denied.", path)
+                    default:
+                        logerr("'%v': %v", path, err)
+                    }
+                default:
+                    logerr("'%v': %v", path, err)
+                }
+                continue
+            }
             defer file.Close()
 
             dirNames, err := file.Readdirnames(0)

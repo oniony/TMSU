@@ -73,7 +73,10 @@ func (UntagCommand) removeFiles(paths []string) error {
 
         file, err := db.FileByPath(absPath)
         if err != nil { return err }
-        if file == nil { return errors.New("File '" + path + "' is not tagged.") }
+        if file == nil {
+            logerr("'%v': file is not tagged", path)
+            continue
+        }
 
         err = db.RemoveFileTagsByFileId(file.Id)
         if err != nil { return err }
@@ -116,9 +119,7 @@ func (command UntagCommand) untagFile(path string, tagNames []string) error {
 func (UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagName string) error {
 	tag, err := db.TagByName(tagName)
 	if err != nil { return err }
-	if tag == nil {
-		errors.New("No such tag" + tagName)
-	}
+	if tag == nil { errors.New("No such tag" + tagName) }
 
 	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)
 	if err != nil { return err }

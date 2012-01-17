@@ -73,7 +73,7 @@ func (HelpCommand) overview() {
 			continue
 		}
 
-		fmt.Printf("  %-" + strconv.Itoa(maxWidth) + "v  %v\n", command.Name(), commandSummary)
+		fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name(), commandSummary)
 	}
 }
 

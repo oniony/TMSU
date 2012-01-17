@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "errors"
-    "fmt"
-    "sort"
+	"errors"
+	"fmt"
+	"sort"
 )
 
 type FilesCommand struct{}
@@ -43,58 +43,74 @@ Lists the files, if any, that have all of the TAGs specified.
 }
 
 func (command FilesCommand) Exec(args []string) error {
-    argCount := len(args)
+	argCount := len(args)
 
-    if argCount == 1 && args[0] == "--all" {
-        return command.listAllFiles()
-    }
+	if argCount == 1 && args[0] == "--all" {
+		return command.listAllFiles()
+	}
 
-    return command.listFiles(args)
+	return command.listFiles(args)
 }
 
 func (FilesCommand) listAllFiles() error {
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    files, err := db.Files()
-    if err != nil { return err }
+	files, err := db.Files()
+	if err != nil {
+		return err
+	}
 
-    for _, file := range files {
-        fmt.Println(file.Path())
-    }
+	for _, file := range files {
+		fmt.Println(file.Path())
+	}
 
-    return nil
+	return nil
 }
 
 func (FilesCommand) listFiles(tagNames []string) error {
-    if len(tagNames) == 0 { return errors.New("At least one tag must be specified.") }
+	if len(tagNames) == 0 {
+		return errors.New("At least one tag must be specified.")
+	}
 
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    for _, tagName := range tagNames {
-        tag, err := db.TagByName(tagName)
-        if err != nil { return err }
-        if tag == nil { return errors.New("No such tag '" + tagName + "'.") }
-    }
+	for _, tagName := range tagNames {
+		tag, err := db.TagByName(tagName)
+		if err != nil {
+			return err
+		}
+		if tag == nil {
+			return errors.New("No such tag '" + tagName + "'.")
+		}
+	}
 
-    files, err := db.FilesWithTags(tagNames)
-    if err != nil { return err }
+	files, err := db.FilesWithTags(tagNames)
+	if err != nil {
+		return err
+	}
 
-    paths := make([]string, len(files))
-    for index, file := range files {
-        relativePath, err := makeRelative(file.Path())
-        if err != nil { return err }
+	paths := make([]string, len(files))
+	for index, file := range files {
+		relativePath, err := makeRelative(file.Path())
+		if err != nil {
+			return err
+		}
 
-        paths[index] = relativePath
-    }
+		paths[index] = relativePath
+	}
 
-    sort.Strings(paths)
-    for _, path := range paths {
-        fmt.Println(path)
-    }
+	sort.Strings(paths)
+	for _, path := range paths {
+		fmt.Println(path)
+	}
 
-    return nil
+	return nil
 }

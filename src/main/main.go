@@ -69,6 +69,6 @@ func main() {
 
 	err := command.Exec(args)
 	if err != nil {
-	    die(err.Error())
+		die(err.Error())
 	}
 }

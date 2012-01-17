@@ -18,26 +18,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "path/filepath"
-    "os"
+	"os"
+	"path/filepath"
 )
 
 func isRegular(fileInfo os.FileInfo) bool {
-    return fileInfo.Mode() & os.ModeType == 0
+	return fileInfo.Mode()&os.ModeType == 0
 }
 
 func directoryEntries(path string) ([]string, error) {
-    file, err := os.Open(path)
-    if err != nil { return nil, err }
-    defer file.Close()
+	file, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
 
-    entryNames, err := file.Readdirnames(0)
-    if err != nil { return nil, err }
+	entryNames, err := file.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
 
-    entryPaths := make([]string, len(entryNames))
-    for index, entryName := range entryNames {
-        entryPaths[index] = filepath.Join(path, entryName)
-    }
+	entryPaths := make([]string, len(entryNames))
+	for index, entryName := range entryNames {
+		entryPaths[index] = filepath.Join(path, entryName)
+	}
 
-    return entryPaths, nil
+	return entryPaths, nil
 }

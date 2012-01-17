@@ -43,22 +43,26 @@ Lists the tags applied to FILEs (files in the current directory by default).
 }
 
 func (command TagsCommand) Exec(args []string) error {
-    argCount := len(args)
+	argCount := len(args)
 
-    if argCount == 1 && args[0] == "--all" {
-        return command.listAllTags()
-    }
+	if argCount == 1 && args[0] == "--all" {
+		return command.listAllTags()
+	}
 
 	return command.listTags(args)
 }
 
 func (TagsCommand) listAllTags() error {
 	db, err := OpenDatabase()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	tags, err := db.Tags()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	for _, tag := range tags {
 		fmt.Println(tag.Name)
@@ -69,99 +73,121 @@ func (TagsCommand) listAllTags() error {
 
 func (command TagsCommand) listTags(paths []string) error {
 	db, err := OpenDatabase()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
-    switch len(paths) {
-        case 0:
-            return command.listTagsRecursive(db, []string { "." })
-        case 1:
-            return command.listTagsForPath(db, paths[0])
-        default:
-            return command.listTagsRecursive(db, paths)
-    }
+	switch len(paths) {
+	case 0:
+		return command.listTagsRecursive(db, []string{"."})
+	case 1:
+		return command.listTagsForPath(db, paths[0])
+	default:
+		return command.listTagsRecursive(db, paths)
+	}
 
-    return command.listTagsRecursive(db, paths)
+	return command.listTagsRecursive(db, paths)
 }
 
 func (command TagsCommand) listTagsForPath(db *Database, path string) error {
-    tags, err := command.tagsForPath(db, path)
-    if err != nil { return err }
+	tags, err := command.tagsForPath(db, path)
+	if err != nil {
+		return err
+	}
 
-    for _, tag := range tags {
-        fmt.Println(tag.Name)
-    }
+	for _, tag := range tags {
+		fmt.Println(tag.Name)
+	}
 
-    return nil
+	return nil
 }
 
 func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error {
-    for _, path := range paths {
-        fileInfo, err := os.Lstat(path)
-        if err != nil { return err }
+	for _, path := range paths {
+		fileInfo, err := os.Lstat(path)
+		if err != nil {
+			return err
+		}
 
-        if err != nil || !fileInfo.IsDir() {
-            tags, err := command.tagsForPath(db, path)
-            if err != nil { return err }
-            if tags == nil { continue }
+		if err != nil || !fileInfo.IsDir() {
+			tags, err := command.tagsForPath(db, path)
+			if err != nil {
+				return err
+			}
+			if tags == nil {
+				continue
+			}
 
-            if len(tags) > 0 {
-                fmt.Printf("%v: ", path)
+			if len(tags) > 0 {
+				fmt.Printf("%v: ", path)
 
-                for index, tag := range tags {
-                    if index > 0 {
-                        fmt.Print(" ")
-                    }
+				for index, tag := range tags {
+					if index > 0 {
+						fmt.Print(" ")
+					}
 
-                    fmt.Print(tag.Name)
-                }
+					fmt.Print(tag.Name)
+				}
 
-                fmt.Println()
-            }
-        } else if fileInfo.IsDir() {
-            file, err := os.Open(path)
-            if err != nil {
-                switch terr := err.(type) {
-                case *os.PathError:
-                    switch terr.Err {
-                    case os.EACCES:
-                        logerr("'%v': permission denied.", path)
-                    default:
-                        logerr("'%v': %v", path, err)
-                    }
-                default:
-                    logerr("'%v': %v", path, err)
-                }
-                continue
-            }
-            defer file.Close()
+				fmt.Println()
+			}
+		} else if fileInfo.IsDir() {
+			file, err := os.Open(path)
+			if err != nil {
+				switch terr := err.(type) {
+				case *os.PathError:
+					switch terr.Err {
+					case os.EACCES:
+						logerr("'%v': permission denied.", path)
+					default:
+						logerr("'%v': %v", path, err)
+					}
+				default:
+					logerr("'%v': %v", path, err)
+				}
+				continue
+			}
+			defer file.Close()
 
-            dirNames, err := file.Readdirnames(0)
-            if err != nil { return err }
+			dirNames, err := file.Readdirnames(0)
+			if err != nil {
+				return err
+			}
 
-            childPaths := make([]string, len(dirNames))
-            for index, dirName := range dirNames {
-                childPaths[index] = filepath.Join(path, dirName)
-            }
+			childPaths := make([]string, len(dirNames))
+			for index, dirName := range dirNames {
+				childPaths[index] = filepath.Join(path, dirName)
+			}
 
-            err = command.listTagsRecursive(db, childPaths)
-            if err != nil { return err }
-        }
-    }
+			err = command.listTagsRecursive(db, childPaths)
+			if err != nil {
+				return err
+			}
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (TagsCommand) tagsForPath(db *Database, path string) ([]Tag, error) {
 	absPath, err := filepath.Abs(path)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	file, err := db.FileByPath(absPath)
-	if err != nil { return nil, err }
-	if file == nil { return nil, nil }
+	if err != nil {
+		return nil, err
+	}
+	if file == nil {
+		return nil, nil
+	}
 
 	tags, err := db.TagsByFileId(file.Id)
-	if err != nil { return nil, err }
+	if err != nil {
+		return nil, err
+	}
 
 	return tags, err
 }

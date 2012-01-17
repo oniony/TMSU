@@ -24,11 +24,11 @@ import (
 )
 
 func die(format string, values ...interface{}) {
-    logerr(format, values...)
-    os.Exit(1)
+	logerr(format, values...)
+	os.Exit(1)
 }
 
 func logerr(format string, values ...interface{}) {
-    format = "tmsu: " + format + "\n" 
-    fmt.Fprintf(os.Stderr, format, values...)
+	format = "tmsu: " + format + "\n"
+	fmt.Fprintf(os.Stderr, format, values...)
 }

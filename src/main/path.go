@@ -18,20 +18,22 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "path/filepath"
-    "os"
-    "strings"
+	"os"
+	"path/filepath"
+	"strings"
 )
 
 func makeRelative(path string) (string, error) {
-    workingDirectory, err := os.Getwd()
-    if err != nil { return "", err }
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
 
-    workingDirectory += string(filepath.Separator)
+	workingDirectory += string(filepath.Separator)
 
-    if strings.HasPrefix(path, workingDirectory) {
-        return path[len(workingDirectory):], nil
-    }
+	if strings.HasPrefix(path, workingDirectory) {
+		return path[len(workingDirectory):], nil
+	}
 
-    return path, nil
+	return path, nil
 }

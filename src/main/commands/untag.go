@@ -46,71 +46,102 @@ func (command UntagCommand) Exec(args []string) error {
 		return errors.New("No arguments specified.")
 	}
 
-    if args[0] == "--all" {
-        if len(args) < 2 { return errors.New("Files to untag must be specified.") }
+	if args[0] == "--all" {
+		if len(args) < 2 {
+			return errors.New("Files to untag must be specified.")
+		}
 
-        err := command.removeFiles(args[1:])
-        if err != nil { return err }
-    } else {
-        if len(args) < 2 { return errors.New("Tags to remove must be specified.") }
+		err := command.removeFiles(args[1:])
+		if err != nil {
+			return err
+		}
+	} else {
+		if len(args) < 2 {
+			return errors.New("Tags to remove must be specified.")
+		}
 
-        err := command.untagFile(args[0], args[1:])
-        if err != nil { return err }
-    }
-
+		err := command.untagFile(args[0], args[1:])
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
 func (UntagCommand) removeFiles(paths []string) error {
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    for _, path := range paths {
-        absPath, err := filepath.Abs(path)
-        if err != nil { return err }
+	for _, path := range paths {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
 
-        file, err := db.FileByPath(absPath)
-        if err != nil { return err }
-        if file == nil {
-            logerr("'%v': file is not tagged", path)
-            continue
-        }
+		file, err := db.FileByPath(absPath)
+		if err != nil {
+			return err
+		}
+		if file == nil {
+			logerr("'%v': file is not tagged", path)
+			continue
+		}
 
-        err = db.RemoveFileTagsByFileId(file.Id)
-        if err != nil { return err }
+		err = db.RemoveFileTagsByFileId(file.Id)
+		if err != nil {
+			return err
+		}
 
-        err = db.RemoveFile(file.Id)
-        if err != nil { return err }
-    }
+		err = db.RemoveFile(file.Id)
+		if err != nil {
+			return err
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (command UntagCommand) untagFile(path string, tagNames []string) error {
 	absPath, err := filepath.Abs(path)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	db, err := OpenDatabase()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	file, err := db.FileByPath(absPath)
-	if err != nil { return err }
-	if file == nil { return errors.New("File '" + path + "' is not tagged.") }
+	if err != nil {
+		return err
+	}
+	if file == nil {
+		return errors.New("File '" + path + "' is not tagged.")
+	}
 
-    for _, tagName := range tagNames {
-        err = command.unapplyTag(db, path, file.Id, tagName)
-        if err != nil { return err }
-    }
+	for _, tagName := range tagNames {
+		err = command.unapplyTag(db, path, file.Id, tagName)
+		if err != nil {
+			return err
+		}
+	}
 
 	hasTags, err := db.AnyFileTagsForFile(file.Id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	if !hasTags {
-        err := db.RemoveFile(file.Id)
-        if err != nil { return err }
+		err := db.RemoveFile(file.Id)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -118,16 +149,26 @@ func (command UntagCommand) untagFile(path string, tagNames []string) error {
 
 func (UntagCommand) unapplyTag(db *Database, path string, fileId uint, tagName string) error {
 	tag, err := db.TagByName(tagName)
-	if err != nil { return err }
-	if tag == nil { errors.New("No such tag" + tagName) }
+	if err != nil {
+		return err
+	}
+	if tag == nil {
+		errors.New("No such tag" + tagName)
+	}
 
 	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)
-	if err != nil { return err }
-	if fileTag == nil { return errors.New("File '" + path + "' is not tagged '" + tagName + "'.") }
+	if err != nil {
+		return err
+	}
+	if fileTag == nil {
+		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
+	}
 
 	if fileTag != nil {
 		err := db.RemoveFileTag(fileId, tag.Id)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	} else {
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.\n")
 	}

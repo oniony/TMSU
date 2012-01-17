@@ -18,46 +18,54 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "fmt"
+	"fmt"
 )
 
-type StatsCommand struct {}
+type StatsCommand struct{}
 
 func (StatsCommand) Name() string {
-    return "stats"
+	return "stats"
 }
 
 func (StatsCommand) Summary() string {
-    return "shows database statistics"
+	return "shows database statistics"
 }
 
 func (StatsCommand) Help() string {
-    return `tmsu stats
+	return `tmsu stats
 tmsu stats
 
 Shows the database statistics.`
 }
 
 func (StatsCommand) Exec(args []string) error {
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    tagCount, err := db.TagCount()
-    if err != nil { return err }
+	tagCount, err := db.TagCount()
+	if err != nil {
+		return err
+	}
 
-    fileCount, err := db.FileCount()
-    if err != nil { return err }
+	fileCount, err := db.FileCount()
+	if err != nil {
+		return err
+	}
 
-    fileTagCount, err := db.FileTagCount()
-    if err != nil { return err }
+	fileTagCount, err := db.FileTagCount()
+	if err != nil {
+		return err
+	}
 
-    fmt.Printf("Database Contents\n")
+	fmt.Printf("Database Contents\n")
 
-    fmt.Printf(" Tags:                       %v\n", tagCount)
-    fmt.Printf(" Files:                      %v\n", fileCount)
-    fmt.Printf(" Taggings:                   %v\n", fileTagCount)
-    fmt.Printf(" Average taggings per file:  %v\n", fileTagCount / fileCount) 
+	fmt.Printf(" Tags:                       %v\n", tagCount)
+	fmt.Printf(" Files:                      %v\n", fileCount)
+	fmt.Printf(" Taggings:                   %v\n", fileTagCount)
+	fmt.Printf(" Average taggings per file:  %v\n", fileTagCount/fileCount)
 
-    return nil
+	return nil
 }

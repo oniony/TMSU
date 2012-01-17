@@ -42,57 +42,77 @@ When FILE is omitted duplicates within the database are identified.`
 }
 
 func (command DupesCommand) Exec(args []string) error {
-    argCount := len(args)
-    if argCount > 1 { errors.New("Only a single file can be specified.") }
+	argCount := len(args)
+	if argCount > 1 {
+		errors.New("Only a single file can be specified.")
+	}
 
-    switch argCount {
-        case 0: return command.findDuplicates()
-        case 1: return command.findDuplicatesOf(args[0])
-    }
+	switch argCount {
+	case 0:
+		return command.findDuplicates()
+	case 1:
+		return command.findDuplicatesOf(args[0])
+	}
 
 	return nil
 }
 
 func (DupesCommand) findDuplicates() error {
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    fileSets, err := db.DuplicateFiles()
-    if err != nil { return err }
+	fileSets, err := db.DuplicateFiles()
+	if err != nil {
+		return err
+	}
 
-    for index, fileSet := range fileSets {
-        if index > 0 { fmt.Println() }
+	for index, fileSet := range fileSets {
+		if index > 0 {
+			fmt.Println()
+		}
 
-        fmt.Printf("%v duplicate files:\n", len(fileSet))
+		fmt.Printf("%v duplicate files:\n", len(fileSet))
 
-        for _, file := range fileSet {
-            fmt.Printf("  %v\n", file.Path())
-        }
-    }
+		for _, file := range fileSet {
+			fmt.Printf("  %v\n", file.Path())
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (DupesCommand) findDuplicatesOf(path string) error {
-    db, err := OpenDatabase()
-    if err != nil { return err }
-    defer db.Close()
+	db, err := OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    fingerprint, err := Fingerprint(path)
-    if err != nil { return err }
+	fingerprint, err := Fingerprint(path)
+	if err != nil {
+		return err
+	}
 
-    files, err := db.FilesByFingerprint(fingerprint)
-    if err != nil { return err }
+	files, err := db.FilesByFingerprint(fingerprint)
+	if err != nil {
+		return err
+	}
 
-    absPath, err := filepath.Abs(path)
-    if err != nil { return err }
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return err
+	}
 
-    for _, file := range files {
-        if file.Path() == absPath { continue }
+	for _, file := range files {
+		if file.Path() == absPath {
+			continue
+		}
 
-        fmt.Println(file.Path())
-    }
+		fmt.Println(file.Path())
+	}
 
-    return nil
+	return nil
 }

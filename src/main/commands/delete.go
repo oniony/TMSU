@@ -43,12 +43,16 @@ func (command DeleteCommand) Exec(args []string) error {
 	}
 
 	db, err := OpenDatabase()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	defer db.Close()
 
 	for _, tagName := range args {
 		err = command.deleteTag(db, tagName)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -56,24 +60,34 @@ func (command DeleteCommand) Exec(args []string) error {
 
 func (DeleteCommand) deleteTag(db *Database, tagName string) error {
 	tag, err := db.TagByName(tagName)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	if tag == nil {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
 	fileTags, err := db.FileTagsByTagId(tag.Id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	err = db.RemoveFileTagsByTagId(tag.Id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	err = db.DeleteTag(tag.Id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	for _, fileTag := range fileTags {
 		hasTags, err := db.AnyFileTagsForFile(fileTag.FileId)
-		if err != nil { return err }
+		if err != nil {
+			return err
+		}
 
 		if !hasTags {
 			db.RemoveFile(fileTag.FileId)

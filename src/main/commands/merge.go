@@ -39,40 +39,64 @@ Merges SRC into DEST resulting in a single tag of name DEST.`
 
 func (MergeCommand) Exec(args []string) error {
 	db, err := OpenDatabase()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 	//defer db.Close()
 
 	sourceTagName := args[0]
 	destTagName := args[1]
 
 	sourceTag, err := db.TagByName(sourceTagName)
-	if err != nil { return err }
-	if sourceTag == nil { return errors.New("No such tag '" + sourceTagName + "'.") }
+	if err != nil {
+		return err
+	}
+	if sourceTag == nil {
+		return errors.New("No such tag '" + sourceTagName + "'.")
+	}
 
 	destTag, err := db.TagByName(destTagName)
-	if err != nil { return err }
-	if destTag == nil { return errors.New("No such tag '" + destTagName + "'.") }
+	if err != nil {
+		return err
+	}
+	if destTag == nil {
+		return errors.New("No such tag '" + destTagName + "'.")
+	}
 
-    fileTags, err := db.FileTagsByTagId(sourceTag.Id)
-    if err != nil { return err }
+	fileTags, err := db.FileTagsByTagId(sourceTag.Id)
+	if err != nil {
+		return err
+	}
 
-    for _, fileTag := range fileTags {
-        destFileTag, err := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
-        if err != nil { return err }
-        if destFileTag != nil { continue }
+	for _, fileTag := range fileTags {
+		destFileTag, err := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+		if err != nil {
+			return err
+		}
+		if destFileTag != nil {
+			continue
+		}
 
-        _, err = db.AddFileTag(fileTag.FileId, destTag.Id)
-        if err != nil { return err }
-    }
+		_, err = db.AddFileTag(fileTag.FileId, destTag.Id)
+		if err != nil {
+			return err
+		}
+	}
 
-    err = db.RemoveFileTagsByTagId(sourceTag.Id)
-    if err != nil { return err }
+	err = db.RemoveFileTagsByTagId(sourceTag.Id)
+	if err != nil {
+		return err
+	}
 
 	err = db.DeleteTag(sourceTag.Id)
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	err = db.Close()
-	if err != nil { return err }
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

@@ -18,16 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "path/filepath"
+	"path/filepath"
 )
 
 type File struct {
-	Id uint
-	Directory string
-	Name string
+	Id          uint
+	Directory   string
+	Name        string
 	Fingerprint string
 }
 
 func (file File) Path() string {
-    return filepath.Join(file.Directory, file.Name)
+	return filepath.Join(file.Directory, file.Name)
 }

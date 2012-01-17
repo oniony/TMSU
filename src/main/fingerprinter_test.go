@@ -18,23 +18,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "os"
-    "path/filepath"
-    "testing"
+	"os"
+	"path/filepath"
+	"testing"
 )
 
 func TestGeneration(test *testing.T) {
-    tempFilePath := filepath.Join(os.TempDir(), "tmsu-fingerprint")
+	tempFilePath := filepath.Join(os.TempDir(), "tmsu-fingerprint")
 
-    file, err := os.Create(tempFilePath)
-    if err != nil { test.Fatal(err.Error()) }
-    defer os.Remove(tempFilePath)
+	file, err := os.Create(tempFilePath)
+	if err != nil {
+		test.Fatal(err.Error())
+	}
+	defer os.Remove(tempFilePath)
 
-    _, err = file.WriteString("They were the footprints of a giagantic hound.")
-    if err != nil { test.Fatal(err.Error()) }
+	_, err = file.WriteString("They were the footprints of a giagantic hound.")
+	if err != nil {
+		test.Fatal(err.Error())
+	}
 
-    fingerprint, err := Fingerprint(tempFilePath)
-    if err != nil { test.Fatal(err.Error()) }
+	fingerprint, err := Fingerprint(tempFilePath)
+	if err != nil {
+		test.Fatal(err.Error())
+	}
 
-    if fingerprint != "87d74123749a45e4c4e5e9053986d7ae878268a8e301d1b8125791517c0d39bf" { test.Fatal("Fingerprint incorrect.") }
+	if fingerprint != "87d74123749a45e4c4e5e9053986d7ae878268a8e301d1b8125791517c0d39bf" {
+		test.Fatal("Fingerprint incorrect.")
+	}
 }

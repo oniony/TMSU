@@ -57,7 +57,7 @@ func main() {
 
 	command := commands[commandName]
 	if command == nil {
-		die("unknown command '%v'.", commandName)
+		fatal("unknown command '%v'.", commandName)
 	}
 
 	var args []string
@@ -69,6 +69,6 @@ func main() {
 
 	err := command.Exec(args)
 	if err != nil {
-		die(err.Error())
+		fatal(err.Error())
 	}
 }

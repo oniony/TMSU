@@ -87,7 +87,7 @@ func (UntagCommand) removeFiles(paths []string) error {
 			return err
 		}
 		if file == nil {
-			logerr("'%v': file is not tagged", path)
+			warn("'%v': file is not tagged", path)
 			continue
 		}
 

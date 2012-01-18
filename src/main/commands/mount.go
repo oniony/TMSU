@@ -35,12 +35,17 @@ func (MountCommand) Summary() string {
 }
 
 func (MountCommand) Help() string {
-	return `tmsu mount [NAME] MOUNTPOINT
+	return `tmsu mount [FILE] MOUNTPOINT
 
-Mounts a at the path MOUNTPOINT.
+Mounts a virtual file-system at the path MOUNTPOINT.
 
-Where NAME is specified then the configured database NAME is mounted at the
-mountpoint specified. Otherwise the currently selecetd database is mounted.`
+Where FILE is specified, the database at FILE is mounted.
+
+If FILE is not specified but the TMSU_DB environment variable is defined then
+the database at TMSU_DB is mounted.
+
+Where neither FILE is specified nor TMSU_DB defined then the default database
+at ~/.tmsu/default.db is mounted.`
 }
 
 func (command MountCommand) Exec(args []string) error {
@@ -57,32 +62,15 @@ func (command MountCommand) Exec(args []string) error {
 			return errors.New("Could not mount database: " + err.Error())
 		}
 	case 2:
-		name := args[0]
+		databasePath := args[0]
 		mountPath := args[1]
 
-		err := command.mountNamed(name, mountPath)
+		err := command.mountExplicit(databasePath, mountPath)
 		if err != nil {
 			return errors.New("Could not mount database: " + err.Error())
 		}
 	default:
 		return errors.New("Too many arguments.")
-	}
-
-	return nil
-}
-
-func (command MountCommand) mountNamed(name, mountPath string) error {
-	config, err := GetDatabaseConfig(name)
-	if err != nil {
-		return err
-	}
-	if config == nil {
-		return errors.New("No configured database called '" + name + "'.")
-	}
-
-	err = command.mountExplicit(config.DatabasePath, mountPath)
-	if err != nil {
-		return err
 	}
 
 	return nil

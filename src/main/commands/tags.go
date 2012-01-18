@@ -139,12 +139,12 @@ func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error
 				case *os.PathError:
 					switch terr.Err {
 					case os.EACCES:
-						logerr("'%v': permission denied.", path)
+						warn("'%v': permission denied.", path)
 					default:
-						logerr("'%v': %v", path, err)
+						warn("'%v': %v", path, err)
 					}
 				default:
-					logerr("'%v': %v", path, err)
+					warn("'%v': %v", path, err)
 				}
 				continue
 			}

@@ -31,10 +31,6 @@ const globalConfigPath = "/etc/tmsu.conf"
 const userConfigPath = "~/.config/tmsu.conf"
 const defaultDatabasePath = "~/.tmsu/default.db"
 
-type Config struct {
-	Databases []DatabaseConfig
-}
-
 type DatabaseConfig struct {
 	Name         string
 	DatabasePath string
@@ -58,21 +54,6 @@ func GetDefaultDatabaseConfig() (*DatabaseConfig, error) {
 	return &DatabaseConfig{"default", path}, nil
 }
 
-func GetDatabaseConfig(name string) (*DatabaseConfig, error) {
-	config, err := readConfig(userConfigPath)
-	if err != nil {
-		return nil, err
-	}
-
-	for _, databaseConfig := range config.Databases {
-		if databaseConfig.Name == name {
-			return &databaseConfig, nil
-		}
-	}
-
-	return nil, nil
-}
-
 func resolvePath(path string) (string, error) {
 	if strings.HasPrefix(path, "~"+string(filepath.Separator)) {
 		homeDirectory, err := os.Getenverror("HOME")
@@ -86,7 +67,7 @@ func resolvePath(path string) (string, error) {
 	return path, nil
 }
 
-func readConfig(path string) (*Config, error) {
+func readConfig(path string) ([]DatabaseConfig, error) {
 	configPath, err := resolvePath(path)
 	if err != nil {
 		return nil, errors.New("Could not resolve configuration file path '" + path + "'.")
@@ -168,5 +149,5 @@ func readConfig(path string) (*Config, error) {
 		databases = append(databases, *database)
 	}
 
-	return &Config{databases}, nil
+	return databases, nil
 }

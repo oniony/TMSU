@@ -23,12 +23,12 @@ import (
 	"os"
 )
 
-func die(format string, values ...interface{}) {
-	logerr(format, values...)
+func fatal(format string, values ...interface{}) {
+	warn(format, values...)
 	os.Exit(1)
 }
 
-func logerr(format string, values ...interface{}) {
+func warn(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
 	fmt.Fprintf(os.Stderr, format, values...)
 }

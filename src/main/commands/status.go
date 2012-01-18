@@ -62,30 +62,15 @@ func (command StatusCommand) Exec(args []string) error {
 		return err
 	}
 
-	for _, absPath := range tagged {
-		path, err := makeRelative(absPath)
-		if err != nil {
-			return err
-		}
-
+	for _, path := range tagged {
 		fmt.Printf("T %v\n", path)
 	}
 
-	for _, absPath := range missing {
-		path, err := makeRelative(absPath)
-		if err != nil {
-			return err
-		}
-
+	for _, path := range missing {
 		fmt.Printf("! %v\n", path)
 	}
 
-	for _, absPath := range untagged {
-		path, err := makeRelative(absPath)
-		if err != nil {
-			return err
-		}
-
+	for _, path := range untagged {
 		fmt.Printf("? %v\n", path)
 	}
 
@@ -104,17 +89,32 @@ func (command StatusCommand) status(paths []string, tagged []string, untagged []
 			return nil, nil, nil, err
 		}
 
-		for _, entry := range databaseEntries {
-			if contains(fileSystemEntries, entry) {
-				tagged = append(tagged, entry)
+		for _, entryPath := range databaseEntries {
+			if contains(fileSystemEntries, entryPath) {
+			    relPath, err := makeRelative(entryPath)
+			    if err != nil {
+			        return nil, nil, nil, err
+                }
+
+				tagged = append(tagged, relPath)
 			} else {
-				missing = append(missing, entry)
+			    relPath, err := makeRelative(entryPath)
+			    if err != nil {
+			        return nil, nil, nil, err
+                }
+
+				missing = append(missing, relPath)
 			}
 		}
 
-		for _, entry := range fileSystemEntries {
-			if !contains(databaseEntries, entry) {
-				untagged = append(untagged, entry)
+		for _, entryPath := range fileSystemEntries {
+			if !contains(databaseEntries, entryPath) {
+			    relPath, err := makeRelative(entryPath)
+			    if err != nil {
+			        return nil, nil, nil, err
+                }
+
+				untagged = append(untagged, relPath)
 			}
 		}
 	}

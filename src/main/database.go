@@ -39,7 +39,7 @@ func OpenDatabase() (*Database, error) {
 	if config == nil {
 		config, err = GetDefaultDatabaseConfig()
 		if err != nil {
-			return nil, err
+			return nil, errors.New("Could not retrieve default database configuration: " + err.Error())
 		}
 
 		// attempt to create default database directory

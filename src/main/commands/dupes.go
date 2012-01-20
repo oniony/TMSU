@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"errors"
 	"fmt"
 	"path/filepath"
 )
@@ -70,7 +69,7 @@ func (DupesCommand) findDuplicatesInDb() error {
 
 		for _, file := range fileSet {
             relPath := makeRelative(file.Path())
-			fmt.Printf("  %v\n", relPath)
+			fmt.Printf("%v\n", relPath)
 		}
 	}
 

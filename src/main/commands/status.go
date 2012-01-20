@@ -91,29 +91,17 @@ func (command StatusCommand) status(paths []string, tagged []string, untagged []
 
 		for _, entryPath := range databaseEntries {
 			if contains(fileSystemEntries, entryPath) {
-			    relPath, err := makeRelative(entryPath)
-			    if err != nil {
-			        return nil, nil, nil, err
-                }
-
+			    relPath := makeRelative(entryPath)
 				tagged = append(tagged, relPath)
 			} else {
-			    relPath, err := makeRelative(entryPath)
-			    if err != nil {
-			        return nil, nil, nil, err
-                }
-
+			    relPath := makeRelative(entryPath)
 				missing = append(missing, relPath)
 			}
 		}
 
 		for _, entryPath := range fileSystemEntries {
 			if !contains(databaseEntries, entryPath) {
-			    relPath, err := makeRelative(entryPath)
-			    if err != nil {
-			        return nil, nil, nil, err
-                }
-
+			    relPath := makeRelative(entryPath)
 				untagged = append(untagged, relPath)
 			}
 		}

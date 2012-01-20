@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"os"
+    "os"
 )
 
 var commands map[string]Command
@@ -48,9 +48,11 @@ func main() {
 		commands[command.Name()] = command
 	}
 
+    args := os.Args[1:] // strip off binary name
+
 	var commandName string
-	if len(os.Args) > 1 {
-		commandName = os.Args[1]
+	if len(args) > 0 {
+		commandName = args[0]
 	} else {
 		commandName = "help"
 	}
@@ -60,12 +62,7 @@ func main() {
 		fatal("unknown command '%v'.", commandName)
 	}
 
-	var args []string
-	if len(os.Args) > 2 {
-		args = os.Args[2:]
-	} else {
-		args = []string{}
-	}
+   args = args[1:] // strip off command
 
 	err := command.Exec(args)
 	if err != nil {

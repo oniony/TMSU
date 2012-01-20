@@ -23,17 +23,17 @@ import (
 	"strings"
 )
 
-func makeRelative(path string) (string, error) {
+func makeRelative(path string) string {
 	workingDirectory, err := os.Getwd()
 	if err != nil {
-		return "", err
+		return path
 	}
 
 	workingDirectory += string(filepath.Separator)
 
 	if strings.HasPrefix(path, workingDirectory) {
-		return path[len(workingDirectory):], nil
+		return path[len(workingDirectory):]
 	}
 
-	return path, nil
+	return path
 }

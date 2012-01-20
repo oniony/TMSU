@@ -34,30 +34,24 @@ func (DupesCommand) Summary() string {
 }
 
 func (DupesCommand) Help() string {
-	return `tmsu dupes [FILE]
+	return `tmsu dupes [FILE...]
 
-Identifies all files in the database that are exact duplicates of FILE.
-
-When FILE is omitted duplicates within the database are identified.`
+Identifies all files in the database that are exact duplicates of FILE. If no
+FILE is specified then identifies duplicates between files in the database.`
 }
 
 func (command DupesCommand) Exec(args []string) error {
-	argCount := len(args)
-	if argCount > 1 {
-		errors.New("Only a single file can be specified.")
-	}
-
-	switch argCount {
+	switch len(args) {
 	case 0:
-		return command.findDuplicates()
-	case 1:
-		return command.findDuplicatesOf(args[0])
+        command.findDuplicatesInDb()
+	default:
+	    return command.findDuplicatesOf(args)
 	}
 
 	return nil
 }
 
-func (DupesCommand) findDuplicates() error {
+func (DupesCommand) findDuplicatesInDb() error {
 	db, err := OpenDatabase()
 	if err != nil {
 		return err
@@ -74,45 +68,69 @@ func (DupesCommand) findDuplicates() error {
 			fmt.Println()
 		}
 
-		fmt.Printf("%v duplicate files:\n", len(fileSet))
-
 		for _, file := range fileSet {
-			fmt.Printf("  %v\n", file.Path())
+            relPath := makeRelative(file.Path())
+			fmt.Printf("  %v\n", relPath)
 		}
 	}
 
 	return nil
 }
 
-func (DupesCommand) findDuplicatesOf(path string) error {
+func (DupesCommand) findDuplicatesOf(paths []string) error {
 	db, err := OpenDatabase()
 	if err != nil {
 		return err
 	}
 	defer db.Close()
 
-	fingerprint, err := Fingerprint(path)
-	if err != nil {
-		return err
-	}
+    first := true
+    for _, path := range paths {
+        fingerprint, err := Fingerprint(path)
+        if err != nil {
+            return err
+        }
 
-	files, err := db.FilesByFingerprint(fingerprint)
-	if err != nil {
-		return err
-	}
+        files, err := db.FilesByFingerprint(fingerprint)
+        if err != nil {
+            return err
+        }
 
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return err
-	}
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return err
+        }
 
-	for _, file := range files {
-		if file.Path() == absPath {
-			continue
-		}
+        // filter out the file we're searching on
+        files = where(files, func(file File) bool { return file.Path() != absPath })
 
-		fmt.Println(file.Path())
-	}
+        if len(paths) > 1 && len(files) > 0 {
+            if first {
+                first = false
+            } else {
+                fmt.Println()
+            }
+
+            fmt.Printf("%v:\n", path)
+        }
+
+        for _, file := range files {
+            relPath := makeRelative(file.Path())
+            fmt.Println(relPath)
+        }
+    }
 
 	return nil
+}
+
+func where(files []File, predicate func(File) bool) []File {
+    result := make([]File, 0, len(files))
+
+    for _, file := range(files) {
+        if predicate(file) {
+            result = append(result, file)
+        }
+    }
+
+    return result
 }

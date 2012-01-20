@@ -67,9 +67,11 @@ func (DupesCommand) findDuplicatesInDb() error {
 			fmt.Println()
 		}
 
+        fmt.Printf("Set of %v duplicates:\n", len(fileSet))
+
 		for _, file := range fileSet {
             relPath := makeRelative(file.Path())
-			fmt.Printf("%v\n", relPath)
+			fmt.Printf("  %v\n", relPath)
 		}
 	}
 
@@ -101,21 +103,21 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
         }
 
         // filter out the file we're searching on
-        files = where(files, func(file File) bool { return file.Path() != absPath })
+        dupes := where(files, func(file File) bool { return file.Path() != absPath })
 
-        if len(paths) > 1 && len(files) > 0 {
+        if len(paths) > 1 && len(dupes) > 0 {
             if first {
                 first = false
             } else {
                 fmt.Println()
             }
 
-            fmt.Printf("%v:\n", path)
+            fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
         }
 
-        for _, file := range files {
-            relPath := makeRelative(file.Path())
-            fmt.Println(relPath)
+        for _, dupe := range dupes {
+            relPath := makeRelative(dupe.Path())
+            fmt.Printf("  %v\n", relPath)
         }
     }
 

@@ -27,11 +27,11 @@ func (RenameCommand) Name() string {
 	return "rename"
 }
 
-func (RenameCommand) Summary() string {
+func (RenameCommand) Synopsis() string {
 	return "renames a tag"
 }
 
-func (RenameCommand) Help() string {
+func (RenameCommand) Description() string {
 	return `tmsu rename OLD NEW
 
 Renames a tag from OLD to NEW.

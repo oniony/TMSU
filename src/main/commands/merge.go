@@ -27,11 +27,11 @@ func (MergeCommand) Name() string {
 	return "merge"
 }
 
-func (MergeCommand) Summary() string {
+func (MergeCommand) Synopsis() string {
 	return "merges two tags together"
 }
 
-func (MergeCommand) Help() string {
+func (MergeCommand) Description() string {
 	return `tmsu merge SRC DEST
         
 Merges SRC into DEST resulting in a single tag of name DEST.`

@@ -29,11 +29,11 @@ func (FilesCommand) Name() string {
 	return "files"
 }
 
-func (FilesCommand) Summary() string {
+func (FilesCommand) Synopsis() string {
 	return "lists files with particular tags"
 }
 
-func (FilesCommand) Help() string {
+func (FilesCommand) Description() string {
 	return `tmsu files TAG...
 tmsu files --all
 

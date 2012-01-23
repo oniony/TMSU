@@ -29,11 +29,11 @@ func (TagsCommand) Name() string {
 	return "tags"
 }
 
-func (TagsCommand) Summary() string {
+func (TagsCommand) Synopsis() string {
 	return "lists all tags or tags applied to files"
 }
 
-func (TagsCommand) Help() string {
+func (TagsCommand) Description() string {
 	return `tmsu tags [FILE]...
 tmsu tags --list
 

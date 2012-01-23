@@ -27,11 +27,11 @@ func (VfsCommand) Name() string {
 	return "vfs"
 }
 
-func (VfsCommand) Summary() string {
+func (VfsCommand) Synopsis() string {
 	return ""
 }
 
-func (VfsCommand) Help() string {
+func (VfsCommand) Description() string {
 	return ""
 }
 

@@ -29,11 +29,11 @@ func (StatusCommand) Name() string {
 	return "status"
 }
 
-func (StatusCommand) Summary() string {
+func (StatusCommand) Synopsis() string {
 	return "lists file status"
 }
 
-func (StatusCommand) Help() string {
+func (StatusCommand) Description() string {
 	return `tmsu status [FILE...]
 
 Shows the tag status of files.

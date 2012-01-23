@@ -30,11 +30,11 @@ func (HelpCommand) Name() string {
 	return "help"
 }
 
-func (HelpCommand) Summary() string {
+func (HelpCommand) Synopsis() string {
 	return "lists commands or provides help for a particular command"
 }
 
-func (HelpCommand) Help() string {
+func (HelpCommand) Description() string {
 	return `tmsu help [COMMAND]
 
 Shows help summary or, where COMMAND is specified, help for COMMAND.`
@@ -43,15 +43,15 @@ Shows help summary or, where COMMAND is specified, help for COMMAND.`
 func (command HelpCommand) Exec(args []string) error {
 	switch len(args) {
 	case 0:
-		command.overview()
+		command.summary()
 	default:
-		command.commandHelp(args[0])
+		command.commandDescription(args[0])
 	}
 
 	return nil
 }
 
-func (HelpCommand) overview() {
+func (HelpCommand) summary() {
 	fmt.Println("TMSU")
 	fmt.Println()
 
@@ -67,7 +67,7 @@ func (HelpCommand) overview() {
 	for _, commandName := range commandNames {
 		command, _ := commands[commandName]
 
-		commandSummary := command.Summary()
+		commandSummary := command.Synopsis()
 		if commandSummary == "" {
 			continue
 		}
@@ -76,12 +76,12 @@ func (HelpCommand) overview() {
 	}
 }
 
-func (HelpCommand) commandHelp(commandName string) {
+func (HelpCommand) commandDescription(commandName string) {
 	command := commands[commandName]
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)
 		return
 	}
 
-	fmt.Println(command.Help())
+	fmt.Println(command.Description())
 }

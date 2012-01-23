@@ -27,11 +27,11 @@ func (VersionCommand) Name() string {
 	return "version"
 }
 
-func (VersionCommand) Summary() string {
+func (VersionCommand) Synopsis() string {
 	return "displays version and copyright information"
 }
 
-func (VersionCommand) Help() string {
+func (VersionCommand) Description() string {
 	return `tmsu version
 
 Displays version and copyright information.`

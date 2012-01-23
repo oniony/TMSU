@@ -27,11 +27,11 @@ func (DeleteCommand) Name() string {
 	return "delete"
 }
 
-func (DeleteCommand) Summary() string {
+func (DeleteCommand) Synopsis() string {
 	return "deletes one or more tags"
 }
 
-func (DeleteCommand) Help() string {
+func (DeleteCommand) Description() string {
 	return `tmsu delete TAG...
 
 Permanently deletes the TAGs specified.`

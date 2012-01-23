@@ -30,11 +30,11 @@ func (TagCommand) Name() string {
 	return "tag"
 }
 
-func (TagCommand) Summary() string {
+func (TagCommand) Synopsis() string {
 	return "applies one or more tags to a file"
 }
 
-func (TagCommand) Help() string {
+func (TagCommand) Description() string {
 	return `tmsu tag FILE TAG...
 tmsu tag --tags "TAG..." FILE...
 

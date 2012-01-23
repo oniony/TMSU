@@ -27,11 +27,11 @@ func (StatsCommand) Name() string {
 	return "stats"
 }
 
-func (StatsCommand) Summary() string {
+func (StatsCommand) Synopsis() string {
 	return "shows database statistics"
 }
 
-func (StatsCommand) Help() string {
+func (StatsCommand) Description() string {
 	return `tmsu stats
 tmsu stats
 

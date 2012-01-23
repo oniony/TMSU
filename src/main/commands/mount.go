@@ -30,11 +30,11 @@ func (MountCommand) Name() string {
 	return "mount"
 }
 
-func (MountCommand) Summary() string {
+func (MountCommand) Synopsis() string {
 	return "mounts the virtual file-system"
 }
 
-func (MountCommand) Help() string {
+func (MountCommand) Description() string {
 	return `tmsu mount [FILE] MOUNTPOINT
 
 Mounts a virtual file-system at the path MOUNTPOINT.

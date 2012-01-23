@@ -29,11 +29,11 @@ func (UntagCommand) Name() string {
 	return "untag"
 }
 
-func (UntagCommand) Summary() string {
+func (UntagCommand) Synopsis() string {
 	return "removes all tags or specific tags from a file"
 }
 
-func (UntagCommand) Help() string {
+func (UntagCommand) Description() string {
 	return `tmsu untag FILE TAG...
 tmsu untag --all FILE...
 tmsu untag --tags "TAG..." FILE...

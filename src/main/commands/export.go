@@ -29,11 +29,11 @@ func (ExportCommand) Name() string {
 	return "export"
 }
 
-func (ExportCommand) Summary() string {
+func (ExportCommand) Synopsis() string {
 	return "exports the tag database"
 }
 
-func (ExportCommand) Help() string {
+func (ExportCommand) Description() string {
 	return `tmsu export
         
 Dumps the tag database to standard output as comma-separated values (CSV).`

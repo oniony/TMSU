@@ -28,11 +28,11 @@ func (DupesCommand) Name() string {
 	return "dupes"
 }
 
-func (DupesCommand) Summary() string {
+func (DupesCommand) Synopsis() string {
 	return "identifies any duplicate files"
 }
 
-func (DupesCommand) Help() string {
+func (DupesCommand) Description() string {
 	return `tmsu dupes [FILE...]
 
 Identifies all files in the database that are exact duplicates of FILE. If no

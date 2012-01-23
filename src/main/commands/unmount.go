@@ -29,11 +29,11 @@ func (UnmountCommand) Name() string {
 	return "unmount"
 }
 
-func (UnmountCommand) Summary() string {
+func (UnmountCommand) Synopsis() string {
 	return "unmounts the virtual file-system"
 }
 
-func (UnmountCommand) Help() string {
+func (UnmountCommand) Description() string {
 	return `tags unmount MOUNTPOINT
 
 Unmounts the virtual file-system at MOUNTPOINT.`

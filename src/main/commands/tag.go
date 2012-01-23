@@ -40,7 +40,7 @@ tmsu tag --tags "TAG..." FILE...
 
 Tags the file FILE with the tag(s) specified.
 
-  -tags  Allows multiple files to be tagged with the same set of quoted tags.`
+  --tags    allows multiple FILEs to be tagged with the same quote set TAGs`
 }
 
 func (command TagCommand) Exec(args []string) error {
@@ -48,7 +48,8 @@ func (command TagCommand) Exec(args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
-	if args[0] == "--tags" {
+    switch args[0] {
+    case "--tags":
 		if len(args) < 3 {
 			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
 		}
@@ -60,7 +61,7 @@ func (command TagCommand) Exec(args []string) error {
 		if err != nil {
 			return err
 		}
-	} else {
+	default:
 		if len(args) < 2 {
 			return errors.New("File to tag and tags to apply must be specified.")
 		}

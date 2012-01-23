@@ -35,10 +35,9 @@ func (HelpCommand) Summary() string {
 }
 
 func (HelpCommand) Help() string {
-	return `tmsu help          lists commands
-tmsu help COMMAND  shows help for COMMAND
+	return `tmsu help [COMMAND]
 
-Shows command summary or, when a command is specified, detailed help for that command.`
+Shows help summary or, where COMMAND is specified, help for COMMAND.`
 }
 
 func (command HelpCommand) Exec(args []string) error {

@@ -34,10 +34,16 @@ func (StatusCommand) Summary() string {
 }
 
 func (StatusCommand) Help() string {
-	return `tmsu status
-tmsu status FILE...
+	return `tmsu status [FILE...]
 
-Shows the status of files.`
+Shows the tag status of files.
+
+Where one or more FILEs are specified, the status of these files is shown.
+Where FILE is a directory, details of all files within the specified directory
+and its descendent directories are shown.
+
+Where no FILE is specified, details of all files within the current directory
+and its descendent directories are shown.`
 }
 
 func (command StatusCommand) Exec(args []string) error {

@@ -45,7 +45,7 @@ If FILE is not specified but the TMSU_DB environment variable is defined then
 the database at TMSU_DB is mounted.
 
 Where neither FILE is specified nor TMSU_DB defined then the default database
-at ~/.tmsu/default.db is mounted.`
+is mounted.`
 }
 
 func (command MountCommand) Exec(args []string) error {

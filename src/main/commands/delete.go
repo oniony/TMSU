@@ -34,7 +34,7 @@ func (DeleteCommand) Summary() string {
 func (DeleteCommand) Help() string {
 	return `tmsu delete TAG...
 
-Permanently deletes the tag(s) specified.`
+Permanently deletes the TAGs specified.`
 }
 
 func (command DeleteCommand) Exec(args []string) error {

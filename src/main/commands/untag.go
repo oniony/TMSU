@@ -20,6 +20,7 @@ package main
 import (
 	"errors"
 	"path/filepath"
+	"strings"
 )
 
 type UntagCommand struct{}
@@ -35,10 +36,12 @@ func (UntagCommand) Summary() string {
 func (UntagCommand) Help() string {
 	return `tmsu untag FILE TAG...
 tmsu untag --all FILE...
+tmsu untag --tags "TAG..." FILE...
 
 Disassociates FILE with the TAGs specified.
 
-  --all    strip each FILE of all tags`
+  --all     strip each FILE of all TAGs
+  --tags    allows multiple FILEs to be disassociated from the same quoted set of TAGs`
 }
 
 func (command UntagCommand) Exec(args []string) error {
@@ -46,7 +49,8 @@ func (command UntagCommand) Exec(args []string) error {
 		return errors.New("No arguments specified.")
 	}
 
-	if args[0] == "--all" {
+	switch args[0] {
+	case "--all":
 		if len(args) < 2 {
 			return errors.New("Files to untag must be specified.")
 		}
@@ -55,16 +59,28 @@ func (command UntagCommand) Exec(args []string) error {
 		if err != nil {
 			return err
 		}
-	} else {
+	case "--tags":
+	    if len(args) < 3 {
+	        return errors.New("Quoted set of tags and at least one file to untag must be specified.")
+        }
+
+        tagNames := strings.Fields(args[1])
+        paths := args[2:]
+
+        err := command.untagPaths(paths, tagNames)
+        if err != nil {
+            return err
+        }
+	default:
 		if len(args) < 2 {
 			return errors.New("Tags to remove must be specified.")
 		}
 
-		err := command.untagFile(args[0], args[1:])
+		err := command.untagPath(args[0], args[1:])
 		if err != nil {
 			return err
 		}
-	}
+    }
 
 	return nil
 }
@@ -105,7 +121,18 @@ func (UntagCommand) removeFiles(paths []string) error {
 	return nil
 }
 
-func (command UntagCommand) untagFile(path string, tagNames []string) error {
+func (command UntagCommand) untagPaths(paths []string, tagNames []string) error {
+	for _, path := range paths {
+		err := command.untagPath(path, tagNames)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (command UntagCommand) untagPath(path string, tagNames []string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return err
@@ -121,6 +148,7 @@ func (command UntagCommand) untagFile(path string, tagNames []string) error {
 	if err != nil {
 		return err
 	}
+
 	if file == nil {
 		return errors.New("File '" + path + "' is not tagged.")
 	}

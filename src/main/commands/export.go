@@ -36,7 +36,7 @@ func (ExportCommand) Summary() string {
 func (ExportCommand) Help() string {
 	return `tmsu export
         
-dumps the tag database to standard output as comma-separated values (CSV)`
+Dumps the tag database to standard output as comma-separated values (CSV).`
 }
 
 func (command ExportCommand) Exec(args []string) error {

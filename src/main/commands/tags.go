@@ -35,17 +35,17 @@ func (TagsCommand) Summary() string {
 
 func (TagsCommand) Help() string {
 	return `tmsu tags [FILE]...
-tmsu tags --all
+tmsu tags --list
 
 Lists the tags applied to FILEs (files in the current directory by default).
 
-  --all    show the complete set of tags`
+  --list    lists the complete set of tags`
 }
 
 func (command TagsCommand) Exec(args []string) error {
 	argCount := len(args)
 
-	if argCount == 1 && args[0] == "--all" {
+	if argCount == 1 && args[0] == "--list" {
 		return command.listAllTags()
 	}
 

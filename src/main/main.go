@@ -53,6 +53,7 @@ func main() {
 	var commandName string
 	if len(args) > 0 {
 		commandName = args[0]
+		args = args[1:]
 	} else {
 		commandName = "help"
 	}
@@ -61,8 +62,6 @@ func main() {
 	if command == nil {
 		fatal("unknown command '%v'.", commandName)
 	}
-
-   args = args[1:] // strip off command
 
 	err := command.Exec(args)
 	if err != nil {

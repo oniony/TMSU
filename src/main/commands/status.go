@@ -59,7 +59,10 @@ func (command StatusCommand) Exec(args []string) error {
 	}
 
 	if len(args) == 0 {
-		tagged, untagged, missing, err = command.status([]string{"."}, tagged, untagged, missing, allFiles)
+        childEntries, err := directoryEntries(".")
+        if err != nil { return nil }
+
+		tagged, untagged, missing, err = command.status(childEntries, tagged, untagged, missing, allFiles)
 	} else {
 		tagged, untagged, missing, err = command.status(args, tagged, untagged, missing, allFiles)
 	}
@@ -85,12 +88,17 @@ func (command StatusCommand) Exec(args []string) error {
 
 func (command StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
 	for _, path := range paths {
-		databaseEntries, err := command.getDatabaseEntries(path)
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return nil, nil, nil, err
+        }
+
+		databaseEntries, err := command.getDatabaseEntries(absPath)
 		if err != nil {
 			return nil, nil, nil, err
 		}
 
-		fileSystemEntries, err := command.getFileSystemEntries(path, allFiles)
+		fileSystemEntries, err := command.getFileSystemEntries(absPath, allFiles)
 		if err != nil {
 			return nil, nil, nil, err
 		}
@@ -126,18 +134,15 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 		return nil, err
 	}
 
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	basename := filepath.Base(absPath)
+	basename := filepath.Base(path)
 
 	if basename[0] != '.' || allFiles {
 		if isRegular(fileInfo) {
-			entries = append(entries, absPath)
+			entries = append(entries, path)
 		} else if fileInfo.IsDir() {
-			childEntries, err := directoryEntries(absPath)
+			entries = append(entries, path)
+
+			childEntries, err := directoryEntries(path)
 			if err != nil {
 				switch terr := err.(type) {
 				case *os.PathError:
@@ -165,18 +170,14 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 }
 
 func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
+    fmt.Println("Getting DB entries", path)
 	db, err := OpenDatabase()
 	if err != nil {
 		return nil, err
 	}
 	defer db.Close()
 
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	files, err := db.FilesByDirectory(absPath)
+	files, err := db.FilesByDirectory(path)
 	if err != nil {
 		return nil, err
 	}

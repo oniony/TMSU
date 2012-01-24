@@ -110,29 +110,26 @@ func (command TagsCommand) listTagsRecursive(db *Database, paths []string) error
 			return err
 		}
 
-		if err != nil || !fileInfo.IsDir() {
-			tags, err := command.tagsForPath(db, path)
-			if err != nil {
-				return err
-			}
-			if tags == nil {
-				continue
-			}
+        tags, err := command.tagsForPath(db, path)
+        if err != nil {
+            return err
+        }
 
-			if len(tags) > 0 {
-				fmt.Printf("%v: ", path)
+        if len(tags) > 0 {
+            fmt.Printf("%v: ", path)
 
-				for index, tag := range tags {
-					if index > 0 {
-						fmt.Print(" ")
-					}
+            for index, tag := range tags {
+                if index > 0 {
+                    fmt.Print(" ")
+                }
 
-					fmt.Print(tag.Name)
-				}
+                fmt.Print(tag.Name)
+            }
 
-				fmt.Println()
-			}
-		} else if fileInfo.IsDir() {
+            fmt.Println()
+        }
+
+		if fileInfo.IsDir() {
 			file, err := os.Open(path)
 			if err != nil {
 				switch terr := err.(type) {

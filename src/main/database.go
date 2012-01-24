@@ -424,12 +424,16 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint}, nil
 }
 
-func (db Database) FilesByDirectory(directory string) ([]File, error) {
-	sql := `SELECT id, directory, name, fingerprint
-	        FROM file
-	        WHERE directory = ? OR directory like ?`
+func (db Database) FilesByDirectory(path string) ([]File, error) {
+    directory := filepath.Dir(path)
+    name := filepath.Base(path)
 
-	rows, err := db.connection.Query(sql, directory, directory+"/%")
+    sql := `SELECT id, directory, name, fingerprint
+            FROM file
+            WHERE directory = ? AND name = ?
+            OR directory like ?`
+
+    rows, err := db.connection.Query(sql, directory, name, directory+"/%")
 	if err != nil {
 		return nil, err
 	}

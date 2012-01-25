@@ -1,0 +1,54 @@
+#compdef tmsu
+
+# Zsh completion script for tmsu. Copy this file to
+# your Zsh function path, e.g. /usr/share/zsh/site-functions/_tmsu.
+
+local context curcontext="$curcontext" state line
+typeset -A opt_args
+
+_tmsu() {
+	local ret=1
+
+	_arguments -C \
+		'1: :_blah' \
+		'*::arg:->args' \
+		&& ret=0
+
+	case $state in
+		(args)
+			curcontext="${curcontext%:*:*}:play-cmd-$words[1]:"
+		 	case $line[1] in
+				(cunt|wank)
+					_message -r 'no more arguments' && ret=0
+				;;
+				(shit)
+					_arguments \
+						'--debug[Debug it up mutherfucker]'\
+					&& ret=0
+			esac
+		;;
+	esac
+}
+
+_blah() {
+	local commands; commands=(
+		'delete:delete tags'
+		'dupes:identify duplicates'
+		'export:export the tag database'
+		'files:list files with particular tags'
+		'help:list commands or show command help'
+		'merge:merge tags'
+		'mount:mount the virtual file-system'
+		'rename:rename tags'
+		'stats:tag database statistics'
+		'status:list file status'
+		'tag:apply tags'
+		'tags:list tags'
+		'unmount:unmounts the virtual file-system'
+		'untag:remove tags'
+		'version:display version and copyright information'
+	)
+	_describe -t commands 'tmsu command' commands "$@"
+}
+
+_tmsu "$@"

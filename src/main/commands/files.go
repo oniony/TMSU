@@ -30,7 +30,7 @@ func (FilesCommand) Name() string {
 }
 
 func (FilesCommand) Synopsis() string {
-	return "lists files with particular tags"
+	return "list files with particular tags"
 }
 
 func (FilesCommand) Description() string {

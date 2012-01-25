@@ -30,7 +30,7 @@ func (TagsCommand) Name() string {
 }
 
 func (TagsCommand) Synopsis() string {
-	return "lists all tags or tags applied to files"
+	return "list tags"
 }
 
 func (TagsCommand) Description() string {
@@ -39,7 +39,7 @@ tmsu tags --list
 
 Lists the tags applied to FILEs (files in the current directory by default).
 
-  --list    lists the complete set of tags`
+  --list    lists all tags defined`
 }
 
 func (command TagsCommand) Exec(args []string) error {

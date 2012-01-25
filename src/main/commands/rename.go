@@ -28,7 +28,7 @@ func (RenameCommand) Name() string {
 }
 
 func (RenameCommand) Synopsis() string {
-	return "renames a tag"
+	return "rename a tag"
 }
 
 func (RenameCommand) Description() string {

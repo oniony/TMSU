@@ -29,7 +29,7 @@ func (DupesCommand) Name() string {
 }
 
 func (DupesCommand) Synopsis() string {
-	return "identifies any duplicate files"
+	return "identify duplicate files"
 }
 
 func (DupesCommand) Description() string {

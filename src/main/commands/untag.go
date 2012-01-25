@@ -30,7 +30,7 @@ func (UntagCommand) Name() string {
 }
 
 func (UntagCommand) Synopsis() string {
-	return "removes all tags or specific tags from a file"
+	return "remove tags from files"
 }
 
 func (UntagCommand) Description() string {

@@ -31,7 +31,7 @@ func (MountCommand) Name() string {
 }
 
 func (MountCommand) Synopsis() string {
-	return "mounts the virtual file-system"
+	return "mount the virtual file-system"
 }
 
 func (MountCommand) Description() string {

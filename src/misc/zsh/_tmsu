@@ -10,45 +10,90 @@ _tmsu() {
 	local ret=1
 
 	_arguments -C \
-		'1: :_blah' \
+		'1: :_tmsu_commands' \
 		'*::arg:->args' \
 		&& ret=0
 
 	case $state in
 		(args)
-			curcontext="${curcontext%:*:*}:play-cmd-$words[1]:"
+			curcontext="${curcontext%:*:*}:tmsu-cmd-$words[1]:"
 		 	case $line[1] in
-				(cunt|wank)
-					_message -r 'no more arguments' && ret=0
+				(delete)
+					_arguments '*:tag:_tmsu_tags' && ret=0
 				;;
-				(shit)
-					_arguments \
-						'--debug[Debug it up mutherfucker]'\
+				(dupes)
+					_arguments '*:file:_files' && ret=0
+				;;
+				(export)
+					# no args
+				;;
+				(files)
+					_arguments '*:tag:_tmsu_tags' && ret=0
+				;;
+				(help)
+					_arguments '1:command:_tmsu_commands' && ret=0
+				;;
+				(merge)
+					_arguments '*:tag:_tmsu_tags' && ret=0
+				;;
+				(mount)
+					_arguments '1:file:_files' \
+						   '2:mountpoint:_files' \
 					&& ret=0
+				;;
+				(rename)
+					_arguments '1:tag:_tmsu_tags' && ret=0
+				;;
+				(stats)
+					# no args
+				;;
+				(status)
+					_arguments '*:file:_files' && ret=0
+				;;
+				(tag)
+				;;
+				(tags)
+					_arguments '--list' \
+					'*:file:_files' \
+					&& ret=0
+				;;
+				(unmount)
+					_arguments '1:mountpoint:_files' && ret=0
+				;;
+				(untag)
+					#TODO
+				;;
+				(version)
+					# no args
+				;;
 			esac
 		;;
 	esac
 }
 
-_blah() {
-	local commands; commands=(
-		'delete:delete tags'
-		'dupes:identify duplicates'
-		'export:export the tag database'
-		'files:list files with particular tags'
-		'help:list commands or show command help'
-		'merge:merge tags'
-		'mount:mount the virtual file-system'
-		'rename:rename tags'
-		'stats:tag database statistics'
-		'status:list file status'
-		'tag:apply tags'
-		'tags:list tags'
-		'unmount:unmounts the virtual file-system'
-		'untag:remove tags'
-		'version:display version and copyright information'
-	)
-	_describe -t commands 'tmsu command' commands "$@"
+_tmsu_commands() {
+	typeset -a command_list
+	local line
+
+	_call_program tmsu tmsu help --list | \
+	while read -A line
+	do
+		command_list+=($line[1])
+	done
+
+	_describe -t commands 'command' command_list "$@"
+}
+
+_tmsu_tags() {
+	typeset -a tag_list
+	local tag
+
+	_call_program tmsu tmsu tags --list | while read -A tag
+	do
+		tag_list+=$tag[1]
+	done
+
+	_describe -t tags 'tags' tag_list
 }
 
 _tmsu "$@"

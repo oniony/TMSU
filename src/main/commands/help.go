@@ -35,9 +35,11 @@ func (HelpCommand) Synopsis() string {
 }
 
 func (HelpCommand) Description() string {
-	return `tmsu help [COMMAND]
+	return `tmsu help [OPTION] [COMMAND]
 
-Shows help summary or, where COMMAND is specified, help for COMMAND.`
+Shows help summary or, where COMMAND is specified, help for COMMAND.
+
+    --list    list commands`
 }
 
 func (command HelpCommand) Exec(args []string) error {
@@ -45,7 +47,11 @@ func (command HelpCommand) Exec(args []string) error {
 	case 0:
 		command.summary()
 	default:
-		command.commandDescription(args[0])
+	    if (args[0] == "--list") {
+	        command.listCommands()
+        } else {
+		    command.describeCommand(args[0])
+        }
 	}
 
 	return nil
@@ -57,7 +63,8 @@ func (HelpCommand) summary() {
 
 	var maxWidth int = 0
 	commandNames := make([]string, 0, len(commands))
-	for commandName, _ := range commands {
+	for _, command  := range commands {
+        commandName := command.Name()
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
 	}
@@ -76,7 +83,17 @@ func (HelpCommand) summary() {
 	}
 }
 
-func (HelpCommand) commandDescription(commandName string) {
+func (HelpCommand) listCommands() {
+	for _, command  := range commands {
+	    if command.Synopsis() == "" {
+	        continue
+        }
+
+        fmt.Println(command.Name())
+	}
+}
+
+func (HelpCommand) describeCommand(commandName string) {
 	command := commands[commandName]
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)

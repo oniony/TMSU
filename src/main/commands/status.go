@@ -170,7 +170,6 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 }
 
 func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
-    fmt.Println("Getting DB entries", path)
 	db, err := OpenDatabase()
 	if err != nil {
 		return nil, err

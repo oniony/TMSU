@@ -82,7 +82,13 @@ func (command MountCommand) mountSelected(mountPath string) error {
 		return err
 	}
 	if config == nil {
-		return errors.New("Could not get selected database configuration.")
+	    config, err = GetDefaultDatabaseConfig()
+	    if err != nil {
+	        return err
+        }
+        if config == nil {
+	        return errors.New("Could not get default database configuration.")
+        }
 	}
 
 	err = command.mountExplicit(config.DatabasePath, mountPath)

@@ -20,6 +20,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 )
@@ -158,10 +159,20 @@ func (TagCommand) applyTag(db *Database, path string, fileId uint, tagName strin
 }
 
 func (TagCommand) addFile(db *Database, path string) (*File, error) {
-	fingerprint, err := Fingerprint(path)
-	if err != nil {
-		return nil, err
-	}
+    fileInfo, err := os.Stat(path)
+    if err != nil {
+        return nil, err
+    }
+
+    var fingerprint string
+    if fileInfo.IsDir() {
+        fingerprint = ""
+    } else {
+        fingerprint, err = Fingerprint(path)
+        if err != nil {
+            return nil, err
+        }
+    }
 
 	file, err := db.FileByPath(path)
 	if err != nil {
@@ -169,18 +180,20 @@ func (TagCommand) addFile(db *Database, path string) (*File, error) {
 	}
 
 	if file == nil {
-		files, err := db.FilesByFingerprint(fingerprint)
-		if err != nil {
-			return nil, err
-		}
+	    if fingerprint != "" {
+            files, err := db.FilesByFingerprint(fingerprint)
+            if err != nil {
+                return nil, err
+            }
 
-		if len(files) > 0 {
-			fmt.Printf("File is a duplicate of previously tagged files.\n")
+            if len(files) > 0 {
+                fmt.Printf("File is a duplicate of previously tagged files.\n")
 
-			for _, duplicateFile := range files {
-				fmt.Printf("  %v\n", duplicateFile.Path())
-			}
-		}
+                for _, duplicateFile := range files {
+                    fmt.Printf("  %v\n", duplicateFile.Path())
+                }
+            }
+        }
 
 		file, err = db.AddFile(path, fingerprint)
 		if err != nil {

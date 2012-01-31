@@ -35,17 +35,16 @@ func (TagsCommand) Synopsis() string {
 
 func (TagsCommand) Description() string {
 	return `tmsu tags [FILE]...
-tmsu tags --list
 
-Lists the tags applied to FILEs (files in the current directory by default).
+Lists the tags applied to FILEs.
 
-  --list    lists all tags defined`
+When run with no arguments, all tags in the database are listed.`
 }
 
 func (command TagsCommand) Exec(args []string) error {
 	argCount := len(args)
 
-	if argCount == 1 && args[0] == "--list" {
+	if argCount == 0 {
 		return command.listAllTags()
 	}
 

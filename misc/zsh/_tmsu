@@ -42,7 +42,7 @@ _tmsu_tags() {
 	typeset -a tag_list
 	local tag
 
-	_call_program tmsu tmsu tags --list | while read -A tag
+	_call_program tmsu tmsu tags | while read -A tag
 	do
 		tag_list+=$tag[1]
 	done
@@ -124,8 +124,7 @@ _tmsu_cmd_tag() {
 }
 
 _tmsu_cmd_tags() {
-	_arguments -s -w '--list' \
-	                 '*:file:_files' \
+	_arguments -s -w '*:file:_files' \
 	&& ret=0
 }
 

@@ -47,14 +47,8 @@ latest version that is known to work with the dependent packages.
 
     See VERSIONS file for which revisions work together.
 
-    > goinstall github.com/mattn/go-sqlite3
-    > goinstall github.com/hanwen/go-fuse/fuse
-
-At the time of writing the go-fuse project does not have a Makefile so must
-be compiled manually:
-
-    > cd $GOROOT/src/pkg/github.com/hanwen/go-fuse
-    > ./all.bash
+    > go get github.com/mattn/go-sqlite3
+    > go get github.com/hanwen/go-fuse/fuse
 
 3. Checkout the tmsu source code:
 

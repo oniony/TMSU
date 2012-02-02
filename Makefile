@@ -2,7 +2,7 @@ SHELL=/bin/sh
 VER=0.0.5
 HGREV=$(shell hg id)
 
-SRC_DIR=src/main
+SRC_DIR=src/tmsu
 BIN_DIR=bin
 DIST_DIR=tmsu-$(VER)
 INSTALL_DIR=/usr/bin
@@ -15,25 +15,25 @@ all: clean generate compile dist test
 
 clean:
 	### Clean ###
-	pushd ${SRC_DIR}; gomake clean; popd
-	rm -f $(SRC_DIR)/$(VER_FILE)
+	pushd ${SRC_DIR}; go tool make clean; popd
+	rm -f $(SRC_DIR)/core/$(VER_FILE)
 	rm -Rf $(BIN_DIR)
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 generate:
 	### Generate ###
-	echo "package main; var version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/$(VER_FILE)
+	echo "package core; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/core/$(VER_FILE)
 
 compile: generate
 	### Compile ###
-	pushd $(SRC_DIR); gomake; popd
+	go build -o $(BIN_FILE) tmsu/main
 	@mkdir -p $(BIN_DIR)
-	cp $(SRC_DIR)/$(BIN_FILE) $(BIN_DIR)
+	mv $(BIN_FILE) $(BIN_DIR)
 
 test: compile
 	### Test ###
-	pushd $(SRC_DIR); gomake test; popd
+	go test tmsu/...
 
 dist: compile
 	### Dist ###

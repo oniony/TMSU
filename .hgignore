@@ -5,5 +5,6 @@
 \.6$
 ^src/main/tmsu$
 \.tgz$
-^src/main/version.gen.go
-^bin
+^src/main/version.gen.go$
+^src/main/_testmain.go$
+^bin/

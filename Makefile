@@ -1,5 +1,5 @@
 SHELL=/bin/sh
-VER=0.0.4
+VER=0.0.5
 HGREV=$(shell hg id)
 
 SRC_DIR=src/main

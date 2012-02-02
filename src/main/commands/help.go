@@ -31,7 +31,7 @@ func (HelpCommand) Name() string {
 }
 
 func (HelpCommand) Synopsis() string {
-	return "list commands or show help for a particular command"
+	return "List commands or show help for a particular command"
 }
 
 func (HelpCommand) Description() string {

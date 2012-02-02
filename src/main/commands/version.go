@@ -28,7 +28,7 @@ func (VersionCommand) Name() string {
 }
 
 func (VersionCommand) Synopsis() string {
-	return "display version and copyright information"
+	return "Display version and copyright information"
 }
 
 func (VersionCommand) Description() string {

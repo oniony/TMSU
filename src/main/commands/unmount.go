@@ -30,7 +30,7 @@ func (UnmountCommand) Name() string {
 }
 
 func (UnmountCommand) Synopsis() string {
-	return "unmount the virtual file-system"
+	return "Unmount the virtual file-system"
 }
 
 func (UnmountCommand) Description() string {

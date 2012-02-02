@@ -30,7 +30,7 @@ func (StatusCommand) Name() string {
 }
 
 func (StatusCommand) Synopsis() string {
-	return "list file status"
+	return "List file status"
 }
 
 func (StatusCommand) Description() string {

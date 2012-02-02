@@ -30,7 +30,7 @@ func (ExportCommand) Name() string {
 }
 
 func (ExportCommand) Synopsis() string {
-	return "export the tag database"
+	return "Export the tag database"
 }
 
 func (ExportCommand) Description() string {

@@ -28,7 +28,7 @@ func (StatsCommand) Name() string {
 }
 
 func (StatsCommand) Synopsis() string {
-	return "show database statistics"
+	return "Show database statistics"
 }
 
 func (StatsCommand) Description() string {

@@ -28,7 +28,7 @@ func (MergeCommand) Name() string {
 }
 
 func (MergeCommand) Synopsis() string {
-	return "merge tags"
+	return "Merge tags"
 }
 
 func (MergeCommand) Description() string {

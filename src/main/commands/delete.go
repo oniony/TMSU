@@ -28,7 +28,7 @@ func (DeleteCommand) Name() string {
 }
 
 func (DeleteCommand) Synopsis() string {
-	return "delete one or more tags"
+	return "Delete one or more tags"
 }
 
 func (DeleteCommand) Description() string {

@@ -30,7 +30,7 @@ func (TagsCommand) Name() string {
 }
 
 func (TagsCommand) Synopsis() string {
-	return "list tags"
+	return "List tags"
 }
 
 func (TagsCommand) Description() string {

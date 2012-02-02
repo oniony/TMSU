@@ -32,7 +32,7 @@ func (TagCommand) Name() string {
 }
 
 func (TagCommand) Synopsis() string {
-	return "apply tags to files"
+	return "Apply tags to files"
 }
 
 func (TagCommand) Description() string {

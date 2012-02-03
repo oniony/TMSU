@@ -1,6 +1,7 @@
 SHELL=/bin/sh
 VER=0.0.5
 HGREV=$(shell hg id)
+export GOPATH=$(PWD)
 
 SRC_DIR=src/tmsu
 BIN_DIR=bin

@@ -28,8 +28,13 @@ func main() {
 
 	var commandName string
 	if len(args) > 0 {
-		commandName = args[0]
-		args = args[1:]
+	    if args[0] == "-h" || args[0] == "-help" || args[0] == "--help" {
+	        commandName = "help"
+        } else {
+            commandName = args[0]
+        }
+
+        args = args[1:]
 	} else {
 		commandName = "help"
 	}

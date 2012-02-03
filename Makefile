@@ -1,5 +1,5 @@
-SHELL=/bin/sh
 VER=0.0.5
+SHELL=/bin/sh
 HGREV=$(shell hg id)
 export GOPATH=$(PWD)
 

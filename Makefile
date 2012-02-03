@@ -42,7 +42,7 @@ dist: compile
 	### Dist ###
 	@mkdir -p $(DIST_DIR)
 	cp -R $(BIN_DIR) $(DIST_DIR)
-	cp LICENSE README $(DIST_DIR)
+	cp -R LICENSE README misc $(DIST_DIR)
 	tar czf $(DIST_FILE) $(DIST_DIR)
 	rm -Rf $(DIST_DIR)
 

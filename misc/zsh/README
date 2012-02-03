@@ -1,0 +1,3 @@
+tmsu completions for Zsh.
+
+Copy to your Zsh site-functions directory (e.g. /usr/share/zsh/site-functions).

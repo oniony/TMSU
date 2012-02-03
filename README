@@ -23,7 +23,17 @@ integrated help:
 
     > tmsu help
 
-Full documentation is maintained online at http://bitbucket.org/oniony/tmsu.
+Full documentation is maintained online in the tmsu wiki:
+
+  http://bitbucket.org/oniony/tmsu/wiki
+
+Downloading
+-----------
+
+Binary builds for a limited number of architectures and operating system
+combinations are available on the project's download page:
+
+  http://bitbucket.org/oniony/tmsu/downloads
 
 Compiling
 ---------
@@ -31,21 +41,24 @@ Compiling
 The following steps are for compiling from source. Compiled binaries for some
 platforms are available from the tmsu project page on Bitbucket.
 
-tmsu is written in Go (http://www.golang.org/). To compile from source you
-must first install Go and the packages that tmsu depends upon.
+tmsu is written in the Go programming language. To compile from source you must
+first install Go and the packages that tmsu depends upon. You can get that from
+the Go website:
+
+  http://www.golang.org/
 
 1. Installing Go
 
-Go can be installed per the instructions at http://golang.org/doc/install.html
-or it may be available in the package management system that comes with your
-operating system.
+Go can be installed per the instructions on the Go website or it may be
+available in the package management system that comes with your operating
+system.
 
 tmsu is currently built against the Go weekly builds. See VERSIONS for the
 latest version that is known to work with the dependent packages.
 
 2. Install the dependent packages.
 
-    See VERSIONS file for which revisions work together.
+    (See VERSIONS file for which revisions work together.)
 
     > go get github.com/mattn/go-sqlite3
     > go get github.com/hanwen/go-fuse/fuse
@@ -66,6 +79,19 @@ This will compile to 'bin/tmsu' within the working directory.
     > sudo make install
 
 This will install tmsu to /usr/bin/tmsu.
+
+Mailing List
+------------
+
+There is a tmsu mailing list which can be used for asking questions, making
+suggestions, reporting bugs, &c.
+
+  http://groups.google.com/group/tmsu
+
+Authors
+-------
+
+tmsu is written by Paul Ruane.
 
 - - -
 

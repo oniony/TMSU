@@ -7,6 +7,8 @@ SRC_DIR=src/tmsu
 BIN_DIR=bin
 DIST_DIR=tmsu-$(VER)
 INSTALL_DIR=/usr/bin
+ZSH_COMP=misc/zsh/_tmsu
+ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 BIN_FILE=tmsu
 VER_FILE=version.gen.go
@@ -47,6 +49,8 @@ dist: compile
 install:
 	### Install ###
 	cp $(BIN_DIR)/$(BIN_FILE) $(INSTALL_DIR)
+	@mkdir -p $(ZSH_COMP_INSTALL_DIR)
+	cp $(ZSH_COMP) $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
 	### Uninstall ###

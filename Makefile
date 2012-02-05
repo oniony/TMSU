@@ -18,7 +18,7 @@ all: clean generate compile dist test
 
 clean:
 	### Clean ###
-	pushd ${SRC_DIR}; go tool make clean; popd
+	go clean tmsu/main
 	rm -f $(SRC_DIR)/core/$(VER_FILE)
 	rm -Rf $(BIN_DIR)
 	rm -Rf $(DIST_DIR)

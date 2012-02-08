@@ -34,7 +34,7 @@ func MakeRelative(path string) string {
     }
 
 	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
-		return path[len(workingDirectory):]
+		return path[len(workingDirectory) + 1:]
 	}
 
 	return path

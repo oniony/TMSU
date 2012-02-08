@@ -80,6 +80,11 @@ This will compile to 'bin/tmsu' within the working directory.
 
 This will install tmsu to /usr/bin/tmsu.
 
+Website
+-------
+
+  http://www.tmsu.org/
+
 Mailing List
 ------------
 

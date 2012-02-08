@@ -30,7 +30,7 @@ func main() {
 	if len(args) > 0 {
 	    if args[0] == "-h" || args[0] == "-help" || args[0] == "--help" {
 	        commandName = "help"
-        } else if args[1] == "-version" || args[0] == "--version" {
+        } else if args[0] == "-version" || args[0] == "--version" {
             commandName = "version"
         } else {
             commandName = args[0]

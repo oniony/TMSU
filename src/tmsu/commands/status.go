@@ -61,10 +61,7 @@ func (command StatusCommand) Exec(args []string) error {
 	}
 
 	if len(args) == 0 {
-        childEntries, err := core.DirectoryEntries(".")
-        if err != nil { return nil }
-
-		tagged, untagged, missing, err = command.status(childEntries, tagged, untagged, missing, allFiles)
+		tagged, untagged, missing, err = command.status([]string {"."}, tagged, untagged, missing, allFiles)
 	} else {
 		tagged, untagged, missing, err = command.status(args, tagged, untagged, missing, allFiles)
 	}
@@ -106,6 +103,7 @@ func (command StatusCommand) status(paths []string, tagged []string, untagged []
 		}
 
 		for _, entryPath := range databaseEntries {
+		    fmt.Println("Considering", entryPath)
 			if contains(fileSystemEntries, entryPath) {
 			    relPath := core.MakeRelative(entryPath)
 				tagged = append(tagged, relPath)

@@ -29,9 +29,11 @@ func MakeRelative(path string) string {
 		return path
 	}
 
-	workingDirectory += string(filepath.Separator)
+    if path == workingDirectory {
+        return "."
+    }
 
-	if strings.HasPrefix(path, workingDirectory) {
+	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
 		return path[len(workingDirectory):]
 	}
 

@@ -1,4 +1,4 @@
-VER=0.0.5
+VER=0.0.6
 SHELL=/bin/sh
 HGREV=$(shell hg id)
 export GOPATH=$(PWD)

@@ -139,7 +139,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	}
 
 	if tag == nil {
-		fmt.Printf("New tag '%v'.\n", tagName)
+		core.Warn("New tag '%v'.", tagName)
 		tag, err = db.AddTag(tagName)
 		if err != nil {
 			return nil, nil, err

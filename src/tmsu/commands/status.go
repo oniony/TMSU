@@ -36,7 +36,7 @@ func (StatusCommand) Synopsis() string {
 }
 
 func (StatusCommand) Description() string {
-	return `tmsu status [FILE...]
+	return `tmsu status [FILE]...
 
 Shows the tag status of files.
 

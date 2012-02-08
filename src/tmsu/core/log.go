@@ -23,12 +23,22 @@ import (
 	"os"
 )
 
-func Fatal(format string, values ...interface{}) {
-	Warn(format, values...)
+func Fatal(values ...interface{}) {
+	Warn(values...)
 	os.Exit(1)
 }
 
-func Warn(format string, values ...interface{}) {
+func Fatalf(format string, values ...interface{}) {
+    Warnf(format, values...)
+    os.Exit(1)
+}
+
+func Warn(values ...interface{}) {
+    fmt.Fprint(os.Stderr, "tmsu: ")
+    fmt.Fprint(os.Stderr, values...)
+}
+
+func Warnf(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
 	fmt.Fprintf(os.Stderr, format, values...)
 }

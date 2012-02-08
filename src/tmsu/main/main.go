@@ -43,7 +43,7 @@ func main() {
 
 	command := commands.Commands[commandName]
 	if command == nil {
-		core.Fatal("unknown command '%v'.", commandName)
+		core.Fatalf("unknown command '%v'.", commandName)
 	}
 
 	err := command.Exec(args)

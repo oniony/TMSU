@@ -105,7 +105,7 @@ func (UntagCommand) removeFiles(paths []string) error {
 			return err
 		}
 		if file == nil {
-			core.Warn("'%v': file is not tagged", path)
+			core.Warnf("'%v': file is not tagged", path)
 			continue
 		}
 

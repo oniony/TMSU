@@ -148,7 +148,7 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 				case *os.PathError:
 					switch terr.Err {
 					case os.EACCES:
-						core.Warn("'%v': permission denied.", path)
+						core.Warnf("'%v': permission denied.", path)
 					default:
 						return nil, err
 					}

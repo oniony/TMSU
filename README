@@ -61,9 +61,9 @@ latest version that is known to work with the dependent packages.
   > go get github.com/mattn/go-sqlite3
   > go get github.com/hanwen/go-fuse/fuse
 
-3. Checkout the tmsu source code:
+3. Clone the tmsu respository:
 
-  > hg co https://bitbucket.org/oniony/tmsu
+  > hg clone https://bitbucket.org/oniony/tmsu
 
 4. Make the project
 
@@ -76,7 +76,9 @@ This will compile to 'bin/tmsu' within the working directory.
 
   > sudo make install
 
-This will install tmsu to /usr/bin/tmsu and the Zsh completion to /usr/share/zsh/site-functions.
+This will install tmsu to /usr/bin/tmsu.
+It will also install the Zsh completion to /usr/share/zsh/site-functions.
+
 To change the paths used override the environment variables in the Makefile.
 
 Community

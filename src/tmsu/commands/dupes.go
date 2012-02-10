@@ -116,11 +116,16 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
             }
 
             fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
-        }
 
-        for _, dupe := range dupes {
-            relPath := core.MakeRelative(dupe.Path())
-            fmt.Printf("  %v\n", relPath)
+            for _, dupe := range dupes {
+                relPath := core.MakeRelative(dupe.Path())
+                fmt.Printf("  %v\n", relPath)
+            }
+        } else {
+            for _, dupe := range dupes {
+                relPath := core.MakeRelative(dupe.Path())
+                fmt.Println(relPath)
+            }
         }
     }
 

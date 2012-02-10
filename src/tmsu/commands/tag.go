@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -190,10 +189,10 @@ func (TagCommand) addFile(db *database.Database, path string) (*entities.File, e
             }
 
             if len(files) > 0 {
-                fmt.Printf("File is a duplicate of previously tagged files.\n")
+                core.Warn("File is a duplicate of previously tagged files.")
 
                 for _, duplicateFile := range files {
-                    fmt.Printf("  %v\n", duplicateFile.Path())
+                    core.Warnf("  %v", duplicateFile.Path())
                 }
             }
         }

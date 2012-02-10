@@ -34,7 +34,6 @@ func (StatsCommand) Synopsis() string {
 
 func (StatsCommand) Description() string {
 	return `tmsu stats
-tmsu stats
 
 Shows the database statistics.`
 }

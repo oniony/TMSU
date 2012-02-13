@@ -44,7 +44,7 @@ _tmsu_tags() {
 
 	_call_program tmsu tmsu tags | while read -A tag
 	do
-		tag_list+=$tag[1]
+		tag_list+=$tag[1]:gs/:/\\:/
 	done
 
 	_describe -t tags 'tags' tag_list

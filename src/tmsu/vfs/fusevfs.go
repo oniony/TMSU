@@ -227,7 +227,16 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	}
 
 	if fileId == 0 {
-		// if no file ID then it is a tag directory
+	    // tag directory
+
+		tag, error := db.TagByName(name)
+		if error != nil {
+		    core.Fatalf("Could not retrieve tag '%v'.", error)
+        }
+		if tag == nil {
+		    return nil, fuse.ENOENT
+        }
+
 		fileCount, error := db.FileCountWithTags(path)
 		if error != nil {
 			core.Fatalf("Could not retrieve count of files with tags: %v.", path)

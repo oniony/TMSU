@@ -17,34 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package commands
 
-var Commands map[string]Command
-
-func init() {
-	commandArray := []Command{
-		DeleteCommand{},
-		DupesCommand{},
-		ExportCommand{},
-		FilesCommand{},
-		HelpCommand{},
-		MergeCommand{},
-		MountCommand{},
-		RenameCommand{},
-		StatsCommand{},
-		StatusCommand{},
-		TagCommand{},
-		TagsCommand{},
-		UnmountCommand{},
-		UntagCommand{},
-		VersionCommand{},
-		VfsCommand{},
-	}
-
-	Commands = make(map[string]Command, len(commandArray))
-	for _, command := range commandArray {
-		Commands[command.Name()] = command
-	}
-}
-
 type Command interface {
 	Name() string
 	Synopsis() string

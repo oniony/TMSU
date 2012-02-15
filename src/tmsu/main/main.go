@@ -24,24 +24,52 @@ import (
 )
 
 func main() {
+    helpCommand := &commands.HelpCommand{}
+    commands := map[string]commands.Command {
+        "delete": &commands.DeleteCommand{},
+        "dupes": &commands.DupesCommand{},
+        "export": &commands.ExportCommand{},
+        "files": &commands.FilesCommand{},
+        "help": helpCommand,
+        "merge": &commands.MergeCommand{},
+        "mount": &commands.MountCommand{},
+        "rename": &commands.RenameCommand{},
+        "stats": &commands.StatsCommand{},
+        "status": &commands.StatusCommand{},
+        "tag": &commands.TagCommand{},
+        "tags": &commands.TagsCommand{},
+        "unmount": &commands.UnmountCommand{},
+        "untag": &commands.UntagCommand{},
+        "version": &commands.VersionCommand{},
+        "vfs": &commands.VfsCommand{},
+    }
+    helpCommand.Commands = commands
+
+    aliases := map[string]string {
+        "-h": "help",
+        "-help": "help",
+        "--help": "help",
+        "-V": "version",
+        "-version": "version",
+        "--version": "version",
+    }
+
     args := os.Args[1:] // strip off binary name
 
 	var commandName string
 	if len(args) > 0 {
-	    if args[0] == "-h" || args[0] == "-help" || args[0] == "--help" {
-	        commandName = "help"
-        } else if args[0] == "-version" || args[0] == "--version" {
-            commandName = "version"
-        } else {
-            commandName = args[0]
-        }
-
+        commandName = args[0]
         args = args[1:]
 	} else {
 		commandName = "help"
 	}
 
-	command := commands.Commands[commandName]
+    dealiased, found := aliases[commandName]
+    if found {
+        commandName = dealiased
+    }
+
+	command := commands[commandName]
 	if command == nil {
 		core.Fatalf("unknown command '%v'.", commandName)
 	}

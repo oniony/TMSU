@@ -24,7 +24,9 @@ import (
 	"strconv"
 )
 
-type HelpCommand struct{}
+type HelpCommand struct {
+    Commands map[string]Command
+}
 
 func (HelpCommand) Name() string {
 	return "help"
@@ -57,13 +59,14 @@ func (command HelpCommand) Exec(args []string) error {
 	return nil
 }
 
-func (HelpCommand) summary() {
+func (helpCommand HelpCommand) summary() {
 	fmt.Println("TMSU")
 	fmt.Println()
 
 	var maxWidth int = 0
-	commandNames := make([]string, 0, len(Commands))
-	for _, command  := range Commands {
+	commandNames := make([]string, 0, len(helpCommand.Commands))
+	for _, command  := range helpCommand.Commands {
+	    fmt.Println("Command:", command)
         commandName := command.Name()
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
@@ -72,7 +75,7 @@ func (HelpCommand) summary() {
 	sort.Strings(commandNames)
 
 	for _, commandName := range commandNames {
-		command, _ := Commands[commandName]
+		command, _ := helpCommand.Commands[commandName]
 
 		commandSummary := command.Synopsis()
 		if commandSummary == "" {
@@ -83,8 +86,8 @@ func (HelpCommand) summary() {
 	}
 }
 
-func (HelpCommand) listCommands() {
-	for _, command  := range Commands {
+func (helpCommand HelpCommand) listCommands() {
+	for _, command  := range helpCommand.Commands {
 	    if command.Synopsis() == "" {
 	        continue
         }
@@ -93,8 +96,8 @@ func (HelpCommand) listCommands() {
 	}
 }
 
-func (HelpCommand) describeCommand(commandName string) {
-	command := Commands[commandName]
+func (helpCommand HelpCommand) describeCommand(commandName string) {
+	command := helpCommand.Commands[commandName]
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)
 		return

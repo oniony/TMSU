@@ -26,6 +26,7 @@ import (
 func main() {
     helpCommand := &commands.HelpCommand{}
     commands := map[string]commands.Command {
+        "copy": commands.CopyCommand{},
         "delete": commands.DeleteCommand{},
         "dupes": commands.DupesCommand{},
         "export": commands.ExportCommand{},

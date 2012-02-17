@@ -289,6 +289,41 @@ func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 	return &entities.Tag{tagId, name}, nil
 }
 
+func (db Database) CopyTag(sourceTagId uint, name string) (*entities.Tag, error) {
+    sql := `INSERT INTO tag (name)
+            VALUES (?)`
+
+	result, err := db.connection.Exec(sql, name)
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected != 1 {
+		return nil, errors.New("Expected exactly one row to be affected.")
+	}
+
+	destTagId, err := result.LastInsertId()
+	if err != nil {
+		return nil, err
+	}
+
+    sql = `INSERT INTO file_tag (file_id, tag_id)
+           SELECT file_id, ?
+           FROM file_tag
+           WHERE tag_id = ?`
+
+    result, err = db.connection.Exec(sql, destTagId, sourceTagId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &entities.Tag{uint(destTagId), name}, nil
+}
+
 func (db Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`

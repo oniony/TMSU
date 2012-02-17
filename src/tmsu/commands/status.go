@@ -103,7 +103,6 @@ func (command StatusCommand) status(paths []string, tagged []string, untagged []
 		}
 
 		for _, entryPath := range databaseEntries {
-		    fmt.Println("Considering", entryPath)
 			if contains(fileSystemEntries, entryPath) {
 			    relPath := core.MakeRelative(entryPath)
 				tagged = append(tagged, relPath)

@@ -43,7 +43,7 @@ tmsu tag --tags "TAG..." FILE...
 
 Tags the file FILE with the tag(s) specified.
 
-  --tags    allows multiple FILEs to be tagged with the same quote set TAGs`
+  --tags    allows multiple FILEs to be tagged with the same quoted set of TAGs`
 }
 
 func (command TagCommand) Exec(args []string) error {
@@ -192,7 +192,7 @@ func (TagCommand) addFile(db *database.Database, path string) (*entities.File, e
                 core.Warn("File is a duplicate of previously tagged files.")
 
                 for _, duplicateFile := range files {
-                    core.Warnf("  %v", duplicateFile.Path())
+                    core.Warnf("  %v", core.MakeRelative(duplicateFile.Path()))
                 }
             }
         }

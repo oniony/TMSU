@@ -1,4 +1,3 @@
-
  .
 -+- |\/| (  | |
  |  |  |  ) |_|
@@ -35,19 +34,21 @@ combinations are available on the project's download page:
 
   http://bitbucket.org/oniony/tmsu/downloads
 
+You will need to ensure that both FUSE and Sqlite3 are installed for the
+program to function.
+
 Compiling
 ---------
 
-The following steps are for compiling from source. Compiled binaries for some
-platforms are available from the tmsu project page on Bitbucket.
+The following steps are for compiling from source.
+
+1. Installing Go
 
 tmsu is written in the Go programming language. To compile from source you must
 first install Go and the packages that tmsu depends upon. You can get that from
 the Go website:
 
   http://www.golang.org/
-
-1. Installing Go
 
 Go can be installed per the instructions on the Go website or it may be
 available in the package management system that comes with your operating
@@ -81,21 +82,26 @@ It will also install the Zsh completion to /usr/share/zsh/site-functions.
 
 To change the paths used override the environment variables in the Makefile.
 
-Community
----------
+About
+-----
 
-The project website:
+The project website is at:
 
   http://www.tmsu.org/
 
 There is a tmsu mailing list which can be used for asking questions, making
-suggestions, reporting bugs, &c. Release announcements are also made on this list.
+suggestions, reporting bugs, &c. Release announcements are also made on this
+list.
 
   http://groups.google.com/group/tmsu
 
-Or you can mail the author directly:
+tmsu is written in Go. For more information visit:
 
-  paul@tmsu.org
+  http://www.golang.org/.
+
+tmsu itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
+much of the functionality it provides is made possible by the Fuse and Sqlite3
+libraries, their Go bindings and, of course, the Go language standard library.
 
 - - -
 

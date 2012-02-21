@@ -1,5 +1,5 @@
 /*
-Copyright 2011 Paul Ruane.
+Copyright 2011-2012 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -41,7 +41,7 @@ Displays version and copyright information.`
 func (VersionCommand) Exec(args []string) error {
 	fmt.Println("TMSU", common.Version)
 	fmt.Println()
-	fmt.Println(`Copyright © 2011 Paul Ruane.
+	fmt.Println(`Copyright © 2011-2012 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

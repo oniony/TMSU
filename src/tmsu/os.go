@@ -15,27 +15,33 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package core
+package tmsu
 
 import (
 	"os"
 	"path/filepath"
-	"strings"
 )
 
-func MakeRelative(path string) string {
-	workingDirectory, err := os.Getwd()
+func IsRegular(fileInfo os.FileInfo) bool {
+	return fileInfo.Mode()&os.ModeType == 0
+}
+
+func DirectoryEntries(path string) ([]string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return path
+		return nil, err
+	}
+	defer file.Close()
+
+	entryNames, err := file.Readdirnames(0)
+	if err != nil {
+		return nil, err
 	}
 
-    if path == workingDirectory {
-        return "."
-    }
-
-	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
-		return path[len(workingDirectory) + 1:]
+	entryPaths := make([]string, len(entryNames))
+	for index, entryName := range entryNames {
+		entryPaths[index] = filepath.Join(path, entryName)
 	}
 
-	return path
+	return entryPaths, nil
 }

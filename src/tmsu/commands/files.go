@@ -21,7 +21,6 @@ import (
 	"errors"
 	"fmt"
 	"sort"
-	"tmsu/core"
 	"tmsu/database"
 )
 
@@ -101,7 +100,7 @@ func (FilesCommand) listFiles(tagNames []string) error {
 
 	paths := make([]string, len(files))
 	for index, file := range files {
-		relPath := core.MakeRelative(file.Path())
+		relPath := MakeRelative(file.Path())
 		paths[index] = relPath
 	}
 

@@ -22,9 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"tmsu/core"
 	"tmsu/database"
-	"tmsu/entities"
 )
 
 type TagCommand struct{}
@@ -119,7 +117,7 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 	return nil
 }
 
-func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*entities.Tag, *entities.FileTag, error) {
+func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
 	if strings.Index(tagName, ",") != -1 {
 		return nil, nil, errors.New("Tag names cannot contain commas.")
 	}
@@ -138,7 +136,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	}
 
 	if tag == nil {
-		core.Warnf("New tag '%v'.", tagName)
+		Warnf("New tag '%v'.", tagName)
 		tag, err = db.AddTag(tagName)
 		if err != nil {
 			return nil, nil, err
@@ -160,7 +158,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	return tag, fileTag, nil
 }
 
-func (TagCommand) addFile(db *database.Database, path string) (*entities.File, error) {
+func (TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
     fileInfo, err := os.Stat(path)
     if err != nil {
         return nil, err
@@ -170,7 +168,7 @@ func (TagCommand) addFile(db *database.Database, path string) (*entities.File, e
     if fileInfo.IsDir() {
         fingerprint = ""
     } else {
-        fingerprint, err = core.Fingerprint(path)
+        fingerprint, err = Fingerprint(path)
         if err != nil {
             return nil, err
         }
@@ -189,10 +187,10 @@ func (TagCommand) addFile(db *database.Database, path string) (*entities.File, e
             }
 
             if len(files) > 0 {
-                core.Warn("File is a duplicate of previously tagged files.")
+                Warn("File is a duplicate of previously tagged files.")
 
                 for _, duplicateFile := range files {
-                    core.Warnf("  %v", core.MakeRelative(duplicateFile.Path()))
+                    Warnf("  %v", MakeRelative(duplicateFile.Path()))
                 }
             }
         }

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-    "tmsu/core"
 	"fmt"
 )
 
@@ -39,7 +38,7 @@ Displays version and copyright information.`
 }
 
 func (VersionCommand) Exec(args []string) error {
-	fmt.Println("TMSU", core.Version)
+	fmt.Println("TMSU", Version)
 	fmt.Println()
 	fmt.Println(`Copyright © 2011 Paul Ruane.
 

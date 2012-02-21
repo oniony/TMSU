@@ -21,9 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"tmsu/core"
 	"tmsu/database"
-	"tmsu/entities"
 )
 
 type TagsCommand struct{}
@@ -138,12 +136,12 @@ func (command TagsCommand) listTagsRecursive(db *database.Database, paths []stri
 				case *os.PathError:
 					switch terr.Err {
 					case os.EACCES:
-						core.Warnf("'%v': permission denied.", path)
+						Warnf("'%v': permission denied.", path)
 					default:
-						core.Warnf("'%v': %v", path, err)
+						Warnf("'%v': %v", path, err)
 					}
 				default:
-					core.Warnf("'%v': %v", path, err)
+					Warnf("'%v': %v", path, err)
 				}
 				continue
 			}
@@ -169,7 +167,7 @@ func (command TagsCommand) listTagsRecursive(db *database.Database, paths []stri
 	return nil
 }
 
-func (TagsCommand) tagsForPath(db *database.Database, path string) ([]entities.Tag, error) {
+func (TagsCommand) tagsForPath(db *database.Database, path string) ([]database.Tag, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err

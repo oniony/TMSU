@@ -15,9 +15,19 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package entities
+package database
 
-type Tag struct {
-	Id   uint
-	Name string
+import (
+	"path/filepath"
+)
+
+type File struct {
+	Id          uint
+	Directory   string
+	Name        string
+	Fingerprint string
+}
+
+func (file File) Path() string {
+	return filepath.Join(file.Directory, file.Name)
 }

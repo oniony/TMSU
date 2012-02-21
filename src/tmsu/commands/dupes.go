@@ -20,9 +20,7 @@ package commands
 import (
 	"fmt"
 	"path/filepath"
-	"tmsu/core"
 	"tmsu/database"
-	"tmsu/entities"
 )
 
 type DupesCommand struct{}
@@ -73,7 +71,7 @@ func (DupesCommand) findDuplicatesInDb() error {
         fmt.Printf("Set of %v duplicates:\n", len(fileSet))
 
 		for _, file := range fileSet {
-            relPath := core.MakeRelative(file.Path())
+            relPath := MakeRelative(file.Path())
 			fmt.Printf("  %v\n", relPath)
 		}
 	}
@@ -90,7 +88,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 
     first := true
     for _, path := range paths {
-        fingerprint, err := core.Fingerprint(path)
+        fingerprint, err := Fingerprint(path)
         if err != nil {
             return err
         }
@@ -106,7 +104,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
         }
 
         // filter out the file we're searching on
-        dupes := where(files, func(file entities.File) bool { return file.Path() != absPath })
+        dupes := where(files, func(file database.File) bool { return file.Path() != absPath })
 
         if len(paths) > 1 && len(dupes) > 0 {
             if first {
@@ -118,12 +116,12 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
             fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
 
             for _, dupe := range dupes {
-                relPath := core.MakeRelative(dupe.Path())
+                relPath := MakeRelative(dupe.Path())
                 fmt.Printf("  %v\n", relPath)
             }
         } else {
             for _, dupe := range dupes {
-                relPath := core.MakeRelative(dupe.Path())
+                relPath := MakeRelative(dupe.Path())
                 fmt.Println(relPath)
             }
         }
@@ -132,8 +130,8 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 	return nil
 }
 
-func where(files []entities.File, predicate func(entities.File) bool) []entities.File {
-    result := make([]entities.File, 0, len(files))
+func where(files []database.File, predicate func(database.File) bool) []database.File {
+    result := make([]database.File, 0, len(files))
 
     for _, file := range(files) {
         if predicate(file) {

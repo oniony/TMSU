@@ -1,7 +1,6 @@
 VER=0.0.6
 SHELL=/bin/sh
 HGREV=$(shell hg id)
-export GOPATH=$(PWD)
 
 SRC_DIR=src/tmsu
 BIN_DIR=bin
@@ -9,34 +8,35 @@ DIST_DIR=tmsu-$(VER)
 INSTALL_DIR=/usr/bin
 ZSH_COMP=misc/zsh/_tmsu
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
-
 BIN_FILE=tmsu
 VER_FILE=version.gen.go
 DIST_FILE=tmsu-$(VER).tgz
+
+export GOPATH=$(PWD)
 
 all: clean generate compile dist test
 
 clean:
 	### Clean ###
-	go clean tmsu/main
-	rm -f $(SRC_DIR)/core/$(VER_FILE)
+	go clean tmsu
+	rm -f $(SRC_DIR)/$(VER_FILE)
 	rm -Rf $(BIN_DIR)
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 generate:
 	### Generate ###
-	echo "package core; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/core/$(VER_FILE)
+	echo "package tmsu; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/$(VER_FILE)
 
 compile: generate
 	### Compile ###
-	go build -o $(BIN_FILE) tmsu/main
+	go build -o $(BIN_FILE) tmsu
 	@mkdir -p $(BIN_DIR)
 	mv $(BIN_FILE) $(BIN_DIR)
 
 test: compile
 	### Test ###
-	go test tmsu/...
+	go test tmsu...
 
 dist: compile
 	### Dist ###

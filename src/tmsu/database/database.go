@@ -25,8 +25,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"tmsu/core"
-	"tmsu/entities"
 )
 
 type Database struct {
@@ -34,12 +32,12 @@ type Database struct {
 }
 
 func OpenDatabase() (*Database, error) {
-	config, err := core.GetSelectedDatabaseConfig()
+	config, err := GetSelectedDatabaseConfig()
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		config, err = core.GetDefaultDatabaseConfig()
+		config, err = GetDefaultDatabaseConfig()
 		if err != nil {
 			return nil, errors.New("Could not retrieve default database configuration: " + err.Error())
 		}
@@ -98,7 +96,7 @@ func (db Database) TagCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Tags() ([]entities.Tag, error) {
+func (db Database) Tags() ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -109,7 +107,7 @@ func (db Database) Tags() ([]entities.Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]entities.Tag, 0, 10)
+	tags := make([]Tag, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -122,13 +120,13 @@ func (db Database) Tags() ([]entities.Tag, error) {
 			return nil, err
 		}
 
-		tags = append(tags, entities.Tag{id, name})
+		tags = append(tags, Tag{id, name})
 	}
 
 	return tags, nil
 }
 
-func (db Database) TagByName(name string) (*entities.Tag, error) {
+func (db Database) TagByName(name string) (*Tag, error) {
 	sql := `SELECT id
 	        FROM tag
 	        WHERE name = ?`
@@ -152,10 +150,10 @@ func (db Database) TagByName(name string) (*entities.Tag, error) {
 		return nil, err
 	}
 
-	return &entities.Tag{id, name}, nil
+	return &Tag{id, name}, nil
 }
 
-func (db Database) TagsByFileId(fileId uint) ([]entities.Tag, error) {
+func (db Database) TagsByFileId(fileId uint) ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -171,7 +169,7 @@ func (db Database) TagsByFileId(fileId uint) ([]entities.Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]entities.Tag, 0, 10)
+	tags := make([]Tag, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -184,13 +182,13 @@ func (db Database) TagsByFileId(fileId uint) ([]entities.Tag, error) {
 			return nil, err
 		}
 
-		tags = append(tags, entities.Tag{tagId, tagName})
+		tags = append(tags, Tag{tagId, tagName})
 	}
 
 	return tags, nil
 }
 
-func (db Database) TagsForTags(tagNames []string) ([]entities.Tag, error) {
+func (db Database) TagsForTags(tagNames []string) ([]Tag, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -222,7 +220,7 @@ func (db Database) TagsForTags(tagNames []string) ([]entities.Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]entities.Tag, 0, 10)
+	tags := make([]Tag, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -236,14 +234,14 @@ func (db Database) TagsForTags(tagNames []string) ([]entities.Tag, error) {
 		}
 
 		if !db.contains(tagNames, tagName) {
-			tags = append(tags, entities.Tag{tagId, tagName})
+			tags = append(tags, Tag{tagId, tagName})
 		}
 	}
 
 	return tags, nil
 }
 
-func (db Database) AddTag(name string) (*entities.Tag, error) {
+func (db Database) AddTag(name string) (*Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
@@ -265,10 +263,10 @@ func (db Database) AddTag(name string) (*entities.Tag, error) {
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &entities.Tag{uint(id), name}, nil
+	return &Tag{uint(id), name}, nil
 }
 
-func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
+func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
@@ -286,10 +284,10 @@ func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &entities.Tag{tagId, name}, nil
+	return &Tag{tagId, name}, nil
 }
 
-func (db Database) CopyTag(sourceTagId uint, name string) (*entities.Tag, error) {
+func (db Database) CopyTag(sourceTagId uint, name string) (*Tag, error) {
     sql := `INSERT INTO tag (name)
             VALUES (?)`
 
@@ -321,7 +319,7 @@ func (db Database) CopyTag(sourceTagId uint, name string) (*entities.Tag, error)
 		return nil, err
 	}
 
-	return &entities.Tag{uint(destTagId), name}, nil
+	return &Tag{uint(destTagId), name}, nil
 }
 
 func (db Database) DeleteTag(tagId uint) error {
@@ -370,7 +368,7 @@ func (db Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Files() ([]entities.File, error) {
+func (db Database) Files() ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
 	        FROM file`
 
@@ -380,7 +378,7 @@ func (db Database) Files() ([]entities.File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]entities.File, 0, 10)
+	files := make([]File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -395,13 +393,13 @@ func (db Database) Files() ([]entities.File, error) {
 			return nil, err
 		}
 
-		files = append(files, entities.File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
 }
 
-func (db Database) File(id uint) (*entities.File, error) {
+func (db Database) File(id uint) (*File, error) {
 	sql := `SELECT directory, name, fingerprint
 	        FROM file
 	        WHERE id = ?`
@@ -427,10 +425,10 @@ func (db Database) File(id uint) (*entities.File, error) {
 		return nil, err
 	}
 
-	return &entities.File{id, directory, name, fingerprint}, nil
+	return &File{id, directory, name, fingerprint}, nil
 }
 
-func (db Database) FileByPath(path string) (*entities.File, error) {
+func (db Database) FileByPath(path string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -458,10 +456,10 @@ func (db Database) FileByPath(path string) (*entities.File, error) {
 		return nil, err
 	}
 
-	return &entities.File{id, directory, name, fingerprint}, nil
+	return &File{id, directory, name, fingerprint}, nil
 }
 
-func (db Database) FilesByDirectory(path string) ([]entities.File, error) {
+func (db Database) FilesByDirectory(path string) ([]File, error) {
     directory := filepath.Dir(path)
     name := filepath.Base(path)
 
@@ -476,7 +474,7 @@ func (db Database) FilesByDirectory(path string) ([]entities.File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]entities.File, 0, 10)
+	files := make([]File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -491,13 +489,13 @@ func (db Database) FilesByDirectory(path string) ([]entities.File, error) {
 			return nil, err
 		}
 
-		files = append(files, entities.File{fileId, dir, name, fingerprint})
+		files = append(files, File{fileId, dir, name, fingerprint})
 	}
 
 	return files, nil
 }
 
-func (db Database) FilesByFingerprint(fingerprint string) ([]entities.File, error) {
+func (db Database) FilesByFingerprint(fingerprint string) ([]File, error) {
 	sql := `SELECT id, directory, name
 	        FROM file
 	        WHERE fingerprint = ?`
@@ -508,7 +506,7 @@ func (db Database) FilesByFingerprint(fingerprint string) ([]entities.File, erro
 	}
 	defer rows.Close()
 
-	files := make([]entities.File, 0, 10)
+	files := make([]File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -522,13 +520,13 @@ func (db Database) FilesByFingerprint(fingerprint string) ([]entities.File, erro
 			return nil, err
 		}
 
-		files = append(files, entities.File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
 }
 
-func (db Database) DuplicateFiles() ([][]entities.File, error) {
+func (db Database) DuplicateFiles() ([][]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
@@ -543,8 +541,8 @@ func (db Database) DuplicateFiles() ([][]entities.File, error) {
 	}
 	defer rows.Close()
 
-	fileSets := make([][]entities.File, 0, 10)
-	var fileSet []entities.File
+	fileSets := make([][]File, 0, 10)
+	var fileSet []File
 	var previousFingerprint string
 
 	for rows.Next() {
@@ -565,11 +563,11 @@ func (db Database) DuplicateFiles() ([][]entities.File, error) {
 			if fileSet != nil {
 				fileSets = append(fileSets, fileSet)
 			}
-			fileSet = make([]entities.File, 0, 10)
+			fileSet = make([]File, 0, 10)
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, entities.File{fileId, directory, name, fingerprint})
+		fileSet = append(fileSet, File{fileId, directory, name, fingerprint})
 	}
 
 	// ensure last file set is added
@@ -580,7 +578,7 @@ func (db Database) DuplicateFiles() ([][]entities.File, error) {
 	return fileSets, nil
 }
 
-func (db Database) AddFile(path string, fingerprint string) (*entities.File, error) {
+func (db Database) AddFile(path string, fingerprint string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -605,7 +603,7 @@ func (db Database) AddFile(path string, fingerprint string) (*entities.File, err
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &entities.File{uint(id), directory, name, fingerprint}, nil
+	return &File{uint(id), directory, name, fingerprint}, nil
 }
 
 func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
@@ -651,7 +649,7 @@ func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
 	return fileCount, nil
 }
 
-func (db Database) FilesWithTags(tagNames []string) ([]entities.File, error) {
+func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE id IN (
@@ -678,7 +676,7 @@ func (db Database) FilesWithTags(tagNames []string) ([]entities.File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]entities.File, 0, 10)
+	files := make([]File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -693,7 +691,7 @@ func (db Database) FilesWithTags(tagNames []string) ([]entities.File, error) {
 			return nil, err
 		}
 
-		files = append(files, entities.File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
@@ -758,7 +756,7 @@ func (db Database) FileTagCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) FileTags() ([]entities.FileTag, error) {
+func (db Database) FileTags() ([]FileTag, error) {
 	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag`
 
@@ -768,7 +766,7 @@ func (db Database) FileTags() ([]entities.FileTag, error) {
 	}
 	defer rows.Close()
 
-	fileTags := make([]entities.FileTag, 0, 10)
+	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -782,13 +780,13 @@ func (db Database) FileTags() ([]entities.FileTag, error) {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, entities.FileTag{fileTagId, fileId, tagId})
+		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
 
 	return fileTags, nil
 }
 
-func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*entities.FileTag, error) {
+func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
 	sql := `SELECT id
 	        FROM file_tag
 	        WHERE file_id = ?
@@ -813,10 +811,10 @@ func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*entities.F
 		return nil, err
 	}
 
-	return &entities.FileTag{fileTagId, fileId, tagId}, nil
+	return &FileTag{fileTagId, fileId, tagId}, nil
 }
 
-func (db Database) FileTagsByTagId(tagId uint) ([]entities.FileTag, error) {
+func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
 	sql := `SELECT id, file_id
 	        FROM file_tag
 	        WHERE tag_id = ?`
@@ -827,7 +825,7 @@ func (db Database) FileTagsByTagId(tagId uint) ([]entities.FileTag, error) {
 	}
 	defer rows.Close()
 
-	fileTags := make([]entities.FileTag, 0, 10)
+	fileTags := make([]FileTag, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -840,7 +838,7 @@ func (db Database) FileTagsByTagId(tagId uint) ([]entities.FileTag, error) {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, entities.FileTag{fileTagId, fileId, tagId})
+		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
 	}
 
 	return fileTags, nil
@@ -868,7 +866,7 @@ func (db Database) AnyFileTagsForFile(fileId uint) (bool, error) {
 	return false, nil
 }
 
-func (db Database) AddFileTag(fileId uint, tagId uint) (*entities.FileTag, error) {
+func (db Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {
 	sql := `INSERT INTO file_tag (file_id, tag_id)
 	        VALUES (?, ?)`
 
@@ -890,7 +888,7 @@ func (db Database) AddFileTag(fileId uint, tagId uint) (*entities.FileTag, error
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &entities.FileTag{uint(id), fileId, tagId}, nil
+	return &FileTag{uint(id), fileId, tagId}, nil
 }
 
 func (db Database) RemoveFileTag(fileId uint, tagId uint) error {

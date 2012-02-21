@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/exec"
 	"time"
-	"tmsu/core"
 )
 
 type MountCommand struct{}
@@ -78,12 +77,12 @@ func (command MountCommand) Exec(args []string) error {
 }
 
 func (command MountCommand) mountSelected(mountPath string) error {
-	config, err := core.GetSelectedDatabaseConfig()
+	config, err := GetSelectedDatabaseConfig()
 	if err != nil {
 		return err
 	}
 	if config == nil {
-	    config, err = core.GetDefaultDatabaseConfig()
+	    config, err = GetDefaultDatabaseConfig()
 	    if err != nil {
 	        return err
         }

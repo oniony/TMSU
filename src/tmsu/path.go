@@ -15,30 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package core
+package tmsu
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
-func Fingerprint(path string) (string, error) {
-	file, err := os.Open(path)
+func MakeRelative(path string) string {
+	workingDirectory, err := os.Getwd()
 	if err != nil {
-		return "", err
-	}
-	defer file.Close()
-
-	hash := sha256.New()
-
-	buffer := make([]byte, 1024)
-	for count := 0; err == nil; count, err = file.Read(buffer) {
-		hash.Write(buffer[:count])
+		return path
 	}
 
-	sum := hash.Sum(make([]byte, 0, 64))
-	fingerprint := hex.EncodeToString(sum)
+    if path == workingDirectory {
+        return "."
+    }
 
-	return fingerprint, nil
+	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
+		return path[len(workingDirectory) + 1:]
+	}
+
+	return path
 }

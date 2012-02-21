@@ -1,5 +1,4 @@
 /*
-
 Copyright 2011 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
@@ -16,30 +15,9 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package core
+package database
 
-import (
-	"fmt"
-	"os"
-)
-
-func Fatal(values ...interface{}) {
-	Warn(values...)
-	os.Exit(1)
-}
-
-func Fatalf(format string, values ...interface{}) {
-    Warnf(format, values...)
-    os.Exit(1)
-}
-
-func Warn(values ...interface{}) {
-    fmt.Fprint(os.Stderr, "tmsu: ")
-    fmt.Fprint(os.Stderr, values...)
-    fmt.Fprint(os.Stderr, "\n")
-}
-
-func Warnf(format string, values ...interface{}) {
-	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(os.Stderr, format, values...)
+type Tag struct {
+	Id   uint
+	Name string
 }

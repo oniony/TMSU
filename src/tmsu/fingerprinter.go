@@ -15,19 +15,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package entities
+package tmsu
 
 import (
-	"path/filepath"
+	"crypto/sha256"
+	"encoding/hex"
+	"os"
 )
 
-type File struct {
-	Id          uint
-	Directory   string
-	Name        string
-	Fingerprint string
-}
+func Fingerprint(path string) (string, error) {
+	file, err := os.Open(path)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
 
-func (file File) Path() string {
-	return filepath.Join(file.Directory, file.Name)
+	hash := sha256.New()
+
+	buffer := make([]byte, 1024)
+	for count := 0; err == nil; count, err = file.Read(buffer) {
+		hash.Write(buffer[:count])
+	}
+
+	sum := hash.Sum(make([]byte, 0, 64))
+	fingerprint := hex.EncodeToString(sum)
+
+	return fingerprint, nil
 }

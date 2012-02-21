@@ -21,7 +21,6 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
-	"tmsu/core"
 	"tmsu/database"
 )
 
@@ -105,7 +104,7 @@ func (UntagCommand) removeFiles(paths []string) error {
 			return err
 		}
 		if file == nil {
-			core.Warnf("'%v': file is not tagged", path)
+			Warnf("'%v': file is not tagged", path)
 			continue
 		}
 

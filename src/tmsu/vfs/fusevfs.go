@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"tmsu/common"
 	"tmsu/database"
 )
 
@@ -78,7 +79,7 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	fileId, err := vfs.parseFileId(name)
 	if err != nil {
-		Fatal("Could not unlink: ", err)
+		common.Fatal("Could not unlink: ", err)
 	}
 
 	if fileId == 0 {
@@ -91,21 +92,21 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatal(err)
+		common.Fatal(err)
 	}
 
 	for _, tagName := range tagNames {
 		tag, err := db.TagByName(tagName)
 		if err != nil {
-			Fatal(err)
+			common.Fatal(err)
 		}
 		if tag == nil {
-			Fatalf("Could not retrieve tag '%v'.", tagName)
+			common.Fatalf("Could not retrieve tag '%v'.", tagName)
 		}
 
 		err = db.RemoveFileTag(fileId, tag.Id)
 		if err != nil {
-			Fatal(err)
+			common.Fatal(err)
 		}
 	}
 
@@ -175,13 +176,13 @@ func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatalf("Could not open database: %v", err)
+		common.Fatalf("Could not open database: %v", err)
 	}
 	defer db.Close()
 
 	tags, err := db.Tags()
 	if err != nil {
-		Fatalf("Could not retrieve tags: %v", err)
+		common.Fatalf("Could not retrieve tags: %v", err)
 	}
 
 	channel := make(chan fuse.DirEntry, len(tags))
@@ -196,13 +197,13 @@ func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatalf("Could not open database: %v", err)
+		common.Fatalf("Could not open database: %v", err)
 	}
 	defer db.Close()
 
 	tagCount, err := db.TagCount()
 	if err != nil {
-		Fatalf("Could not get tag count: %v", err)
+		common.Fatalf("Could not get tag count: %v", err)
 	}
 
 	now := time.Now()
@@ -215,7 +216,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatalf("Could not open database: %v", err)
+		common.Fatalf("Could not open database: %v", err)
 	}
 	defer db.Close()
 
@@ -229,7 +230,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 		tag, error := db.TagByName(name)
 		if error != nil {
-		    Fatalf("Could not retrieve tag '%v'.", error)
+		    common.Fatalf("Could not retrieve tag '%v'.", error)
         }
 		if tag == nil {
 		    return nil, fuse.ENOENT
@@ -237,7 +238,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 		fileCount, error := db.FileCountWithTags(path)
 		if error != nil {
-			Fatalf("Could not retrieve count of files with tags: %v.", path)
+			common.Fatalf("Could not retrieve count of files with tags: %v.", path)
 		}
 
 		now := time.Now()
@@ -246,7 +247,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 	file, err := db.File(fileId)
 	if err != nil {
-		Fatalf("Could not retrieve file #%v: %v", fileId, err)
+		common.Fatalf("Could not retrieve file #%v: %v", fileId, err)
 	}
 	if file == nil {
 		return &fuse.Attr{Mode: fuse.S_IFREG}, fuse.ENOENT
@@ -269,7 +270,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatalf("Could not open database: %v", err)
+		common.Fatalf("Could not open database: %v", err)
 	}
 	defer db.Close()
 
@@ -277,12 +278,12 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 
 	furtherTags, err := db.TagsForTags(tags)
 	if err != nil {
-		Fatalf("Could not retrieve tags for tags: %v", err)
+		common.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
 	files, err := db.FilesWithTags(tags)
 	if err != nil {
-		Fatalf("Could not retrieve tagged files: %v", err)
+		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
 	channel := make(chan fuse.DirEntry, len(files)+len(furtherTags))
@@ -305,13 +306,13 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 
 	db, err := database.OpenDatabaseAt(vfs.databasePath)
 	if err != nil {
-		Fatalf("Could not open database: %v", err)
+		common.Fatalf("Could not open database: %v", err)
 	}
 	defer db.Close()
 
 	fileId, err := vfs.parseFileId(name)
 	if err != nil {
-		Fatalf("Could not parse file identifier: %v", err)
+		common.Fatalf("Could not parse file identifier: %v", err)
 	}
 	if fileId == 0 {
 		return "", fuse.ENOENT
@@ -319,7 +320,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 
 	file, err := db.File(fileId)
 	if err != nil {
-		Fatalf("Could not find file %v in database.", fileId)
+		common.Fatalf("Could not find file %v in database.", fileId)
 	}
 
 	return file.Path(), fuse.OK

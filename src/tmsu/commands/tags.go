@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"tmsu/common"
 	"tmsu/database"
 )
 
@@ -136,12 +137,12 @@ func (command TagsCommand) listTagsRecursive(db *database.Database, paths []stri
 				case *os.PathError:
 					switch terr.Err {
 					case os.EACCES:
-						Warnf("'%v': permission denied.", path)
+						common.Warnf("'%v': permission denied.", path)
 					default:
-						Warnf("'%v': %v", path, err)
+						common.Warnf("'%v': %v", path, err)
 					}
 				default:
-					Warnf("'%v': %v", path, err)
+					common.Warnf("'%v': %v", path, err)
 				}
 				continue
 			}

@@ -15,30 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package tmsu
+package common
 
 import (
-	"fmt"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
-func Fatal(values ...interface{}) {
-	Warn(values...)
-	os.Exit(1)
-}
+func MakeRelative(path string) string {
+	workingDirectory, err := os.Getwd()
+	if err != nil {
+		return path
+	}
 
-func Fatalf(format string, values ...interface{}) {
-    Warnf(format, values...)
-    os.Exit(1)
-}
+    if path == workingDirectory {
+        return "."
+    }
 
-func Warn(values ...interface{}) {
-    fmt.Fprint(os.Stderr, "tmsu: ")
-    fmt.Fprint(os.Stderr, values...)
-    fmt.Fprint(os.Stderr, "\n")
-}
+	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
+		return path[len(workingDirectory) + 1:]
+	}
 
-func Warnf(format string, values ...interface{}) {
-	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(os.Stderr, format, values...)
+	return path
 }

@@ -15,27 +15,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package tmsu
+package common
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"os"
-	"path/filepath"
-	"strings"
 )
 
-func MakeRelative(path string) string {
-	workingDirectory, err := os.Getwd()
+func Fingerprint(path string) (string, error) {
+	file, err := os.Open(path)
 	if err != nil {
-		return path
+		return "", err
+	}
+	defer file.Close()
+
+	hash := sha256.New()
+
+	buffer := make([]byte, 1024)
+	for count := 0; err == nil; count, err = file.Read(buffer) {
+		hash.Write(buffer[:count])
 	}
 
-    if path == workingDirectory {
-        return "."
-    }
+	sum := hash.Sum(make([]byte, 0, 64))
+	fingerprint := hex.EncodeToString(sum)
 
-	if strings.HasPrefix(path, workingDirectory + string(filepath.Separator)) {
-		return path[len(workingDirectory) + 1:]
-	}
-
-	return path
+	return fingerprint, nil
 }

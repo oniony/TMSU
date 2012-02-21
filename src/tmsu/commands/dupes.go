@@ -20,6 +20,7 @@ package commands
 import (
 	"fmt"
 	"path/filepath"
+	"tmsu/common"
 	"tmsu/database"
 )
 
@@ -71,7 +72,7 @@ func (DupesCommand) findDuplicatesInDb() error {
         fmt.Printf("Set of %v duplicates:\n", len(fileSet))
 
 		for _, file := range fileSet {
-            relPath := MakeRelative(file.Path())
+            relPath := common.MakeRelative(file.Path())
 			fmt.Printf("  %v\n", relPath)
 		}
 	}
@@ -88,7 +89,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 
     first := true
     for _, path := range paths {
-        fingerprint, err := Fingerprint(path)
+        fingerprint, err := common.Fingerprint(path)
         if err != nil {
             return err
         }
@@ -116,12 +117,12 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
             fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
 
             for _, dupe := range dupes {
-                relPath := MakeRelative(dupe.Path())
+                relPath := common.MakeRelative(dupe.Path())
                 fmt.Printf("  %v\n", relPath)
             }
         } else {
             for _, dupe := range dupes {
-                relPath := MakeRelative(dupe.Path())
+                relPath := common.MakeRelative(dupe.Path())
                 fmt.Println(relPath)
             }
         }

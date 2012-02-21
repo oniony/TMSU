@@ -15,34 +15,33 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package tmsu
+package commands
 
 import (
-	"os"
-	"path/filepath"
-	"testing"
 )
 
-func TestGeneration(test *testing.T) {
-	tempFilePath := filepath.Join(os.TempDir(), "tmsu-fingerprint")
+type RepairCommand struct{}
 
-	file, err := os.Create(tempFilePath)
-	if err != nil {
-		test.Fatal(err.Error())
-	}
-	defer os.Remove(tempFilePath)
+func (RepairCommand) Name() string {
+	return "repair"
+}
 
-	_, err = file.WriteString("They were the footprints of a giagantic hound.")
-	if err != nil {
-		test.Fatal(err.Error())
-	}
+func (RepairCommand) Synopsis() string {
+	return "Repair breakages caused by file moves and amendments"
+}
 
-	fingerprint, err := Fingerprint(tempFilePath)
-	if err != nil {
-		test.Fatal(err.Error())
-	}
+func (RepairCommand) Description() string {
+	return `tmsu repair
 
-	if fingerprint != "87d74123749a45e4c4e5e9053986d7ae878268a8e301d1b8125791517c0d39bf" {
-		test.Fatal("Fingerprint incorrect.")
-	}
+Attempts to repair the database with respect to changes to tagged file contents
+and file moves.
+
+This process consists of two steps:
+
+  1. Update the stored fingerprints for modified files.
+  2. Find the new path of moved files.`
+}
+
+func (command RepairCommand) Exec(args []string) error {
+    return nil
 }

@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tmsu/common"
 	"tmsu/database"
 )
 
@@ -136,7 +137,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	}
 
 	if tag == nil {
-		Warnf("New tag '%v'.", tagName)
+		common.Warnf("New tag '%v'.", tagName)
 		tag, err = db.AddTag(tagName)
 		if err != nil {
 			return nil, nil, err
@@ -168,7 +169,7 @@ func (TagCommand) addFile(db *database.Database, path string) (*database.File, e
     if fileInfo.IsDir() {
         fingerprint = ""
     } else {
-        fingerprint, err = Fingerprint(path)
+        fingerprint, err = common.Fingerprint(path)
         if err != nil {
             return nil, err
         }
@@ -187,10 +188,10 @@ func (TagCommand) addFile(db *database.Database, path string) (*database.File, e
             }
 
             if len(files) > 0 {
-                Warn("File is a duplicate of previously tagged files.")
+                common.Warn("File is a duplicate of previously tagged files.")
 
                 for _, duplicateFile := range files {
-                    Warnf("  %v", MakeRelative(duplicateFile.Path()))
+                    common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
                 }
             }
         }

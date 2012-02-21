@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+	"tmsu/common"
 )
 
 type VersionCommand struct{}
@@ -38,7 +39,7 @@ Displays version and copyright information.`
 }
 
 func (VersionCommand) Exec(args []string) error {
-	fmt.Println("TMSU", Version)
+	fmt.Println("TMSU", common.Version)
 	fmt.Println()
 	fmt.Println(`Copyright © 2011 Paul Ruane.
 

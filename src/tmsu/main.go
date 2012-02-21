@@ -20,6 +20,7 @@ package main
 import (
     "os"
     "tmsu/commands"
+    "tmsu/common"
 )
 
 func main() {
@@ -71,11 +72,11 @@ func main() {
 
 	command := commands[commandName]
 	if command == nil {
-		Fatalf("unknown command '%v'.", commandName)
+		common.Fatalf("unknown command '%v'.", commandName)
 	}
 
 	err := command.Exec(args)
 	if err != nil {
-		Fatal(err.Error())
+		common.Fatal(err.Error())
 	}
 }

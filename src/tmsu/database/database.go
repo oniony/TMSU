@@ -25,6 +25,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"tmsu/common"
 )
 
 type Database struct {
@@ -32,12 +33,12 @@ type Database struct {
 }
 
 func OpenDatabase() (*Database, error) {
-	config, err := GetSelectedDatabaseConfig()
+	config, err := common.GetSelectedDatabaseConfig()
 	if err != nil {
 		return nil, err
 	}
 	if config == nil {
-		config, err = GetDefaultDatabaseConfig()
+		config, err = common.GetDefaultDatabaseConfig()
 		if err != nil {
 			return nil, errors.New("Could not retrieve default database configuration: " + err.Error())
 		}

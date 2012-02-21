@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"tmsu/common"
 	"tmsu/database"
 )
 
@@ -103,17 +104,17 @@ func (command StatusCommand) status(paths []string, tagged []string, untagged []
 
 		for _, entryPath := range databaseEntries {
 			if contains(fileSystemEntries, entryPath) {
-			    relPath := MakeRelative(entryPath)
+			    relPath := common.MakeRelative(entryPath)
 				tagged = append(tagged, relPath)
 			} else {
-			    relPath := MakeRelative(entryPath)
+			    relPath := common.MakeRelative(entryPath)
 				missing = append(missing, relPath)
 			}
 		}
 
 		for _, entryPath := range fileSystemEntries {
 			if !contains(databaseEntries, entryPath) {
-			    relPath := MakeRelative(entryPath)
+			    relPath := common.MakeRelative(entryPath)
 				untagged = append(untagged, relPath)
 			}
 		}
@@ -135,18 +136,18 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 	basename := filepath.Base(path)
 
 	if basename[0] != '.' || allFiles {
-		if IsRegular(fileInfo) {
+		if common.IsRegular(fileInfo) {
 			entries = append(entries, path)
 		} else if fileInfo.IsDir() {
 			entries = append(entries, path)
 
-			childEntries, err := DirectoryEntries(path)
+			childEntries, err := common.DirectoryEntries(path)
 			if err != nil {
 				switch terr := err.(type) {
 				case *os.PathError:
 					switch terr.Err {
 					case os.EACCES:
-						Warnf("'%v': permission denied.", path)
+						common.Warnf("'%v': permission denied.", path)
 					default:
 						return nil, err
 					}

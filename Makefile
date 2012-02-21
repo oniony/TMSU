@@ -6,8 +6,10 @@ SRC_DIR=src/tmsu
 BIN_DIR=bin
 DIST_DIR=tmsu-$(VER)
 INSTALL_DIR=/usr/bin
+
 ZSH_COMP=misc/zsh/_tmsu
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
+
 BIN_FILE=tmsu
 VER_FILE=version.gen.go
 DIST_FILE=tmsu-$(VER).tgz
@@ -19,14 +21,14 @@ all: clean generate compile dist test
 clean:
 	### Clean ###
 	go clean tmsu
-	rm -f $(SRC_DIR)/$(VER_FILE)
+	rm -f $(SRC_DIR)/common/$(VER_FILE)
 	rm -Rf $(BIN_DIR)
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 generate:
 	### Generate ###
-	echo "package tmsu; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/$(VER_FILE)
+	echo "package common; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/common/$(VER_FILE)
 
 compile: generate
 	### Compile ###
@@ -36,7 +38,7 @@ compile: generate
 
 test: compile
 	### Test ###
-	go test tmsu...
+	go test tmsu/...
 
 dist: compile
 	### Dist ###

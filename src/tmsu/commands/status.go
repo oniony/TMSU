@@ -143,17 +143,11 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 
 			childEntries, err := common.DirectoryEntries(path)
 			if err != nil {
-				switch terr := err.(type) {
-				case *os.PathError:
-					switch terr.Err {
-					case os.EACCES:
+			    if os.IsPermission(err) {
 						common.Warnf("'%v': permission denied.", path)
-					default:
-						return nil, err
-					}
-				default:
-					return nil, err
-				}
+                } else {
+                    return nil, err
+                }
 			}
 
 			for _, entry := range childEntries {

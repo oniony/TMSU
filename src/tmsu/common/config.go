@@ -56,10 +56,10 @@ func GetDefaultDatabaseConfig() (*DatabaseConfig, error) {
 
 func resolvePath(path string) (string, error) {
 	if strings.HasPrefix(path, "~"+string(filepath.Separator)) {
-		homeDirectory, err := os.Getenverror("HOME")
-		if err != nil {
-			return "", err
-		}
+		homeDirectory := os.Getenv("HOME")
+		if homeDirectory == "" {
+		    return "", errors.New("Could not identify home directory.")
+        }
 
 		path = strings.Join([]string{homeDirectory, path[2:]}, string(filepath.Separator))
 	}
@@ -75,19 +75,13 @@ func readConfig(path string) ([]DatabaseConfig, error) {
 
 	file, err := os.Open(configPath)
 	if err != nil {
-		switch terr := err.(type) {
-		case *os.PathError:
-			switch terr.Err {
-			case os.ENOENT:
-				return nil, nil // configuration file is missing
-			case os.EACCES:
-				return nil, errors.New("Permission denied.")
-			default:
-				return nil, terr
-			}
-		default:
-			return nil, err
-		}
+	    if (os.IsNotExist(err)) {
+	        return nil, nil // configuration file is missing
+        } else if (os.IsPermission(err)) {
+            return nil, errors.New("Permission denied.")
+        } else {
+            return nil, err
+        }
 	}
 	defer file.Close()
 

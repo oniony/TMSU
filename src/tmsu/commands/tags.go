@@ -133,15 +133,9 @@ func (command TagsCommand) listTagsRecursive(db *database.Database, paths []stri
 		if fileInfo.IsDir() {
 			file, err := os.Open(path)
 			if err != nil {
-				switch terr := err.(type) {
-				case *os.PathError:
-					switch terr.Err {
-					case os.EACCES:
-						common.Warnf("'%v': permission denied.", path)
-					default:
-						common.Warnf("'%v': %v", path, err)
-					}
-				default:
+			    if os.IsPermission(err) {
+			        common.Warnf("'%v': permission denied.", path)
+                } else {
 					common.Warnf("'%v': %v", path, err)
 				}
 				continue

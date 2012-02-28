@@ -62,6 +62,24 @@ latest version that is known to work with the dependent packages.
   $ go get github.com/mattn/go-sqlite3
   $ go get github.com/hanwen/go-fuse/fuse
 
+Presently go-fuse does not compile automatically when retrieved with 'go get'
+so it is necessary to build it manually:
+
+  a. Change to the go-fuse source directory:
+
+    $ cd $GOROOT/src/pkg/github.com/hanwen/go-fuse
+
+  b. Edit the all.bash script and change both occurances of 'go-fuse/${d}'
+  to 'github.com/hanwen/go-fuse/${d}'.
+
+  c. Change the permissions of all.bash to make it executable:
+
+    $ chmod a+x all.bash
+
+  d. Run the build:
+
+    $ ./all.bash
+
 3. Clone the tmsu respository:
 
   $ hg clone https://bitbucket.org/oniony/tmsu

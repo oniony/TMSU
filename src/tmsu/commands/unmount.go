@@ -56,11 +56,11 @@ func (UnmountCommand) Exec(args []string) error {
 		return err
 	}
 
-	message, err := os.Wait(process.Pid, 0)
+	processState, err := process.Wait()
 	if err != nil {
 		return err
 	}
-	if message.ExitStatus() != 0 {
+	if !processState.Success() {
 		return errors.New("Could not unmount.")
 	}
 

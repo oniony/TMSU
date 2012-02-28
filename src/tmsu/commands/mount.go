@@ -135,13 +135,13 @@ func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
-	waitMessage, err := command.Process.Wait(os.WNOHANG)
+	processState, err := command.Process.Wait()
 	if err != nil {
 		return err
 	}
 
-	if waitMessage.WaitStatus.Exited() {
-		if waitMessage.WaitStatus.ExitStatus() != 0 {
+	if processState.Exited() {
+		if !processState.Success() {
 			buffer := make([]byte, 1024)
 			count, err := errorPipe.Read(buffer)
 			if err != nil {

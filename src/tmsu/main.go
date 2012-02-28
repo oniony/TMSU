@@ -35,6 +35,7 @@ func main() {
         "merge": commands.MergeCommand{},
         "mount": commands.MountCommand{},
         "rename": commands.RenameCommand{},
+        "repair": commands.RepairCommand{},
         "stats": commands.StatsCommand{},
         "status": commands.StatusCommand{},
         "tag": commands.TagCommand{},

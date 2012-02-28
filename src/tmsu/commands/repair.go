@@ -18,6 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+    "fmt"
+    "path/filepath"
+    "tmsu/common"
+    "tmsu/database"
 )
 
 type RepairCommand struct{}
@@ -27,21 +31,48 @@ func (RepairCommand) Name() string {
 }
 
 func (RepairCommand) Synopsis() string {
-	return "Repair breakages caused by file moves and amendments"
+	return "Repair stale data caused by file moves and amendments"
 }
 
 func (RepairCommand) Description() string {
 	return `tmsu repair
 
-Attempts to repair the database with respect to changes to tagged file contents
-and file moves.
-
-This process consists of two steps:
-
-  1. Update the stored fingerprints for modified files.
-  2. Find the new path of moved files.`
+Updates the database with respect to changed and moved files.`
 }
 
 func (command RepairCommand) Exec(args []string) error {
+    db, err := database.OpenDatabase()
+    if err != nil {
+        return err
+    }
+    defer db.Close()
+
+    for _, path := range args {
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return err
+        }
+
+        files, err := db.FilesByDirectory(absPath)
+        if err != nil {
+            return err
+        }
+
+        for _, file := range files {
+            fingerprint, err := common.Fingerprint(file.Path())
+            if err != nil {
+                //TODO detect missing files
+                common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
+            }
+
+            if (file.Fingerprint != fingerprint) {
+                fmt.Printf("File '%v' has changed.\n", file.Path())
+            }
+        }
+    }
+
+    //TODO check fingerprints of existing database entries -- update if necessary
+    //TODO identify missing files
+    //TODO find files with same fingerprints -- hook them up if only one
     return nil
 }

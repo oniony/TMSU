@@ -48,79 +48,106 @@ Where no FILE is specified, details of all files within the current directory
 and its descendent directories are shown.`
 }
 
-func (command StatusCommand) Exec(args []string) error {
-	tagged := make([]string, 0, 10)
-	untagged := make([]string, 0, 10)
-	missing := make([]string, 0, 10)
-	allFiles := false
-	var err error
+type StatusReport struct {
+    Tagged []string
+    Modified []string
+    Missing []string
+    Untagged []string
+}
 
+func NewReport() *StatusReport {
+    return &StatusReport { make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10) }
+}
+
+func (command StatusCommand) Exec(args []string) error {
+	allFiles := false
 	if len(args) > 0 && args[0] == "--all" {
 		allFiles = true
 		args = args[1:]
 	}
 
+	var err error
+    report := NewReport()
 	if len(args) == 0 {
-		tagged, untagged, missing, err = command.status([]string {"."}, tagged, untagged, missing, allFiles)
+        entries, err := common.DirectoryEntries(".")
+        if err != nil {
+            return err
+        }
+
+		report, err = command.status(entries, report, allFiles)
 	} else {
-		tagged, untagged, missing, err = command.status(args, tagged, untagged, missing, allFiles)
+		report, err = command.status(args, report, allFiles)
 	}
 
 	if err != nil {
 		return err
 	}
 
-	for _, path := range tagged {
-		fmt.Printf("T %v\n", path)
+	for _, path := range report.Tagged {
+		fmt.Println("T", path)
 	}
 
-	for _, path := range missing {
-		fmt.Printf("! %v\n", path)
+    for _, path := range report.Modified {
+        fmt.Println("M", path)
+    }
+
+	for _, path := range report.Missing {
+		fmt.Println("!", path)
 	}
 
-	for _, path := range untagged {
-		fmt.Printf("? %v\n", path)
+	for _, path := range report.Untagged {
+		fmt.Println("?", path)
 	}
 
 	return nil
 }
 
-func (command StatusCommand) status(paths []string, tagged []string, untagged []string, missing []string, allFiles bool) ([]string, []string, []string, error) {
+func (command StatusCommand) status(paths []string, report *StatusReport, allFiles bool) (*StatusReport, error) {
 	for _, path := range paths {
         absPath, err := filepath.Abs(path)
         if err != nil {
-            return nil, nil, nil, err
+            return nil, err
         }
 
 		databaseEntries, err := command.getDatabaseEntries(absPath)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, err
 		}
 
 		fileSystemEntries, err := command.getFileSystemEntries(absPath, allFiles)
 		if err != nil {
-			return nil, nil, nil, err
+			return nil, err
 		}
 
-		for _, entryPath := range databaseEntries {
-			if contains(fileSystemEntries, entryPath) {
-			    relPath := common.MakeRelative(entryPath)
-				tagged = append(tagged, relPath)
+		for _, entry := range databaseEntries {
+            relPath := common.MakeRelative(entry.Path())
+
+			if contains(fileSystemEntries, entry.Path()) {
+                fingerprint, err := common.Fingerprint(entry.Path())
+                if err != nil {
+                    return nil, err
+                }
+
+                if fingerprint != entry.Fingerprint {
+                    report.Modified = append(report.Modified, relPath)
+                } else {
+                    report.Tagged = append(report.Tagged, relPath)
+                }
 			} else {
-			    relPath := common.MakeRelative(entryPath)
-				missing = append(missing, relPath)
+			    relPath := common.MakeRelative(entry.Path())
+				report.Missing = append(report.Missing, relPath)
 			}
 		}
 
 		for _, entryPath := range fileSystemEntries {
-			if !contains(databaseEntries, entryPath) {
+			if _, contains := databaseEntries[entryPath]; !contains {
 			    relPath := common.MakeRelative(entryPath)
-				untagged = append(untagged, relPath)
+				report.Untagged = append(report.Untagged, relPath)
 			}
 		}
 	}
 
-	return tagged, untagged, missing, nil
+	return report, nil
 }
 
 func (command StatusCommand) getFileSystemEntries(path string, allFiles bool) ([]string, error) {
@@ -162,7 +189,7 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 	return entries, nil
 }
 
-func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
+func (StatusCommand) getDatabaseEntries(path string) (map[string]*database.File, error) {
 	db, err := database.OpenDatabase()
 	if err != nil {
 		return nil, err
@@ -174,9 +201,9 @@ func (StatusCommand) getDatabaseEntries(path string) ([]string, error) {
 		return nil, err
 	}
 
-	entries := make([]string, 0, len(files))
+	entries := make(map[string]*database.File)
 	for _, file := range files {
-		entries = append(entries, file.Path())
+		entries[file.Path()] = file
 	}
 
 	return entries, nil

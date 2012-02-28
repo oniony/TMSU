@@ -63,10 +63,13 @@ func (command RepairCommand) Exec(args []string) error {
             if err != nil {
                 //TODO detect missing files
                 common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
+                continue
             }
 
             if (file.Fingerprint != fingerprint) {
-                fmt.Printf("File '%v' has changed.\n", file.Path())
+                fmt.Println("M", file.Path())
+
+                db.UpdateFileFingerprint(file.Id, fingerprint)
             }
         }
     }

@@ -460,22 +460,23 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint}, nil
 }
 
-func (db Database) FilesByDirectory(path string) ([]File, error) {
+func (db Database) FilesByDirectory(path string) ([]*File, error) {
     directory := filepath.Dir(path)
     name := filepath.Base(path)
 
     sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE directory = ? AND name = ?
+            OR directory = ?
             OR directory like ?`
 
-    rows, err := db.connection.Query(sql, directory, name, directory+"/%")
+    rows, err := db.connection.Query(sql, directory, name, path, path+"/%")
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	files := make([]File, 0, 10)
+	files := make([]*File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -489,8 +490,7 @@ func (db Database) FilesByDirectory(path string) ([]File, error) {
 		if err != nil {
 			return nil, err
 		}
-
-		files = append(files, File{fileId, dir, name, fingerprint})
+		files = append(files, &File{fileId, dir, name, fingerprint})
 	}
 
 	return files, nil

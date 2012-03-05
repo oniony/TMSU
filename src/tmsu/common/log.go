@@ -28,14 +28,14 @@ func Fatal(values ...interface{}) {
 }
 
 func Fatalf(format string, values ...interface{}) {
-    Warnf(format, values...)
-    os.Exit(1)
+	Warnf(format, values...)
+	os.Exit(1)
 }
 
 func Warn(values ...interface{}) {
-    fmt.Fprint(os.Stderr, "tmsu: ")
-    fmt.Fprint(os.Stderr, values...)
-    fmt.Fprint(os.Stderr, "\n")
+	fmt.Fprint(os.Stderr, "tmsu: ")
+	fmt.Fprint(os.Stderr, values...)
+	fmt.Fprint(os.Stderr, "\n")
 }
 
 func Warnf(format string, values ...interface{}) {

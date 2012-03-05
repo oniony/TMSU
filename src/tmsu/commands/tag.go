@@ -50,8 +50,8 @@ func (command TagCommand) Exec(args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
-    switch args[0] {
-    case "--tags":
+	switch args[0] {
+	case "--tags":
 		if len(args) < 3 {
 			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
 		}
@@ -160,20 +160,20 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 }
 
 func (TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
-    fileInfo, err := os.Stat(path)
-    if err != nil {
-        return nil, err
-    }
+	fileInfo, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
 
-    var fingerprint string
-    if fileInfo.IsDir() {
-        fingerprint = ""
-    } else {
-        fingerprint, err = common.Fingerprint(path)
-        if err != nil {
-            return nil, err
-        }
-    }
+	var fingerprint string
+	if fileInfo.IsDir() {
+		fingerprint = ""
+	} else {
+		fingerprint, err = common.Fingerprint(path)
+		if err != nil {
+			return nil, err
+		}
+	}
 
 	file, err := db.FileByPath(path)
 	if err != nil {
@@ -181,20 +181,20 @@ func (TagCommand) addFile(db *database.Database, path string) (*database.File, e
 	}
 
 	if file == nil {
-	    if fingerprint != "" {
-            files, err := db.FilesByFingerprint(fingerprint)
-            if err != nil {
-                return nil, err
-            }
+		if fingerprint != "" {
+			files, err := db.FilesByFingerprint(fingerprint)
+			if err != nil {
+				return nil, err
+			}
 
-            if len(files) > 0 {
-                common.Warn("File is a duplicate of previously tagged files.")
+			if len(files) > 0 {
+				common.Warn("File is a duplicate of previously tagged files.")
 
-                for _, duplicateFile := range files {
-                    common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
-                }
-            }
-        }
+				for _, duplicateFile := range files {
+					common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
+				}
+			}
+		}
 
 		file, err = db.AddFile(path, fingerprint)
 		if err != nil {

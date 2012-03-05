@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-    "fmt"
-    "path/filepath"
-    "tmsu/common"
-    "tmsu/database"
+	"fmt"
+	"path/filepath"
+	"tmsu/common"
+	"tmsu/database"
 )
 
 type RepairCommand struct{}
@@ -41,41 +41,41 @@ Updates the database with respect to changed and moved files.`
 }
 
 func (command RepairCommand) Exec(args []string) error {
-    db, err := database.OpenDatabase()
-    if err != nil {
-        return err
-    }
-    defer db.Close()
+	db, err := database.OpenDatabase()
+	if err != nil {
+		return err
+	}
+	defer db.Close()
 
-    for _, path := range args {
-        absPath, err := filepath.Abs(path)
-        if err != nil {
-            return err
-        }
+	for _, path := range args {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
 
-        files, err := db.FilesByDirectory(absPath)
-        if err != nil {
-            return err
-        }
+		files, err := db.FilesByDirectory(absPath)
+		if err != nil {
+			return err
+		}
 
-        for _, file := range files {
-            fingerprint, err := common.Fingerprint(file.Path())
-            if err != nil {
-                //TODO detect missing files
-                common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
-                continue
-            }
+		for _, file := range files {
+			fingerprint, err := common.Fingerprint(file.Path())
+			if err != nil {
+				//TODO detect missing files
+				common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
+				continue
+			}
 
-            if (file.Fingerprint != fingerprint) {
-                fmt.Println("M", file.Path())
+			if file.Fingerprint != fingerprint {
+				fmt.Println("M", file.Path())
 
-                db.UpdateFileFingerprint(file.Id, fingerprint)
-            }
-        }
-    }
+				db.UpdateFileFingerprint(file.Id, fingerprint)
+			}
+		}
+	}
 
-    //TODO check fingerprints of existing database entries -- update if necessary
-    //TODO identify missing files
-    //TODO find files with same fingerprints -- hook them up if only one
-    return nil
+	//TODO check fingerprints of existing database entries -- update if necessary
+	//TODO identify missing files
+	//TODO find files with same fingerprints -- hook them up if only one
+	return nil
 }

@@ -44,9 +44,9 @@ FILE is specified then identifies duplicates between files in the database.`
 func (command DupesCommand) Exec(args []string) error {
 	switch len(args) {
 	case 0:
-        command.findDuplicatesInDb()
+		command.findDuplicatesInDb()
 	default:
-	    return command.findDuplicatesOf(args)
+		return command.findDuplicatesOf(args)
 	}
 
 	return nil
@@ -69,10 +69,10 @@ func (DupesCommand) findDuplicatesInDb() error {
 			fmt.Println()
 		}
 
-        fmt.Printf("Set of %v duplicates:\n", len(fileSet))
+		fmt.Printf("Set of %v duplicates:\n", len(fileSet))
 
 		for _, file := range fileSet {
-            relPath := common.MakeRelative(file.Path())
+			relPath := common.MakeRelative(file.Path())
 			fmt.Printf("  %v\n", relPath)
 		}
 	}
@@ -87,58 +87,58 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 	}
 	defer db.Close()
 
-    first := true
-    for _, path := range paths {
-        fingerprint, err := common.Fingerprint(path)
-        if err != nil {
-            return err
-        }
+	first := true
+	for _, path := range paths {
+		fingerprint, err := common.Fingerprint(path)
+		if err != nil {
+			return err
+		}
 
-        files, err := db.FilesByFingerprint(fingerprint)
-        if err != nil {
-            return err
-        }
+		files, err := db.FilesByFingerprint(fingerprint)
+		if err != nil {
+			return err
+		}
 
-        absPath, err := filepath.Abs(path)
-        if err != nil {
-            return err
-        }
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
 
-        // filter out the file we're searching on
-        dupes := where(files, func(file database.File) bool { return file.Path() != absPath })
+		// filter out the file we're searching on
+		dupes := where(files, func(file database.File) bool { return file.Path() != absPath })
 
-        if len(paths) > 1 && len(dupes) > 0 {
-            if first {
-                first = false
-            } else {
-                fmt.Println()
-            }
+		if len(paths) > 1 && len(dupes) > 0 {
+			if first {
+				first = false
+			} else {
+				fmt.Println()
+			}
 
-            fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
+			fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
 
-            for _, dupe := range dupes {
-                relPath := common.MakeRelative(dupe.Path())
-                fmt.Printf("  %v\n", relPath)
-            }
-        } else {
-            for _, dupe := range dupes {
-                relPath := common.MakeRelative(dupe.Path())
-                fmt.Println(relPath)
-            }
-        }
-    }
+			for _, dupe := range dupes {
+				relPath := common.MakeRelative(dupe.Path())
+				fmt.Printf("  %v\n", relPath)
+			}
+		} else {
+			for _, dupe := range dupes {
+				relPath := common.MakeRelative(dupe.Path())
+				fmt.Println(relPath)
+			}
+		}
+	}
 
 	return nil
 }
 
 func where(files []database.File, predicate func(database.File) bool) []database.File {
-    result := make([]database.File, 0, len(files))
+	result := make([]database.File, 0, len(files))
 
-    for _, file := range(files) {
-        if predicate(file) {
-            result = append(result, file)
-        }
-    }
+	for _, file := range files {
+		if predicate(file) {
+			result = append(result, file)
+		}
+	}
 
-    return result
+	return result
 }

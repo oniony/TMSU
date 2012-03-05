@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-	"errors"
 	"database/sql"
+	"errors"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path/filepath"
@@ -289,7 +289,7 @@ func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 }
 
 func (db Database) CopyTag(sourceTagId uint, name string) (*Tag, error) {
-    sql := `INSERT INTO tag (name)
+	sql := `INSERT INTO tag (name)
             VALUES (?)`
 
 	result, err := db.connection.Exec(sql, name)
@@ -310,12 +310,12 @@ func (db Database) CopyTag(sourceTagId uint, name string) (*Tag, error) {
 		return nil, err
 	}
 
-    sql = `INSERT INTO file_tag (file_id, tag_id)
+	sql = `INSERT INTO file_tag (file_id, tag_id)
            SELECT file_id, ?
            FROM file_tag
            WHERE tag_id = ?`
 
-    result, err = db.connection.Exec(sql, destTagId, sourceTagId)
+	result, err = db.connection.Exec(sql, destTagId, sourceTagId)
 	if err != nil {
 		return nil, err
 	}
@@ -461,16 +461,16 @@ func (db Database) FileByPath(path string) (*File, error) {
 }
 
 func (db Database) FilesByDirectory(path string) ([]*File, error) {
-    directory := filepath.Dir(path)
-    name := filepath.Base(path)
+	directory := filepath.Dir(path)
+	name := filepath.Base(path)
 
-    sql := `SELECT id, directory, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint
             FROM file
             WHERE directory = ? AND name = ?
             OR directory = ?
             OR directory like ?`
 
-    rows, err := db.connection.Query(sql, directory, name, path, path+"/%")
+	rows, err := db.connection.Query(sql, directory, name, path, path+"/%")
 	if err != nil {
 		return nil, err
 	}

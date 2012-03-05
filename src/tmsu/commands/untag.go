@@ -62,17 +62,17 @@ func (command UntagCommand) Exec(args []string) error {
 			return err
 		}
 	case "--tags":
-	    if len(args) < 3 {
-	        return errors.New("Quoted set of tags and at least one file to untag must be specified.")
-        }
+		if len(args) < 3 {
+			return errors.New("Quoted set of tags and at least one file to untag must be specified.")
+		}
 
-        tagNames := strings.Fields(args[1])
-        paths := args[2:]
+		tagNames := strings.Fields(args[1])
+		paths := args[2:]
 
-        err := command.untagPaths(paths, tagNames)
-        if err != nil {
-            return err
-        }
+		err := command.untagPaths(paths, tagNames)
+		if err != nil {
+			return err
+		}
 	default:
 		if len(args) < 2 {
 			return errors.New("Tags to remove must be specified.")
@@ -82,7 +82,7 @@ func (command UntagCommand) Exec(args []string) error {
 		if err != nil {
 			return err
 		}
-    }
+	}
 
 	return nil
 }

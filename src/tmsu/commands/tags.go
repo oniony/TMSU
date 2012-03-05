@@ -111,31 +111,31 @@ func (command TagsCommand) listTagsRecursive(db *database.Database, paths []stri
 			return err
 		}
 
-        tags, err := command.tagsForPath(db, path)
-        if err != nil {
-            return err
-        }
+		tags, err := command.tagsForPath(db, path)
+		if err != nil {
+			return err
+		}
 
-        if len(tags) > 0 {
-            fmt.Printf("%v: ", path)
+		if len(tags) > 0 {
+			fmt.Printf("%v: ", path)
 
-            for index, tag := range tags {
-                if index > 0 {
-                    fmt.Print(" ")
-                }
+			for index, tag := range tags {
+				if index > 0 {
+					fmt.Print(" ")
+				}
 
-                fmt.Print(tag.Name)
-            }
+				fmt.Print(tag.Name)
+			}
 
-            fmt.Println()
-        }
+			fmt.Println()
+		}
 
 		if fileInfo.IsDir() {
 			file, err := os.Open(path)
 			if err != nil {
-			    if os.IsPermission(err) {
-			        common.Warnf("'%v': permission denied.", path)
-                } else {
+				if os.IsPermission(err) {
+					common.Warnf("'%v': permission denied.", path)
+				} else {
 					common.Warnf("'%v': %v", path, err)
 				}
 				continue

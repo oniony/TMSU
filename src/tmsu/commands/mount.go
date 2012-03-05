@@ -84,13 +84,13 @@ func (command MountCommand) mountSelected(mountPath string) error {
 		return err
 	}
 	if config == nil {
-	    config, err = common.GetDefaultDatabaseConfig()
-	    if err != nil {
-	        return err
-        }
-        if config == nil {
-	        return errors.New("Could not get default database configuration.")
-        }
+		config, err = common.GetDefaultDatabaseConfig()
+		if err != nil {
+			return err
+		}
+		if config == nil {
+			return errors.New("Could not get default database configuration.")
+		}
 	}
 
 	err = command.mountExplicit(config.DatabasePath, mountPath)
@@ -136,12 +136,12 @@ func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
-    var waitStatus syscall.WaitStatus
-    var rusage syscall.Rusage
-    _, err = syscall.Wait4(command.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
-    if err != nil {
-        return err
-    }
+	var waitStatus syscall.WaitStatus
+	var rusage syscall.Rusage
+	_, err = syscall.Wait4(command.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
+	if err != nil {
+		return err
+	}
 
 	if waitStatus.Exited() {
 		if waitStatus.ExitStatus() != 0 {

@@ -39,9 +39,9 @@ Merges TAGs into tag DEST resulting in a single tag of name DEST.`
 }
 
 func (MergeCommand) Exec(args []string) error {
-    if len(args) < 2 {
-        return errors.New("Too few arguments.")
-    }
+	if len(args) < 2 {
+		return errors.New("Too few arguments.")
+	}
 
 	db, err := database.OpenDatabase()
 	if err != nil {
@@ -49,55 +49,55 @@ func (MergeCommand) Exec(args []string) error {
 	}
 	defer db.Close()
 
-	destTagName := args[len(args) - 1]
+	destTagName := args[len(args)-1]
 
-    for _, sourceTagName := range args[0:len(args) - 1] {
-        sourceTag, err := db.TagByName(sourceTagName)
-        if err != nil {
-            return err
-        }
-        if sourceTag == nil {
-            return errors.New("No such tag '" + sourceTagName + "'.")
-        }
+	for _, sourceTagName := range args[0 : len(args)-1] {
+		sourceTag, err := db.TagByName(sourceTagName)
+		if err != nil {
+			return err
+		}
+		if sourceTag == nil {
+			return errors.New("No such tag '" + sourceTagName + "'.")
+		}
 
-        destTag, err := db.TagByName(destTagName)
-        if err != nil {
-            return err
-        }
-        if destTag == nil {
-            return errors.New("No such tag '" + destTagName + "'.")
-        }
+		destTag, err := db.TagByName(destTagName)
+		if err != nil {
+			return err
+		}
+		if destTag == nil {
+			return errors.New("No such tag '" + destTagName + "'.")
+		}
 
-        fileTags, err := db.FileTagsByTagId(sourceTag.Id)
-        if err != nil {
-            return err
-        }
+		fileTags, err := db.FileTagsByTagId(sourceTag.Id)
+		if err != nil {
+			return err
+		}
 
-        for _, fileTag := range fileTags {
-            destFileTag, err := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
-            if err != nil {
-                return err
-            }
-            if destFileTag != nil {
-                continue
-            }
+		for _, fileTag := range fileTags {
+			destFileTag, err := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+			if err != nil {
+				return err
+			}
+			if destFileTag != nil {
+				continue
+			}
 
-            _, err = db.AddFileTag(fileTag.FileId, destTag.Id)
-            if err != nil {
-                return err
-            }
-        }
+			_, err = db.AddFileTag(fileTag.FileId, destTag.Id)
+			if err != nil {
+				return err
+			}
+		}
 
-        err = db.RemoveFileTagsByTagId(sourceTag.Id)
-        if err != nil {
-            return err
-        }
+		err = db.RemoveFileTagsByTagId(sourceTag.Id)
+		if err != nil {
+			return err
+		}
 
-        err = db.DeleteTag(sourceTag.Id)
-        if err != nil {
-            return err
-        }
-    }
+		err = db.DeleteTag(sourceTag.Id)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }

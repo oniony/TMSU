@@ -25,7 +25,7 @@ import (
 )
 
 type HelpCommand struct {
-    Commands map[string]Command
+	Commands map[string]Command
 }
 
 func (HelpCommand) Name() string {
@@ -49,11 +49,11 @@ func (command HelpCommand) Exec(args []string) error {
 	case 0:
 		command.summary()
 	default:
-	    if (args[0] == "--list") {
-	        command.listCommands()
-        } else {
-		    command.describeCommand(args[0])
-        }
+		if args[0] == "--list" {
+			command.listCommands()
+		} else {
+			command.describeCommand(args[0])
+		}
 	}
 
 	return nil
@@ -65,8 +65,8 @@ func (helpCommand HelpCommand) summary() {
 
 	var maxWidth int = 0
 	commandNames := make([]string, 0, len(helpCommand.Commands))
-	for _, command  := range helpCommand.Commands {
-        commandName := command.Name()
+	for _, command := range helpCommand.Commands {
+		commandName := command.Name()
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
 	}
@@ -86,12 +86,12 @@ func (helpCommand HelpCommand) summary() {
 }
 
 func (helpCommand HelpCommand) listCommands() {
-	for _, command  := range helpCommand.Commands {
-	    if command.Synopsis() == "" {
-	        continue
-        }
+	for _, command := range helpCommand.Commands {
+		if command.Synopsis() == "" {
+			continue
+		}
 
-        fmt.Println(command.Name())
+		fmt.Println(command.Name())
 	}
 }
 

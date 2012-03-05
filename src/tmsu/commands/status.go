@@ -49,14 +49,14 @@ and its descendent directories are shown.`
 }
 
 type StatusReport struct {
-    Tagged []string
-    Modified []string
-    Missing []string
-    Untagged []string
+	Tagged   []string
+	Modified []string
+	Missing  []string
+	Untagged []string
 }
 
 func NewReport() *StatusReport {
-    return &StatusReport { make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10) }
+	return &StatusReport{make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10)}
 }
 
 func (command StatusCommand) Exec(args []string) error {
@@ -67,12 +67,12 @@ func (command StatusCommand) Exec(args []string) error {
 	}
 
 	var err error
-    report := NewReport()
+	report := NewReport()
 	if len(args) == 0 {
-        entries, err := common.DirectoryEntries(".")
-        if err != nil {
-            return err
-        }
+		entries, err := common.DirectoryEntries(".")
+		if err != nil {
+			return err
+		}
 
 		report, err = command.status(entries, report, allFiles)
 	} else {
@@ -87,9 +87,9 @@ func (command StatusCommand) Exec(args []string) error {
 		fmt.Println("T", path)
 	}
 
-    for _, path := range report.Modified {
-        fmt.Println("M", path)
-    }
+	for _, path := range report.Modified {
+		fmt.Println("M", path)
+	}
 
 	for _, path := range report.Missing {
 		fmt.Println("!", path)
@@ -104,10 +104,10 @@ func (command StatusCommand) Exec(args []string) error {
 
 func (command StatusCommand) status(paths []string, report *StatusReport, allFiles bool) (*StatusReport, error) {
 	for _, path := range paths {
-        absPath, err := filepath.Abs(path)
-        if err != nil {
-            return nil, err
-        }
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return nil, err
+		}
 
 		databaseEntries, err := command.getDatabaseEntries(absPath)
 		if err != nil {
@@ -120,28 +120,28 @@ func (command StatusCommand) status(paths []string, report *StatusReport, allFil
 		}
 
 		for _, entry := range databaseEntries {
-            relPath := common.MakeRelative(entry.Path())
+			relPath := common.MakeRelative(entry.Path())
 
 			if contains(fileSystemEntries, entry.Path()) {
-                fingerprint, err := common.Fingerprint(entry.Path())
-                if err != nil {
-                    return nil, err
-                }
+				fingerprint, err := common.Fingerprint(entry.Path())
+				if err != nil {
+					return nil, err
+				}
 
-                if fingerprint != entry.Fingerprint {
-                    report.Modified = append(report.Modified, relPath)
-                } else {
-                    report.Tagged = append(report.Tagged, relPath)
-                }
+				if fingerprint != entry.Fingerprint {
+					report.Modified = append(report.Modified, relPath)
+				} else {
+					report.Tagged = append(report.Tagged, relPath)
+				}
 			} else {
-			    relPath := common.MakeRelative(entry.Path())
+				relPath := common.MakeRelative(entry.Path())
 				report.Missing = append(report.Missing, relPath)
 			}
 		}
 
 		for _, entryPath := range fileSystemEntries {
 			if _, contains := databaseEntries[entryPath]; !contains {
-			    relPath := common.MakeRelative(entryPath)
+				relPath := common.MakeRelative(entryPath)
 				report.Untagged = append(report.Untagged, relPath)
 			}
 		}
@@ -170,11 +170,11 @@ func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries 
 
 			childEntries, err := common.DirectoryEntries(path)
 			if err != nil {
-			    if os.IsPermission(err) {
-						common.Warnf("'%v': permission denied.", path)
-                } else {
-                    return nil, err
-                }
+				if os.IsPermission(err) {
+					common.Warnf("'%v': permission denied.", path)
+				} else {
+					return nil, err
+				}
 			}
 
 			for _, entry := range childEntries {

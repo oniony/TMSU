@@ -19,7 +19,7 @@ package commands
 
 import (
 	"errors"
-    "tmsu/database"
+	"tmsu/database"
 )
 
 type DeleteCommand struct{}

@@ -18,58 +18,58 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-    "os"
-    "tmsu/commands"
-    "tmsu/common"
+	"os"
+	"tmsu/commands"
+	"tmsu/common"
 )
 
 func main() {
-    helpCommand := &commands.HelpCommand{}
-    commands := map[string]commands.Command {
-        "copy": commands.CopyCommand{},
-        "delete": commands.DeleteCommand{},
-        "dupes": commands.DupesCommand{},
-        "export": commands.ExportCommand{},
-        "files": commands.FilesCommand{},
-        "help": helpCommand,
-        "merge": commands.MergeCommand{},
-        "mount": commands.MountCommand{},
-        "rename": commands.RenameCommand{},
-        "repair": commands.RepairCommand{},
-        "stats": commands.StatsCommand{},
-        "status": commands.StatusCommand{},
-        "tag": commands.TagCommand{},
-        "tags": commands.TagsCommand{},
-        "unmount": commands.UnmountCommand{},
-        "untag": commands.UntagCommand{},
-        "version": commands.VersionCommand{},
-        "vfs": commands.VfsCommand{},
-    }
-    helpCommand.Commands = commands
+	helpCommand := &commands.HelpCommand{}
+	commands := map[string]commands.Command{
+		"copy":    commands.CopyCommand{},
+		"delete":  commands.DeleteCommand{},
+		"dupes":   commands.DupesCommand{},
+		"export":  commands.ExportCommand{},
+		"files":   commands.FilesCommand{},
+		"help":    helpCommand,
+		"merge":   commands.MergeCommand{},
+		"mount":   commands.MountCommand{},
+		"rename":  commands.RenameCommand{},
+		"repair":  commands.RepairCommand{},
+		"stats":   commands.StatsCommand{},
+		"status":  commands.StatusCommand{},
+		"tag":     commands.TagCommand{},
+		"tags":    commands.TagsCommand{},
+		"unmount": commands.UnmountCommand{},
+		"untag":   commands.UntagCommand{},
+		"version": commands.VersionCommand{},
+		"vfs":     commands.VfsCommand{},
+	}
+	helpCommand.Commands = commands
 
-    aliases := map[string]string {
-        "-h": "help",
-        "-help": "help",
-        "--help": "help",
-        "-V": "version",
-        "-version": "version",
-        "--version": "version",
-    }
+	aliases := map[string]string{
+		"-h":        "help",
+		"-help":     "help",
+		"--help":    "help",
+		"-V":        "version",
+		"-version":  "version",
+		"--version": "version",
+	}
 
-    args := os.Args[1:] // strip off binary name
+	args := os.Args[1:] // strip off binary name
 
 	var commandName string
 	if len(args) > 0 {
-        commandName = args[0]
-        args = args[1:]
+		commandName = args[0]
+		args = args[1:]
 	} else {
 		commandName = "help"
 	}
 
-    dealiased, found := aliases[commandName]
-    if found {
-        commandName = dealiased
-    }
+	dealiased, found := aliases[commandName]
+	if found {
+		commandName = dealiased
+	}
 
 	command := commands[commandName]
 	if command == nil {

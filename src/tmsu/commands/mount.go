@@ -21,6 +21,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"syscall"
 	"time"
 	"tmsu/common"
 )
@@ -135,13 +136,15 @@ func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
-	processState, err := command.Process.Wait()
-	if err != nil {
-		return err
-	}
+    var waitStatus syscall.WaitStatus
+    var rusage syscall.Rusage
+    _, err = syscall.Wait4(command.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
+    if err != nil {
+        return err
+    }
 
-	if processState.Exited() {
-		if !processState.Success() {
+	if waitStatus.Exited() {
+		if waitStatus.ExitStatus() != 0 {
 			buffer := make([]byte, 1024)
 			count, err := errorPipe.Read(buffer)
 			if err != nil {

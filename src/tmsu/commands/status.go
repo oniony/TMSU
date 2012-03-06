@@ -32,15 +32,19 @@ func (StatusCommand) Name() string {
 }
 
 func (StatusCommand) Synopsis() string {
-	return "List the status of database entries"
+	return "List the file tagging status"
 }
 
 func (StatusCommand) Description() string {
-	return `tmsu status [FILE]...
+	return `tmsu status [PATH]...
 
-Shows the status of tagged entries in the database.
+Shows the status of entries in the database and file system.
 
-Where FILEs are given, only matching files are shown.
+Where no PATHs are given, the status of all the entries in the database are
+listed. (Untagged files and directories are not identified in this case.)
+
+Where PATHs are given then only the database entries corresponding to these
+paths are shown, along with any untagged files on the filesystem at these paths.
 
 The status codes in the listing have the following meanings:
 
@@ -138,13 +142,20 @@ func (command StatusCommand) statusPath(path string, report *StatusReport) (erro
         command.fileSystemStatus(entry, report)
     }
 
-    childEntries, err := db.FilesByDirectory(path)
+    dirEntries, err := db.FilesByDirectory(path)
     if err != nil {
         return err
     }
 
-    for _, childEntry := range childEntries {
-        command.fileSystemStatus(childEntry, report)
+    for _, dirEntry := range dirEntries {
+        command.fileSystemStatus(dirEntry, report)
+    }
+
+    if isDir(path) {
+        err := command.findUntagged(path, db, report)
+        if err != nil {
+            return err
+        }
     }
 
     return nil
@@ -189,6 +200,44 @@ func (command StatusCommand) fileSystemStatus(entry *database.File, report *Stat
     }
 }
 
+func (command StatusCommand) findUntagged(path string, db *database.Database, report *StatusReport) error {
+    dir, err := os.Open(path)
+    if err != nil {
+        switch {
+        case os.IsPermission(err):
+            common.Warnf("'%v': Permission denied", path)
+            return nil
+        default:
+            return err
+        }
+    }
+
+    dirEntries, err := dir.Readdir(0)
+    dir.Close()
+
+    if err != nil {
+        return err
+    }
+
+    for _, dirEntry := range dirEntries {
+        dirEntryPath := filepath.Join(path, dirEntry.Name())
+
+        file, err := db.FileByPath(dirEntryPath)
+        if err != nil {
+            return nil
+        }
+        if file == nil {
+            report.Untagged = append(report.Untagged, dirEntryPath)
+        }
+
+        if isDir(dirEntryPath) {
+            command.findUntagged(dirEntryPath, db, report)
+        }
+    }
+
+    return nil
+}
+
 func contains(strings []string, str string) bool {
     for _, item := range strings {
         if item == str {
@@ -197,4 +246,22 @@ func contains(strings []string, str string) bool {
     }
 
     return false
+}
+
+func isDir(path string) bool {
+    info, err := os.Stat(path)
+    if err != nil {
+        switch {
+        case os.IsPermission(err):
+            common.Warnf("'%v': Permission denied", path)
+        case os.IsNotExist(err):
+            common.Warnf("'%v': No such file", path)
+        default:
+            common.Warnf("'%v': Error: %v", err)
+        }
+
+        return false
+    }
+
+    return info.IsDir()
 }

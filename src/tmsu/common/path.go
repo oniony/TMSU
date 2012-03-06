@@ -23,6 +23,24 @@ import (
 	"strings"
 )
 
+func IsDir(path string) bool {
+    info, err := os.Stat(path)
+    if err != nil {
+        switch {
+        case os.IsPermission(err):
+            Warnf("'%v': Permission denied", path)
+        case os.IsNotExist(err):
+            Warnf("'%v': No such file", path)
+        default:
+            Warnf("'%v': Error: %v", err)
+        }
+
+        return false
+    }
+
+    return info.IsDir()
+}
+
 func MakeRelative(path string) string {
 	workingDirectory, err := os.Getwd()
 	if err != nil {

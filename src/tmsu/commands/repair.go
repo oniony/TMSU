@@ -54,28 +54,28 @@ func (command RepairCommand) Exec(args []string) error {
 			return err
 		}
 
-		files, err := db.FilesByDirectory(absPath)
+		pathEntries, err := db.FilesByDirectory(absPath)
 		if err != nil {
 			return err
 		}
 
-		for _, file := range files {
-			fingerprint, err := common.Fingerprint(file.Path())
+		for _, pathEntry := range pathEntries {
+			fingerprint, err := common.Fingerprint(pathEntry.Path())
 			if err != nil {
 			    switch {
                 case os.IsNotExist(err):
-			        common.Warnf("'%v': missing", file.Path())
+			        common.Warnf("'%v': missing", pathEntry.Path())
 			    default:
-                    common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
+                    common.Warnf("Could not fingerprint '%v': %v", pathEntry.Path(), err)
                 }
 
                 continue
 			}
 
-			if file.Fingerprint != fingerprint {
-				fmt.Println("M", file.Path())
+			if pathEntry.Fingerprint != fingerprint {
+				fmt.Println("M", pathEntry.Path())
 
-				db.UpdateFileFingerprint(file.Id, fingerprint)
+				db.UpdateFileFingerprint(pathEntry.Id, fingerprint)
 			}
 		}
 	}

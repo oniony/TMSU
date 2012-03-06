@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/common"
@@ -160,20 +159,10 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 }
 
 func (TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
-	fileInfo, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	var fingerprint string
-	if fileInfo.IsDir() {
-		fingerprint = ""
-	} else {
-		fingerprint, err = common.Fingerprint(path)
-		if err != nil {
-			return nil, err
-		}
-	}
+    fingerprint, err := common.Fingerprint(path)
+    if err != nil {
+        return nil, err
+    }
 
 	file, err := db.FileByPath(path)
 	if err != nil {

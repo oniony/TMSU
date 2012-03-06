@@ -21,6 +21,8 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"os"
+	"path/filepath"
+	"sort"
 )
 
 func Fingerprint(path string) (string, error) {
@@ -32,13 +34,40 @@ func Fingerprint(path string) (string, error) {
 
 	hash := sha256.New()
 
-	buffer := make([]byte, 1024)
-	for count := 0; err == nil; count, err = file.Read(buffer) {
-		hash.Write(buffer[:count])
-	}
+    if (IsDir(path)) {
+        children, err := file.Readdir(0)
+        if err != nil {
+            return "", err
+        }
 
-	sum := hash.Sum(make([]byte, 0, 64))
-	fingerprint := hex.EncodeToString(sum)
+        fingerprints := make([]string, 0, len(children))
+
+        for _, child := range children {
+            childPath := filepath.Join(path, child.Name())
+
+            fingerprint, err := Fingerprint(childPath)
+            if err != nil {
+                return "", err
+            }
+
+            fingerprints = append(fingerprints, fingerprint)
+        }
+
+        sort.Strings(fingerprints)
+
+        for _, fingerprint := range fingerprints {
+            hash.Write([]byte(fingerprint))
+        }
+    } else {
+        buffer := make([]byte, 1024)
+        for count := 0; err == nil; count, err = file.Read(buffer) {
+            hash.Write(buffer[:count])
+        }
+
+    }
+
+    sum := hash.Sum(make([]byte, 0, 64))
+    fingerprint := hex.EncodeToString(sum)
 
 	return fingerprint, nil
 }

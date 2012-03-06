@@ -113,9 +113,12 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
         }
     } else {
         for _, path := range paths {
-            path = filepath.Clean(path)
+            absPath, err := filepath.Abs(path)
+            if err != nil {
+                return err
+            }
 
-            err := command.statusPath(path, report)
+            err = command.statusPath(absPath, report)
             if err != nil {
                 return err
             }
@@ -151,7 +154,7 @@ func (command StatusCommand) statusPath(path string, report *StatusReport) (erro
         command.fileSystemStatus(dirEntry, report)
     }
 
-    if isDir(path) {
+    if common.IsDir(path) {
         err := command.findUntagged(path, db, report)
         if err != nil {
             return err
@@ -230,7 +233,7 @@ func (command StatusCommand) findUntagged(path string, db *database.Database, re
             report.Untagged = append(report.Untagged, dirEntryPath)
         }
 
-        if isDir(dirEntryPath) {
+        if common.IsDir(dirEntryPath) {
             command.findUntagged(dirEntryPath, db, report)
         }
     }
@@ -246,22 +249,4 @@ func contains(strings []string, str string) bool {
     }
 
     return false
-}
-
-func isDir(path string) bool {
-    info, err := os.Stat(path)
-    if err != nil {
-        switch {
-        case os.IsPermission(err):
-            common.Warnf("'%v': Permission denied", path)
-        case os.IsNotExist(err):
-            common.Warnf("'%v': No such file", path)
-        default:
-            common.Warnf("'%v': Error: %v", err)
-        }
-
-        return false
-    }
-
-    return info.IsDir()
 }

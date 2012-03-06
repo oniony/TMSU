@@ -23,6 +23,7 @@ import (
 	"strings"
 	"tmsu/common"
 	"tmsu/database"
+	"tmsu/fingerprint"
 )
 
 type TagCommand struct{}
@@ -159,7 +160,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 }
 
 func (TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
-    fingerprint, err := common.Fingerprint(path)
+    fingerprint, err := fingerprint.Create(path)
     if err != nil {
         return nil, err
     }

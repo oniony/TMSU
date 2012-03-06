@@ -19,13 +19,14 @@ package database
 
 import (
 	"path/filepath"
+	"tmsu/fingerprint"
 )
 
 type File struct {
 	Id          uint
 	Directory   string
 	Name        string
-	Fingerprint string
+	Fingerprint fingerprint.Fingerprint
 }
 
 func (file File) Path() string {

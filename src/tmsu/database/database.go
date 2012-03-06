@@ -26,6 +26,7 @@ import (
 	"strconv"
 	"strings"
 	"tmsu/common"
+	"tmsu/fingerprint"
 )
 
 type Database struct {
@@ -388,7 +389,7 @@ func (db Database) Files() ([]*File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint string
+		var fingerprint fingerprint.Fingerprint
 		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if err != nil {
 			return nil, err
@@ -420,7 +421,7 @@ func (db Database) File(id uint) (*File, error) {
 
 	var directory string
 	var name string
-	var fingerprint string
+	var fingerprint fingerprint.Fingerprint
 	err = rows.Scan(&directory, &name, &fingerprint)
 	if err != nil {
 		return nil, err
@@ -451,7 +452,7 @@ func (db Database) FileByPath(path string) (*File, error) {
 	}
 
 	var id uint
-	var fingerprint string
+	var fingerprint fingerprint.Fingerprint
 	err = rows.Scan(&id, &fingerprint)
 	if err != nil {
 		return nil, err
@@ -480,7 +481,7 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 		var fileId uint
 		var dir string
 		var name string
-		var fingerprint string
+		var fingerprint fingerprint.Fingerprint
 		err = rows.Scan(&fileId, &dir, &name, &fingerprint)
 		if err != nil {
 			return nil, err
@@ -491,7 +492,7 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 	return files, nil
 }
 
-func (db Database) FilesByFingerprint(fingerprint string) ([]File, error) {
+func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]File, error) {
 	sql := `SELECT id, directory, name
 	        FROM file
 	        WHERE fingerprint = ?`
@@ -539,7 +540,7 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 
 	fileSets := make([][]File, 0, 10)
 	var fileSet []File
-	var previousFingerprint string
+	var previousFingerprint fingerprint.Fingerprint
 
 	for rows.Next() {
 		if rows.Err() != nil {
@@ -549,7 +550,7 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint string
+		var fingerprint fingerprint.Fingerprint
 		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if err != nil {
 			return nil, err
@@ -574,7 +575,7 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 	return fileSets, nil
 }
 
-func (db Database) AddFile(path string, fingerprint string) (*File, error) {
+func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -681,7 +682,7 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint string
+		var fingerprint fingerprint.Fingerprint
 		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
 		if err != nil {
 			return nil, err
@@ -693,7 +694,7 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 	return files, nil
 }
 
-func (db Database) UpdateFileFingerprint(fileId uint, fingerprint string) error {
+func (db Database) UpdateFileFingerprint(fileId uint, fingerprint fingerprint.Fingerprint) error {
 	sql := `UPDATE file
 	        SET fingerprint = ?
 	        WHERE id = ?`

@@ -18,11 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
-	"tmsu/common"
-	"tmsu/database"
+//	"tmsu/fingerprint"
 )
 
 type RepairCommand struct{}
@@ -32,56 +28,41 @@ func (RepairCommand) Name() string {
 }
 
 func (RepairCommand) Synopsis() string {
-	return "Repair stale data caused by file moves and amendments"
+	return "Repair the database"
 }
 
 func (RepairCommand) Description() string {
-	return `tmsu repair
+	return `tmsu repair [PATH]...
 
-Updates the database with respect to changed and moved files.`
+Fixes broken paths and stale fingerprints in the database caused by file
+modifications and moves.
+
+Repairs tagged files and directories under PATHS by:
+
+    1. Updating the stored fingerprints of modified files and directories.
+    2. Updating the path of missing files and directories where an untagged file
+       or directory with the same fingerprint can be found in PATHs.
+
+Where no PATHS are specified all tagged files and directories fingerprints in
+the database are repaired. (In this mode file moves cannot be repaired as tmsu
+will not know where to look for them.)`
 }
 
 func (command RepairCommand) Exec(args []string) error {
-	db, err := database.OpenDatabase()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
+    //pathsByFingerprint := make(map[fingerprint.Fingerprint]string)
 
-	for _, path := range args {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
+    //for _, path := range args {
+        //TODO recursively build fingerprints
+   // }
 
-		pathEntries, err := db.FilesByDirectory(absPath)
-		if err != nil {
-			return err
-		}
+    //TODO get the database entries under PATHs
+    //TODO look at file in file system
+    //TODO   case missing: is there an untagged file with same fingerprint?
+    //         case more: warn multiple candidates
+    //         case 1: update database
+    //         case 0: warn file missing
+    //TODO   case modified: update database
+    //TODO   case unmodified: do nothing
 
-		for _, pathEntry := range pathEntries {
-			fingerprint, err := common.Fingerprint(pathEntry.Path())
-			if err != nil {
-			    switch {
-                case os.IsNotExist(err):
-			        common.Warnf("'%v': missing", pathEntry.Path())
-			    default:
-                    common.Warnf("Could not fingerprint '%v': %v", pathEntry.Path(), err)
-                }
-
-                continue
-			}
-
-			if pathEntry.Fingerprint != fingerprint {
-				fmt.Println("M", pathEntry.Path())
-
-				db.UpdateFileFingerprint(pathEntry.Id, fingerprint)
-			}
-		}
-	}
-
-	//TODO check fingerprints of existing database entries -- update if necessary
-	//TODO identify missing files
-	//TODO find files with same fingerprints -- hook them up if only one
 	return nil
 }

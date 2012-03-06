@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"tmsu/common"
 	"tmsu/database"
+	"tmsu/fingerprint"
 )
 
 type StatusCommand struct{}
@@ -184,7 +185,7 @@ func (command StatusCommand) statusAll(report *StatusReport) (error) {
 }
 
 func (command StatusCommand) fileSystemStatus(entry *database.File, report *StatusReport) {
-    fingerprint, err := common.Fingerprint(entry.Path())
+    fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
         switch {
         case os.IsPermission(err):

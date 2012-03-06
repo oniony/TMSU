@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package common
+package fingerprint
 
 import (
 	"crypto/sha256"
@@ -23,9 +23,10 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"tmsu/common"
 )
 
-func Fingerprint(path string) (string, error) {
+func Create(path string) (Fingerprint, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return "", err
@@ -34,18 +35,18 @@ func Fingerprint(path string) (string, error) {
 
 	hash := sha256.New()
 
-    if (IsDir(path)) {
+    if (common.IsDir(path)) {
         children, err := file.Readdir(0)
         if err != nil {
             return "", err
         }
 
-        fingerprints := make([]string, 0, len(children))
+        fingerprints := make(FingerprintList, 0, len(children))
 
         for _, child := range children {
             childPath := filepath.Join(path, child.Name())
 
-            fingerprint, err := Fingerprint(childPath)
+            fingerprint, err := Create(childPath)
             if err != nil {
                 return "", err
             }
@@ -53,7 +54,7 @@ func Fingerprint(path string) (string, error) {
             fingerprints = append(fingerprints, fingerprint)
         }
 
-        sort.Strings(fingerprints)
+        sort.Sort(fingerprints)
 
         for _, fingerprint := range fingerprints {
             hash.Write([]byte(fingerprint))
@@ -69,5 +70,5 @@ func Fingerprint(path string) (string, error) {
     sum := hash.Sum(make([]byte, 0, 64))
     fingerprint := hex.EncodeToString(sum)
 
-	return fingerprint, nil
+	return Fingerprint(fingerprint), nil
 }

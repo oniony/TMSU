@@ -1,0 +1,7 @@
+* Auto-detect file type and apply tag.  
+* Improve VFS actions.
+* Allow actions to be performed on VFS files.
+* Handle case of attempting to mount VFS when already mounted at mp.
+* Getopt replacement.
+* Auto-tags (in general).
+* Exif

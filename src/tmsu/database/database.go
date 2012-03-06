@@ -369,7 +369,7 @@ func (db Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Files() ([]File, error) {
+func (db Database) Files() ([]*File, error) {
 	sql := `SELECT id, directory, name, fingerprint
 	        FROM file`
 
@@ -379,7 +379,7 @@ func (db Database) Files() ([]File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]File, 0, 10)
+	files := make([]*File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -394,7 +394,7 @@ func (db Database) Files() ([]File, error) {
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint})
+		files = append(files, &File{fileId, directory, name, fingerprint})
 	}
 
 	return files, nil
@@ -461,16 +461,11 @@ func (db Database) FileByPath(path string) (*File, error) {
 }
 
 func (db Database) FilesByDirectory(path string) ([]*File, error) {
-	directory := filepath.Dir(path)
-	name := filepath.Base(path)
-
 	sql := `SELECT id, directory, name, fingerprint
             FROM file
-            WHERE directory = ? AND name = ?
-            OR directory = ?
-            OR directory like ?`
+            WHERE directory = ? OR directory LIKE ?`
 
-	rows, err := db.connection.Query(sql, directory, name, path, path+"/%")
+	rows, err := db.connection.Query(sql, path, filepath.Clean(path + "/%"))
 	if err != nil {
 		return nil, err
 	}

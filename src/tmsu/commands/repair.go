@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"tmsu/common"
 	"tmsu/database"
@@ -61,9 +62,14 @@ func (command RepairCommand) Exec(args []string) error {
 		for _, file := range files {
 			fingerprint, err := common.Fingerprint(file.Path())
 			if err != nil {
-				//TODO detect missing files
-				common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
-				continue
+			    switch {
+                case os.IsNotExist(err):
+			        common.Warnf("'%v': missing", file.Path())
+			    default:
+                    common.Warnf("Could not fingerprint '%v': %v", file.Path(), err)
+                }
+
+                continue
 			}
 
 			if file.Fingerprint != fingerprint {

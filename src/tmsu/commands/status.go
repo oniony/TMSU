@@ -32,20 +32,27 @@ func (StatusCommand) Name() string {
 }
 
 func (StatusCommand) Synopsis() string {
-	return "List file status"
+	return "List the status of database entries"
 }
 
 func (StatusCommand) Description() string {
 	return `tmsu status [FILE]...
 
-Shows the tag status of files.
+Shows the status of tagged entries in the database.
 
-Where one or more FILEs are specified, the status of these files is shown.
-Where FILE is a directory, details of all files within the specified directory
-and its descendent directories are shown.
+Where FILEs are given, only matching files are shown.
 
-Where no FILE is specified, details of all files within the current directory
-and its descendent directories are shown.`
+The status codes in the listing have the following meanings:
+
+  T - Tagged
+  M - Modified
+  ! - Missing
+  ? - Untagged
+
+The 'repair' command can be used to fix problems caused by files that have been
+modified or moved on disk.
+
+  --disturbed    Show also files that have not been moved nor modified`
 }
 
 type StatusReport struct {
@@ -60,161 +67,134 @@ func NewReport() *StatusReport {
 }
 
 func (command StatusCommand) Exec(args []string) error {
-	allFiles := false
-	if len(args) > 0 && args[0] == "--all" {
-		allFiles = true
-		args = args[1:]
-	}
+    all := false
+    if len(args) > 0 && args[0] == "--all" {
+        all = true
+        args = args[1:]
+    }
 
-	var err error
-	report := NewReport()
-	if len(args) == 0 {
-		entries, err := common.DirectoryEntries(".")
-		if err != nil {
-			return err
-		}
+    report := NewReport()
 
-		report, err = command.status(entries, report, allFiles)
-	} else {
-		report, err = command.status(args, report, allFiles)
-	}
+    err := command.status(args, report)
+    if err != nil {
+        return err
+    }
 
-	if err != nil {
-		return err
-	}
-
-	for _, path := range report.Tagged {
-		fmt.Println("T", path)
-	}
+    if all {
+        for _, path := range report.Tagged {
+            fmt.Println("T", path)
+        }
+    }
 
 	for _, path := range report.Modified {
-		fmt.Println("M", path)
+        fmt.Println("M", path)
 	}
 
 	for _, path := range report.Missing {
-		fmt.Println("!", path)
+        fmt.Println("!", path)
 	}
 
 	for _, path := range report.Untagged {
-		fmt.Println("?", path)
-	}
+	    fmt.Println("?", path)
+    }
 
 	return nil
 }
 
-func (command StatusCommand) status(paths []string, report *StatusReport, allFiles bool) (*StatusReport, error) {
-	for _, path := range paths {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return nil, err
-		}
+func (command StatusCommand) status(paths []string, report *StatusReport) (error) {
+    if len(paths) == 0 {
+        err := command.statusAll(report)
+        if err != nil {
+            return err
+        }
+    } else {
+        for _, path := range paths {
+            path = filepath.Clean(path)
 
-		databaseEntries, err := command.getDatabaseEntries(absPath)
-		if err != nil {
-			return nil, err
-		}
+            err := command.statusPath(path, report)
+            if err != nil {
+                return err
+            }
+        }
+    }
 
-		fileSystemEntries, err := command.getFileSystemEntries(absPath, allFiles)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, entry := range databaseEntries {
-			relPath := common.MakeRelative(entry.Path())
-
-			if contains(fileSystemEntries, entry.Path()) {
-				fingerprint, err := common.Fingerprint(entry.Path())
-				if err != nil {
-					return nil, err
-				}
-
-				if fingerprint != entry.Fingerprint {
-					report.Modified = append(report.Modified, relPath)
-				} else {
-					report.Tagged = append(report.Tagged, relPath)
-				}
-			} else {
-				relPath := common.MakeRelative(entry.Path())
-				report.Missing = append(report.Missing, relPath)
-			}
-		}
-
-		for _, entryPath := range fileSystemEntries {
-			if _, contains := databaseEntries[entryPath]; !contains {
-				relPath := common.MakeRelative(entryPath)
-				report.Untagged = append(report.Untagged, relPath)
-			}
-		}
-	}
-
-	return report, nil
+    return nil
 }
 
-func (command StatusCommand) getFileSystemEntries(path string, allFiles bool) ([]string, error) {
-	return command.getFileSystemEntriesRecursive(path, make([]string, 0, 10), allFiles)
-}
-
-func (command StatusCommand) getFileSystemEntriesRecursive(path string, entries []string, allFiles bool) ([]string, error) {
-	fileInfo, err := os.Lstat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	basename := filepath.Base(path)
-
-	if basename[0] != '.' || allFiles {
-		if common.IsRegular(fileInfo) {
-			entries = append(entries, path)
-		} else if fileInfo.IsDir() {
-			entries = append(entries, path)
-
-			childEntries, err := common.DirectoryEntries(path)
-			if err != nil {
-				if os.IsPermission(err) {
-					common.Warnf("'%v': permission denied.", path)
-				} else {
-					return nil, err
-				}
-			}
-
-			for _, entry := range childEntries {
-				entries, err = command.getFileSystemEntriesRecursive(entry, entries, allFiles)
-				if err != nil {
-					return nil, err
-				}
-			}
-		}
-	}
-
-	return entries, nil
-}
-
-func (StatusCommand) getDatabaseEntries(path string) (map[string]*database.File, error) {
+func (command StatusCommand) statusPath(path string, report *StatusReport) (error) {
 	db, err := database.OpenDatabase()
 	if err != nil {
-		return nil, err
+		return err
 	}
 	defer db.Close()
 
-	files, err := db.FilesByDirectory(path)
-	if err != nil {
-		return nil, err
-	}
+    entry, err := db.FileByPath(path)
+    if err != nil {
+        return err
+    }
+    if entry == nil {
+        report.Untagged = append(report.Untagged, path)
+    } else {
+        command.fileSystemStatus(entry, report)
+    }
 
-	entries := make(map[string]*database.File)
-	for _, file := range files {
-		entries[file.Path()] = file
-	}
+    childEntries, err := db.FilesByDirectory(path)
+    if err != nil {
+        return err
+    }
 
-	return entries, nil
+    for _, childEntry := range childEntries {
+        command.fileSystemStatus(childEntry, report)
+    }
+
+    return nil
 }
 
-func contains(strings []string, find string) bool {
-	for _, str := range strings {
-		if str == find {
-			return true
-		}
+func (command StatusCommand) statusAll(report *StatusReport) (error) {
+	db, err := database.OpenDatabase()
+	if err != nil {
+		return err
 	}
+	defer db.Close()
 
-	return false
+    entries, err := db.Files()
+    if err != nil {
+        return err
+    }
+
+	for _, entry := range entries {
+	    command.fileSystemStatus(entry, report)
+    }
+
+    return nil
+}
+
+func (command StatusCommand) fileSystemStatus(entry *database.File, report *StatusReport) {
+    fingerprint, err := common.Fingerprint(entry.Path())
+    if err != nil {
+        switch {
+        case os.IsPermission(err):
+            common.Warnf("'%v': Permission denied", entry.Path())
+        case os.IsNotExist(err):
+            report.Missing = append(report.Missing, entry.Path())
+        default:
+            common.Warnf("'%v': %v", entry.Path(), err)
+        }
+    } else {
+        if entry.Fingerprint != fingerprint {
+            report.Modified = append(report.Modified, entry.Path())
+        } else {
+            report.Tagged = append(report.Tagged, entry.Path())
+        }
+    }
+}
+
+func contains(strings []string, str string) bool {
+    for _, item := range strings {
+        if item == str {
+            return true
+        }
+    }
+
+    return false
 }

@@ -54,7 +54,7 @@ func (command TagsCommand) Exec(args []string) error {
 }
 
 func (TagsCommand) listAllTags() error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}
@@ -73,7 +73,7 @@ func (TagsCommand) listAllTags() error {
 }
 
 func (command TagsCommand) listTags(paths []string) error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

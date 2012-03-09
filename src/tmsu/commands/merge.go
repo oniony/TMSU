@@ -43,7 +43,7 @@ func (MergeCommand) Exec(args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

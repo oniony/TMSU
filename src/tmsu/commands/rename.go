@@ -42,7 +42,7 @@ To merge tags use the 'merge' command instead.`
 }
 
 func (RenameCommand) Exec(args []string) error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

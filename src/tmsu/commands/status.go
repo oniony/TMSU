@@ -54,10 +54,8 @@ The status codes in the listing have the following meanings:
   ! - Missing
   ? - Untagged
 
-The 'repair' command can be used to fix problems caused by files that have been
-modified or moved on disk.
-
-  --disturbed    Show also files that have not been moved nor modified`
+Note: The 'repair' command can be used to fix problems caused by files that have
+been modified or moved on disk.`
 }
 
 type StatusReport struct {
@@ -72,12 +70,6 @@ func NewReport() *StatusReport {
 }
 
 func (command StatusCommand) Exec(args []string) error {
-    all := false
-    if len(args) > 0 && args[0] == "--all" {
-        all = true
-        args = args[1:]
-    }
-
     report := NewReport()
 
     err := command.status(args, report)
@@ -85,10 +77,8 @@ func (command StatusCommand) Exec(args []string) error {
         return err
     }
 
-    if all {
-        for _, path := range report.Tagged {
-            fmt.Println("T", path)
-        }
+    for _, path := range report.Tagged {
+        fmt.Println("T", path)
     }
 
 	for _, path := range report.Modified {
@@ -130,7 +120,7 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
 }
 
 func (command StatusCommand) statusPath(path string, report *StatusReport) (error) {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}
@@ -166,7 +156,7 @@ func (command StatusCommand) statusPath(path string, report *StatusReport) (erro
 }
 
 func (command StatusCommand) statusAll(report *StatusReport) (error) {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

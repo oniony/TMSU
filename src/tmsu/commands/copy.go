@@ -39,7 +39,7 @@ Creates a new tag NEW applied to the same set of files as TAG.`
 }
 
 func (CopyCommand) Exec(args []string) error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

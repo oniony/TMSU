@@ -33,7 +33,7 @@ type Database struct {
 	connection *sql.DB
 }
 
-func OpenDatabase() (*Database, error) {
+func Open() (*Database, error) {
 	config, err := common.GetSelectedDatabaseConfig()
 	if err != nil {
 		return nil, err
@@ -49,10 +49,10 @@ func OpenDatabase() (*Database, error) {
 		os.MkdirAll(dir, os.ModeDir|0755)
 	}
 
-	return OpenDatabaseAt(config.DatabasePath)
+	return OpenAt(config.DatabasePath)
 }
 
-func OpenDatabaseAt(path string) (*Database, error) {
+func OpenAt(path string) (*Database, error) {
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, errors.New("Could not open database: " + err.Error())
@@ -389,13 +389,13 @@ func (db Database) Files() ([]*File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint fingerprint.Fingerprint
-		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		var fp string
+		err = rows.Scan(&fileId, &directory, &name, &fp)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint})
+		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp)})
 	}
 
 	return files, nil
@@ -421,13 +421,13 @@ func (db Database) File(id uint) (*File, error) {
 
 	var directory string
 	var name string
-	var fingerprint fingerprint.Fingerprint
-	err = rows.Scan(&directory, &name, &fingerprint)
+	var fp string
+	err = rows.Scan(&directory, &name, &fp)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp)}, nil
 }
 
 func (db Database) FileByPath(path string) (*File, error) {
@@ -452,13 +452,13 @@ func (db Database) FileByPath(path string) (*File, error) {
 	}
 
 	var id uint
-	var fingerprint fingerprint.Fingerprint
-	err = rows.Scan(&id, &fingerprint)
+	var fp string
+	err = rows.Scan(&id, &fp)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp)}, nil
 }
 
 func (db Database) FilesByDirectory(path string) ([]*File, error) {
@@ -481,12 +481,12 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 		var fileId uint
 		var dir string
 		var name string
-		var fingerprint fingerprint.Fingerprint
-		err = rows.Scan(&fileId, &dir, &name, &fingerprint)
+		var fp string
+		err = rows.Scan(&fileId, &dir, &name, &fp)
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, &File{fileId, dir, name, fingerprint})
+		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp)})
 	}
 
 	return files, nil
@@ -550,11 +550,13 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint fingerprint.Fingerprint
-		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		var fp string
+		err = rows.Scan(&fileId, &directory, &name, &fp)
 		if err != nil {
 			return nil, err
 		}
+
+        fingerprint := fingerprint.Fingerprint(fp)
 
 		if fingerprint != previousFingerprint {
 			if fileSet != nil {
@@ -682,13 +684,13 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 		var fileId uint
 		var directory string
 		var name string
-		var fingerprint fingerprint.Fingerprint
-		err = rows.Scan(&fileId, &directory, &name, &fingerprint)
+		var fp string
+		err = rows.Scan(&fileId, &directory, &name, &fp)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp)})
 	}
 
 	return files, nil

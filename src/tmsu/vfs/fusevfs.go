@@ -90,7 +90,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	path := vfs.splitPath(name)
 	tagNames := path[1 : len(path)-1]
 
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatal(err)
 	}
@@ -174,7 +174,7 @@ func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
@@ -195,7 +195,7 @@ func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
@@ -214,7 +214,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
@@ -268,7 +268,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
@@ -304,7 +304,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	name := path[len(path)-1]
 
-	db, err := database.OpenDatabaseAt(vfs.databasePath)
+	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}

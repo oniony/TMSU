@@ -92,7 +92,7 @@ func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
 }
 
 func (command TagCommand) tagPath(path string, tagNames []string) error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

@@ -55,7 +55,7 @@ func (command FilesCommand) Exec(args []string) error {
 }
 
 func (FilesCommand) listAllFiles() error {
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}
@@ -75,10 +75,10 @@ func (FilesCommand) listAllFiles() error {
 
 func (FilesCommand) listFiles(tagNames []string) error {
 	if len(tagNames) == 0 {
-		return errors.New("At least one tag must be specified.")
+		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
 
-	db, err := database.OpenDatabase()
+	db, err := database.Open()
 	if err != nil {
 		return err
 	}

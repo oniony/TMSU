@@ -108,36 +108,46 @@ func (command StatusCommand) Exec(args []string) error {
 
 func (command StatusCommand) status(paths []string, report *StatusReport) (error) {
     if len(paths) == 0 {
-//        err := command.statusAll(report)
-//        if err != nil {
-//            return err
-//        }
-    } else {
-        for _, path := range paths {
-            absPath, err := filepath.Abs(path)
-            if err != nil {
-                return err
-            }
+	    db, err := database.Open()
+        if err != nil {
+            return err
+        }
+        defer db.Close()
 
-            status, err := command.statusPath(absPath)
-            if err != nil {
-                return err
-            }
+        entries, err := db.Files()
+        if err != nil {
+            return err
+        }
 
-            switch status {
-            case UNTAGGED:
-                report.Untagged = append(report.Untagged, path)
-            case TAGGED:
-                report.Tagged = append(report.Tagged, path)
-            case MODIFIED:
-                report.Modified = append(report.Modified, path)
-            case MISSING:
-                report.Missing = append(report.Missing, path)
-            case NESTED:
-                report.Nested = append(report.Nested, path)
-            default:
-                panic("Unsupported status " + string(status))
-            }
+        for _, entry := range entries {
+            paths = append(paths, entry.Path())
+        }
+    }
+
+    for _, path := range paths {
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return err
+        }
+
+        status, err := command.statusPath(absPath)
+        if err != nil {
+            return err
+        }
+
+        switch status {
+        case UNTAGGED:
+            report.Untagged = append(report.Untagged, path)
+        case TAGGED:
+            report.Tagged = append(report.Tagged, path)
+        case MODIFIED:
+            report.Modified = append(report.Modified, path)
+        case MISSING:
+            report.Missing = append(report.Missing, path)
+        case NESTED:
+            report.Nested = append(report.Nested, path)
+        default:
+            panic("Unsupported status " + string(status))
         }
     }
 
@@ -151,13 +161,23 @@ func (command StatusCommand) statusPath(path string) (Status, error) {
 	}
 	defer db.Close()
 
-    // see if path itself is tagged
-
     entry, err := db.FileByPath(path)
     if err != nil {
         return 0, err
     }
     if entry != nil {
+        // path is tagged
+
+        _, err := os.Stat(path)
+        if err != nil {
+            switch {
+            case os.IsNotExist(err):
+                return MISSING, nil
+            default:
+                return 0, err
+            }
+        }
+
         fingerprint, err := fingerprint.Create(path)
         if err != nil {
             return 0, err
@@ -169,6 +189,8 @@ func (command StatusCommand) statusPath(path string) (Status, error) {
             return MODIFIED, nil
         }
     } else {
+        // path is not tagged
+
         if common.IsDir(path) {
             dir, err := os.Open(path)
             if err != nil {
@@ -197,25 +219,6 @@ func (command StatusCommand) statusPath(path string) (Status, error) {
 
     return 0, nil
 }
-
-//func (command StatusCommand) statusAll(report *StatusReport) (error) {
-//	db, err := database.Open()
-//	if err != nil {
-//		return err
-//	}
-//	defer db.Close()
-//
-//    entries, err := db.Files()
-//    if err != nil {
-//        return err
-//    }
-//
-//	for _, entry := range entries {
-//	    command.fileSystemStatus(entry, report)
-//    }
-//
-//    return nil
-//}
 
 type Status int
 

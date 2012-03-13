@@ -92,7 +92,6 @@ func (db Database) CreateSchema() error {
                id INTEGER PRIMARY KEY,
                directory TEXT NOT NULL,
                name TEXT NOT NULL,
-               modTimestamp DATE NOT NULL,
                fingerprint TEXT NOT NULL,
                CONSTRAINT con_file_path UNIQUE (directory, name)
            )`

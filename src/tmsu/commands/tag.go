@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/common"
@@ -159,7 +160,7 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	return tag, fileTag, nil
 }
 
-func (TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
+func (command TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
     fingerprint, err := fingerprint.Create(path)
     if err != nil {
         return nil, err
@@ -170,7 +171,14 @@ func (TagCommand) addFile(db *database.Database, path string) (*database.File, e
 		return nil, err
 	}
 
+    err = command.validateFileAdd(db, path)
+    if err != nil {
+        return nil, err
+    }
+
 	if file == nil {
+	    // new file
+
 		if fingerprint != "" {
 			files, err := db.FilesByFingerprint(fingerprint)
 			if err != nil {
@@ -191,10 +199,41 @@ func (TagCommand) addFile(db *database.Database, path string) (*database.File, e
 			return nil, err
 		}
 	} else {
+	    // existing file
+
 		if file.Fingerprint != fingerprint {
 			db.UpdateFileFingerprint(file.Id, fingerprint)
 		}
 	}
 
 	return file, nil
+}
+
+func (TagCommand) validateFileAdd(db *database.Database, path string) error {
+    info, err := os.Stat(path)
+    if err != nil {
+        return err
+    }
+
+    if info.IsDir() {
+        files, err := db.FilesByDirectory(path)
+        if err != nil {
+            return err
+        }
+
+        if len(files) > 0 {
+            return errors.New("Cannot tag directory '" + path + "' as it contains tagged items.")
+        }
+    } else {
+        dir := filepath.Dir(path)
+        file, err := db.FileByPath(dir)
+        if err != nil {
+            return err
+        }
+        if file != nil {
+            return errors.New("Cannot tag file '" + path + "' as its parent directory is tagged.")
+        }
+    }
+
+    return nil
 }

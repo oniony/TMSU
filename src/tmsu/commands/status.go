@@ -135,17 +135,19 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
             return err
         }
 
+        relPath := common.MakeRelative(path)
+
         switch status {
         case UNTAGGED:
-            report.Untagged = append(report.Untagged, path)
+            report.Untagged = append(report.Untagged, relPath)
         case TAGGED:
-            report.Tagged = append(report.Tagged, path)
+            report.Tagged = append(report.Tagged, relPath)
         case MODIFIED:
-            report.Modified = append(report.Modified, path)
+            report.Modified = append(report.Modified, relPath)
         case MISSING:
-            report.Missing = append(report.Missing, path)
+            report.Missing = append(report.Missing, relPath)
         case NESTED:
-            report.Nested = append(report.Nested, path)
+            report.Nested = append(report.Nested, relPath)
         default:
             panic("Unsupported status " + string(status))
         }

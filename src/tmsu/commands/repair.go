@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+    "fmt"
     "os"
     "path/filepath"
     "tmsu/common"
@@ -48,12 +49,12 @@ Repairs tagged files and directories under PATHS by:
        or directory with the same fingerprint can be found in PATHs.
 
 Where no PATHS are specified all tagged files and directories fingerprints in
-the database are repaired. (In this mode file moves cannot be repaired as tmsu
-will not know where to look for them.)`
+the database are checked and their fingerprints updated where modifications are
+found.`
 }
 
 func (command RepairCommand) Exec(args []string) error {
-    pathByFingerprint, err := command.buildFileSystemFingerprints(args)
+    pathsByFingerprint, err := command.buildFileSystemFingerprints(args)
     if err != nil {
         return err
     }
@@ -65,21 +66,27 @@ func (command RepairCommand) Exec(args []string) error {
     defer db.Close()
 
     for _, path := range args {
-        entry, err := db.FileByPath(path)
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return err
+        }
+
+        entry, err := db.FileByPath(absPath)
         if err != nil {
             return err
         }
         if entry != nil {
-            err := command.checkEntry(entry, pathByFingerprint)
+            err := command.checkEntry(entry, db, pathsByFingerprint)
             if err != nil {
                 return err
             }
         }
 
         // path might be a directory
+
         childEntries, err := db.FilesByDirectory(path)
         for _, childEntry := range childEntries {
-            err := command.checkEntry(childEntry, pathByFingerprint)
+            err := command.checkEntry(childEntry, db, pathsByFingerprint)
             if err != nil {
                 return err
             }
@@ -89,13 +96,13 @@ func (command RepairCommand) Exec(args []string) error {
     return nil
 }
 
-func (command RepairCommand) checkEntry(entry *database.File, fileSystemEntries map[fingerprint.Fingerprint]string) error {
+func (command RepairCommand) checkEntry(entry *database.File, db *database.Database, fileSystemEntries map[fingerprint.Fingerprint]string) error {
     fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
         switch {
         case os.IsNotExist(err):
             //TODO is there an untagged file with same fingerprint?
-            common.Warnf(entry.Path(), "Missing - maybe moved")
+            common.Warnf("'%v': Missing - maybe moved", entry.Path())
             return nil
         case os.IsPermission(err):
             common.Warnf("'%v': Permission denied", entry.Path())
@@ -106,9 +113,12 @@ func (command RepairCommand) checkEntry(entry *database.File, fileSystemEntries 
     }
 
     if fingerprint != entry.Fingerprint {
-        common.Warn(entry.Path(), "File is modified")
-    } else {
-        common.Warn(entry.Path(), "File is not modified")
+        fmt.Printf("'%v': fingerprint updated\n", entry.Path())
+
+        err := db.UpdateFileFingerprint(entry.Id, fingerprint)
+        if err != nil {
+            return err
+        }
     }
 
 	return nil
@@ -120,6 +130,13 @@ func (command RepairCommand) buildFileSystemFingerprints(paths []string) (map[fi
     for _, path := range paths {
         err := command.buildFileSystemFingerprintsRecursive(path, pathByFingerprint)
         if err != nil {
+            switch {
+            case os.IsNotExist(err):
+                continue
+            case os.IsPermission(err):
+                continue
+            }
+
             return nil, err
         }
     }

@@ -70,7 +70,7 @@ func (command RepairCommand) Exec(args []string) error {
             return err
         }
         if entry != nil {
-            err := command.checkEntry(entry, pathsByFingerprint)
+            err := command.checkEntry(entry, pathByFingerprint)
             if err != nil {
                 return err
             }
@@ -80,12 +80,17 @@ func (command RepairCommand) Exec(args []string) error {
         childEntries, err := db.FilesByDirectory(path)
         for _, childEntry := range childEntries {
             err := command.checkEntry(childEntry, pathByFingerprint)
+            if err != nil {
+                return err
+            }
         }
     }
+
+    return nil
 }
 
 func (command RepairCommand) checkEntry(entry *database.File, fileSystemEntries map[fingerprint.Fingerprint]string) error {
-    fingerprint, err := fingerprint.Fingerprint(entry.Path())
+    fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
         switch {
         case os.IsNotExist(err):
@@ -100,7 +105,7 @@ func (command RepairCommand) checkEntry(entry *database.File, fileSystemEntries 
         }
     }
 
-    if fingerprint != entry.Fingerprint() {
+    if fingerprint != entry.Fingerprint {
         common.Warn(entry.Path(), "File is modified")
     } else {
         common.Warn(entry.Path(), "File is not modified")

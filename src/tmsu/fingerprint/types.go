@@ -19,16 +19,4 @@ package fingerprint
 
 type Fingerprint string
 
-type FingerprintList []Fingerprint
-
-func (fingerprints FingerprintList) Len() int {
-    return len(fingerprints)
-}
-
-func (fingerprints FingerprintList) Less(i, j int) bool {
-    return fingerprints[i] < fingerprints[j]
-}
-
-func (fingerprints FingerprintList) Swap(i, j int) {
-    fingerprints[j], fingerprints[i] = fingerprints[i], fingerprints[j]
-}
+const EMPTY Fingerprint = Fingerprint("")

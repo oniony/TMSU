@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package fingerprint
 
 import (
+    "bytes"
 	"crypto/sha256"
+	"encoding/binary"
 	"encoding/hex"
 	"os"
 	"path/filepath"
@@ -29,46 +31,59 @@ import (
 func Create(path string) (Fingerprint, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return "", err
+		return EMPTY, err
 	}
 	defer file.Close()
 
 	hash := sha256.New()
 
     if (common.IsDir(path)) {
-        children, err := file.Readdir(0)
+        dir, err := os.Open(path)
         if err != nil {
-            return "", err
+            return EMPTY, err
         }
 
-        fingerprints := make(FingerprintList, 0, len(children))
+        entries, err := dir.Readdir(0)
+        if err != nil {
+            return EMPTY, err
+        }
+        sort.Sort(FileInfoSlice(entries))
 
-        for _, child := range children {
-            childPath := filepath.Join(path, child.Name())
+        buffer := new(bytes.Buffer)
+        for _, entry := range entries {
+            entryPath := filepath.Join(path, entry.Name())
+            stat, err := os.Stat(entryPath)
 
-            fingerprint, err := Create(childPath)
             if err != nil {
-                return "", err
+                return EMPTY, err
             }
 
-            fingerprints = append(fingerprints, fingerprint)
+            binary.Write(buffer, binary.LittleEndian, stat.ModTime().UnixNano())
         }
-
-        sort.Sort(fingerprints)
-
-        for _, fingerprint := range fingerprints {
-            hash.Write([]byte(fingerprint))
-        }
+        buffer.WriteTo(hash)
     } else {
         buffer := make([]byte, 1024)
         for count := 0; err == nil; count, err = file.Read(buffer) {
             hash.Write(buffer[:count])
         }
-
     }
 
     sum := hash.Sum(make([]byte, 0, 64))
     fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil
+}
+
+type FileInfoSlice []os.FileInfo
+
+func (infos FileInfoSlice) Len() int {
+    return len(infos)
+}
+
+func (infos FileInfoSlice) Less(i, j int) bool {
+    return infos[i].Name() < infos[j].Name()
+}
+
+func (infos FileInfoSlice) Swap(i, j int) {
+    infos[j], infos[i] = infos[i], infos[j]
 }

@@ -461,6 +461,31 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint.Fingerprint(fp)}, nil
 }
 
+func (db Database) HasTaggedEntries(path string) (bool, error) {
+    sql := `SELECT count(1)
+            FROM file
+            WHERE directory = ?
+            OR directory LIKE ?`
+
+    rows, err := db.connection.Query(sql, path, filepath.Clean(path + "/%"))
+    if err != nil {
+        return false, err
+    }
+    defer rows.Close()
+
+    if !rows.Next() {
+        return false, errors.New("Could not retrieve tagged entry count.")
+    }
+    if rows.Err() != nil {
+        return false, rows.Err()
+    }
+
+    var entryCount int
+    rows.Scan(&entryCount)
+
+    return entryCount > 0, nil
+}
+
 func (db Database) FilesByDirectory(path string) ([]*File, error) {
 	sql := `SELECT id, directory, name, fingerprint
             FROM file
@@ -497,7 +522,7 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]Fi
 	        FROM file
 	        WHERE fingerprint = ?`
 
-	rows, err := db.connection.Query(sql, fingerprint)
+	rows, err := db.connection.Query(sql, string(fingerprint))
 	if err != nil {
 		return nil, err
 	}
@@ -584,7 +609,7 @@ func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint) (*F
 	sql := `INSERT INTO file (directory, name, fingerprint)
 	        VALUES (?, ?, ?)`
 
-	result, err := db.connection.Exec(sql, directory, name, fingerprint)
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint))
 	if err != nil {
 		return nil, err
 	}
@@ -701,7 +726,7 @@ func (db Database) UpdateFileFingerprint(fileId uint, fingerprint fingerprint.Fi
 	        SET fingerprint = ?
 	        WHERE id = ?`
 
-	_, err := db.connection.Exec(sql, fingerprint, int(fileId))
+	_, err := db.connection.Exec(sql, string(fingerprint), int(fileId))
 	if err != nil {
 		return err
 	}

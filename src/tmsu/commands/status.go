@@ -51,8 +51,13 @@ The status codes in the listing have the following meanings:
 
   T - Tagged
   M - Modified
-  ! - Missing
+  ! - Missingd
   ? - Untagged
+  + - Nested
+
+The nested status is shown only for directories and indicates that the
+directory is not tagged itself but that some of the files or directories within
+it are.
 
 Note: The 'repair' command can be used to fix problems caused by files that have
 been modified or moved on disk.`
@@ -63,10 +68,11 @@ type StatusReport struct {
 	Modified []string
 	Missing  []string
 	Untagged []string
+	Nested   []string
 }
 
 func NewReport() *StatusReport {
-	return &StatusReport{make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10)}
+	return &StatusReport{make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10), make([]string, 0, 10)}
 }
 
 func (command StatusCommand) Exec(args []string) error {
@@ -85,6 +91,10 @@ func (command StatusCommand) Exec(args []string) error {
         fmt.Println("M", path)
 	}
 
+    for _, path := range report.Nested {
+        fmt.Println("+", path)
+    }
+
 	for _, path := range report.Missing {
         fmt.Println("!", path)
 	}
@@ -98,10 +108,10 @@ func (command StatusCommand) Exec(args []string) error {
 
 func (command StatusCommand) status(paths []string, report *StatusReport) (error) {
     if len(paths) == 0 {
-        err := command.statusAll(report)
-        if err != nil {
-            return err
-        }
+//        err := command.statusAll(report)
+//        if err != nil {
+//            return err
+//        }
     } else {
         for _, path := range paths {
             absPath, err := filepath.Abs(path)
@@ -109,9 +119,24 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
                 return err
             }
 
-            err = command.statusPath(absPath, report)
+            status, err := command.statusPath(absPath)
             if err != nil {
                 return err
+            }
+
+            switch status {
+            case UNTAGGED:
+                report.Untagged = append(report.Untagged, path)
+            case TAGGED:
+                report.Tagged = append(report.Tagged, path)
+            case MODIFIED:
+                report.Modified = append(report.Modified, path)
+            case MISSING:
+                report.Missing = append(report.Missing, path)
+            case NESTED:
+                report.Nested = append(report.Nested, path)
+            default:
+                panic("Unsupported status " + string(status))
             }
         }
     }
@@ -119,125 +144,85 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
     return nil
 }
 
-func (command StatusCommand) statusPath(path string, report *StatusReport) (error) {
+func (command StatusCommand) statusPath(path string) (Status, error) {
 	db, err := database.Open()
 	if err != nil {
-		return err
+		return 0, err
 	}
 	defer db.Close()
+
+    // see if path itself is tagged
 
     entry, err := db.FileByPath(path)
     if err != nil {
-        return err
+        return 0, err
     }
-    if entry == nil {
-        report.Untagged = append(report.Untagged, path)
-    } else {
-        command.fileSystemStatus(entry, report)
-    }
-
-    dirEntries, err := db.FilesByDirectory(path)
-    if err != nil {
-        return err
-    }
-
-    for _, dirEntry := range dirEntries {
-        command.fileSystemStatus(dirEntry, report)
-    }
-
-    if common.IsDir(path) {
-        err := command.findUntagged(path, db, report)
+    if entry != nil {
+        fingerprint, err := fingerprint.Create(path)
         if err != nil {
-            return err
+            return 0, err
         }
-    }
 
-    return nil
-}
-
-func (command StatusCommand) statusAll(report *StatusReport) (error) {
-	db, err := database.Open()
-	if err != nil {
-		return err
-	}
-	defer db.Close()
-
-    entries, err := db.Files()
-    if err != nil {
-        return err
-    }
-
-	for _, entry := range entries {
-	    command.fileSystemStatus(entry, report)
-    }
-
-    return nil
-}
-
-func (command StatusCommand) fileSystemStatus(entry *database.File, report *StatusReport) {
-    fingerprint, err := fingerprint.Create(entry.Path())
-    if err != nil {
-        switch {
-        case os.IsPermission(err):
-            common.Warnf("'%v': Permission denied", entry.Path())
-        case os.IsNotExist(err):
-            report.Missing = append(report.Missing, entry.Path())
-        default:
-            common.Warnf("'%v': %v", entry.Path(), err)
-        }
-    } else {
-        if entry.Fingerprint != fingerprint {
-            report.Modified = append(report.Modified, entry.Path())
+        if entry.Fingerprint == fingerprint {
+            return TAGGED, nil
         } else {
-            report.Tagged = append(report.Tagged, entry.Path())
+            return MODIFIED, nil
+        }
+    } else {
+        if common.IsDir(path) {
+            dir, err := os.Open(path)
+            if err != nil {
+                return 0, err
+            }
+
+            entries, err := dir.Readdir(0)
+            for _, entry := range entries {
+                entryPath := filepath.Join(path, entry.Name())
+                status, err := command.statusPath(entryPath)
+                if err != nil {
+                    return 0, err
+                }
+
+                switch status {
+                case TAGGED, MODIFIED, NESTED:
+                    return NESTED, err
+                }
+            }
+
+            return UNTAGGED, err
+        } else {
+            return UNTAGGED, err
         }
     }
+
+    return 0, nil
 }
 
-func (command StatusCommand) findUntagged(path string, db *database.Database, report *StatusReport) error {
-    dir, err := os.Open(path)
-    if err != nil {
-        switch {
-        case os.IsPermission(err):
-            common.Warnf("'%v': Permission denied", path)
-            return nil
-        default:
-            return err
-        }
-    }
+//func (command StatusCommand) statusAll(report *StatusReport) (error) {
+//	db, err := database.Open()
+//	if err != nil {
+//		return err
+//	}
+//	defer db.Close()
+//
+//    entries, err := db.Files()
+//    if err != nil {
+//        return err
+//    }
+//
+//	for _, entry := range entries {
+//	    command.fileSystemStatus(entry, report)
+//    }
+//
+//    return nil
+//}
 
-    dirEntries, err := dir.Readdir(0)
-    dir.Close()
+type Status int
 
-    if err != nil {
-        return err
-    }
-
-    for _, dirEntry := range dirEntries {
-        dirEntryPath := filepath.Join(path, dirEntry.Name())
-
-        file, err := db.FileByPath(dirEntryPath)
-        if err != nil {
-            return nil
-        }
-        if file == nil {
-            report.Untagged = append(report.Untagged, dirEntryPath)
-        }
-
-        if common.IsDir(dirEntryPath) {
-            command.findUntagged(dirEntryPath, db, report)
-        }
-    }
-
-    return nil
-}
-
-func contains(strings []string, str string) bool {
-    for _, item := range strings {
-        if item == str {
-            return true
-        }
-    }
-
-    return false
-}
+const (
+    UNTAGGED Status = iota
+    TAGGED
+    MODIFIED
+    NESTED
+    MISSING
+)

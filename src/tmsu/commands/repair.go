@@ -97,6 +97,23 @@ func (command RepairCommand) Exec(args []string) error {
 }
 
 func (command RepairCommand) checkEntry(entry *database.File, db *database.Database, fileSystemEntries map[fingerprint.Fingerprint]string) error {
+    info, err := os.Stat(entry.Path())
+    if err != nil {
+        switch {
+        case os.IsNotExist(err):
+            //TODO is there an untagged file with same fingerprint?
+            common.Warnf("'%v': Missing - maybe moved", entry.Path())
+            return nil
+        case os.IsPermission(err):
+            common.Warnf("'%v': Permission denied", entry.Path())
+            return nil
+        default:
+            common.Warn("'%v': %v", err)
+        }
+    }
+
+    modTime := info.ModTime()
+
     fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
         switch {
@@ -115,7 +132,7 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
     if fingerprint != entry.Fingerprint {
         fmt.Printf("'%v': fingerprint updated\n", entry.Path())
 
-        err := db.UpdateFileFingerprint(entry.Id, fingerprint)
+        err := db.UpdateFile(entry.Id, fingerprint, modTime)
         if err != nil {
             return err
         }

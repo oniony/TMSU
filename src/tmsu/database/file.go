@@ -19,6 +19,7 @@ package database
 
 import (
 	"path/filepath"
+	"time"
 	"tmsu/fingerprint"
 )
 
@@ -27,6 +28,7 @@ type File struct {
 	Directory   string
 	Name        string
 	Fingerprint fingerprint.Fingerprint
+	ModTimestamp time.Time
 }
 
 func (file File) Path() string {

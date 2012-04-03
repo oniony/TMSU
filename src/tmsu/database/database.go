@@ -23,7 +23,12 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path/filepath"
+	"time"
 	"tmsu/common"
+)
+
+const (
+    DateLayout = "2006-01-02 15:04:05"
 )
 
 type Database struct {
@@ -93,6 +98,7 @@ func (db Database) CreateSchema() error {
                directory TEXT NOT NULL,
                name TEXT NOT NULL,
                fingerprint TEXT NOT NULL,
+               mod_timestamp DATETIME NOT NULL,
                CONSTRAINT con_file_path UNIQUE (directory, name)
            )`
 
@@ -157,4 +163,16 @@ func (db Database) contains(list []string, str string) bool {
 	}
 
 	return false
+}
+
+func parseTimestamp(text string) time.Time {
+    t, err := time.Parse(DateLayout, text)
+    if err != nil {
+        return time.Unix(0,0)
+    }
+    return t
+}
+
+func formatTimestamp(t time.Time) string {
+    return t.Format(DateLayout)
 }

@@ -176,33 +176,37 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
         return nil, err
     }
 
+    info, err := os.Stat(path)
+    if err != nil {
+        return nil, err
+    }
+    modTime := info.ModTime()
+
 	if file == nil {
 	    // new file
 
-		if fingerprint != "" {
-			files, err := db.FilesByFingerprint(fingerprint)
-			if err != nil {
-				return nil, err
-			}
+        files, err := db.FilesByFingerprint(fingerprint)
+        if err != nil {
+            return nil, err
+        }
 
-			if len(files) > 0 {
-				common.Warn("File is a duplicate of previously tagged files.")
+        if len(files) > 0 {
+            common.Warn("File is a duplicate of previously tagged files.")
 
-				for _, duplicateFile := range files {
-					common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
-				}
-			}
-		}
+            for _, duplicateFile := range files {
+                common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
+            }
+        }
 
-		file, err = db.AddFile(path, fingerprint)
+		file, err = db.AddFile(path, fingerprint, modTime)
 		if err != nil {
 			return nil, err
 		}
 	} else {
 	    // existing file
 
-		if file.Fingerprint != fingerprint {
-			db.UpdateFileFingerprint(file.Id, fingerprint)
+		if file.Fingerprint != fingerprint || file.ModTimestamp != modTime {
+			db.UpdateFile(file.Id, fingerprint, modTime)
 		}
 	}
 

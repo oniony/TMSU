@@ -20,6 +20,7 @@ package database
 import (
     "errors"
     "path/filepath"
+    "time"
     "tmsu/fingerprint"
 )
 
@@ -50,7 +51,7 @@ func (db Database) FileCount() (uint, error) {
 }
 
 func (db Database) Files() ([]*File, error) {
-	sql := `SELECT id, directory, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint, mod_time
 	        FROM file`
 
 	rows, err := db.connection.Query(sql)
@@ -69,19 +70,20 @@ func (db Database) Files() ([]*File, error) {
 		var directory string
 		var name string
 		var fp string
-		err = rows.Scan(&fileId, &directory, &name, &fp)
+		var modTime string
+		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp)})
+		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil
 }
 
 func (db Database) File(id uint) (*File, error) {
-	sql := `SELECT directory, name, fingerprint
+	sql := `SELECT directory, name, fingerprint, mod_time
 	        FROM file
 	        WHERE id = ?`
 
@@ -101,19 +103,20 @@ func (db Database) File(id uint) (*File, error) {
 	var directory string
 	var name string
 	var fp string
-	err = rows.Scan(&directory, &name, &fp)
+	var modTime string
+	err = rows.Scan(&directory, &name, &fp, &modTime)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp)}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
 func (db Database) FileByPath(path string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `SELECT id, fingerprint
+	sql := `SELECT id, fingerprint, mod_time
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
@@ -132,16 +135,17 @@ func (db Database) FileByPath(path string) (*File, error) {
 
 	var id uint
 	var fp string
-	err = rows.Scan(&id, &fp)
+	var modTime string
+	err = rows.Scan(&id, &fp, &modTime)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp)}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
 func (db Database) FilesByDirectory(path string) ([]*File, error) {
-	sql := `SELECT id, directory, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE directory = ? OR directory LIKE ?`
 
@@ -161,18 +165,19 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 		var dir string
 		var name string
 		var fp string
-		err = rows.Scan(&fileId, &dir, &name, &fp)
+		var modTime string
+		err = rows.Scan(&fileId, &dir, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp)})
+		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil
 }
 
 func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]File, error) {
-	sql := `SELECT id, directory, name
+	sql := `SELECT id, directory, name, mod_time
 	        FROM file
 	        WHERE fingerprint = ?`
 
@@ -191,19 +196,20 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]Fi
 		var fileId uint
 		var directory string
 		var name string
-		err = rows.Scan(&fileId, &directory, &name)
+		var modTime string
+		err = rows.Scan(&fileId, &directory, &name, &modTime)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint})
+		files = append(files, File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
 	}
 
 	return files, nil
 }
 
 func (db Database) DuplicateFiles() ([][]File, error) {
-	sql := `SELECT id, directory, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
                                 FROM file
@@ -230,7 +236,8 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 		var directory string
 		var name string
 		var fp string
-		err = rows.Scan(&fileId, &directory, &name, &fp)
+		var modTime string
+		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
@@ -245,7 +252,7 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, File{fileId, directory, name, fingerprint})
+		fileSet = append(fileSet, File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
 	}
 
 	// ensure last file set is added
@@ -256,14 +263,14 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 	return fileSets, nil
 }
 
-func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint) (*File, error) {
+func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `INSERT INTO file (directory, name, fingerprint)
-	        VALUES (?, ?, ?)`
+	sql := `INSERT INTO file (directory, name, fingerprint, mod_time)
+	        VALUES (?, ?, ?, ?)`
 
-	result, err := db.connection.Exec(sql, directory, name, string(fingerprint))
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), formatTimestamp(modTime))
 	if err != nil {
 		return nil, err
 	}
@@ -281,15 +288,15 @@ func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint) (*F
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &File{uint(id), directory, name, fingerprint}, nil
+	return &File{uint(id), directory, name, fingerprint, modTime}, nil
 }
 
-func (db Database) UpdateFileFingerprint(fileId uint, fingerprint fingerprint.Fingerprint) error {
+func (db Database) UpdateFile(fileId uint, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
 	sql := `UPDATE file
-	        SET fingerprint = ?
+	        SET fingerprint = ?, mod_time = ?
 	        WHERE id = ?`
 
-	_, err := db.connection.Exec(sql, string(fingerprint), int(fileId))
+	_, err := db.connection.Exec(sql, string(fingerprint), formatTimestamp(modTime), int(fileId))
 	if err != nil {
 		return err
 	}
@@ -316,4 +323,3 @@ func (db Database) RemoveFile(fileId uint) error {
 
 	return nil
 }
-

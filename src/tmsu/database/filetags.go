@@ -68,7 +68,7 @@ func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
 }
 
 func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
-	sql := `SELECT id, directory, name, fingerprint
+	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
                 SELECT file_id
@@ -104,12 +104,13 @@ func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
 		var directory string
 		var name string
 		var fp string
-		err = rows.Scan(&fileId, &directory, &name, &fp)
+		var modTime string
+		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp)})
+		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil

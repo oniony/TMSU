@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"strings"
+	"time"
 	"tmsu/database"
 )
 
@@ -57,7 +58,7 @@ func (command ExportCommand) Exec(args []string) error {
 	}
 
 	for _, file := range files {
-		fmt.Printf("%v,%v,", file.Path(), file.Fingerprint)
+		fmt.Printf("%v,%v,%v,", file.Path(), file.Fingerprint, formatTime(file.ModTimestamp))
 
 		tags, err := db.TagsByFileId(file.Id)
 		if err != nil {
@@ -74,4 +75,8 @@ func (command ExportCommand) Exec(args []string) error {
 	}
 
 	return nil
+}
+
+func formatTime(time time.Time) string {
+    return time.Format("2006-01-02 15:04:05")
 }

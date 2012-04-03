@@ -291,12 +291,15 @@ func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint, mod
 	return &File{uint(id), directory, name, fingerprint, modTime}, nil
 }
 
-func (db Database) UpdateFile(fileId uint, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
+func (db Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
+	directory := filepath.Dir(path)
+	name := filepath.Base(path)
+
 	sql := `UPDATE file
-	        SET fingerprint = ?, mod_time = ?
+	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?
 	        WHERE id = ?`
 
-	_, err := db.connection.Exec(sql, string(fingerprint), formatTimestamp(modTime), int(fileId))
+	_, err := db.connection.Exec(sql, directory, name, string(fingerprint), formatTimestamp(modTime), int(fileId))
 	if err != nil {
 		return err
 	}

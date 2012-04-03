@@ -205,8 +205,8 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
 	} else {
 	    // existing file
 
-		if file.Fingerprint != fingerprint || file.ModTimestamp != modTime {
-			db.UpdateFile(file.Id, fingerprint, modTime)
+		if file.ModTimestamp != modTime {
+			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
 		}
 	}
 

@@ -96,43 +96,43 @@ func (command RepairCommand) Exec(args []string) error {
     return nil
 }
 
-func (command RepairCommand) checkEntry(entry *database.File, db *database.Database, fileSystemEntries map[fingerprint.Fingerprint]string) error {
+func (command RepairCommand) checkEntry(entry *database.File, db *database.Database, pathsByFingerprint map[fingerprint.Fingerprint][]string) error {
     info, err := os.Stat(entry.Path())
     if err != nil {
         switch {
         case os.IsNotExist(err):
-            //TODO is there an untagged file with same fingerprint?
-            common.Warnf("'%v': Missing - maybe moved", entry.Path())
-            return nil
+            err = command.processMissingEntry(entry, pathsByFingerprint, db)
+            if err != nil {
+                return err
+            }
         case os.IsPermission(err):
-            common.Warnf("'%v': Permission denied", entry.Path())
-            return nil
+            common.Warnf("'%v': Permission denied.", entry.Path())
         default:
             common.Warn("'%v': %v", err)
         }
-    }
 
+        return nil
+    }
     modTime := info.ModTime()
 
     fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
         switch {
         case os.IsNotExist(err):
-            //TODO is there an untagged file with same fingerprint?
-            common.Warnf("'%v': Missing - maybe moved", entry.Path())
-            return nil
+            common.Warnf("'%v': Missing", entry.Path())
         case os.IsPermission(err):
             common.Warnf("'%v': Permission denied", entry.Path())
-            return nil
         default:
             common.Warn("'%v': %v", err)
         }
+
+        return nil
     }
 
-    if fingerprint != entry.Fingerprint {
-        fmt.Printf("'%v': fingerprint updated\n", entry.Path())
+    if modTime != entry.ModTimestamp || fingerprint != entry.Fingerprint {
+        fmt.Printf("'%v': entry updated.\n", entry.Path())
 
-        err := db.UpdateFile(entry.Id, fingerprint, modTime)
+        err := db.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
         if err != nil {
             return err
         }
@@ -141,11 +141,41 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 	return nil
 }
 
-func (command RepairCommand) buildFileSystemFingerprints(paths []string) (map[fingerprint.Fingerprint]string, error) {
-    pathByFingerprint := make(map[fingerprint.Fingerprint]string)
+func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFingerprint map[fingerprint.Fingerprint][]string, db *database.Database) error {
+    paths, ok := pathsByFingerprint[entry.Fingerprint]
+    if !ok {
+        common.Warnf("'%v': Missing.", entry.Path())
+        return nil
+    }
+
+    switch len(paths) {
+    case 0:
+        panic("No paths for fingerprint.")
+    case 1:
+        newPath, err := filepath.Abs(paths[0])
+        if err != nil {
+            return err
+        }
+
+        info, err := os.Stat(newPath)
+        if err != nil {
+            return err
+        }
+
+        db.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime())
+        fmt.Printf("'%v': Updated path to '%v'.\n", entry.Path(), newPath)
+    default:
+        common.Warnf("'%v': Moved to multiple destinations.", entry.Path())
+    }
+
+    return nil
+}
+
+func (command RepairCommand) buildFileSystemFingerprints(paths []string) (map[fingerprint.Fingerprint][]string, error) {
+    pathsByFingerprint := make(map[fingerprint.Fingerprint][]string)
 
     for _, path := range paths {
-        err := command.buildFileSystemFingerprintsRecursive(path, pathByFingerprint)
+        err := command.buildFileSystemFingerprintsRecursive(path, pathsByFingerprint)
         if err != nil {
             switch {
             case os.IsNotExist(err):
@@ -158,10 +188,10 @@ func (command RepairCommand) buildFileSystemFingerprints(paths []string) (map[fi
         }
     }
 
-    return pathByFingerprint, nil
+    return pathsByFingerprint, nil
 }
 
-func (command RepairCommand) buildFileSystemFingerprintsRecursive(path string, pathByFingerprint map[fingerprint.Fingerprint]string) error {
+func (command RepairCommand) buildFileSystemFingerprintsRecursive(path string, pathsByFingerprint map[fingerprint.Fingerprint][]string) error {
     path = filepath.Clean(path)
 
     fingerprint, err := fingerprint.Create(path)
@@ -169,7 +199,12 @@ func (command RepairCommand) buildFileSystemFingerprintsRecursive(path string, p
         return err
     }
 
-    pathByFingerprint[fingerprint] = path
+    paths, ok := pathsByFingerprint[fingerprint]
+    if !ok {
+        paths = make([]string, 0, 10)
+    }
+    paths = append(paths, path)
+    pathsByFingerprint[fingerprint] = paths
 
     if common.IsDir(path) {
         dir, err := os.Open(path)
@@ -184,7 +219,7 @@ func (command RepairCommand) buildFileSystemFingerprintsRecursive(path string, p
 
         for _, dirEntry := range dirEntries {
             dirEntryPath := filepath.Join(path, dirEntry.Name())
-            command.buildFileSystemFingerprintsRecursive(dirEntryPath, pathByFingerprint)
+            command.buildFileSystemFingerprintsRecursive(dirEntryPath, pathsByFingerprint)
         }
     }
 

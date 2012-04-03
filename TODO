@@ -1,5 +1,13 @@
+IMMEDIATE
+
+* Repair command currently requires '.' to be passed before it'll do anything.
+* Status command is confusing as it runs only on the db with no args and only on the specified files with args.
+* Auto-upgrade database
+* Improve unit-test coverage, especially database.
+
+LATER
+
 * Auto-detect file type and apply tag.  
-* Improve VFS actions.
 * Allow actions to be performed on VFS files.
 * Handle case of attempting to mount VFS when already mounted at mp.
 * Getopt replacement.

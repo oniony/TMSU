@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"tmsu/common"
 	"tmsu/database"
-	"tmsu/fingerprint"
 )
 
 type StatusCommand struct{}
@@ -168,58 +167,57 @@ func (command StatusCommand) statusPath(path string) (Status, error) {
         return 0, err
     }
     if entry != nil {
-        // path is tagged
+        return command.statusTaggedPath(entry)
+    } else {
+        return command.statusUntaggedPath(path)
+    }
 
-        _, err := os.Stat(path)
-        if err != nil {
-            switch {
-            case os.IsNotExist(err):
-                return MISSING, nil
-            default:
-                return 0, err
-            }
+    return 0, nil
+}
+
+func (command StatusCommand) statusTaggedPath(entry *database.File) (Status, error) {
+    info, err := os.Stat(entry.Path())
+    if err != nil {
+        switch {
+        case os.IsNotExist(err):
+            return MISSING, nil
+        default:
+            return 0, err
         }
+    }
 
-        fingerprint, err := fingerprint.Create(path)
+    if entry.ModTimestamp == info.ModTime() {
+        return TAGGED, nil
+    }
+
+    return MODIFIED, nil
+}
+
+func (command StatusCommand) statusUntaggedPath(path string) (Status, error) {
+    if common.IsDir(path) {
+        dir, err := os.Open(path)
         if err != nil {
             return 0, err
         }
 
-        if entry.Fingerprint == fingerprint {
-            return TAGGED, nil
-        } else {
-            return MODIFIED, nil
-        }
-    } else {
-        // path is not tagged
-
-        if common.IsDir(path) {
-            dir, err := os.Open(path)
+        entries, err := dir.Readdir(0)
+        for _, entry := range entries {
+            entryPath := filepath.Join(path, entry.Name())
+            status, err := command.statusPath(entryPath)
             if err != nil {
                 return 0, err
             }
 
-            entries, err := dir.Readdir(0)
-            for _, entry := range entries {
-                entryPath := filepath.Join(path, entry.Name())
-                status, err := command.statusPath(entryPath)
-                if err != nil {
-                    return 0, err
-                }
-
-                switch status {
-                case TAGGED, MODIFIED, NESTED:
-                    return NESTED, err
-                }
+            switch status {
+            case TAGGED, MODIFIED, NESTED:
+                return NESTED, err
             }
-
-            return UNTAGGED, err
-        } else {
-            return UNTAGGED, err
         }
+
+        return UNTAGGED, nil
     }
 
-    return 0, nil
+    return UNTAGGED, nil
 }
 
 type Status int

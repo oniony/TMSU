@@ -84,6 +84,10 @@ _tmsu_cmd_rename() {
 	_arguments -s -w '1:tag:_tmsu_tags' && ret=0
 }
 
+_tmsu_cmd_repair() {
+	_arguments -s -w '*:file:_files' && ret=0
+}
+
 _tmsu_cmd_stats() {
     # no arguments
 }
@@ -124,8 +128,7 @@ _tmsu_cmd_tag() {
 }
 
 _tmsu_cmd_tags() {
-	_arguments -s -w '*:file:_files' \
-	&& ret=0
+	_arguments -s -w '*:file:_files' && ret=0
 }
 
 _tmsu_cmd_unmount() {

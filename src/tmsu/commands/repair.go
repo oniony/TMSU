@@ -113,7 +113,7 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 
         return nil
     }
-    modTime := info.ModTime()
+    modTime := info.ModTime().UTC()
 
     fingerprint, err := fingerprint.Create(entry.Path())
     if err != nil {
@@ -129,7 +129,7 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
         return nil
     }
 
-    if modTime != entry.ModTimestamp || fingerprint != entry.Fingerprint {
+    if modTime.Unix() != entry.ModTimestamp.Unix() || fingerprint != entry.Fingerprint {
         fmt.Printf("'%v': entry updated.\n", entry.Path())
 
         err := db.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
@@ -162,7 +162,7 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFi
             return err
         }
 
-        db.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime())
+        db.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime().UTC())
         fmt.Printf("'%v': Updated path to '%v'.\n", entry.Path(), newPath)
     default:
         common.Warnf("'%v': Moved to multiple destinations.", entry.Path())

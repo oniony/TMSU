@@ -216,7 +216,9 @@ func (command StatusCommand) statusTaggedPath(entry *database.File) (Status, err
         }
     }
 
-    if entry.ModTimestamp == info.ModTime() {
+    fmt.Println("Entry mod", entry.ModTimestamp.Unix())
+    fmt.Println("Info mod", info.ModTime().Unix())
+    if entry.ModTimestamp.Unix() == info.ModTime().Unix() {
         return TAGGED, nil
     }
 

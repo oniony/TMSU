@@ -180,7 +180,7 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
     if err != nil {
         return nil, err
     }
-    modTime := info.ModTime()
+    modTime := info.ModTime().UTC()
 
 	if file == nil {
 	    // new file
@@ -205,7 +205,7 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
 	} else {
 	    // existing file
 
-		if file.ModTimestamp != modTime {
+		if file.ModTimestamp.Unix() != modTime.Unix() {
 			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
 		}
 	}

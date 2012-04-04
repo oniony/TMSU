@@ -25,6 +25,11 @@ import (
 	"tmsu/database"
 )
 
+// 1. No arguments shows the status of entries within the current working directory.
+// 2. One argument shows the status of that entry. Directory contents are shown.
+// 3. Status with arguments shows the status of the arguments. Directory contents are shown beneath directory name.
+// 4. --directory shows directory entries rather than contents.
+
 type StatusCommand struct{}
 
 func (StatusCommand) Name() string {
@@ -38,15 +43,11 @@ func (StatusCommand) Synopsis() string {
 func (StatusCommand) Description() string {
 	return `tmsu status [PATH]...
 
-Shows the status of entries in the database and file system.
+Shows the status of PATHs (current directory by default).
 
-Where no PATHs are given, the status of all the entries in the database are
-listed. (Untagged files and directories are not identified in this case.)
+  --directory    List directory entries instead of contents.
 
-Where PATHs are given then only the database entries corresponding to these
-paths are shown, along with any untagged files on the filesystem at these paths.
-
-The status codes in the listing have the following meanings:
+Status codes are:
 
   T - Tagged
   M - Modified
@@ -54,9 +55,8 @@ The status codes in the listing have the following meanings:
   ? - Untagged
   + - Nested
 
-The nested status is shown only for directories and indicates that the
-directory is not tagged itself but that some of the files or directories within
-it are.
+Nested (+) indicates a directory is not itself tagged but some of the files and
+directories within it are.
 
 Note: The 'repair' command can be used to fix problems caused by files that have
 been modified or moved on disk.`
@@ -75,9 +75,16 @@ func NewReport() *StatusReport {
 }
 
 func (command StatusCommand) Exec(args []string) error {
+    showDirectory := false
+
+    if len(args) > 0 && args[0] == "--directory" {
+        showDirectory = true
+        args = args[1:]
+    }
+
     report := NewReport()
 
-    err := command.status(args, report)
+    err := command.status(args, report, showDirectory)
     if err != nil {
         return err
     }
@@ -105,22 +112,9 @@ func (command StatusCommand) Exec(args []string) error {
 	return nil
 }
 
-func (command StatusCommand) status(paths []string, report *StatusReport) (error) {
+func (command StatusCommand) status(paths []string, report *StatusReport, showDirectory bool) error {
     if len(paths) == 0 {
-	    db, err := database.Open()
-        if err != nil {
-            return err
-        }
-        defer db.Close()
-
-        entries, err := db.Files()
-        if err != nil {
-            return err
-        }
-
-        for _, entry := range entries {
-            paths = append(paths, entry.Path())
-        }
+        paths = []string{"."}
     }
 
     for _, path := range paths {
@@ -129,33 +123,69 @@ func (command StatusCommand) status(paths []string, report *StatusReport) (error
             return err
         }
 
-        status, err := command.statusPath(absPath)
-        if err != nil {
-            return err
-        }
+        if !showDirectory && isDir(absPath) {
+            status, err := command.getStatus(absPath)
+            switch status {
+            case TAGGED, MODIFIED, MISSING:
+                err = command.statusPath(absPath, report)
+                if err != nil {
+                    return err
+                }
+            }
 
-        relPath := common.MakeRelative(path)
+            dir, err := os.Open(absPath)
+            if err != nil {
+                return err
+            }
+            defer dir.Close()
 
-        switch status {
-        case UNTAGGED:
-            report.Untagged = append(report.Untagged, relPath)
-        case TAGGED:
-            report.Tagged = append(report.Tagged, relPath)
-        case MODIFIED:
-            report.Modified = append(report.Modified, relPath)
-        case MISSING:
-            report.Missing = append(report.Missing, relPath)
-        case NESTED:
-            report.Nested = append(report.Nested, relPath)
-        default:
-            panic("Unsupported status " + string(status))
+            entryNames, err := dir.Readdirnames(0)
+            for _, entryName := range entryNames {
+                entryPath := filepath.Join(absPath, entryName)
+
+                err := command.statusPath(entryPath, report)
+                if err != nil {
+                    return err
+                }
+            }
+        } else {
+            err = command.statusPath(absPath, report)
+            if err != nil {
+                return err
+            }
         }
     }
 
     return nil
 }
 
-func (command StatusCommand) statusPath(path string) (Status, error) {
+func (command StatusCommand) statusPath(path string, report *StatusReport) error {
+    status, err := command.getStatus(path)
+    if err != nil {
+        return err
+    }
+
+    relPath := common.MakeRelative(path)
+
+    switch status {
+    case UNTAGGED:
+        report.Untagged = append(report.Untagged, relPath)
+    case TAGGED:
+        report.Tagged = append(report.Tagged, relPath)
+    case MODIFIED:
+        report.Modified = append(report.Modified, relPath)
+    case MISSING:
+        report.Missing = append(report.Missing, relPath)
+    case NESTED:
+        report.Nested = append(report.Nested, relPath)
+    default:
+        panic("Unsupported status " + string(status))
+    }
+
+    return nil
+}
+
+func (command StatusCommand) getStatus(path string) (Status, error) {
 	db, err := database.Open()
 	if err != nil {
 		return 0, err
@@ -203,7 +233,7 @@ func (command StatusCommand) statusUntaggedPath(path string) (Status, error) {
         entries, err := dir.Readdir(0)
         for _, entry := range entries {
             entryPath := filepath.Join(path, entry.Name())
-            status, err := command.statusPath(entryPath)
+            status, err := command.getStatus(entryPath)
             if err != nil {
                 return 0, err
             }
@@ -218,6 +248,15 @@ func (command StatusCommand) statusUntaggedPath(path string) (Status, error) {
     }
 
     return UNTAGGED, nil
+}
+
+func isDir(path string) bool {
+    info, err := os.Stat(path)
+    if err != nil {
+        return false
+    }
+
+    return info.IsDir()
 }
 
 type Status int

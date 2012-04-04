@@ -50,7 +50,7 @@ Repairs tagged files and directories under PATHS by:
 
 Where no PATHS are specified all tagged files and directories fingerprints in
 the database are checked and their fingerprints updated where modifications are
-found.`
+found. (In this mode file move repairs are not performed.)`
 }
 
 func (command RepairCommand) Exec(args []string) error {

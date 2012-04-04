@@ -25,11 +25,6 @@ import (
 	"tmsu/database"
 )
 
-// 1. No arguments shows the status of entries within the current working directory.
-// 2. One argument shows the status of that entry. Directory contents are shown.
-// 3. Status with arguments shows the status of the arguments. Directory contents are shown beneath directory name.
-// 4. --directory shows directory entries rather than contents.
-
 type StatusCommand struct{}
 
 func (StatusCommand) Name() string {
@@ -197,15 +192,15 @@ func (command StatusCommand) getStatus(path string) (Status, error) {
         return 0, err
     }
     if entry != nil {
-        return command.statusTaggedPath(entry)
+        return command.getTaggedPathStatus(entry)
     } else {
-        return command.statusUntaggedPath(path)
+        return command.getUntaggedPathStatus(path)
     }
 
     return 0, nil
 }
 
-func (command StatusCommand) statusTaggedPath(entry *database.File) (Status, error) {
+func (command StatusCommand) getTaggedPathStatus(entry *database.File) (Status, error) {
     info, err := os.Stat(entry.Path())
     if err != nil {
         switch {
@@ -223,7 +218,7 @@ func (command StatusCommand) statusTaggedPath(entry *database.File) (Status, err
     return MODIFIED, nil
 }
 
-func (command StatusCommand) statusUntaggedPath(path string) (Status, error) {
+func (command StatusCommand) getUntaggedPathStatus(path string) (Status, error) {
     if common.IsDir(path) {
         dir, err := os.Open(path)
         if err != nil {

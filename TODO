@@ -1,10 +1,9 @@
 IMMEDIATE
 
-* Repair command currently requires '.' to be passed before it'll do anything.
-* Status command is confusing as it runs only on the db with no args and only on the specified files with args.
+* 'status' command no longer identifies missing files unless passed as arguments.
+* 'repair' command currently requires '.' to be passed before it'll do anything.
 * Auto-upgrade database
 * Improve unit-test coverage, especially database.
-* ZSH support for repair command.
 
 LATER
 

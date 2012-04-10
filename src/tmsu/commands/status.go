@@ -112,6 +112,11 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
         paths = []string{"."}
     }
 
+    db, err := database.Open()
+    if err != nil {
+        return err
+    }
+
     for _, path := range paths {
         absPath, err := filepath.Abs(path)
         if err != nil {
@@ -119,14 +124,18 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
         }
 
         if !showDirectory && isDir(absPath) {
-            status, err := command.getStatus(absPath)
+            status, err := command.getStatus(absPath, db)
+            if err != nil {
+                return err
+            }
+
             switch status {
             case TAGGED, MODIFIED, MISSING:
-                err = command.statusPath(absPath, report)
+                err = command.addToReport(absPath, status, report)
                 if err != nil {
                     return err
                 }
-            case UNTAGGED:
+            case UNTAGGED, NESTED:
                 dir, err := os.Open(absPath)
                 if err != nil {
                     return err
@@ -137,9 +146,26 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
                 for _, entryName := range entryNames {
                     entryPath := filepath.Join(absPath, entryName)
 
-                    err := command.statusPath(entryPath, report)
+                    status, err := command.getStatus(entryPath, db)
                     if err != nil {
                         return err
+                    }
+
+                    err = command.addToReport(entryPath, status, report)
+                    if err != nil {
+                        return err
+                    }
+                }
+
+                files, err := db.FilesByDirectory(absPath)
+                for _, file := range files {
+                    status, err := command.getStatus(file.Path(), db)
+                    if err != nil {
+                        return err
+                    }
+
+                    if status == MISSING {
+                        command.addToReport(file.Path(), status, report)
                     }
                 }
             default:
@@ -147,9 +173,13 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
             }
 
         } else {
-            err = command.statusPath(absPath, report)
+            status, err := command.getStatus(absPath, db)
             if err != nil {
                 return err
+            }
+
+            if status == MISSING {
+                command.addToReport(absPath, status, report)
             }
         }
     }
@@ -157,12 +187,7 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
     return nil
 }
 
-func (command StatusCommand) statusPath(path string, report *StatusReport) error {
-    status, err := command.getStatus(path)
-    if err != nil {
-        return err
-    }
-
+func (command StatusCommand) addToReport(path string, status Status, report *StatusReport) error {
     relPath := common.MakeRelative(path)
 
     switch status {
@@ -183,13 +208,7 @@ func (command StatusCommand) statusPath(path string, report *StatusReport) error
     return nil
 }
 
-func (command StatusCommand) getStatus(path string) (Status, error) {
-	db, err := database.Open()
-	if err != nil {
-		return 0, err
-	}
-	defer db.Close()
-
+func (command StatusCommand) getStatus(path string, db *database.Database) (Status, error) {
     entry, err := db.FileByPath(path)
     if err != nil {
         return 0, err
@@ -197,7 +216,7 @@ func (command StatusCommand) getStatus(path string) (Status, error) {
     if entry != nil {
         return command.getTaggedPathStatus(entry)
     } else {
-        return command.getUntaggedPathStatus(path)
+        return command.getUntaggedPathStatus(path, db)
     }
 
     return 0, nil
@@ -221,7 +240,7 @@ func (command StatusCommand) getTaggedPathStatus(entry *database.File) (Status, 
     return MODIFIED, nil
 }
 
-func (command StatusCommand) getUntaggedPathStatus(path string) (Status, error) {
+func (command StatusCommand) getUntaggedPathStatus(path string, db *database.Database) (Status, error) {
     if common.IsDir(path) {
         dir, err := os.Open(path)
         if err != nil {
@@ -231,7 +250,7 @@ func (command StatusCommand) getUntaggedPathStatus(path string) (Status, error) 
         entries, err := dir.Readdir(0)
         for _, entry := range entries {
             entryPath := filepath.Join(path, entry.Name())
-            status, err := command.getStatus(entryPath)
+            status, err := command.getStatus(entryPath, db)
             if err != nil {
                 return 0, err
             }

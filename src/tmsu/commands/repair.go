@@ -54,6 +54,10 @@ found. (In this mode file move repairs are not performed.)`
 }
 
 func (command RepairCommand) Exec(args []string) error {
+    if len(args) == 0 {
+        args = []string {"."}
+    }
+
     pathsByFingerprint, err := command.buildFileSystemFingerprints(args)
     if err != nil {
         return err
@@ -130,12 +134,12 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
     }
 
     if modTime.Unix() != entry.ModTimestamp.Unix() || fingerprint != entry.Fingerprint {
-        fmt.Printf("'%v': entry updated.\n", entry.Path())
-
         err := db.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
         if err != nil {
             return err
         }
+
+        fmt.Printf("'%v': Repaired.\n", entry.Path())
     }
 
 	return nil
@@ -163,9 +167,10 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFi
         }
 
         db.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime().UTC())
-        fmt.Printf("'%v': Updated path to '%v'.\n", entry.Path(), newPath)
+
+        fmt.Printf("'%v': Repaired (moved to '%v').\n", entry.Path(), newPath)
     default:
-        common.Warnf("'%v': Moved to multiple destinations.", entry.Path())
+        common.Warnf("'%v': Cannot repair: file moved to multiple destinations.", entry.Path())
     }
 
     return nil

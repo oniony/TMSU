@@ -281,7 +281,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 		common.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
-	files, err := db.FilesWithTags(tags)
+	files, err := db.FilesWithTags(tags, []string{})
 	if err != nil {
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}

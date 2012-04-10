@@ -4,6 +4,8 @@ IMMEDIATE
 * 'repair' command currently requires '.' to be passed before it'll do anything.
 * Auto-upgrade database
 * Improve unit-test coverage, especially database.
+* Show negating tag directories in VFS (e.g. '-sometag').
+* Update Zsh completion.
 
 LATER
 

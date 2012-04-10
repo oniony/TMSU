@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-    "errors"
-    "strconv"
-    "strings"
-    "tmsu/fingerprint"
+	"errors"
+	"strconv"
+	"strings"
+	"tmsu/fingerprint"
 )
 
 func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
@@ -67,25 +67,43 @@ func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
 	return fileCount, nil
 }
 
-func (db Database) FilesWithTags(tagNames []string) ([]File, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (
-                    SELECT id
-                    FROM tag
-                    WHERE name IN (` + strings.Repeat("?,", len(tagNames)-1) + `?)
-                )
-                GROUP BY file_id
-                HAVING count(1) = ` + strconv.Itoa(len(tagNames)) + `
-            )`
-
-	// convert string array to empty-interface array
-	castTagNames := make([]interface{}, len(tagNames))
-	for index, tagName := range tagNames {
+func (db Database) FilesWithTags(includeTagNames, excludeTagNames []string) ([]File, error) {
+	castTagNames := make([]interface{}, len(includeTagNames)+len(excludeTagNames))
+	for index, tagName := range includeTagNames {
 		castTagNames[index] = tagName
+	}
+	for index, tagName := range excludeTagNames {
+		castTagNames[index+len(includeTagNames)] = tagName
+	}
+
+	sql := `SELECT id, directory, name, fingerprint, mod_time
+			FROM file
+			WHERE 1 = 1`
+
+	if len(includeTagNames) > 0 {
+		sql += ` AND id IN (
+					SELECT file_id
+					FROM file_tag
+					WHERE tag_id IN (
+						SELECT id
+						FROM tag
+						WHERE name IN (` + strings.Repeat("?,", len(includeTagNames)-1) + `?)
+					)
+					GROUP BY file_id
+					HAVING count(1) = ` + strconv.Itoa(len(includeTagNames)) + `
+				)`
+	}
+
+	if len(excludeTagNames) > 0 {
+		sql += ` AND id NOT IN (
+					SELECT file_id
+					FROM file_tag
+					WHERE tag_id IN (
+						SELECT id
+						FROM tag
+						WHERE name IN (` + strings.Repeat("?,", len(excludeTagNames)-1) + `?)
+					)
+				)`
 	}
 
 	rows, err := db.connection.Query(sql, castTagNames...)

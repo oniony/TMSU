@@ -73,8 +73,8 @@ func (FilesCommand) listAllFiles() error {
 	return nil
 }
 
-func (FilesCommand) listFiles(tagNames []string) error {
-	if len(tagNames) == 0 {
+func (FilesCommand) listFiles(args []string) error {
+	if len(args) == 0 {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
 
@@ -84,7 +84,18 @@ func (FilesCommand) listFiles(tagNames []string) error {
 	}
 	defer db.Close()
 
-	for _, tagName := range tagNames {
+    includeTagNames := make([]string, 0)
+    excludeTagNames := make([]string, 0)
+	for _, arg := range args {
+	    var tagName string
+	    if arg[0] == '-' {
+	        tagName = arg[1:]
+            excludeTagNames = append(excludeTagNames, tagName)
+        } else {
+            tagName = arg
+            includeTagNames = append(includeTagNames, tagName)
+        }
+
 		tag, err := db.TagByName(tagName)
 		if err != nil {
 			return err
@@ -94,7 +105,7 @@ func (FilesCommand) listFiles(tagNames []string) error {
 		}
 	}
 
-	files, err := db.FilesWithTags(tagNames)
+	files, err := db.FilesWithTags(includeTagNames, excludeTagNames)
 	if err != nil {
 		return err
 	}

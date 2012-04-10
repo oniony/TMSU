@@ -132,6 +132,10 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 		return nil, nil, errors.New("Tag names cannot contain spaces.")
 	}
 
+	if tagName[0] == '-' {
+	    return nil, nil, errors.New("Tag names cannot start '-'.")
+    }
+
 	tag, err := db.TagByName(tagName)
 	if err != nil {
 		return nil, nil, err

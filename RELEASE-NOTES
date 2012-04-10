@@ -1,0 +1,34 @@
+0.0.6
+-----
+
+IMPORTANT
+
+Version 0.0.6 makes a schema change to the database to record the modification
+timestamp for files. The new code will not work with an existing tmsu database
+until it has been upgraded.
+
+To upgrade the database, run the upgrade script using the Sqlite3 tooling:
+
+    $ sqlite3 -init misc/db-upgrade/0.0.5_to_0.0.6.sql
+
+It is also advisable to run 'repair' after upgrading which will populate the
+new column and also fix the directory fingerprints which have a new algorithm.
+
+CHANGES
+
+* Upgraded to Go 1.
+* Added 'repair' command to fix up database when files are moved or modified.
+* Added 'version' command.
+* Added 'copy' command (duplicates a tag).
+* Added modification timestamp which is used in preference to fingerprint.
+* Command output now includes 'tmsu' to make it clear where output is coming from when piping.
+* Relative paths now calculated more accurately.
+* Zsh completion now supports tags containing colons.
+* 'status' command performance and functionality improvements.
+* Added directory fingerprinting.
+* Added 'repair' command to Zsh completion.
+
+0.0.5
+-----
+
+This is the first published binary of tmsu.

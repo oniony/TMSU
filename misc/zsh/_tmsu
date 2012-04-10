@@ -50,6 +50,10 @@ _tmsu_tags() {
 	_describe -t tags 'tags' tag_list
 }
 
+_tmsu_cmd_copy() {
+    _arguments -s -w '1:tag:_tmsu_tags' && ret=0
+}
+
 _tmsu_cmd_delete() {
 	_arguments -s -w '*:tag:_tmsu_tags' && ret=0
 }

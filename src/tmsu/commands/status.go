@@ -46,7 +46,7 @@ Status codes are:
 
   T - Tagged
   M - Modified
-  ! - Missingd
+  ! - Missing
   ? - Untagged
   + - Nested
 
@@ -126,23 +126,26 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
                 if err != nil {
                     return err
                 }
-            }
-
-            dir, err := os.Open(absPath)
-            if err != nil {
-                return err
-            }
-            defer dir.Close()
-
-            entryNames, err := dir.Readdirnames(0)
-            for _, entryName := range entryNames {
-                entryPath := filepath.Join(absPath, entryName)
-
-                err := command.statusPath(entryPath, report)
+            case UNTAGGED:
+                dir, err := os.Open(absPath)
                 if err != nil {
                     return err
                 }
+                defer dir.Close()
+
+                entryNames, err := dir.Readdirnames(0)
+                for _, entryName := range entryNames {
+                    entryPath := filepath.Join(absPath, entryName)
+
+                    err := command.statusPath(entryPath, report)
+                    if err != nil {
+                        return err
+                    }
+                }
+            default:
+                panic("Unsupported state " + string(status))
             }
+
         } else {
             err = command.statusPath(absPath, report)
             if err != nil {

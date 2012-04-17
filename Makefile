@@ -1,4 +1,4 @@
-VER=0.0.6
+VER=0.0.7
 SHELL=/bin/sh
 HGREV=$(shell hg id)
 
@@ -44,7 +44,7 @@ dist: compile
 	### Dist ###
 	@mkdir -p $(DIST_DIR)
 	cp -R $(BIN_DIR) $(DIST_DIR)
-	cp -R LICENSE README misc $(DIST_DIR)
+	cp -R LICENSE README RELEASE-NOTES misc $(DIST_DIR)
 	tar czf $(DIST_FILE) $(DIST_DIR)
 	rm -Rf $(DIST_DIR)
 

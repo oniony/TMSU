@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package fingerprint
 
 import (
+    "fmt"
 	"os"
 	"path/filepath"
 	"testing"
@@ -45,14 +46,4 @@ func TestRegularGeneration(test *testing.T) {
 	if fingerprint != Fingerprint("87d74123749a45e4c4e5e9053986d7ae878268a8e301d1b8125791517c0d39bf") {
 		test.Fatal("Fingerprint incorrect.")
 	}
-}
-
-func TestLargeFileGeneration(test *testing.T) {
-    tempFilePath := filepath.Join(os.TempDir(), "tmsu-fingerprint")
-
-	_, err := os.Create(tempFilePath)
-	if err != nil {
-		test.Fatal(err.Error())
-	}
-	defer os.Remove(tempFilePath)
 }

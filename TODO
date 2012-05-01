@@ -1,15 +1,14 @@
 IMMEDIATE
 
-* Auto-upgrade database
 * Improve unit-test coverage, especially database.
-* Show negating tag directories in VFS (e.g. '-sometag').
-* Update Zsh completion.
+* Allow actions to be performed on VFS files.
+* Tag implications (tag A implies B).
 
 LATER
 
 * Auto-detect file type and apply tag.  
-* Allow actions to be performed on VFS files.
 * Handle case of attempting to mount VFS when already mounted at mp.
 * Getopt replacement.
 * Auto-tags (in general).
+* Improve Zsh completion so that only applicable tags are shown.
 * Exif

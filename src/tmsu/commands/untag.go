@@ -183,7 +183,7 @@ func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, 
 		return err
 	}
 	if tag == nil {
-		errors.New("No such tag" + tagName)
+		return errors.New("No such tag '" + tagName + "'.")
 	}
 
 	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)

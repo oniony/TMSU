@@ -70,7 +70,7 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 
 	path := vfs.splitPath(name)
 
-    if path[len(path) - 1] == ".vfs" {
+    if path[len(path) - 1] == MetaDataFileName {
         return vfs.getMetaFileAttr()
     }
 
@@ -125,7 +125,7 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEnt
 		return vfs.topDirectories()
 	case "tags":
 		return vfs.tagDirectories()
-    case ".vfs":
+    case MetaDataFileName:
 	    return nil, fuse.ENOTDIR
 	}
 
@@ -149,13 +149,15 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 }
 
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
-    data := []byte(fmt.Sprintf("Database: %v\n", vfs.databasePath))
+    data := []byte(fmt.Sprintf("db=%v\n", vfs.databasePath))
     file := fuse.NewDataFile([]byte(data))
 
     return file, 0
 }
 
 // implementation
+
+const MetaDataFileName string = ".tmsu_vfs"
 
 func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
@@ -183,7 +185,7 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
 	channel := make(chan fuse.DirEntry, 2)
 	channel <- fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR}
-    channel <- fuse.DirEntry{Name: ".vfs", Mode: fuse.S_IFREG}
+    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
 	close(channel)
 
 	return channel, fuse.OK
@@ -202,7 +204,7 @@ func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 	}
 
 	channel := make(chan fuse.DirEntry, len(tags) + 1)
-    channel <- fuse.DirEntry{Name: ".vfs", Mode: fuse.S_IFREG}
+    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
 	for _, tag := range tags {
 		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
@@ -311,7 +313,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 	channel := make(chan fuse.DirEntry, len(files)+len(furtherTags)+1)
 	defer close(channel)
 
-    channel <- fuse.DirEntry{Name: ".vfs", Mode: fuse.S_IFREG}
+    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
 
 	for _, tag := range furtherTags {
 		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}

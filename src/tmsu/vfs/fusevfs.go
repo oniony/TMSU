@@ -119,7 +119,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	return fuse.OK
 }
 
-func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) (chan fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
 	switch name {
 	case "":
 		return vfs.topDirectories()
@@ -182,16 +182,14 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 	return id, nil
 }
 
-func (vfs FuseVfs) topDirectories() (chan fuse.DirEntry, fuse.Status) {
-	channel := make(chan fuse.DirEntry, 2)
-	channel <- fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR}
-    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
-	close(channel)
-
-	return channel, fuse.OK
+func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
+    entries := make([]fuse.DirEntry, 0, 2)
+    entries = append(entries, fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR})
+    entries = append(entries, fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG})
+	return entries, fuse.OK
 }
 
-func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
@@ -203,14 +201,13 @@ func (vfs FuseVfs) tagDirectories() (chan fuse.DirEntry, fuse.Status) {
 		common.Fatalf("Could not retrieve tags: %v", err)
 	}
 
-	channel := make(chan fuse.DirEntry, len(tags) + 1)
-    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
-	for _, tag := range tags {
-		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
+    entries := make([]fuse.DirEntry, len(tags) + 1)
+    entries[0] = fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
+	for index, tag := range tags {
+	    entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
-	close(channel)
 
-	return channel, fuse.OK
+	return entries, fuse.OK
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
@@ -291,7 +288,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(size), Mtime: uint64(modTime.Unix()), Mtimensec: uint32(modTime.Nanosecond())}, fuse.OK
 }
 
-func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
 	db, err := database.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
@@ -310,21 +307,20 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) (chan fuse.DirEntry, fuse.S
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
-	channel := make(chan fuse.DirEntry, len(files)+len(furtherTags)+1)
-	defer close(channel)
+    entries := make([]fuse.DirEntry, len(files)+len(furtherTags)+1)
 
-    channel <- fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
+    entries[0] = fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
 
-	for _, tag := range furtherTags {
-		channel <- fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
+	for index, tag := range furtherTags {
+		entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
 	}
 
-	for _, file := range files {
-		linkName := vfs.getLinkName(file)
-		channel <- fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
+	for index, file := range files {
+        linkName := vfs.getLinkName(file)
+		entries[index + len(furtherTags) + 1] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}
 
-	return channel, fuse.OK
+	return entries, fuse.OK
 }
 
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {

@@ -70,10 +70,6 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 
 	path := vfs.splitPath(name)
 
-    if path[len(path) - 1] == MetaDataFileName {
-        return vfs.getMetaFileAttr()
-    }
-
 	switch path[0] {
 	case "tags":
 		return vfs.getTaggedEntryAttr(path[1:])
@@ -125,8 +121,6 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 		return vfs.topDirectories()
 	case "tags":
 		return vfs.tagDirectories()
-    case MetaDataFileName:
-	    return nil, fuse.ENOTDIR
 	}
 
 	path := vfs.splitPath(name)
@@ -157,8 +151,6 @@ func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.
 
 // implementation
 
-const MetaDataFileName string = ".tmsu_vfs"
-
 func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
 }
@@ -183,9 +175,8 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 }
 
 func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
-    entries := make([]fuse.DirEntry, 0, 2)
+    entries := make([]fuse.DirEntry, 0, 1)
     entries = append(entries, fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR})
-    entries = append(entries, fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG})
 	return entries, fuse.OK
 }
 
@@ -201,8 +192,7 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 		common.Fatalf("Could not retrieve tags: %v", err)
 	}
 
-    entries := make([]fuse.DirEntry, len(tags) + 1)
-    entries[0] = fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
+    entries := make([]fuse.DirEntry, len(tags))
 	for index, tag := range tags {
 	    entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
@@ -224,11 +214,6 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 
 	now := time.Now()
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(tagCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
-}
-
-func (vfs FuseVfs) getMetaFileAttr() (*fuse.Attr, fuse.Status) {
-	now := time.Now()
-    return &fuse.Attr{Mode: fuse.S_IFREG | 0444, Size: uint64(len(vfs.databasePath)), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
@@ -307,14 +292,10 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
-    entries := make([]fuse.DirEntry, len(files)+len(furtherTags)+1)
-
-    entries[0] = fuse.DirEntry{Name: MetaDataFileName, Mode: fuse.S_IFREG}
-
+    entries := make([]fuse.DirEntry, len(files)+len(furtherTags))
 	for index, tag := range furtherTags {
 		entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
 	}
-
 	for index, file := range files {
         linkName := vfs.getLinkName(file)
 		entries[index + len(furtherTags) + 1] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}

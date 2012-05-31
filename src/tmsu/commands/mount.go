@@ -24,6 +24,7 @@ import (
 	"syscall"
 	"time"
 	"tmsu/common"
+	"tmsu/vfs"
 )
 
 type MountCommand struct{}
@@ -53,6 +54,7 @@ is mounted.`
 func (command MountCommand) Exec(args []string) error {
 	argCount := len(args)
 
+    vfs.MountTable()
 	switch argCount {
 	case 0:
 		return errors.New("Mountpoint must be specified.")

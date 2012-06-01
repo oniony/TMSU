@@ -57,3 +57,11 @@ func MakeRelative(path string) string {
 
 	return path
 }
+
+func Join(dir, path string) string {
+    if filepath.IsAbs(path) {
+        return path
+    }
+
+    return filepath.Join(dir, path)
+}

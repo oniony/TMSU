@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -38,9 +39,10 @@ func (MountCommand) Synopsis() string {
 }
 
 func (MountCommand) Description() string {
-	return `tmsu mount [FILE] MOUNTPOINT
+	return `tmsu mount [[FILE] MOUNTPOINT]
 
-Mounts a virtual file-system at the path MOUNTPOINT.
+Without arguments, lists the currently mounted file-systems, otherwise mounts a
+virtual file-system at the path MOUNTPOINT.
 
 Where FILE is specified, the database at FILE is mounted.
 
@@ -54,10 +56,9 @@ is mounted.`
 func (command MountCommand) Exec(args []string) error {
 	argCount := len(args)
 
-    vfs.MountTable()
 	switch argCount {
 	case 0:
-		return errors.New("Mountpoint must be specified.")
+		command.listMounts()
 	case 1:
 		mountPath := args[0]
 
@@ -78,6 +79,19 @@ func (command MountCommand) Exec(args []string) error {
 	}
 
 	return nil
+}
+
+func (command MountCommand) listMounts() error {
+    mt, err := vfs.GetMountTable()
+    if err != nil {
+        return err
+    }
+
+    for _, mount := range mt {
+        fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
+    }
+
+    return nil
 }
 
 func (command MountCommand) mountSelected(mountPath string) error {

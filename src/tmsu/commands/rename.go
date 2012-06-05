@@ -59,6 +59,11 @@ func (RenameCommand) Exec(args []string) error {
 		return errors.New("No such tag '" + sourceTagName + "'.")
 	}
 
+    err = validateTagName(destTagName)
+    if err != nil {
+        return err
+    }
+
 	destTag, err := db.TagByName(destTagName)
 	if err != nil {
 		return err

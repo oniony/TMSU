@@ -120,20 +120,9 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 }
 
 func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
-	if strings.Index(tagName, ",") != -1 {
-		return nil, nil, errors.New("Tag names cannot contain commas.")
-	}
-
-	if strings.Index(tagName, "=") != -1 {
-		return nil, nil, errors.New("Tag names cannot contain '='.")
-	}
-
-	if strings.Index(tagName, " ") != -1 {
-		return nil, nil, errors.New("Tag names cannot contain spaces.")
-	}
-
-	if tagName[0] == '-' {
-	    return nil, nil, errors.New("Tag names cannot start '-'.")
+    err := validateTagName(tagName)
+    if err != nil {
+        return nil, nil, err
     }
 
 	tag, err := db.TagByName(tagName)

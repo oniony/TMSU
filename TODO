@@ -1,7 +1,8 @@
 IMMEDIATE
 
-* Improve unit-test coverage, especially database.
+* 'unmount --all'
 * Allow actions to be performed on VFS files.
+* Improve unit-test coverage, especially database.
 * Tag implications (tag A implies B).
 
 LATER

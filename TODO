@@ -1,8 +1,12 @@
-IMMEDIATE
+0.0.8
 
 * 'unmount --all'
+* Allow tagged directory entries to be tagged and inherit parent tags.
 * Allow actions to be performed on VFS files.
 * Improve unit-test coverage, especially database.
+
+0.0.9
+
 * Tag implications (tag A implies B).
 
 LATER

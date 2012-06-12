@@ -1,7 +1,7 @@
 0.0.8
 
 * 'unmount --all'
-* Allow tagged directory entries to be tagged and inherit parent tags.
+* Allow files within a tagged directory to be tagged (tag inheritence).
 * Allow actions to be performed on VFS files.
 * Improve unit-test coverage, especially database.
 
@@ -15,5 +15,6 @@ LATER
 * Handle case of attempting to mount VFS when already mounted at mp.
 * Getopt replacement.
 * Auto-tags (in general).
-* Improve Zsh completion so that only applicable tags are shown.
+* Zsh: show only applicable tags.
+* Zsh: show only mounted dirs on 'unmount' completion.
 * Exif

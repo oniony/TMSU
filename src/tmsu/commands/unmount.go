@@ -21,6 +21,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"tmsu/vfs"
 )
 
 type UnmountCommand struct{}
@@ -34,18 +35,27 @@ func (UnmountCommand) Synopsis() string {
 }
 
 func (UnmountCommand) Description() string {
-	return `tags unmount MOUNTPOINT
+	return `tmsu unmount MOUNTPOINT
+tmsu unmount --all
 
-Unmounts the virtual file-system at MOUNTPOINT.`
+Unmounts the virtual file-system at MOUNTPOINT.
+
+    --all    Unmounts all mounted TMSU file-systems.`
 }
 
-func (UnmountCommand) Exec(args []string) error {
+func (command UnmountCommand) Exec(args []string) error {
 	if len(args) < 1 {
 		return errors.New("Path to unmount not speciified.")
 	}
 
-	path := args[0]
+    if (args[0] == "--all") {
+        return command.unmountAll()
+    }
 
+    return command.unmount(args[0])
+}
+
+func (UnmountCommand) unmount(path string) error {
 	fusermountPath, err := exec.LookPath("fusermount")
 	if err != nil {
 		return err
@@ -65,4 +75,20 @@ func (UnmountCommand) Exec(args []string) error {
 	}
 
 	return nil
+}
+
+func (command UnmountCommand) unmountAll() error {
+    mt, err := vfs.GetMountTable()
+    if err != nil {
+        return errors.New("Could not get mount table: " + err.Error())
+    }
+
+    for _, mount := range mt {
+        err = command.unmount(mount.MountPath)
+        if err != nil {
+            return err
+        }
+    }
+
+    return nil
 }

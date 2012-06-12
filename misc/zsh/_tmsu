@@ -80,7 +80,7 @@ _tmsu_cmd_merge() {
 
 _tmsu_cmd_mount() {
 	_arguments -s -w '1:file:_files' \
-	                 '2:mountpoint:_files' \
+	                 '2:mountpoint:_dirs' \
 	&& ret=0
 }
 
@@ -136,7 +136,9 @@ _tmsu_cmd_tags() {
 }
 
 _tmsu_cmd_unmount() {
-	_arguments -s -w '1:mountpoint:_files' && ret=0
+	_arguments -s -w '--all' \
+	                 '1:mountpoint:_files' \
+	&& ret=0
 }
 
 _tmsu_cmd_untag() {

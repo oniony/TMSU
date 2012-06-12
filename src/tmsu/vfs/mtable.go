@@ -32,11 +32,11 @@ type Mount struct {
 }
 
 func GetMountTable() ([]Mount, error) {
-    //TODO change this to system calls
+    //TODO change this to examine /proc directly
 
     outputBytes, err := exec.Command("pgrep", "-f", "tmsu vfs").Output()
     if err != nil {
-        return nil, err
+        return []Mount{}, nil //TODO currently assumes no matches
     }
 
     pids := strings.Split(strings.Trim(string(outputBytes), "\n"), "\n")

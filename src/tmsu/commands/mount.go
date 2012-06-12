@@ -59,7 +59,10 @@ func (command MountCommand) Exec(args []string) error {
 
 	switch argCount {
 	case 0:
-		command.listMounts()
+        err := command.listMounts()
+        if err != nil {
+            return errors.New("Could not list mounts: " + err.Error())
+        }
 	case 1:
 		mountPath := args[0]
 

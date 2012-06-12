@@ -1,5 +1,6 @@
 0.0.8
 
+* Mount table should look at /proc directly rather than calling pgrep.
 * 'unmount --all'
 * Allow files within a tagged directory to be tagged (tag inheritence).
 * Allow actions to be performed on VFS files.

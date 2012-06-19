@@ -24,6 +24,8 @@ import (
     "os/exec"
     "strings"
     "tmsu/common"
+    "tmsu/common/proc"
+    "fmt"
 )
 
 type Mount struct {
@@ -32,6 +34,15 @@ type Mount struct {
 }
 
 func GetMountTable() ([]Mount, error) {
+    pids, err := proc.GetProcessIds()
+    if err != nil {
+        return nil, err
+    }
+
+    for _, pid := range pids {
+        fmt.Println("Pid", pid)
+    }
+
     //TODO change this to examine /proc directly
 
     outputBytes, err := exec.Command("pgrep", "-f", "tmsu vfs").Output()
@@ -39,11 +50,11 @@ func GetMountTable() ([]Mount, error) {
         return []Mount{}, nil //TODO currently assumes no matches
     }
 
-    pids := strings.Split(strings.Trim(string(outputBytes), "\n"), "\n")
+    pids2 := strings.Split(strings.Trim(string(outputBytes), "\n"), "\n")
 
-    mountTable := make([]Mount, len(pids))
+    mountTable := make([]Mount, len(pids2))
 
-    for index, pid := range pids {
+    for index, pid := range pids2 {
         metaPath := "/proc/" + pid
 
         workingDirectory, err := os.Readlink(metaPath + "/cwd")

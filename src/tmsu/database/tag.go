@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
+    "database/sql"
     "errors"
     "strconv"
     "strings"
@@ -65,23 +66,7 @@ func (db Database) Tags() ([]Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]Tag, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var id uint
-		var name string
-		err = rows.Scan(&id, &name)
-		if err != nil {
-			return nil, err
-		}
-
-		tags = append(tags, Tag{id, name})
-	}
-
-	return tags, nil
+    return readTags(rows, make([]Tag, 0, 10))
 }
 
 func (db Database) TagByName(name string) (*Tag, error) {
@@ -127,23 +112,7 @@ func (db Database) TagsByFileId(fileId uint) ([]Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]Tag, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var tagId uint
-		var tagName string
-		err = rows.Scan(&tagId, &tagName)
-		if err != nil {
-			return nil, err
-		}
-
-		tags = append(tags, Tag{tagId, tagName})
-	}
-
-	return tags, nil
+    return readTags(rows, make([]Tag, 0, 10))
 }
 
 func (db Database) TagsForTags(tagNames []string) ([]Tag, error) {
@@ -178,25 +147,7 @@ func (db Database) TagsForTags(tagNames []string) ([]Tag, error) {
 	}
 	defer rows.Close()
 
-	tags := make([]Tag, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var tagId uint
-		var tagName string
-		err = rows.Scan(&tagId, &tagName)
-		if err != nil {
-			return nil, err
-		}
-
-		if !db.contains(tagNames, tagName) {
-			tags = append(tags, Tag{tagId, tagName})
-		}
-	}
-
-	return tags, nil
+    return readTags(rows, make([]Tag, 0, 10))
 }
 
 func (db Database) AddTag(name string) (*Tag, error) {
@@ -298,4 +249,25 @@ func (db Database) DeleteTag(tagId uint) error {
 	}
 
 	return nil
+}
+
+// 
+
+func readTags(rows *sql.Rows, tags []Tag) ([]Tag, error) {
+	for rows.Next() {
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+
+		var tagId uint
+		var tagName string
+        err := rows.Scan(&tagId, &tagName)
+		if err != nil {
+			return nil, err
+		}
+
+		tags = append(tags, Tag{tagId, tagName})
+	}
+
+	return tags, nil
 }

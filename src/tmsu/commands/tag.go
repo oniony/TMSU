@@ -164,11 +164,6 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
 		return nil, err
 	}
 
-    err = command.validateFileAdd(db, path)
-    if err != nil {
-        return nil, err
-    }
-
     info, err := os.Stat(path)
     if err != nil {
         return nil, err
@@ -204,33 +199,4 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
 	}
 
 	return file, nil
-}
-
-func (TagCommand) validateFileAdd(db *database.Database, path string) error {
-    info, err := os.Stat(path)
-    if err != nil {
-        return err
-    }
-
-    if info.IsDir() {
-        files, err := db.FilesByDirectory(path)
-        if err != nil {
-            return err
-        }
-
-        if len(files) > 0 {
-            return errors.New("Cannot tag directory '" + path + "' as it contains tagged items.")
-        }
-    } else {
-        dir := filepath.Dir(path)
-        file, err := db.FileByPath(dir)
-        if err != nil {
-            return err
-        }
-        if file != nil {
-            return errors.New("Cannot tag file '" + path + "' as its parent directory is tagged.")
-        }
-    }
-
-    return nil
 }

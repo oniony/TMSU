@@ -19,9 +19,10 @@ package database
 
 import (
 	"errors"
+	"path/filepath"
+	"database/sql"
 	"strconv"
 	"strings"
-	"tmsu/fingerprint"
 )
 
 type FileTag struct {
@@ -31,46 +32,12 @@ type FileTag struct {
 }
 
 func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
-	sql := `SELECT count(1)
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (
-                    SELECT id
-                    FROM tag
-                    WHERE name IN (` + strings.Repeat("?,", len(tagNames)-1) + `?)
-                )
-                GROUP BY file_id
-                HAVING count(1) = ` + strconv.Itoa(len(tagNames)) + `
-            )`
+    files, err := db.FilesWithTags(tagNames, []string{})
+    if err != nil {
+        return 0, err
+    }
 
-	// convert string array to empty-interface array
-	castTagNames := make([]interface{}, len(tagNames))
-	for index, tagName := range tagNames {
-		castTagNames[index] = tagName
-	}
-
-	rows, err := db.connection.Query(sql, castTagNames...)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	if !rows.Next() {
-		return 0, errors.New("Count query returned no rows.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
-
-	var fileCount uint
-	err = rows.Scan(&fileCount)
-	if err != nil {
-		return 0, err
-	}
-
-	return fileCount, nil
+    return uint(len(files)), nil
 }
 
 func (db Database) FilesWithTags(includeTagNames, excludeTagNames []string) ([]File, error) {
@@ -118,24 +85,20 @@ func (db Database) FilesWithTags(includeTagNames, excludeTagNames []string) ([]F
 	}
 	defer rows.Close()
 
-	files := make([]File, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
+    files, err := readFiles(rows, make([]File, 0, 10))
+    if err != nil {
+        return nil, err
+    }
 
-		var fileId uint
-		var directory string
-		var name string
-		var fp string
-		var modTime string
-		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
-		if err != nil {
-			return nil, err
-		}
+    for _, file := range(files) {
+        path := filepath.Join(file.Directory, file.Name)
+        additionalFiles, err := db.FilesByDirectory(path)
+        if err != nil {
+            return nil, err
+        }
 
-		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
-	}
+        files = append(files, additionalFiles...)
+    }
 
 	return files, nil
 }
@@ -176,24 +139,7 @@ func (db Database) FileTags() ([]FileTag, error) {
 	}
 	defer rows.Close()
 
-	fileTags := make([]FileTag, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var fileTagId uint
-		var fileId uint
-		var tagId uint
-		err = rows.Scan(&fileTagId, &fileId, &tagId)
-		if err != nil {
-			return nil, err
-		}
-
-		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
-	}
-
-	return fileTags, nil
+	return readFileTags(rows, make([]FileTag, 0, 10))
 }
 
 func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
@@ -225,7 +171,7 @@ func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, e
 }
 
 func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
-	sql := `SELECT id, file_id
+	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag
 	        WHERE tag_id = ?`
 
@@ -235,23 +181,7 @@ func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
 	}
 	defer rows.Close()
 
-	fileTags := make([]FileTag, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var fileTagId uint
-		var fileId uint
-		err = rows.Scan(&fileTagId, &fileId)
-		if err != nil {
-			return nil, err
-		}
-
-		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
-	}
-
-	return fileTags, nil
+	return readFileTags(rows, make([]FileTag, 0, 10))
 }
 
 func (db Database) AnyFileTagsForFile(fileId uint) (bool, error) {
@@ -365,4 +295,26 @@ func (db Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
 	}
 
 	return nil
+}
+
+// helpers
+
+func readFileTags(rows *sql.Rows, fileTags []FileTag) ([]FileTag, error) {
+	for rows.Next() {
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+
+		var fileTagId uint
+		var fileId uint
+		var tagId uint
+        err := rows.Scan(&fileTagId, &fileId, &tagId)
+		if err != nil {
+			return nil, err
+		}
+
+		fileTags = append(fileTags, FileTag{fileTagId, fileId, tagId})
+	}
+
+	return fileTags, nil
 }

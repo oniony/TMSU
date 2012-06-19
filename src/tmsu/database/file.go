@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
+    "database/sql"
     "errors"
 	"path/filepath"
 	"time"
@@ -62,7 +63,7 @@ func (db Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Files() ([]*File, error) {
+func (db Database) Files() ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
 	        FROM file`
 
@@ -72,26 +73,7 @@ func (db Database) Files() ([]*File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]*File, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var fileId uint
-		var directory string
-		var name string
-		var fp string
-		var modTime string
-		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
-		if err != nil {
-			return nil, err
-		}
-
-		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
-	}
-
-	return files, nil
+	return readFiles(rows, make([]File, 0, 10))
 }
 
 func (db Database) File(id uint) (*File, error) {
@@ -156,7 +138,7 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
-func (db Database) FilesByDirectory(path string) ([]*File, error) {
+func (db Database) FilesByDirectory(path string) ([]File, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE directory = ? OR directory LIKE ?`
@@ -167,7 +149,7 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]*File, 0, 10)
+	files := make([]File, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -182,7 +164,7 @@ func (db Database) FilesByDirectory(path string) ([]*File, error) {
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+		files = append(files, File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil
@@ -337,4 +319,28 @@ func (db Database) RemoveFile(fileId uint) error {
 	}
 
 	return nil
+}
+
+//
+
+func readFiles(rows *sql.Rows, files []File) ([]File, error) {
+	for rows.Next() {
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+
+		var fileId uint
+		var directory string
+		var name string
+		var fp string
+		var modTime string
+        err := rows.Scan(&fileId, &directory, &name, &fp, &modTime)
+		if err != nil {
+			return nil, err
+		}
+
+		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+	}
+
+	return files, nil
 }

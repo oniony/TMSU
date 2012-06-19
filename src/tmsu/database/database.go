@@ -155,16 +155,6 @@ func (db Database) CreateSchema() error {
 	return nil
 }
 
-func (db Database) contains(list []string, str string) bool {
-	for _, current := range list {
-		if current == str {
-			return true
-		}
-	}
-
-	return false
-}
-
 func parseTimestamp(text string) time.Time {
     t, err := time.Parse(DateLayout, text)
     if err != nil {

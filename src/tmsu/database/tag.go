@@ -20,8 +20,6 @@ package database
 import (
     "database/sql"
     "errors"
-    "strconv"
-    "strings"
 )
 
 type Tag struct {
@@ -55,7 +53,7 @@ func (db Database) TagCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Tags() ([]Tag, error) {
+func (db Database) Tags() (Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -66,7 +64,7 @@ func (db Database) Tags() ([]Tag, error) {
 	}
 	defer rows.Close()
 
-    return readTags(rows, make([]Tag, 0, 10))
+    return readTags(rows, make(Tags, 0, 10))
 }
 
 func (db Database) TagByName(name string) (*Tag, error) {
@@ -96,15 +94,14 @@ func (db Database) TagByName(name string) (*Tag, error) {
 	return &Tag{id, name}, nil
 }
 
-func (db Database) TagsByFileId(fileId uint) ([]Tag, error) {
+func (db Database) TagsByFileId(fileId uint) (Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
                 SELECT tag_id
                 FROM file_tag
                 WHERE file_id = ?
-            )
-            ORDER BY name`
+            )`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
@@ -112,42 +109,30 @@ func (db Database) TagsByFileId(fileId uint) ([]Tag, error) {
 	}
 	defer rows.Close()
 
-    return readTags(rows, make([]Tag, 0, 10))
+    return readTags(rows, make(Tags, 0, 10))
 }
 
-func (db Database) TagsForTags(tagNames []string) ([]Tag, error) {
-	sql := `SELECT id, name
-            FROM tag
-            WHERE id IN (
-                SELECT distinct(tag_id)
-                FROM file_tag
-                WHERE file_id IN (
-                    SELECT file_id
-                    FROM file_tag
-                    WHERE tag_id IN (
-                        SELECT id
-                        FROM tag
-                        WHERE name IN (` + strings.Repeat("?,", len(tagNames)-1) + `?)
-                    )
-                    GROUP BY file_id
-                    HAVING count(*) = ` + strconv.Itoa(len(tagNames)) + `
-                )
-            )
-            ORDER BY name`
+func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
+    files, err := db.FilesWithTags(tagIds, []uint{}, false)
+    if err != nil {
+        return nil, err
+    }
 
-	// convert string array to empty-interface array
-	castTagNames := make([]interface{}, len(tagNames))
-	for index, tagName := range tagNames {
-		castTagNames[index] = tagName
-	}
+    furtherTags := make(Tags, 0, 10)
+    for _, file := range files {
+        tags, err := db.TagsByFileId(file.Id)
+        if err != nil {
+            return nil, err
+        }
 
-	rows, err := db.connection.Query(sql, castTagNames...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
+        for _, tag := range tags {
+            if !containsTagId(tagIds, tag.Id) && !containsTag(furtherTags, tag) {
+                furtherTags = append(furtherTags, tag)
+            }
+        }
+    }
 
-    return readTags(rows, make([]Tag, 0, 10))
+    return furtherTags, nil
 }
 
 func (db Database) AddTag(name string) (*Tag, error) {
@@ -251,9 +236,23 @@ func (db Database) DeleteTag(tagId uint) error {
 	return nil
 }
 
+type Tags []Tag
+
+func (tags Tags) Len() int {
+    return len(tags)
+}
+
+func (tags Tags) Swap(i, j int) {
+    tags[i], tags[j] = tags[j], tags[i]
+}
+
+func (tags Tags) Less(i, j int) bool {
+    return tags[i].Name < tags[j].Name
+}
+
 // 
 
-func readTags(rows *sql.Rows, tags []Tag) ([]Tag, error) {
+func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, rows.Err()
@@ -270,4 +269,20 @@ func readTags(rows *sql.Rows, tags []Tag) ([]Tag, error) {
 	}
 
 	return tags, nil
+}
+
+func containsTagId(items []uint, searchItem uint) bool {
+    for _, item := range items {
+        if item == searchItem { return true }
+    }
+
+    return false
+}
+
+func containsTag(tags Tags, searchTag Tag) bool {
+    for _, tag := range tags {
+        if tag.Id == searchTag.Id { return true }
+    }
+
+    return false
 }

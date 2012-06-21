@@ -40,7 +40,7 @@ func (StatusCommand) Description() string {
 
 Shows the status of PATHs (current directory by default).
 
-  --directory    List directory entries instead of contents.
+  --directory    list directory entries instead of contents
 
 Status codes are:
 

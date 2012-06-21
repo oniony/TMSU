@@ -40,7 +40,7 @@ tmsu unmount --all
 
 Unmounts the virtual file-system at MOUNTPOINT.
 
-    --all    Unmounts all mounted TMSU file-systems.`
+  --all    unmounts all mounted TMSU file-systems`
 }
 
 func (command UnmountCommand) Exec(args []string) error {

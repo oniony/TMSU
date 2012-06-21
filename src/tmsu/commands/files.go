@@ -36,12 +36,13 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files TAG...
+	return `tmsu files [--explicit] TAG...
 tmsu files --all
 
 Lists the files, if any, that have all of the TAGs specified.
 
-  --all    show the complete set of tagged files`
+  --all         show the complete set of tagged files
+  --explicit    show only files tagged explicitly (not inherited)`
 }
 
 func (command FilesCommand) Exec(args []string) error {
@@ -51,7 +52,13 @@ func (command FilesCommand) Exec(args []string) error {
 		return command.listAllFiles()
 	}
 
-	return command.listFiles(args)
+    explicitOnly := false
+	if argCount > 0 && args[0] == "--explicit" {
+	    explicitOnly = true
+        args = args[1:]
+    }
+
+	return command.listFiles(args, explicitOnly)
 }
 
 func (FilesCommand) listAllFiles() error {
@@ -73,7 +80,7 @@ func (FilesCommand) listAllFiles() error {
 	return nil
 }
 
-func (FilesCommand) listFiles(args []string) error {
+func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	if len(args) == 0 {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
@@ -84,16 +91,17 @@ func (FilesCommand) listFiles(args []string) error {
 	}
 	defer db.Close()
 
-    includeTagNames := make([]string, 0)
-    excludeTagNames := make([]string, 0)
+    includeTagIds := make([]uint, 0)
+    excludeTagIds := make([]uint, 0)
 	for _, arg := range args {
 	    var tagName string
+	    var include bool
 	    if arg[0] == '-' {
 	        tagName = arg[1:]
-            excludeTagNames = append(excludeTagNames, tagName)
+	        include = false
         } else {
             tagName = arg
-            includeTagNames = append(includeTagNames, tagName)
+            include = true
         }
 
 		tag, err := db.TagByName(tagName)
@@ -103,9 +111,15 @@ func (FilesCommand) listFiles(args []string) error {
 		if tag == nil {
 			return errors.New("No such tag '" + tagName + "'.")
 		}
+
+        if include {
+            includeTagIds = append(includeTagIds, tag.Id)
+        } else {
+            excludeTagIds = append(excludeTagIds, tag.Id)
+        }
 	}
 
-	files, err := db.FilesWithTags(includeTagNames, excludeTagNames)
+	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
 	if err != nil {
 		return err
 	}
@@ -115,8 +129,8 @@ func (FilesCommand) listFiles(args []string) error {
 		relPath := common.MakeRelative(file.Path())
 		paths[index] = relPath
 	}
-
 	sort.Strings(paths)
+
 	for _, path := range paths {
 		fmt.Println(path)
 	}

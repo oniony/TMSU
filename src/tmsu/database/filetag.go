@@ -19,10 +19,7 @@ package database
 
 import (
 	"errors"
-	"path/filepath"
 	"database/sql"
-	"strconv"
-	"strings"
 )
 
 type FileTag struct {
@@ -31,8 +28,8 @@ type FileTag struct {
 	TagId  uint
 }
 
-func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
-    files, err := db.FilesWithTags(tagNames, []string{})
+func (db Database) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, error) {
+    files, err := db.FilesWithTags(tagIds, []uint{}, explicitOnly)
     if err != nil {
         return 0, err
     }
@@ -40,64 +37,92 @@ func (db Database) FileCountWithTags(tagNames []string) (uint, error) {
     return uint(len(files)), nil
 }
 
-func (db Database) FilesWithTags(includeTagNames, excludeTagNames []string) ([]File, error) {
-	castTagNames := make([]interface{}, len(includeTagNames)+len(excludeTagNames))
-	for index, tagName := range includeTagNames {
-		castTagNames[index] = tagName
-	}
-	for index, tagName := range excludeTagNames {
-		castTagNames[index+len(includeTagNames)] = tagName
-	}
+func (db Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
+    sql := `SELECT id, directory, name, fingerprint, mod_time
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM file_tag
+                WHERE tag_id = ?)`
 
-	sql := `SELECT id, directory, name, fingerprint, mod_time
-			FROM file
-			WHERE 1 = 1`
-
-	if len(includeTagNames) > 0 {
-		sql += ` AND id IN (
-					SELECT file_id
-					FROM file_tag
-					WHERE tag_id IN (
-						SELECT id
-						FROM tag
-						WHERE name IN (` + strings.Repeat("?,", len(includeTagNames)-1) + `?)
-					)
-					GROUP BY file_id
-					HAVING count(1) = ` + strconv.Itoa(len(includeTagNames)) + `
-				)`
-	}
-
-	if len(excludeTagNames) > 0 {
-		sql += ` AND id NOT IN (
-					SELECT file_id
-					FROM file_tag
-					WHERE tag_id IN (
-						SELECT id
-						FROM tag
-						WHERE name IN (` + strings.Repeat("?,", len(excludeTagNames)-1) + `?)
-					)
-				)`
-	}
-
-	rows, err := db.connection.Query(sql, castTagNames...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-    files, err := readFiles(rows, make([]File, 0, 10))
+    rows, err := db.connection.Query(sql, tagId)
     if err != nil {
         return nil, err
     }
+    defer rows.Close()
 
-    for _, file := range(files) {
-        path := filepath.Join(file.Directory, file.Name)
-        additionalFiles, err := db.FilesByDirectory(path)
+    explicitFiles, err := readFiles(rows, make(Files, 0, 10))
+
+    files := make([]File, len(explicitFiles), len(explicitFiles) + 10)
+    copy(files, explicitFiles)
+
+    if !explicitOnly {
+        for _, explicitFile := range explicitFiles {
+            additionalFiles, err := db.FilesByDirectory(explicitFile.Path())
+            if err != nil {
+                return nil, err
+            }
+
+            files = append(files, additionalFiles...)
+        }
+    }
+
+    return files, nil
+}
+
+func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOnly bool) ([]File, error) {
+    var filesById map[uint]File = make(map[uint]File, 10)
+
+    if len(includeTagIds) > 0 {
+        files, err := db.FilesWithTag(includeTagIds[0], explicitOnly)
+        if err != nil {
+            return nil, err
+        }
+        for _, file := range files {
+            filesById[file.Id] = file
+        }
+
+        for _, includeTagId := range includeTagIds[1:] {
+            files, err := db.FilesWithTag(includeTagId, explicitOnly)
+            if err != nil {
+                return nil, err
+            }
+
+            for _, file := range filesById {
+                if !contains(files, file) {
+                    delete(filesById, file.Id)
+                }
+            }
+        }
+    } else {
+        files, err := db.Files()
+        if err != nil {
+            return nil, err
+        }
+        for _, file := range files {
+            filesById[file.Id] = file
+        }
+    }
+
+    for _, excludeTagId := range excludeTagIds {
+        files, err := db.FilesWithTag(excludeTagId, explicitOnly)
         if err != nil {
             return nil, err
         }
 
-        files = append(files, additionalFiles...)
+        for _, file := range files {
+            _, contains := filesById[file.Id]
+            if contains {
+                delete(filesById, file.Id)
+            }
+        }
+    }
+
+    files := make(Files, len(filesById))
+    index := 0
+    for _, value := range filesById {
+        files[index] = value
+        index += 1
     }
 
 	return files, nil
@@ -129,7 +154,7 @@ func (db Database) FileTagCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) FileTags() ([]FileTag, error) {
+func (db Database) FileTags() (FileTags, error) {
 	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag`
 
@@ -139,7 +164,7 @@ func (db Database) FileTags() ([]FileTag, error) {
 	}
 	defer rows.Close()
 
-	return readFileTags(rows, make([]FileTag, 0, 10))
+	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
 func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
@@ -170,7 +195,7 @@ func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, e
 	return &FileTag{fileTagId, fileId, tagId}, nil
 }
 
-func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
+func (db Database) FileTagsByTagId(tagId uint) (FileTags, error) {
 	sql := `SELECT id, file_id, tag_id
 	        FROM file_tag
 	        WHERE tag_id = ?`
@@ -181,7 +206,7 @@ func (db Database) FileTagsByTagId(tagId uint) ([]FileTag, error) {
 	}
 	defer rows.Close()
 
-	return readFileTags(rows, make([]FileTag, 0, 10))
+	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
 func (db Database) AnyFileTagsForFile(fileId uint) (bool, error) {
@@ -297,9 +322,11 @@ func (db Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
 	return nil
 }
 
+type FileTags []FileTag
+
 // helpers
 
-func readFileTags(rows *sql.Rows, fileTags []FileTag) ([]FileTag, error) {
+func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, rows.Err()
@@ -317,4 +344,12 @@ func readFileTags(rows *sql.Rows, fileTags []FileTag) ([]FileTag, error) {
 	}
 
 	return fileTags, nil
+}
+
+func contains(files Files, searchFile File) bool {
+    for _, file := range files {
+        if file.Id == searchFile.Id { return true }
+    }
+
+    return false
 }

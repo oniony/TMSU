@@ -41,7 +41,7 @@ func (HelpCommand) Description() string {
 
 Shows help summary or, where COMMAND is specified, help for COMMAND.
 
-    --list    list commands`
+  --list    list commands`
 }
 
 func (command HelpCommand) Exec(args []string) error {

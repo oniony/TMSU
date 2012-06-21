@@ -43,7 +43,7 @@ tmsu untag --tags "TAG..." FILE...
 Disassociates FILE with the TAGs specified.
 
   --all     strip each FILE of all TAGs
-  --tags    allows multiple FILEs to be disassociated from the same quoted set of TAGs`
+  --tags    disassociate multiple FILEs from the same quoted set of TAGs`
 }
 
 func (command UntagCommand) Exec(args []string) error {

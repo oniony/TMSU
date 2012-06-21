@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
+    "errors"
     "fmt"
 	"github.com/hanwen/go-fuse/fuse"
 	"os"
@@ -194,7 +195,7 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 
     entries := make([]fuse.DirEntry, len(tags))
 	for index, tag := range tags {
-	    entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
+	    entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 
 	return entries, fuse.OK
@@ -234,16 +235,13 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	if fileId == 0 {
 		// tag directory
 
-		tag, error := db.TagByName(name)
-		if error != nil {
-			common.Fatalf("Could not retrieve tag '%v'.", error)
-		}
-		if tag == nil {
-			return nil, fuse.ENOENT
-		}
+        tagIds, err := vfs.tagNamesToIds(db, path)
+        if err != nil {
+            common.Fatalf("Could not lookup tag IDs: %v.", err)
+        }
 
-		fileCount, error := db.FileCountWithTags(path)
-		if error != nil {
+		fileCount, err := db.FileCountWithTags(tagIds, false)
+		if err != nil {
 			common.Fatalf("Could not retrieve count of files with tags: %v.", path)
 		}
 
@@ -280,25 +278,28 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	}
 	defer db.Close()
 
-	tags := path
+    tagIds, err := vfs.tagNamesToIds(db, path)
+    if err != nil {
+        common.Fatalf("Could not lookup tag IDs: %v.", err)
+    }
 
-	furtherTags, err := db.TagsForTags(tags)
+	furtherTagIds, err := db.TagsForTags(tagIds)
 	if err != nil {
 		common.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
-	files, err := db.FilesWithTags(tags, []string{})
+	files, err := db.FilesWithTags(tagIds, []uint{}, false)
 	if err != nil {
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
-    entries := make([]fuse.DirEntry, len(files)+len(furtherTags))
-	for index, tag := range furtherTags {
-		entries[index + 1] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
+    entries := make([]fuse.DirEntry, len(files)+len(furtherTagIds))
+	for index, tag := range furtherTagIds {
+		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
 	}
 	for index, file := range files {
         linkName := vfs.getLinkName(file)
-		entries[index + len(furtherTags) + 1] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
+		entries[index + len(furtherTagIds)] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}
 
 	return entries, fuse.OK
@@ -340,6 +341,24 @@ func (vfs FuseVfs) getLinkName(file database.File) string {
 	}
 
 	return linkName + suffix
+}
+
+func (vfs FuseVfs) tagNamesToIds(db *database.Database, tagNames []string) ([]uint, error) {
+    tagIds := make([]uint, len(tagNames))
+
+    for index, tagName := range tagNames {
+        tag, err := db.TagByName(tagName)
+        if err != nil {
+            return nil, err
+        }
+        if tag == nil {
+            return nil, errors.New("No such tag '" + tagName + "'.")
+        }
+
+        tagIds[index] = tag.Id
+    }
+
+    return tagIds, nil
 }
 
 func Uitoa(ui uint) string {

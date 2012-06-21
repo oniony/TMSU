@@ -63,7 +63,7 @@ func (db Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Files() ([]File, error) {
+func (db Database) Files() (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
 	        FROM file`
 
@@ -73,7 +73,7 @@ func (db Database) Files() ([]File, error) {
 	}
 	defer rows.Close()
 
-	return readFiles(rows, make([]File, 0, 10))
+	return readFiles(rows, make(Files, 0, 10))
 }
 
 func (db Database) File(id uint) (*File, error) {
@@ -138,7 +138,7 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
-func (db Database) FilesByDirectory(path string) ([]File, error) {
+func (db Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE directory = ? OR directory LIKE ?`
@@ -149,7 +149,7 @@ func (db Database) FilesByDirectory(path string) ([]File, error) {
 	}
 	defer rows.Close()
 
-	files := make([]File, 0, 10)
+	files := make(Files, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -170,7 +170,7 @@ func (db Database) FilesByDirectory(path string) ([]File, error) {
 	return files, nil
 }
 
-func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]File, error) {
+func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
 	sql := `SELECT id, directory, name, mod_time
 	        FROM file
 	        WHERE fingerprint = ?`
@@ -181,7 +181,7 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]Fi
 	}
 	defer rows.Close()
 
-	files := make([]File, 0, 10)
+	files := make(Files, 0, 10)
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, err
@@ -202,7 +202,7 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) ([]Fi
 	return files, nil
 }
 
-func (db Database) DuplicateFiles() ([][]File, error) {
+func (db Database) DuplicateFiles() ([]Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
@@ -217,8 +217,8 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 	}
 	defer rows.Close()
 
-	fileSets := make([][]File, 0, 10)
-	var fileSet []File
+	fileSets := make([]Files, 0, 10)
+	var fileSet Files
 	var previousFingerprint fingerprint.Fingerprint
 
 	for rows.Next() {
@@ -242,7 +242,7 @@ func (db Database) DuplicateFiles() ([][]File, error) {
 			if fileSet != nil {
 				fileSets = append(fileSets, fileSet)
 			}
-			fileSet = make([]File, 0, 10)
+			fileSet = make(Files, 0, 10)
 			previousFingerprint = fingerprint
 		}
 
@@ -321,9 +321,11 @@ func (db Database) RemoveFile(fileId uint) error {
 	return nil
 }
 
+type Files []File
+
 //
 
-func readFiles(rows *sql.Rows, files []File) ([]File, error) {
+func readFiles(rows *sql.Rows, files Files) (Files, error) {
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, rows.Err()

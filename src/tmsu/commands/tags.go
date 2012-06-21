@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"tmsu/common"
+	"sort"
 	"tmsu/database"
 )
 
@@ -36,21 +36,29 @@ func (TagsCommand) Synopsis() string {
 }
 
 func (TagsCommand) Description() string {
-	return `tmsu tags [FILE]...
+	return `tmsu tags [--explicit] [FILE]...
+tmsu tags --all
 
 Lists the tags applied to FILEs.
 
-When run with no arguments, all tags in the database are listed.`
+When run with no arguments, tags for the current working directory are listed.
+
+  --all         lists all of the tags defined
+  --explicit    show only explicitly applied tags (not inherited)`
 }
 
 func (command TagsCommand) Exec(args []string) error {
-	argCount := len(args)
-
-	if argCount == 0 {
+	if len(args) == 1 && args[0] == "--all" {
 		return command.listAllTags()
 	}
 
-	return command.listTags(args)
+    explicitOnly := false
+    if len(args) > 0 && args[0] == "--explicit" {
+        explicitOnly = true
+        args = args[1:]
+    }
+
+	return command.listTags(args, explicitOnly)
 }
 
 func (TagsCommand) listAllTags() error {
@@ -72,7 +80,7 @@ func (TagsCommand) listAllTags() error {
 	return nil
 }
 
-func (command TagsCommand) listTags(paths []string) error {
+func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 	db, err := database.Open()
 	if err != nil {
 		return err
@@ -81,18 +89,18 @@ func (command TagsCommand) listTags(paths []string) error {
 
 	switch len(paths) {
 	case 0:
-		return command.listTagsRecursive(db, []string{"."})
+		return command.listTagsForWorkingDirectory(db, explicitOnly)
 	case 1:
-		return command.listTagsForPath(db, paths[0])
+		return command.listTagsForPath(db, paths[0], explicitOnly)
 	default:
-		return command.listTagsRecursive(db, paths)
+		return command.listTagsForPaths(db, paths, explicitOnly)
 	}
 
-	return command.listTagsRecursive(db, paths)
+	return nil
 }
 
-func (command TagsCommand) listTagsForPath(db *database.Database, path string) error {
-	tags, err := command.tagsForPath(db, path)
+func (command TagsCommand) listTagsForPath(db *database.Database, path string, explicitOnly bool) error {
+	tags, err := command.tagsForPath(db, path, explicitOnly)
 	if err != nil {
 		return err
 	}
@@ -104,82 +112,82 @@ func (command TagsCommand) listTagsForPath(db *database.Database, path string) e
 	return nil
 }
 
-func (command TagsCommand) listTagsRecursive(db *database.Database, paths []string) error {
-	for _, path := range paths {
-		fileInfo, err := os.Lstat(path)
-		if err != nil {
-			return err
-		}
+func (command TagsCommand) listTagsForPaths(db *database.Database, paths []string, explicitOnly bool) error {
+    for _, path := range paths {
+        tags, err := command.tagsForPath(db, path, explicitOnly)
+        if err != nil {
+            return err
+        }
 
-		tags, err := command.tagsForPath(db, path)
-		if err != nil {
-			return err
-		}
+        fmt.Print(path + ": ")
+        for _, tag := range tags {
+            fmt.Print(tag.Name)
+        }
+        fmt.Print("\n")
+    }
 
-		if len(tags) > 0 {
-			fmt.Printf("%v: ", path)
-
-			for index, tag := range tags {
-				if index > 0 {
-					fmt.Print(" ")
-				}
-
-				fmt.Print(tag.Name)
-			}
-
-			fmt.Println()
-		}
-
-		if fileInfo.IsDir() {
-			file, err := os.Open(path)
-			if err != nil {
-				if os.IsPermission(err) {
-					common.Warnf("'%v': permission denied.", path)
-				} else {
-					common.Warnf("'%v': %v", path, err)
-				}
-				continue
-			}
-			defer file.Close()
-
-			dirNames, err := file.Readdirnames(0)
-			if err != nil {
-				return err
-			}
-
-			childPaths := make([]string, len(dirNames))
-			for index, dirName := range dirNames {
-				childPaths[index] = filepath.Join(path, dirName)
-			}
-
-			err = command.listTagsRecursive(db, childPaths)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+    return nil
 }
 
-func (TagsCommand) tagsForPath(db *database.Database, path string) ([]database.Tag, error) {
+func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, explicitOnly bool) error {
+    file, err := os.Open(".")
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    dirNames, err := file.Readdirnames(0)
+    if err != nil {
+        return err
+    }
+
+    sort.Strings(dirNames)
+
+    for _, dirName := range dirNames {
+        tags, err := command.tagsForPath(db, dirName, explicitOnly)
+        if err != nil {
+            return err
+        }
+
+        if len(tags) == 0 { continue }
+
+        fmt.Print(dirName + ":")
+        for _, tag := range tags {
+            fmt.Print(" " + tag.Name)
+        }
+        fmt.Print("\n")
+    }
+
+    return nil
+}
+
+func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly bool) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
 	}
 
-	file, err := db.FileByPath(absPath)
-	if err != nil {
-		return nil, err
-	}
-	if file == nil {
-		return nil, nil
-	}
+    tags := make(database.Tags, 0, 10)
+    for absPath != "/" {
+        file, err := db.FileByPath(absPath)
+        if err != nil {
+            return nil, err
+        }
 
-	tags, err := db.TagsByFileId(file.Id)
-	if err != nil {
-		return nil, err
-	}
+        if file != nil {
+            moreTags, err := db.TagsByFileId(file.Id)
+            if err != nil {
+                return nil, err
+            }
+            tags = append(tags, moreTags...)
+        }
 
-	return tags, err
+        if explicitOnly { break }
+
+        absPath = filepath.Dir(absPath)
+    }
+
+    sort.Sort(tags)
+
+	return tags, nil
 }

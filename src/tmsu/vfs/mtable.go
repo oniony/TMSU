@@ -18,14 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
-    "bytes"
-    "io/ioutil"
     "os"
-    "os/exec"
-    "strings"
     "tmsu/common"
     "tmsu/common/proc"
-    "fmt"
 )
 
 type Mount struct {
@@ -39,39 +34,21 @@ func GetMountTable() ([]Mount, error) {
         return nil, err
     }
 
+    mountTable := make([]Mount, 0, 10)
+
     for _, pid := range pids {
-        fmt.Println("Pid", pid)
-    }
-
-    //TODO change this to examine /proc directly
-
-    outputBytes, err := exec.Command("pgrep", "-f", "tmsu vfs").Output()
-    if err != nil {
-        return []Mount{}, nil //TODO currently assumes no matches
-    }
-
-    pids2 := strings.Split(strings.Trim(string(outputBytes), "\n"), "\n")
-
-    mountTable := make([]Mount, len(pids2))
-
-    for index, pid := range pids2 {
-        metaPath := "/proc/" + pid
-
-        workingDirectory, err := os.Readlink(metaPath + "/cwd")
+        process, err := proc.GetProcess(pid)
         if err != nil {
-            return nil, err
+            if !os.IsPermission(err) {
+                return nil, err
+            }
+        } else {
+            if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
+                databasePath := common.Join(process.WorkingDirectory, process.CommandLine[2])
+                mountPath := common.Join(process.WorkingDirectory, process.CommandLine[3])
+                mountTable = append(mountTable, Mount{databasePath, mountPath})
+            }
         }
-
-        data, err := ioutil.ReadFile(metaPath + "/cmdline")
-        if err != nil {
-            return nil, err
-        }
-
-        tokens := bytes.Split(data, []byte{0})
-
-        databasePath := common.Join(workingDirectory, string(tokens[2]))
-        mountPath := common.Join(workingDirectory, string(tokens[3]))
-        mountTable[index] = Mount{databasePath, mountPath}
     }
 
     return mountTable, nil

@@ -150,7 +150,6 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 	if err != nil {
 		return err
 	}
-
 	if file == nil {
 		return errors.New("File '" + path + "' is not tagged.")
 	}
@@ -194,14 +193,10 @@ func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, 
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
 	}
 
-	if fileTag != nil {
-		err := db.RemoveFileTag(fileId, tag.Id)
-		if err != nil {
-			return err
-		}
-	} else {
-		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.\n")
-	}
+    err = db.RemoveFileTag(fileId, tag.Id)
+    if err != nil {
+        return err
+    }
 
 	return nil
 }

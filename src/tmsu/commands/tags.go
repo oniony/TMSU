@@ -119,9 +119,9 @@ func (command TagsCommand) listTagsForPaths(db *database.Database, paths []strin
             return err
         }
 
-        fmt.Print(path + ": ")
+        fmt.Print(path + ":")
         for _, tag := range tags {
-            fmt.Print(tag.Name)
+            fmt.Print(" " + tag.Name)
         }
         fmt.Print("\n")
     }

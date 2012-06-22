@@ -62,10 +62,10 @@ func (StatsCommand) Exec(args []string) error {
 
 	fmt.Printf("Database Contents\n")
 
-	fmt.Printf(" Tags:                       %v\n", tagCount)
-	fmt.Printf(" Files:                      %v\n", fileCount)
-	fmt.Printf(" Taggings:                   %v\n", fileTagCount)
-	fmt.Printf(" Average taggings per file:  %v\n", fileTagCount/fileCount)
+	fmt.Printf(" Tags:      %v\n", tagCount)
+	fmt.Printf(" Files:     %v\n", fileCount)
+	fmt.Printf(" Taggings:  %v\n", fileTagCount)
+	fmt.Printf(" Average:   %v\n", fileTagCount/fileCount)
 
 	return nil
 }

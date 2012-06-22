@@ -261,6 +261,9 @@ func getNestedCode(nested bool) string {
     return " "
 }
 
+//TODO this needs to look in the database rather than the file-system
+//     otherwise it will incorrectly report for directories with tagged
+//     contents that have been replaced with identically named file
 func isDir(path string) bool {
     info, err := os.Stat(path)
     if err != nil {

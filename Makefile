@@ -44,6 +44,8 @@ dist: compile
 	### Dist ###
 	@mkdir -p $(DIST_DIR)
 	cp -R $(BIN_DIR) $(DIST_DIR)
+	cp README $(DIST_DIR)
+	cp LICENCE $(DIST_DIR)
 	tar czf $(DIST_FILE) $(DIST_DIR)
 	rm -Rf $(DIST_DIR)
 

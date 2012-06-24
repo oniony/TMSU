@@ -106,6 +106,24 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 -------------
 
+v0.0.8
+
+  Files can now be tagged within tagged directories. Files within tagged
+  directories will inherit the directory's tags.
+
+  * Fixed bug with 'untag' command when non-existant tag is specified.
+  * Updated with respect to go-fuse API change. 
+  * 'mount' command now lists mount points if invoked without arguments.
+  * Improved 'mount' command help.
+  * 'rename' command now validates destination tag name.
+  * Fixed bug with 'unmount --all' returning an error if there are no mounts.
+  * Removed dependency upon 'pgrep'; now accesses proc-fs directotly for mount information.
+  * 'files' command will now show files that inherit the specified tags ('--explicit' option turns this off).
+  * 'tags' command will now shows inherited tags ('--explicit' turns this off).
+  * 'status' command now reports inherited tags.
+  * 'stats' command formatting updated.
+  * Other minor bug fixes.
+
 v0.0.7
 
   Files larger than 5MB now use a different fingerprinting algorithm where the

@@ -42,7 +42,7 @@ _tmsu_tags() {
 	typeset -a tag_list
 	local tag
 
-	_call_program tmsu tmsu tags | while read -A tag
+	_call_program tmsu tmsu tags --all | while read -A tag
 	do
 		tag_list+=$tag[1]:gs/:/\\:/
 	done

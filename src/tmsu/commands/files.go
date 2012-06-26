@@ -36,10 +36,10 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files [--explicit] TAG...
+	return `tmsu files [--explicit] [-]TAG...
 tmsu files --all
 
-Lists the files, if any, that have all of the TAGs specified.
+Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).
 
   --all         show the complete set of tagged files
   --explicit    show only files tagged explicitly (not inherited)`

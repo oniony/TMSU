@@ -39,22 +39,25 @@ func (StatusCommand) Synopsis() string {
 func (StatusCommand) Description() string {
     return `tmsu status [PATH]...
 
-    Shows the status of PATHs (current directory by default).
+Shows the status of PATHs.
 
-    --directory    list directory entries instead of contents
+Where PATHs are not specified, the statuses of the contents of the working
+directory are shown.
 
-    Status codes are shown in the first column:
+  --directory    list directory entries instead of contents
 
-    T - Tagged
-    M - Modified
-    ! - Missing
-    U - Untagged
+Status codes are shown in the first column:
 
-    If the status code is followed by a plus (+) this indicates that it is a
-    directory containing one or more tagged items.
+  T - Tagged
+  M - Modified
+  ! - Missing
+  U - Untagged
 
-    Note: The 'repair' command can be used to fix problems caused by files that have
-    been modified or moved on disk.`
+If the status code is followed by a plus (+) this indicates that it is a
+directory containing one or more tagged items.
+
+Note: The 'repair' command can be used to fix problems caused by files that have
+been modified or moved on disk.`
 }
 
 type StatusReport struct {

@@ -18,72 +18,72 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package proc
 
 import (
-    "bytes"
-    "fmt"
-    "os"
-    "io/ioutil"
-    "regexp"
-    "strconv"
+	"bytes"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"regexp"
+	"strconv"
 )
 
 type Process struct {
-    Pid              int
-    CommandLine      []string
-    WorkingDirectory string
+	Pid              int
+	CommandLine      []string
+	WorkingDirectory string
 }
 
 func GetProcessIds() ([]int, error) {
-    procDir, err := os.Open("/proc")
-    if err != nil {
-        return nil, err
-    }
+	procDir, err := os.Open("/proc")
+	if err != nil {
+		return nil, err
+	}
 
-    dirNames, err := procDir.Readdirnames(0)
-    if err != nil {
-        return nil, err
-    }
+	dirNames, err := procDir.Readdirnames(0)
+	if err != nil {
+		return nil, err
+	}
 
-    procDir.Close()
+	procDir.Close()
 
-    re, err := regexp.Compile("[0-9]+")
-    if err != nil {
-        return nil, err
-    }
+	re, err := regexp.Compile("[0-9]+")
+	if err != nil {
+		return nil, err
+	}
 
-    pids := make([]int, 0, len(dirNames))
+	pids := make([]int, 0, len(dirNames))
 
-    for _, dirName := range dirNames {
-        if re.MatchString(dirName) {
-            pid, err := strconv.Atoi(dirName)
-            if err != nil {
-                return nil, err
-            }
+	for _, dirName := range dirNames {
+		if re.MatchString(dirName) {
+			pid, err := strconv.Atoi(dirName)
+			if err != nil {
+				return nil, err
+			}
 
-            pids = append(pids, pid)
-        }
-    }
+			pids = append(pids, pid)
+		}
+	}
 
-    return pids, nil
+	return pids, nil
 }
 
 func GetProcess(pid int) (*Process, error) {
-    processDir := fmt.Sprintf("/proc/%v", pid)
+	processDir := fmt.Sprintf("/proc/%v", pid)
 
-    workingDirectory, err := os.Readlink(processDir + "/cwd")
-    if err != nil {
-        return nil, err
-    }
+	workingDirectory, err := os.Readlink(processDir + "/cwd")
+	if err != nil {
+		return nil, err
+	}
 
-    data, err := ioutil.ReadFile(processDir + "/cmdline")
-    if err != nil {
-        return nil, err
-    }
+	data, err := ioutil.ReadFile(processDir + "/cmdline")
+	if err != nil {
+		return nil, err
+	}
 
-    tokens := bytes.Split(data, []byte{0})
-    commandLine := make([]string, len(tokens))
-    for index, token := range tokens {
-        commandLine[index] = string(token)
-    }
+	tokens := bytes.Split(data, []byte{0})
+	commandLine := make([]string, len(tokens))
+	for index, token := range tokens {
+		commandLine[index] = string(token)
+	}
 
-    return &Process{pid, commandLine, workingDirectory}, nil
+	return &Process{pid, commandLine, workingDirectory}, nil
 }

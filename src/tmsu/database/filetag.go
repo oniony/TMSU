@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-	"errors"
 	"database/sql"
+	"errors"
 )
 
 type FileTag struct {
@@ -29,101 +29,101 @@ type FileTag struct {
 }
 
 func (db Database) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, error) {
-    files, err := db.FilesWithTags(tagIds, []uint{}, explicitOnly)
-    if err != nil {
-        return 0, err
-    }
+	files, err := db.FilesWithTags(tagIds, []uint{}, explicitOnly)
+	if err != nil {
+		return 0, err
+	}
 
-    return uint(len(files)), nil
+	return uint(len(files)), nil
 }
 
 func (db Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
-    sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
                 SELECT file_id
                 FROM file_tag
                 WHERE tag_id = ?)`
 
-    rows, err := db.connection.Query(sql, tagId)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    explicitFiles, err := readFiles(rows, make(Files, 0, 10))
+	explicitFiles, err := readFiles(rows, make(Files, 0, 10))
 
-    files := make([]File, len(explicitFiles), len(explicitFiles) + 10)
-    copy(files, explicitFiles)
+	files := make(Files, len(explicitFiles), len(explicitFiles)+10)
+	copy(files, explicitFiles)
 
-    if !explicitOnly {
-        for _, explicitFile := range explicitFiles {
-            additionalFiles, err := db.FilesByDirectory(explicitFile.Path())
-            if err != nil {
-                return nil, err
-            }
+	if !explicitOnly {
+		for _, explicitFile := range explicitFiles {
+			additionalFiles, err := db.FilesByDirectory(explicitFile.Path())
+			if err != nil {
+				return nil, err
+			}
 
-            files = append(files, additionalFiles...)
-        }
-    }
+			files = append(files, additionalFiles...)
+		}
+	}
 
-    return files, nil
+	return files, nil
 }
 
-func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOnly bool) ([]File, error) {
-    var filesById map[uint]File = make(map[uint]File, 10)
+func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOnly bool) (Files, error) {
+	var filesById map[uint]File = make(map[uint]File, 10)
 
-    if len(includeTagIds) > 0 {
-        files, err := db.FilesWithTag(includeTagIds[0], explicitOnly)
-        if err != nil {
-            return nil, err
-        }
-        for _, file := range files {
-            filesById[file.Id] = file
-        }
+	if len(includeTagIds) > 0 {
+		files, err := db.FilesWithTag(includeTagIds[0], explicitOnly)
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			filesById[file.Id] = file
+		}
 
-        for _, includeTagId := range includeTagIds[1:] {
-            files, err := db.FilesWithTag(includeTagId, explicitOnly)
-            if err != nil {
-                return nil, err
-            }
+		for _, includeTagId := range includeTagIds[1:] {
+			files, err := db.FilesWithTag(includeTagId, explicitOnly)
+			if err != nil {
+				return nil, err
+			}
 
-            for _, file := range filesById {
-                if !contains(files, file) {
-                    delete(filesById, file.Id)
-                }
-            }
-        }
-    } else {
-        files, err := db.Files()
-        if err != nil {
-            return nil, err
-        }
-        for _, file := range files {
-            filesById[file.Id] = file
-        }
-    }
+			for _, file := range filesById {
+				if !contains(files, file) {
+					delete(filesById, file.Id)
+				}
+			}
+		}
+	} else {
+		files, err := db.Files()
+		if err != nil {
+			return nil, err
+		}
+		for _, file := range files {
+			filesById[file.Id] = file
+		}
+	}
 
-    for _, excludeTagId := range excludeTagIds {
-        files, err := db.FilesWithTag(excludeTagId, explicitOnly)
-        if err != nil {
-            return nil, err
-        }
+	for _, excludeTagId := range excludeTagIds {
+		files, err := db.FilesWithTag(excludeTagId, explicitOnly)
+		if err != nil {
+			return nil, err
+		}
 
-        for _, file := range files {
-            _, contains := filesById[file.Id]
-            if contains {
-                delete(filesById, file.Id)
-            }
-        }
-    }
+		for _, file := range files {
+			_, contains := filesById[file.Id]
+			if contains {
+				delete(filesById, file.Id)
+			}
+		}
+	}
 
-    files := make(Files, len(filesById))
-    index := 0
-    for _, value := range filesById {
-        files[index] = value
-        index += 1
-    }
+	files := make(Files, len(filesById))
+	index := 0
+	for _, value := range filesById {
+		files[index] = value
+		index += 1
+	}
 
 	return files, nil
 }
@@ -335,7 +335,7 @@ func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 		var fileTagId uint
 		var fileId uint
 		var tagId uint
-        err := rows.Scan(&fileTagId, &fileId, &tagId)
+		err := rows.Scan(&fileTagId, &fileId, &tagId)
 		if err != nil {
 			return nil, err
 		}
@@ -347,9 +347,11 @@ func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 }
 
 func contains(files Files, searchFile File) bool {
-    for _, file := range files {
-        if file.Id == searchFile.Id { return true }
-    }
+	for _, file := range files {
+		if file.Id == searchFile.Id {
+			return true
+		}
+	}
 
-    return false
+	return false
 }

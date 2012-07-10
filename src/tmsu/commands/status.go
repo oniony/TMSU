@@ -18,26 +18,26 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-    "fmt"
-    "os"
-    "path/filepath"
-    "strconv"
-    "tmsu/common"
-    "tmsu/database"
+	"fmt"
+	"os"
+	"path/filepath"
+	"strconv"
+	"tmsu/common"
+	"tmsu/database"
 )
 
 type StatusCommand struct{}
 
 func (StatusCommand) Name() string {
-    return "status"
+	return "status"
 }
 
 func (StatusCommand) Synopsis() string {
-    return "List the file tagging status"
+	return "List the file tagging status"
 }
 
 func (StatusCommand) Description() string {
-    return `tmsu status [PATH]...
+	return `tmsu status [PATH]...
 
 Shows the status of PATHs.
 
@@ -61,226 +61,228 @@ been modified or moved on disk.`
 }
 
 type StatusReport struct {
-    Rows []Row
+	Rows []Row
 }
 
 type Row struct {
-    Path   string
-    Status Status
-    Nested bool
+	Path   string
+	Status Status
+	Nested bool
 }
 
 func NewReport() *StatusReport {
-    return &StatusReport{make([]Row, 0, 10)}
+	return &StatusReport{make([]Row, 0, 10)}
 }
 
 func (command StatusCommand) Exec(args []string) error {
-    showDirectory := false
+	showDirectory := false
 
-    if len(args) > 0 && args[0] == "--directory" {
-        showDirectory = true
-        args = args[1:]
-    }
+	if len(args) > 0 && args[0] == "--directory" {
+		showDirectory = true
+		args = args[1:]
+	}
 
-    report := NewReport()
+	report := NewReport()
 
-    err := command.status(args, report, showDirectory)
-    if err != nil {
-        return err
-    }
+	err := command.status(args, report, showDirectory)
+	if err != nil {
+		return err
+	}
 
-    for _, row := range report.Rows {
-        if row.Status == TAGGED {
-            command.printRow(row)
-        }
-    }
+	for _, row := range report.Rows {
+		if row.Status == TAGGED {
+			command.printRow(row)
+		}
+	}
 
-    for _, row := range report.Rows {
-        if row.Status == MODIFIED {
-            command.printRow(row)
-        }
-    }
+	for _, row := range report.Rows {
+		if row.Status == MODIFIED {
+			command.printRow(row)
+		}
+	}
 
-    for _, row := range report.Rows {
-        if row.Status == MISSING {
-            command.printRow(row)
-        }
-    }
+	for _, row := range report.Rows {
+		if row.Status == MISSING {
+			command.printRow(row)
+		}
+	}
 
-    for _, row := range report.Rows {
-        if row.Status == UNTAGGED {
-            command.printRow(row)
-        }
-    }
+	for _, row := range report.Rows {
+		if row.Status == UNTAGGED {
+			command.printRow(row)
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (command StatusCommand) status(paths []string, report *StatusReport, showDirectory bool) error {
-    if len(paths) == 0 {
-        paths = []string{"."}
-    }
+	if len(paths) == 0 {
+		paths = []string{"."}
+	}
 
-    db, err := database.Open()
-    if err != nil {
-        return err
-    }
+	db, err := database.Open()
+	if err != nil {
+		return err
+	}
 
-    for _, path := range paths {
-        absPath, err := filepath.Abs(path)
-        if err != nil {
-            return err
-        }
+	for _, path := range paths {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
 
-        if !showDirectory && isDir(absPath) {
-            dir, err := os.Open(absPath)
-            if err != nil {
-                return err
-            }
-            defer dir.Close()
+		if !showDirectory && isDir(absPath) {
+			dir, err := os.Open(absPath)
+			if err != nil {
+				return err
+			}
+			defer dir.Close()
 
-            entryNames, err := dir.Readdirnames(0)
-            for _, entryName := range entryNames {
-                entryPath := filepath.Join(absPath, entryName)
+			entryNames, err := dir.Readdirnames(0)
+			for _, entryName := range entryNames {
+				entryPath := filepath.Join(absPath, entryName)
 
-                status, nested, err := command.getStatus(entryPath, db)
-                if err != nil {
-                    return err
-                }
+				status, nested, err := command.getStatus(entryPath, db)
+				if err != nil {
+					return err
+				}
 
-                report.Rows = append(report.Rows, Row{entryPath, status, nested})
-            }
+				report.Rows = append(report.Rows, Row{entryPath, status, nested})
+			}
 
-            files, err := db.FilesByDirectory(absPath)
-            for _, file := range files {
-                status, nested, err := command.getStatus(file.Path(), db)
-                if err != nil {
-                    return err
-                }
+			files, err := db.FilesByDirectory(absPath)
+			for _, file := range files {
+				status, nested, err := command.getStatus(file.Path(), db)
+				if err != nil {
+					return err
+				}
 
-                if status == MISSING {
-                    report.Rows = append(report.Rows, Row{file.Path(), status, nested})
-                }
-            }
-        } else {
-            status, nested, err := command.getStatus(absPath, db)
-            if err != nil {
-                return err
-            }
+				if status == MISSING {
+					report.Rows = append(report.Rows, Row{file.Path(), status, nested})
+				}
+			}
+		} else {
+			status, nested, err := command.getStatus(absPath, db)
+			if err != nil {
+				return err
+			}
 
-            report.Rows = append(report.Rows, Row{absPath, status, nested})
-        }
-    }
+			report.Rows = append(report.Rows, Row{absPath, status, nested})
+		}
+	}
 
-    return nil
+	return nil
 }
 
 func (command StatusCommand) getStatus(path string, db *database.Database) (Status, bool, error) {
-    entry, err := db.FileByPath(path)
-    if err != nil {
-        return 0, false, err
-    }
+	entry, err := db.FileByPath(path)
+	if err != nil {
+		return 0, false, err
+	}
 
-    var status Status
-    if entry != nil {
-        info, err := os.Stat(path)
-        if err != nil {
-            return 0, false, nil
-        }
+	var status Status
+	if entry != nil {
+		info, err := os.Stat(path)
+		if err != nil {
+			return 0, false, nil
+		}
 
-        if entry.ModTimestamp.Unix() == info.ModTime().Unix() {
-            status = TAGGED
-        } else {
-            status = MODIFIED
-        }
-    } else {
-        status = UNTAGGED
-    }
+		if entry.ModTimestamp.Unix() == info.ModTime().Unix() {
+			status = TAGGED
+		} else {
+			status = MODIFIED
+		}
+	} else {
+		status = UNTAGGED
+	}
 
-    nested, err := command.isNested(path, db)
-    if err != nil {
-        return 0, false, err
-    }
+	nested, err := command.isNested(path, db)
+	if err != nil {
+		return 0, false, err
+	}
 
-    return status, nested, nil
+	return status, nested, nil
 }
 
 func (StatusCommand) printRow(row Row) {
-    statusCode := getStatusCode(row.Status)
-    nestedCode := getNestedCode(row.Nested)
-    path := row.Path
+	statusCode := getStatusCode(row.Status)
+	nestedCode := getNestedCode(row.Nested)
+	path := row.Path
 
-    fmt.Printf("%v%v %v\n", statusCode, nestedCode, path)
+	fmt.Printf("%v%v %v\n", statusCode, nestedCode, path)
 }
 
 func (command StatusCommand) isNested(path string, db *database.Database) (bool, error) {
-    if !common.IsDir(path) {
-        return false, nil
-    }
+	if !common.IsDir(path) {
+		return false, nil
+	}
 
-    dir, err := os.Open(path)
-    if err != nil {
-        return false, err
-    }
+	dir, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
 
-    entries, err := dir.Readdir(0)
-    for _, entry := range entries {
-        entryPath := filepath.Join(path, entry.Name())
-        status, nested, err := command.getStatus(entryPath, db)
-        if err != nil {
-            return false, err
-        }
+	entries, err := dir.Readdir(0)
+	for _, entry := range entries {
+		entryPath := filepath.Join(path, entry.Name())
+		status, nested, err := command.getStatus(entryPath, db)
+		if err != nil {
+			return false, err
+		}
 
-        switch status {
-        case TAGGED, MODIFIED, MISSING:
-            return true, nil
-        }
+		switch status {
+		case TAGGED, MODIFIED, MISSING:
+			return true, nil
+		}
 
-        if nested {
-            return true, nil
-        }
-    }
+		if nested {
+			return true, nil
+		}
+	}
 
-    return false, nil
+	return false, nil
 }
 
 func getStatusCode(status Status) string {
-    switch status {
-    case TAGGED:
-        return "T"
-    case MODIFIED:
-        return "M"
-    case MISSING:
-        return "!"
-    case UNTAGGED:
-        return "U"
-    }
+	switch status {
+	case TAGGED:
+		return "T"
+	case MODIFIED:
+		return "M"
+	case MISSING:
+		return "!"
+	case UNTAGGED:
+		return "U"
+	}
 
-    panic("Unsupported status '" + strconv.Itoa(int(status)) + "'.")
+	panic("Unsupported status '" + strconv.Itoa(int(status)) + "'.")
 }
 
 func getNestedCode(nested bool) string {
-    if nested { return "+" }
-    return " "
+	if nested {
+		return "+"
+	}
+	return " "
 }
 
 //TODO this needs to look in the database rather than the file-system
 //     otherwise it will incorrectly report for directories with tagged
 //     contents that have been replaced with identically named file
 func isDir(path string) bool {
-    info, err := os.Stat(path)
-    if err != nil {
-        return false
-    }
+	info, err := os.Stat(path)
+	if err != nil {
+		return false
+	}
 
-    return info.IsDir()
+	return info.IsDir()
 }
 
 type Status int
 
 const (
-    UNTAGGED        Status = iota
-    TAGGED
-    MODIFIED
-    MISSING
+	UNTAGGED Status = iota
+	TAGGED
+	MODIFIED
+	MISSING
 )

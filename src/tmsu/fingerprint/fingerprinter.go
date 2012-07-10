@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package fingerprint
 
 import (
-    "bytes"
+	"bytes"
 	"crypto/sha256"
 	"encoding/binary"
 	"encoding/hex"
@@ -32,22 +32,22 @@ const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
 func Create(path string) (Fingerprint, error) {
-    if (common.IsDir(path)) {
-        return createDirectoryFingerprint(path)
-    }
+	if common.IsDir(path) {
+		return createDirectoryFingerprint(path)
+	}
 
-    stat, err := os.Stat(path)
-    if err != nil {
-        return EMPTY, err
-    }
+	stat, err := os.Stat(path)
+	if err != nil {
+		return EMPTY, err
+	}
 
-    fileSize := stat.Size()
+	fileSize := stat.Size()
 
-    if fileSize > sparseFingerprintThreshold {
-        return createSparseFingerprint(path, fileSize)
-    }
+	if fileSize > sparseFingerprintThreshold {
+		return createSparseFingerprint(path, fileSize)
+	}
 
-    return createFullFingerprint(path)
+	return createFullFingerprint(path)
 }
 
 func createDirectoryFingerprint(path string) (Fingerprint, error) {
@@ -57,35 +57,35 @@ func createDirectoryFingerprint(path string) (Fingerprint, error) {
 	}
 	defer file.Close()
 
-    entries, err := file.Readdir(0)
-    if err != nil {
-        return EMPTY, err
-    }
-    sort.Sort(FileInfoSlice(entries))
+	entries, err := file.Readdir(0)
+	if err != nil {
+		return EMPTY, err
+	}
+	sort.Sort(FileInfoSlice(entries))
 
-    buffer := new(bytes.Buffer)
-    for _, entry := range entries {
-        entryPath := filepath.Join(path, entry.Name())
-        stat, err := os.Stat(entryPath)
+	buffer := new(bytes.Buffer)
+	for _, entry := range entries {
+		entryPath := filepath.Join(path, entry.Name())
+		stat, err := os.Stat(entryPath)
 
-        if err != nil {
-            return EMPTY, err
-        }
+		if err != nil {
+			return EMPTY, err
+		}
 
-        binary.Write(buffer, binary.LittleEndian, stat.ModTime().UnixNano())
-    }
+		binary.Write(buffer, binary.LittleEndian, stat.ModTime().UnixNano())
+	}
 
 	hash := sha256.New()
-    buffer.WriteTo(hash)
+	buffer.WriteTo(hash)
 
-    sum := hash.Sum(make([]byte, 0, 64))
-    fingerprint := hex.EncodeToString(sum)
+	sum := hash.Sum(make([]byte, 0, 64))
+	fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil
 }
 
 func createSparseFingerprint(path string, fileSize int64) (Fingerprint, error) {
-    buffer := make([]byte, sparseFingerprintSize)
+	buffer := make([]byte, sparseFingerprintSize)
 	hash := sha256.New()
 
 	file, err := os.Open(path)
@@ -94,39 +94,39 @@ func createSparseFingerprint(path string, fileSize int64) (Fingerprint, error) {
 	}
 	defer file.Close()
 
-    // start
-    count, err := file.Read(buffer)
-    if err != nil {
-        return EMPTY, err
-    }
-    hash.Write(buffer[:count])
+	// start
+	count, err := file.Read(buffer)
+	if err != nil {
+		return EMPTY, err
+	}
+	hash.Write(buffer[:count])
 
-    // middle
-    _, err = file.Seek((fileSize - sparseFingerprintSize) / 2, 0)
-    if err != nil {
-        return EMPTY, err
-    }
+	// middle
+	_, err = file.Seek((fileSize-sparseFingerprintSize)/2, 0)
+	if err != nil {
+		return EMPTY, err
+	}
 
-    count, err = file.Read(buffer)
-    if err != nil {
-        return EMPTY, err
-    }
-    hash.Write(buffer[:count])
+	count, err = file.Read(buffer)
+	if err != nil {
+		return EMPTY, err
+	}
+	hash.Write(buffer[:count])
 
-    // end
-    _, err = file.Seek(-sparseFingerprintSize, 2)
-    if err != nil {
-        return EMPTY, err
-    }
+	// end
+	_, err = file.Seek(-sparseFingerprintSize, 2)
+	if err != nil {
+		return EMPTY, err
+	}
 
-    count, err = file.Read(buffer)
-    if err != nil {
-        return EMPTY, err
-    }
-    hash.Write(buffer[:count])
+	count, err = file.Read(buffer)
+	if err != nil {
+		return EMPTY, err
+	}
+	hash.Write(buffer[:count])
 
-    sum := hash.Sum(make([]byte, 0, 64))
-    fingerprint := hex.EncodeToString(sum)
+	sum := hash.Sum(make([]byte, 0, 64))
+	fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil
 }
@@ -140,13 +140,13 @@ func createFullFingerprint(path string) (Fingerprint, error) {
 	}
 	defer file.Close()
 
-    buffer := make([]byte, 1024)
-    for count := 0; err == nil; count, err = file.Read(buffer) {
-        hash.Write(buffer[:count])
-    }
+	buffer := make([]byte, 1024)
+	for count := 0; err == nil; count, err = file.Read(buffer) {
+		hash.Write(buffer[:count])
+	}
 
-    sum := hash.Sum(make([]byte, 0, 64))
-    fingerprint := hex.EncodeToString(sum)
+	sum := hash.Sum(make([]byte, 0, 64))
+	fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil
 }
@@ -154,13 +154,13 @@ func createFullFingerprint(path string) (Fingerprint, error) {
 type FileInfoSlice []os.FileInfo
 
 func (infos FileInfoSlice) Len() int {
-    return len(infos)
+	return len(infos)
 }
 
 func (infos FileInfoSlice) Less(i, j int) bool {
-    return infos[i].Name() < infos[j].Name()
+	return infos[i].Name() < infos[j].Name()
 }
 
 func (infos FileInfoSlice) Swap(i, j int) {
-    infos[j], infos[i] = infos[i], infos[j]
+	infos[j], infos[i] = infos[i], infos[j]
 }

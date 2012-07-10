@@ -52,11 +52,11 @@ func (command TagsCommand) Exec(args []string) error {
 		return command.listAllTags()
 	}
 
-    explicitOnly := false
-    if len(args) > 0 && args[0] == "--explicit" {
-        explicitOnly = true
-        args = args[1:]
-    }
+	explicitOnly := false
+	if len(args) > 0 && args[0] == "--explicit" {
+		explicitOnly = true
+		args = args[1:]
+	}
 
 	return command.listTags(args, explicitOnly)
 }
@@ -113,52 +113,54 @@ func (command TagsCommand) listTagsForPath(db *database.Database, path string, e
 }
 
 func (command TagsCommand) listTagsForPaths(db *database.Database, paths []string, explicitOnly bool) error {
-    for _, path := range paths {
-        tags, err := command.tagsForPath(db, path, explicitOnly)
-        if err != nil {
-            return err
-        }
+	for _, path := range paths {
+		tags, err := command.tagsForPath(db, path, explicitOnly)
+		if err != nil {
+			return err
+		}
 
-        fmt.Print(path + ":")
-        for _, tag := range tags {
-            fmt.Print(" " + tag.Name)
-        }
-        fmt.Print("\n")
-    }
+		fmt.Print(path + ":")
+		for _, tag := range tags {
+			fmt.Print(" " + tag.Name)
+		}
+		fmt.Print("\n")
+	}
 
-    return nil
+	return nil
 }
 
 func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, explicitOnly bool) error {
-    file, err := os.Open(".")
-    if err != nil {
-        return err
-    }
-    defer file.Close()
+	file, err := os.Open(".")
+	if err != nil {
+		return err
+	}
+	defer file.Close()
 
-    dirNames, err := file.Readdirnames(0)
-    if err != nil {
-        return err
-    }
+	dirNames, err := file.Readdirnames(0)
+	if err != nil {
+		return err
+	}
 
-    sort.Strings(dirNames)
+	sort.Strings(dirNames)
 
-    for _, dirName := range dirNames {
-        tags, err := command.tagsForPath(db, dirName, explicitOnly)
-        if err != nil {
-            return err
-        }
+	for _, dirName := range dirNames {
+		tags, err := command.tagsForPath(db, dirName, explicitOnly)
+		if err != nil {
+			return err
+		}
 
-        if len(tags) == 0 { continue }
+		if len(tags) == 0 {
+			continue
+		}
 
-        fmt.Print(dirName + ":")
-        for _, tag := range tags {
-            fmt.Print(" " + tag.Name)
-        }
-        fmt.Print("\n")
-    }
+		fmt.Print(dirName + ":")
+		for _, tag := range tags {
+			fmt.Print(" " + tag.Name)
+		}
+		fmt.Print("\n")
+	}
 
-    return nil
+	return nil
 }
 
 func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly bool) (database.Tags, error) {
@@ -167,27 +169,29 @@ func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly 
 		return nil, err
 	}
 
-    tags := make(database.Tags, 0, 10)
-    for absPath != "/" {
-        file, err := db.FileByPath(absPath)
-        if err != nil {
-            return nil, err
-        }
+	tags := make(database.Tags, 0, 10)
+	for absPath != "/" {
+		file, err := db.FileByPath(absPath)
+		if err != nil {
+			return nil, err
+		}
 
-        if file != nil {
-            moreTags, err := db.TagsByFileId(file.Id)
-            if err != nil {
-                return nil, err
-            }
-            tags = append(tags, moreTags...)
-        }
+		if file != nil {
+			moreTags, err := db.TagsByFileId(file.Id)
+			if err != nil {
+				return nil, err
+			}
+			tags = append(tags, moreTags...)
+		}
 
-        if explicitOnly { break }
+		if explicitOnly {
+			break
+		}
 
-        absPath = filepath.Dir(absPath)
-    }
+		absPath = filepath.Dir(absPath)
+	}
 
-    sort.Sort(tags)
+	sort.Sort(tags)
 
 	return tags, nil
 }

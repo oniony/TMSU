@@ -18,18 +18,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-    "database/sql"
-    "errors"
+	"database/sql"
+	"errors"
 	"path/filepath"
 	"time"
 	"tmsu/fingerprint"
 )
 
 type File struct {
-	Id          uint
-	Directory   string
-	Name        string
-	Fingerprint fingerprint.Fingerprint
+	Id           uint
+	Directory    string
+	Name         string
+	Fingerprint  fingerprint.Fingerprint
 	ModTimestamp time.Time
 }
 
@@ -143,7 +143,7 @@ func (db Database) FilesByDirectory(path string) (Files, error) {
             FROM file
             WHERE directory = ? OR directory LIKE ?`
 
-	rows, err := db.connection.Query(sql, path, filepath.Clean(path + "/%"))
+	rows, err := db.connection.Query(sql, path, filepath.Clean(path+"/%"))
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +236,7 @@ func (db Database) DuplicateFiles() ([]Files, error) {
 			return nil, err
 		}
 
-        fingerprint := fingerprint.Fingerprint(fp)
+		fingerprint := fingerprint.Fingerprint(fp)
 
 		if fingerprint != previousFingerprint {
 			if fileSet != nil {
@@ -336,7 +336,7 @@ func readFiles(rows *sql.Rows, files Files) (Files, error) {
 		var name string
 		var fp string
 		var modTime string
-        err := rows.Scan(&fileId, &directory, &name, &fp, &modTime)
+		err := rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}

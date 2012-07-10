@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
-    "errors"
-    "fmt"
+	"errors"
+	"fmt"
 	"github.com/hanwen/go-fuse/fuse"
 	"os"
 	"path/filepath"
@@ -144,10 +144,10 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 }
 
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
-    data := []byte(fmt.Sprintf("db=%v\n", vfs.databasePath))
-    file := fuse.NewDataFile([]byte(data))
+	data := []byte(fmt.Sprintf("db=%v\n", vfs.databasePath))
+	file := fuse.NewDataFile([]byte(data))
 
-    return file, 0
+	return file, 0
 }
 
 // implementation
@@ -176,8 +176,8 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 }
 
 func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
-    entries := make([]fuse.DirEntry, 0, 1)
-    entries = append(entries, fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR})
+	entries := make([]fuse.DirEntry, 0, 1)
+	entries = append(entries, fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR})
 	return entries, fuse.OK
 }
 
@@ -193,9 +193,9 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 		common.Fatalf("Could not retrieve tags: %v", err)
 	}
 
-    entries := make([]fuse.DirEntry, len(tags))
+	entries := make([]fuse.DirEntry, len(tags))
 	for index, tag := range tags {
-	    entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
+		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 
 	return entries, fuse.OK
@@ -235,10 +235,10 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	if fileId == 0 {
 		// tag directory
 
-        tagIds, err := vfs.tagNamesToIds(db, path)
-        if err != nil {
-            common.Fatalf("Could not lookup tag IDs: %v.", err)
-        }
+		tagIds, err := vfs.tagNamesToIds(db, path)
+		if err != nil {
+			common.Fatalf("Could not lookup tag IDs: %v.", err)
+		}
 
 		fileCount, err := db.FileCountWithTags(tagIds, false)
 		if err != nil {
@@ -278,10 +278,10 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	}
 	defer db.Close()
 
-    tagIds, err := vfs.tagNamesToIds(db, path)
-    if err != nil {
-        common.Fatalf("Could not lookup tag IDs: %v.", err)
-    }
+	tagIds, err := vfs.tagNamesToIds(db, path)
+	if err != nil {
+		common.Fatalf("Could not lookup tag IDs: %v.", err)
+	}
 
 	furtherTagIds, err := db.TagsForTags(tagIds)
 	if err != nil {
@@ -293,13 +293,13 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
-    entries := make([]fuse.DirEntry, len(files)+len(furtherTagIds))
+	entries := make([]fuse.DirEntry, len(files)+len(furtherTagIds))
 	for index, tag := range furtherTagIds {
 		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
 	}
 	for index, file := range files {
-        linkName := vfs.getLinkName(file)
-		entries[index + len(furtherTagIds)] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
+		linkName := vfs.getLinkName(file)
+		entries[index+len(furtherTagIds)] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
 	}
 
 	return entries, fuse.OK
@@ -344,21 +344,21 @@ func (vfs FuseVfs) getLinkName(file database.File) string {
 }
 
 func (vfs FuseVfs) tagNamesToIds(db *database.Database, tagNames []string) ([]uint, error) {
-    tagIds := make([]uint, len(tagNames))
+	tagIds := make([]uint, len(tagNames))
 
-    for index, tagName := range tagNames {
-        tag, err := db.TagByName(tagName)
-        if err != nil {
-            return nil, err
-        }
-        if tag == nil {
-            return nil, errors.New("No such tag '" + tagName + "'.")
-        }
+	for index, tagName := range tagNames {
+		tag, err := db.TagByName(tagName)
+		if err != nil {
+			return nil, err
+		}
+		if tag == nil {
+			return nil, errors.New("No such tag '" + tagName + "'.")
+		}
 
-        tagIds[index] = tag.Id
-    }
+		tagIds[index] = tag.Id
+	}
 
-    return tagIds, nil
+	return tagIds, nil
 }
 
 func Uitoa(ui uint) string {

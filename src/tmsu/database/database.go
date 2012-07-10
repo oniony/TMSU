@@ -28,7 +28,7 @@ import (
 )
 
 const (
-    DateLayout = "2006-01-02 15:04:05"
+	DateLayout = "2006-01-02 15:04:05"
 )
 
 type Database struct {
@@ -156,13 +156,13 @@ func (db Database) CreateSchema() error {
 }
 
 func parseTimestamp(text string) time.Time {
-    t, err := time.Parse(DateLayout, text)
-    if err != nil {
-        return time.Unix(0,0)
-    }
-    return t
+	t, err := time.Parse(DateLayout, text)
+	if err != nil {
+		return time.Unix(0, 0)
+	}
+	return t
 }
 
 func formatTimestamp(t time.Time) string {
-    return t.Format(DateLayout)
+	return t.Format(DateLayout)
 }

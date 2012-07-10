@@ -18,38 +18,38 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
-    "os"
-    "tmsu/common"
-    "tmsu/common/proc"
+	"os"
+	"tmsu/common"
+	"tmsu/common/proc"
 )
 
 type Mount struct {
-    DatabasePath string
-    MountPath    string
+	DatabasePath string
+	MountPath    string
 }
 
 func GetMountTable() ([]Mount, error) {
-    pids, err := proc.GetProcessIds()
-    if err != nil {
-        return nil, err
-    }
+	pids, err := proc.GetProcessIds()
+	if err != nil {
+		return nil, err
+	}
 
-    mountTable := make([]Mount, 0, 10)
+	mountTable := make([]Mount, 0, 10)
 
-    for _, pid := range pids {
-        process, err := proc.GetProcess(pid)
-        if err != nil {
-            if !os.IsPermission(err) {
-                return nil, err
-            }
-        } else {
-            if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
-                databasePath := common.Join(process.WorkingDirectory, process.CommandLine[2])
-                mountPath := common.Join(process.WorkingDirectory, process.CommandLine[3])
-                mountTable = append(mountTable, Mount{databasePath, mountPath})
-            }
-        }
-    }
+	for _, pid := range pids {
+		process, err := proc.GetProcess(pid)
+		if err != nil {
+			if !os.IsPermission(err) {
+				return nil, err
+			}
+		} else {
+			if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
+				databasePath := common.Join(process.WorkingDirectory, process.CommandLine[2])
+				mountPath := common.Join(process.WorkingDirectory, process.CommandLine[3])
+				mountTable = append(mountTable, Mount{databasePath, mountPath})
+			}
+		}
+	}
 
-    return mountTable, nil
+	return mountTable, nil
 }

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-    "database/sql"
-    "errors"
+	"database/sql"
+	"errors"
 )
 
 type Tag struct {
@@ -64,7 +64,7 @@ func (db Database) Tags() (Tags, error) {
 	}
 	defer rows.Close()
 
-    return readTags(rows, make(Tags, 0, 10))
+	return readTags(rows, make(Tags, 0, 10))
 }
 
 func (db Database) TagByName(name string) (*Tag, error) {
@@ -109,30 +109,30 @@ func (db Database) TagsByFileId(fileId uint) (Tags, error) {
 	}
 	defer rows.Close()
 
-    return readTags(rows, make(Tags, 0, 10))
+	return readTags(rows, make(Tags, 0, 10))
 }
 
 func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
-    files, err := db.FilesWithTags(tagIds, []uint{}, false)
-    if err != nil {
-        return nil, err
-    }
+	files, err := db.FilesWithTags(tagIds, []uint{}, false)
+	if err != nil {
+		return nil, err
+	}
 
-    furtherTags := make(Tags, 0, 10)
-    for _, file := range files {
-        tags, err := db.TagsByFileId(file.Id)
-        if err != nil {
-            return nil, err
-        }
+	furtherTags := make(Tags, 0, 10)
+	for _, file := range files {
+		tags, err := db.TagsByFileId(file.Id)
+		if err != nil {
+			return nil, err
+		}
 
-        for _, tag := range tags {
-            if !containsTagId(tagIds, tag.Id) && !containsTag(furtherTags, tag) {
-                furtherTags = append(furtherTags, tag)
-            }
-        }
-    }
+		for _, tag := range tags {
+			if !containsTagId(tagIds, tag.Id) && !containsTag(furtherTags, tag) {
+				furtherTags = append(furtherTags, tag)
+			}
+		}
+	}
 
-    return furtherTags, nil
+	return furtherTags, nil
 }
 
 func (db Database) AddTag(name string) (*Tag, error) {
@@ -239,15 +239,15 @@ func (db Database) DeleteTag(tagId uint) error {
 type Tags []Tag
 
 func (tags Tags) Len() int {
-    return len(tags)
+	return len(tags)
 }
 
 func (tags Tags) Swap(i, j int) {
-    tags[i], tags[j] = tags[j], tags[i]
+	tags[i], tags[j] = tags[j], tags[i]
 }
 
 func (tags Tags) Less(i, j int) bool {
-    return tags[i].Name < tags[j].Name
+	return tags[i].Name < tags[j].Name
 }
 
 // 
@@ -260,7 +260,7 @@ func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
 
 		var tagId uint
 		var tagName string
-        err := rows.Scan(&tagId, &tagName)
+		err := rows.Scan(&tagId, &tagName)
 		if err != nil {
 			return nil, err
 		}
@@ -272,17 +272,21 @@ func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
 }
 
 func containsTagId(items []uint, searchItem uint) bool {
-    for _, item := range items {
-        if item == searchItem { return true }
-    }
+	for _, item := range items {
+		if item == searchItem {
+			return true
+		}
+	}
 
-    return false
+	return false
 }
 
 func containsTag(tags Tags, searchTag Tag) bool {
-    for _, tag := range tags {
-        if tag.Id == searchTag.Id { return true }
-    }
+	for _, tag := range tags {
+		if tag.Id == searchTag.Id {
+			return true
+		}
+	}
 
-    return false
+	return false
 }

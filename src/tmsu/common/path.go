@@ -24,21 +24,21 @@ import (
 )
 
 func IsDir(path string) bool {
-    info, err := os.Stat(path)
-    if err != nil {
-        switch {
-        case os.IsPermission(err):
-            Warnf("'%v': Permission denied", path)
-        case os.IsNotExist(err):
-            Warnf("'%v': No such file", path)
-        default:
-            Warnf("'%v': Error: %v", err)
-        }
+	info, err := os.Stat(path)
+	if err != nil {
+		switch {
+		case os.IsPermission(err):
+			Warnf("'%v': Permission denied", path)
+		case os.IsNotExist(err):
+			Warnf("'%v': No such file", path)
+		default:
+			Warnf("'%v': Error: %v", err)
+		}
 
-        return false
-    }
+		return false
+	}
 
-    return info.IsDir()
+	return info.IsDir()
 }
 
 func MakeRelative(path string) string {
@@ -59,9 +59,9 @@ func MakeRelative(path string) string {
 }
 
 func Join(dir, path string) string {
-    if filepath.IsAbs(path) {
-        return path
-    }
+	if filepath.IsAbs(path) {
+		return path
+	}
 
-    return filepath.Join(dir, path)
+	return filepath.Join(dir, path)
 }

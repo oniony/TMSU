@@ -193,10 +193,10 @@ func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, 
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
 	}
 
-    err = db.RemoveFileTag(fileId, tag.Id)
-    if err != nil {
-        return err
-    }
+	err = db.RemoveFileTag(fileId, tag.Id)
+	if err != nil {
+		return err
+	}
 
 	return nil
 }

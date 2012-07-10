@@ -59,10 +59,10 @@ func (command MountCommand) Exec(args []string) error {
 
 	switch argCount {
 	case 0:
-        err := command.listMounts()
-        if err != nil {
-            return errors.New("Could not list mounts: " + err.Error())
-        }
+		err := command.listMounts()
+		if err != nil {
+			return errors.New("Could not list mounts: " + err.Error())
+		}
 	case 1:
 		mountPath := args[0]
 
@@ -86,16 +86,16 @@ func (command MountCommand) Exec(args []string) error {
 }
 
 func (command MountCommand) listMounts() error {
-    mt, err := vfs.GetMountTable()
-    if err != nil {
-        return err
-    }
+	mt, err := vfs.GetMountTable()
+	if err != nil {
+		return err
+	}
 
-    for _, mount := range mt {
-        fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
-    }
+	for _, mount := range mt {
+		fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
+	}
 
-    return nil
+	return nil
 }
 
 func (command MountCommand) mountSelected(mountPath string) error {

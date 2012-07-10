@@ -52,11 +52,11 @@ func (command FilesCommand) Exec(args []string) error {
 		return command.listAllFiles()
 	}
 
-    explicitOnly := false
+	explicitOnly := false
 	if argCount > 0 && args[0] == "--explicit" {
-	    explicitOnly = true
-        args = args[1:]
-    }
+		explicitOnly = true
+		args = args[1:]
+	}
 
 	return command.listFiles(args, explicitOnly)
 }
@@ -91,18 +91,18 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	}
 	defer db.Close()
 
-    includeTagIds := make([]uint, 0)
-    excludeTagIds := make([]uint, 0)
+	includeTagIds := make([]uint, 0)
+	excludeTagIds := make([]uint, 0)
 	for _, arg := range args {
-	    var tagName string
-	    var include bool
-	    if arg[0] == '-' {
-	        tagName = arg[1:]
-	        include = false
-        } else {
-            tagName = arg
-            include = true
-        }
+		var tagName string
+		var include bool
+		if arg[0] == '-' {
+			tagName = arg[1:]
+			include = false
+		} else {
+			tagName = arg
+			include = true
+		}
 
 		tag, err := db.TagByName(tagName)
 		if err != nil {
@@ -112,17 +112,19 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 			return errors.New("No such tag '" + tagName + "'.")
 		}
 
-        if include {
-            includeTagIds = append(includeTagIds, tag.Id)
-        } else {
-            excludeTagIds = append(excludeTagIds, tag.Id)
-        }
+		if include {
+			includeTagIds = append(includeTagIds, tag.Id)
+		} else {
+			excludeTagIds = append(excludeTagIds, tag.Id)
+		}
 	}
 
 	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
 	if err != nil {
 		return err
 	}
+
+	//TODO look for untagged files if !explicitOnly
 
 	paths := make([]string, len(files))
 	for index, file := range files {

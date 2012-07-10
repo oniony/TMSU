@@ -22,7 +22,6 @@ import (
 	"strings"
 )
 
-
 func validateTagName(tagName string) error {
 	if strings.Index(tagName, ",") != -1 {
 		return errors.New("Tag names cannot contain commas.")
@@ -37,8 +36,8 @@ func validateTagName(tagName string) error {
 	}
 
 	if tagName[0] == '-' {
-	    return errors.New("Tag names cannot start with '-'.")
-    }
+		return errors.New("Tag names cannot start with '-'.")
+	}
 
-    return nil
+	return nil
 }

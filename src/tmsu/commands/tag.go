@@ -120,10 +120,10 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 }
 
 func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
-    err := validateTagName(tagName)
-    if err != nil {
-        return nil, nil, err
-    }
+	err := validateTagName(tagName)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	tag, err := db.TagByName(tagName)
 	if err != nil {
@@ -154,44 +154,44 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 }
 
 func (command TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
-    fingerprint, err := fingerprint.Create(path)
-    if err != nil {
-        return nil, err
-    }
+	fingerprint, err := fingerprint.Create(path)
+	if err != nil {
+		return nil, err
+	}
 
 	file, err := db.FileByPath(path)
 	if err != nil {
 		return nil, err
 	}
 
-    info, err := os.Stat(path)
-    if err != nil {
-        return nil, err
-    }
-    modTime := info.ModTime().UTC()
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	modTime := info.ModTime().UTC()
 
 	if file == nil {
-	    // new file
+		// new file
 
-        files, err := db.FilesByFingerprint(fingerprint)
-        if err != nil {
-            return nil, err
-        }
+		files, err := db.FilesByFingerprint(fingerprint)
+		if err != nil {
+			return nil, err
+		}
 
-        if len(files) > 0 {
-            common.Warn("File is a duplicate of previously tagged files.")
+		if len(files) > 0 {
+			common.Warn("File is a duplicate of previously tagged files.")
 
-            for _, duplicateFile := range files {
-                common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
-            }
-        }
+			for _, duplicateFile := range files {
+				common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
+			}
+		}
 
 		file, err = db.AddFile(path, fingerprint, modTime)
 		if err != nil {
 			return nil, err
 		}
 	} else {
-	    // existing file
+		// existing file
 
 		if file.ModTimestamp.Unix() != modTime.Unix() {
 			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)

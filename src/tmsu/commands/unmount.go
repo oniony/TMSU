@@ -48,11 +48,11 @@ func (command UnmountCommand) Exec(args []string) error {
 		return errors.New("Path to unmount not speciified.")
 	}
 
-    if (args[0] == "--all") {
-        return command.unmountAll()
-    }
+	if args[0] == "--all" {
+		return command.unmountAll()
+	}
 
-    return command.unmount(args[0])
+	return command.unmount(args[0])
 }
 
 func (UnmountCommand) unmount(path string) error {
@@ -78,17 +78,17 @@ func (UnmountCommand) unmount(path string) error {
 }
 
 func (command UnmountCommand) unmountAll() error {
-    mt, err := vfs.GetMountTable()
-    if err != nil {
-        return errors.New("Could not get mount table: " + err.Error())
-    }
+	mt, err := vfs.GetMountTable()
+	if err != nil {
+		return errors.New("Could not get mount table: " + err.Error())
+	}
 
-    for _, mount := range mt {
-        err = command.unmount(mount.MountPath)
-        if err != nil {
-            return err
-        }
-    }
+	for _, mount := range mt {
+		err = command.unmount(mount.MountPath)
+		if err != nil {
+			return err
+		}
+	}
 
-    return nil
+	return nil
 }

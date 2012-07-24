@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
-	"errors"
 	"fmt"
 	"github.com/hanwen/go-fuse/fuse"
 	"os"
@@ -239,6 +238,9 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		if err != nil {
 			common.Fatalf("Could not lookup tag IDs: %v.", err)
 		}
+		if tagIds == nil {
+			return nil, fuse.ENOENT
+		}
 
 		fileCount, err := db.FileCountWithTags(tagIds, false)
 		if err != nil {
@@ -281,6 +283,9 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	tagIds, err := vfs.tagNamesToIds(db, path)
 	if err != nil {
 		common.Fatalf("Could not lookup tag IDs: %v.", err)
+	}
+	if tagIds == nil {
+		return nil, fuse.ENOENT
 	}
 
 	furtherTagIds, err := db.TagsForTags(tagIds)
@@ -352,7 +357,7 @@ func (vfs FuseVfs) tagNamesToIds(db *database.Database, tagNames []string) ([]ui
 			return nil, err
 		}
 		if tag == nil {
-			return nil, errors.New("No such tag '" + tagName + "'.")
+			return nil, nil
 		}
 
 		tagIds[index] = tag.Id

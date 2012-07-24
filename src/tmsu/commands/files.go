@@ -124,7 +124,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		return err
 	}
 
-	paths := make([]string, 0, len(files))
+	paths := make([]string, len(files))
 	for _, file := range files {
 		relPath := common.MakeRelative(file.Path())
 		paths = append(paths, relPath)
@@ -141,10 +141,16 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 			}
 		}
 	}
+
 	sort.Strings(paths)
 
+	previousPath := ""
 	for _, path := range paths {
-		fmt.Println(path)
+		if path != previousPath {
+			fmt.Println(path)
+		}
+
+		previousPath = path
 	}
 
 	return nil

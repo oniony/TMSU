@@ -192,6 +192,23 @@ func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly 
 	}
 
 	sort.Sort(tags)
+	tags = uniq(tags)
 
 	return tags, nil
+}
+
+func uniq(tags []database.Tag) []database.Tag {
+	uniqueTags := make([]database.Tag, 0, len(tags))
+
+	var previousTag database.Tag = database.Tag{}
+	for _, tag := range tags {
+		if tag.Name == previousTag.Name {
+			continue
+		}
+
+		uniqueTags = append(uniqueTags, tag)
+		previousTag = tag
+	}
+
+	return uniqueTags
 }

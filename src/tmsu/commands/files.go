@@ -124,12 +124,22 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		return err
 	}
 
-	//TODO look for untagged files if !explicitOnly
-
-	paths := make([]string, len(files))
-	for index, file := range files {
+	paths := make([]string, 0, len(files))
+	for _, file := range files {
 		relPath := common.MakeRelative(file.Path())
-		paths[index] = relPath
+		paths = append(paths, relPath)
+
+		if !explicitOnly {
+			additionalPaths, err := common.DirectoryEntries(file.Path())
+			if err != nil {
+				return err
+			}
+
+			for _, additionalPath := range additionalPaths {
+				relAdditionalPath := common.MakeRelative(additionalPath)
+				paths = append(paths, relAdditionalPath)
+			}
+		}
 	}
 	sort.Strings(paths)
 

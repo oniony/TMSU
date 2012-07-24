@@ -298,13 +298,13 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
 
-	entries := make([]fuse.DirEntry, len(files)+len(furtherTagIds))
-	for index, tag := range furtherTagIds {
-		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755}
+	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagIds))
+	for _, tag := range furtherTagIds {
+		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755})
 	}
-	for index, file := range files {
+	for _, file := range files {
 		linkName := vfs.getLinkName(file)
-		entries[index+len(furtherTagIds)] = fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK}
+		entries = append(entries, fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK})
 	}
 
 	return entries, fuse.OK

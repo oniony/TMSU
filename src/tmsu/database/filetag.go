@@ -37,7 +37,7 @@ func (db Database) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, er
 	return uint(len(files)), nil
 }
 
-func (db Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
+func (db Database) FilesWithTag(tagId uint) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
@@ -51,20 +51,9 @@ func (db Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
 	}
 	defer rows.Close()
 
-	explicitFiles, err := readFiles(rows, make(Files, 0, 10))
-
-	files := make(Files, len(explicitFiles), len(explicitFiles)+10)
-	copy(files, explicitFiles)
-
-	if !explicitOnly {
-		for _, explicitFile := range explicitFiles {
-			additionalFiles, err := db.FilesByDirectory(explicitFile.Path())
-			if err != nil {
-				return nil, err
-			}
-
-			files = append(files, additionalFiles...)
-		}
+	files, err := readFiles(rows, make(Files, 0, 10))
+	if err != nil {
+		return nil, err
 	}
 
 	return files, nil
@@ -74,7 +63,7 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOn
 	var filesById map[uint]File = make(map[uint]File, 10)
 
 	if len(includeTagIds) > 0 {
-		files, err := db.FilesWithTag(includeTagIds[0], explicitOnly)
+		files, err := db.FilesWithTag(includeTagIds[0])
 		if err != nil {
 			return nil, err
 		}
@@ -83,7 +72,7 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOn
 		}
 
 		for _, includeTagId := range includeTagIds[1:] {
-			files, err := db.FilesWithTag(includeTagId, explicitOnly)
+			files, err := db.FilesWithTag(includeTagId)
 			if err != nil {
 				return nil, err
 			}
@@ -105,7 +94,7 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOn
 	}
 
 	for _, excludeTagId := range excludeTagIds {
-		files, err := db.FilesWithTag(excludeTagId, explicitOnly)
+		files, err := db.FilesWithTag(excludeTagId)
 		if err != nil {
 			return nil, err
 		}

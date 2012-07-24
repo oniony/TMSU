@@ -27,6 +27,14 @@ func IsRegular(fileInfo os.FileInfo) bool {
 }
 
 func DirectoryEntries(path string) ([]string, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	if !stat.IsDir() {
+		return []string{}, nil
+	}
+
 	file, err := os.Open(path)
 	if err != nil {
 		return nil, err

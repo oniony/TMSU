@@ -106,6 +106,12 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 -------------
 
+v0.0.9
+
+  * Fixed bug which caused process hosting the virtual file-system to crash if
+    a non-existant tag directory is 'stat'ed.
+  * Untagged files now inherit parent directory tags.
+
 v0.0.8
 
   Files can now be tagged within tagged directories. Files within tagged
@@ -117,8 +123,10 @@ v0.0.8
   * Improved 'mount' command help.
   * 'rename' command now validates destination tag name.
   * Fixed bug with 'unmount --all' returning an error if there are no mounts.
-  * Removed dependency upon 'pgrep'; now accesses proc-fs directotly for mount information.
-  * 'files' command will now show files that inherit the specified tags ('--explicit' option turns this off).
+  * Removed dependency upon 'pgrep'; now accesses proc-fs directotly for mount
+    information.
+  * 'files' command will now show files that inherit the specified tags
+    ('--explicit' option turns this off).
   * 'tags' command will now shows inherited tags ('--explicit' turns this off).
   * 'status' command now reports inherited tags.
   * 'stats' command formatting updated.

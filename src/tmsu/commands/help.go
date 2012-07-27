@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+	"github.com/ogier/pflag"
 	"math"
 	"sort"
 	"strconv"
@@ -45,13 +46,21 @@ Shows help summary or, where COMMAND is specified, help for COMMAND.
 }
 
 func (command HelpCommand) Exec(args []string) error {
-	switch len(args) {
-	case 0:
-		command.summary()
-	default:
-		if args[0] == "--list" {
-			command.listCommands()
-		} else {
+	flagSet := pflag.NewFlagSet("help", pflag.ExitOnError)
+	flagSet.Usage = func() { command.Description() }
+
+	var list bool
+	flagSet.BoolVarP(&list, "list", "l", false, "List all commands.")
+
+	flagSet.Parse(args)
+
+	if list {
+		command.listCommands()
+	} else {
+		switch len(args) {
+		case 0:
+			command.summary()
+		default:
 			command.describeCommand(args[0])
 		}
 	}

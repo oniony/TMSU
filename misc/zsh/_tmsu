@@ -71,7 +71,9 @@ _tmsu_cmd_files() {
 }
 
 _tmsu_cmd_help() {
-	_arguments -s -w '1:command:_tmsu_commands' && ret=0
+	_arguments -s -w '--list' \
+	                 '1:command:_tmsu_commands' &&
+	                 ret=0
 }
 
 _tmsu_cmd_merge() {

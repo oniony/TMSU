@@ -48,6 +48,7 @@ func main() {
 	helpCommand.Commands = commands
 
 	aliases := map[string]string{
+		"-?":        "help",
 		"-h":        "help",
 		"-help":     "help",
 		"--help":    "help",

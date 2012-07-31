@@ -95,12 +95,20 @@ func (helpCommand HelpCommand) summary() {
 }
 
 func (helpCommand HelpCommand) listCommands() {
+	commandNames := make([]string, 0, len(helpCommand.Commands))
+
 	for _, command := range helpCommand.Commands {
 		if command.Synopsis() == "" {
 			continue
 		}
 
-		fmt.Println(command.Name())
+		commandNames = append(commandNames, command.Name())
+	}
+
+	sort.Strings(commandNames)
+
+	for _, commandName := range commandNames {
+		fmt.Println(commandName)
 	}
 }
 

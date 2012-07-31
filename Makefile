@@ -19,7 +19,6 @@ export GOPATH=$(PWD)
 all: clean generate compile dist test
 
 clean:
-	### Clean ###
 	go clean tmsu
 	rm -f $(SRC_DIR)/common/$(VER_FILE)
 	rm -Rf $(BIN_DIR)
@@ -27,21 +26,17 @@ clean:
 	rm -f $(DIST_FILE)
 
 generate:
-	### Generate ###
 	echo "package common; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/common/$(VER_FILE)
 
 compile: generate
-	### Compile ###
 	go build -o $(BIN_FILE) tmsu
 	@mkdir -p $(BIN_DIR)
 	mv $(BIN_FILE) $(BIN_DIR)
 
 test: compile
-	### Test ###
 	go test tmsu/...
 
 dist: compile
-	### Dist ###
 	@mkdir -p $(DIST_DIR)
 	cp -R $(BIN_DIR) $(DIST_DIR)
 	cp README $(DIST_DIR)
@@ -50,11 +45,9 @@ dist: compile
 	rm -Rf $(DIST_DIR)
 
 install:
-	### Install ###
 	cp $(BIN_DIR)/$(BIN_FILE) $(INSTALL_DIR)
 	@mkdir -p $(ZSH_COMP_INSTALL_DIR)
 	cp $(ZSH_COMP) $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
-	### Uninstall ###
 	rm $(INSTALL_DIR)/$(BIN_NAME)

@@ -20,6 +20,10 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"os"
+	"path/filepath"
+	"time"
+	"tmsu/common"
 )
 
 type FileTag struct {
@@ -28,8 +32,8 @@ type FileTag struct {
 	TagId  uint
 }
 
-func (db Database) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, error) {
-	files, err := db.FilesWithTags(tagIds, []uint{}, explicitOnly)
+func (db Database) FileCountWithTags(tagIds []uint, explicit bool) (uint, error) {
+	files, err := db.FilesWithTags(tagIds, []uint{}, explicit)
 	if err != nil {
 		return 0, err
 	}
@@ -37,7 +41,7 @@ func (db Database) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, er
 	return uint(len(files)), nil
 }
 
-func (db Database) FilesWithTag(tagId uint) (Files, error) {
+func (db Database) FilesWithTag(tagId uint, explicit bool) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
@@ -56,30 +60,47 @@ func (db Database) FilesWithTag(tagId uint) (Files, error) {
 		return nil, err
 	}
 
+	if !explicit {
+		for _, file := range files {
+			additionalPaths, err := common.DirectoryEntries(file.Path())
+			if err != nil && !os.IsNotExist(err) {
+				return nil, err
+			}
+
+			if additionalPaths != nil {
+				for _, additionalPath := range additionalPaths {
+					directory := filepath.Dir(additionalPath)
+					filename := filepath.Base(additionalPath)
+					files = append(files, File{0, directory, filename, "", time.Time{}})
+				}
+			}
+		}
+	}
+
 	return files, nil
 }
 
-func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOnly bool) (Files, error) {
-	var filesById map[uint]File = make(map[uint]File, 10)
+func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicit bool) (Files, error) {
+	var fileByPath map[string]File = make(map[string]File, 10)
 
 	if len(includeTagIds) > 0 {
-		files, err := db.FilesWithTag(includeTagIds[0])
+		files, err := db.FilesWithTag(includeTagIds[0], explicit)
 		if err != nil {
 			return nil, err
 		}
 		for _, file := range files {
-			filesById[file.Id] = file
+			fileByPath[file.Path()] = file
 		}
 
 		for _, includeTagId := range includeTagIds[1:] {
-			files, err := db.FilesWithTag(includeTagId)
+			files, err := db.FilesWithTag(includeTagId, explicit)
 			if err != nil {
 				return nil, err
 			}
 
-			for _, file := range filesById {
+			for path, file := range fileByPath {
 				if !contains(files, file) {
-					delete(filesById, file.Id)
+					delete(fileByPath, path)
 				}
 			}
 		}
@@ -88,30 +109,29 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOn
 		if err != nil {
 			return nil, err
 		}
+
 		for _, file := range files {
-			filesById[file.Id] = file
+			fileByPath[file.Path()] = file
 		}
 	}
 
 	for _, excludeTagId := range excludeTagIds {
-		files, err := db.FilesWithTag(excludeTagId)
+		files, err := db.FilesWithTag(excludeTagId, explicit)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, file := range files {
-			_, contains := filesById[file.Id]
+			_, contains := fileByPath[file.Path()]
 			if contains {
-				delete(filesById, file.Id)
+				delete(fileByPath, file.Path())
 			}
 		}
 	}
 
-	files := make(Files, len(filesById))
-	index := 0
-	for _, value := range filesById {
-		files[index] = value
-		index += 1
+	files := make(Files, len(fileByPath))
+	for _, file := range fileByPath {
+		files = append(files, file)
 	}
 
 	return files, nil
@@ -337,7 +357,7 @@ func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 
 func contains(files Files, searchFile File) bool {
 	for _, file := range files {
-		if file.Id == searchFile.Id {
+		if file.Path() == searchFile.Path() {
 			return true
 		}
 	}

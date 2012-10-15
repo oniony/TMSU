@@ -20,7 +20,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"os"
 	"sort"
 	"tmsu/common"
 	"tmsu/database"
@@ -43,7 +42,7 @@ tmsu files --all
 Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).
 
   --all         show the complete set of tagged files
-  --explicit    show only files tagged explicitly (not inherited)`
+  --explicit    show only files tagged explicitly`
 }
 
 func (command FilesCommand) Exec(args []string) error {
@@ -53,13 +52,13 @@ func (command FilesCommand) Exec(args []string) error {
 		return command.listAllFiles()
 	}
 
-	explicitOnly := false
+	explicit := false
 	if argCount > 0 && args[0] == "--explicit" {
-		explicitOnly = true
+		explicit = true
 		args = args[1:]
 	}
 
-	return command.listFiles(args, explicitOnly)
+	return command.listFiles(args, explicit)
 }
 
 func (FilesCommand) listAllFiles() error {
@@ -81,7 +80,7 @@ func (FilesCommand) listAllFiles() error {
 	return nil
 }
 
-func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
+func (FilesCommand) listFiles(args []string, explicit bool) error {
 	if len(args) == 0 {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
@@ -120,7 +119,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		}
 	}
 
-	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
+	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicit)
 	if err != nil {
 		return err
 	}
@@ -129,20 +128,6 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	for _, file := range files {
 		relPath := common.MakeRelative(file.Path())
 		paths = append(paths, relPath)
-
-		if !explicitOnly {
-			additionalPaths, err := common.DirectoryEntries(file.Path())
-			if err != nil && !os.IsNotExist(err) {
-				return err
-			}
-
-			if additionalPaths != nil {
-				for _, additionalPath := range additionalPaths {
-					relAdditionalPath := common.MakeRelative(additionalPath)
-					paths = append(paths, relAdditionalPath)
-				}
-			}
-		}
 	}
 
 	sort.Strings(paths)

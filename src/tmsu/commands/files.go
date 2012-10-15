@@ -20,6 +20,7 @@ package commands
 import (
 	"errors"
 	"fmt"
+	"os"
 	"sort"
 	"tmsu/common"
 	"tmsu/database"
@@ -131,13 +132,15 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 
 		if !explicitOnly {
 			additionalPaths, err := common.DirectoryEntries(file.Path())
-			if err != nil {
+			if err != nil && !os.IsNotExist(err) {
 				return err
 			}
 
-			for _, additionalPath := range additionalPaths {
-				relAdditionalPath := common.MakeRelative(additionalPath)
-				paths = append(paths, relAdditionalPath)
+			if additionalPaths != nil {
+				for _, additionalPath := range additionalPaths {
+					relAdditionalPath := common.MakeRelative(additionalPath)
+					paths = append(paths, relAdditionalPath)
+				}
 			}
 		}
 	}

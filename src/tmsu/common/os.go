@@ -31,6 +31,7 @@ func DirectoryEntries(path string) ([]string, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	if !stat.IsDir() {
 		return []string{}, nil
 	}

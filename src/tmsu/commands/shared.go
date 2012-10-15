@@ -23,6 +23,10 @@ import (
 )
 
 func validateTagName(tagName string) error {
+	if tagName == "." || tagName == ".." {
+		return errors.New("Tag name cannot be '.' or '..'.")
+	}
+
 	if strings.Index(tagName, ",") != -1 {
 		return errors.New("Tag names cannot contain commas.")
 	}
@@ -33,6 +37,10 @@ func validateTagName(tagName string) error {
 
 	if strings.Index(tagName, " ") != -1 {
 		return errors.New("Tag names cannot contain spaces.")
+	}
+
+	if strings.Index(tagName, "/") != -1 {
+		return errors.New("Tag names cannot contain slashes.")
 	}
 
 	if tagName[0] == '-' {

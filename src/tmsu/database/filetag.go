@@ -61,7 +61,9 @@ func (db Database) FilesWithTag(tagId uint, explicit bool) (Files, error) {
 	}
 
 	if !explicit {
-		for _, file := range files {
+		for index := 0; index < len(files); index += 1 {
+			file := files[index]
+
 			additionalPaths, err := common.DirectoryEntries(file.Path())
 			if err != nil && !os.IsNotExist(err) {
 				return nil, err

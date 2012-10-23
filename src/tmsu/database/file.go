@@ -170,6 +170,33 @@ func (db Database) FilesByDirectory(path string) (Files, error) {
 	return files, nil
 }
 
+func (db Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (uint, error) {
+	sql := `SELECT count(id)
+            FROM file
+            WHERE fingerprint = ?`
+
+	rows, err := db.connection.Query(sql, string(fingerprint))
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return 0, errors.New("Could not get file count.")
+	}
+	if rows.Err() != nil {
+		return 0, err
+	}
+
+	var count uint
+	err = rows.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
 	sql := `SELECT id, directory, name, mod_time
 	        FROM file
@@ -302,6 +329,14 @@ func (db Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.
 }
 
 func (db Database) RemoveFile(fileId uint) error {
+	file, err := db.File(fileId)
+	if err != nil {
+		return err
+	}
+	if file == nil {
+		return errors.New("No such file '" + string(fileId) + "'.")
+	}
+
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
@@ -316,6 +351,22 @@ func (db Database) RemoveFile(fileId uint) error {
 	}
 	if rowsAffected != 1 {
 		return errors.New("Expected exactly one row to be affected.")
+	}
+
+	files, err := db.FilesByDirectory(file.Path())
+	if err != nil {
+		return err
+	}
+
+	for _, file := range files {
+		filetags, err := db.FileTagsByFileId(file.Id, false)
+		if err != nil {
+			return err
+		}
+
+		if len(filetags) == 0 {
+			db.RemoveFile(file.Id)
+		}
 	}
 
 	return nil

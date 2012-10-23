@@ -161,12 +161,12 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 		}
 	}
 
-	hasTags, err := db.AnyFileTagsForFile(file.Id)
+	filetags, err := db.FileTagsByFileId(file.Id, false)
 	if err != nil {
 		return err
 	}
 
-	if !hasTags {
+	if len(filetags) == 0 {
 		err := db.RemoveFile(file.Id)
 		if err != nil {
 			return err

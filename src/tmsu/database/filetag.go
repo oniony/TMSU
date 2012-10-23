@@ -33,6 +33,7 @@ type FileTag struct {
 }
 
 func (db Database) FileCountWithTags(tagIds []uint, explicit bool) (uint, error) {
+	//TODO optimize
 	files, err := db.FilesWithTags(tagIds, []uint{}, explicit)
 	if err != nil {
 		return 0, err
@@ -220,26 +221,42 @@ func (db Database) FileTagsByTagId(tagId uint) (FileTags, error) {
 	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
-func (db Database) AnyFileTagsForFile(fileId uint) (bool, error) {
-	sql := `SELECT 1
+func (db Database) FileTagsByFileId(fileId uint, explicitOnly bool) (FileTags, error) {
+	sql := `SELECT id, file_id, tag_id
             FROM file_tag
-            WHERE file_id = ?
-            LIMIT 1`
+            WHERE file_id = ?`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
-		return false, err
+		return nil, err
 	}
-	defer rows.Close()
+	fileTags, err := readFileTags(rows, make(FileTags, 0, 10))
+	rows.Close()
 
-	if rows.Next() {
-		return true, nil
-	}
-	if rows.Err() != nil {
-		return false, err
+	if !explicitOnly {
+		file, err := db.File(fileId)
+		if err != nil {
+			return nil, err
+		}
+
+		parentFile, err := db.FileByPath(file.Directory)
+		if err != nil {
+			return nil, err
+		}
+
+		if parentFile != nil {
+			additionalFileTags, err := db.FileTagsByFileId(parentFile.Id, explicitOnly)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, additionalFileTag := range additionalFileTags {
+				fileTags = append(fileTags, additionalFileTag)
+			}
+		}
 	}
 
-	return false, nil
+	return fileTags, nil
 }
 
 func (db Database) AddFileTag(fileId uint, tagId uint) (*FileTag, error) {

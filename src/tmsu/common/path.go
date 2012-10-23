@@ -41,7 +41,7 @@ func IsDir(path string) bool {
 	return info.IsDir()
 }
 
-func MakeRelative(path string) string {
+func RelPath(path string) string {
 	workingDirectory, err := os.Getwd()
 	if err != nil {
 		return path

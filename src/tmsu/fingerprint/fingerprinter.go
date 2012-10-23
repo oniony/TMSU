@@ -18,13 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package fingerprint
 
 import (
-	"bytes"
 	"crypto/sha256"
-	"encoding/binary"
 	"encoding/hex"
 	"os"
-	"path/filepath"
-	"sort"
 	"tmsu/common"
 )
 
@@ -33,7 +29,7 @@ const sparseFingerprintSize = 512 * 1024
 
 func Create(path string) (Fingerprint, error) {
 	if common.IsDir(path) {
-		return createDirectoryFingerprint(path)
+		return EMPTY, nil
 	}
 
 	stat, err := os.Stat(path)
@@ -48,40 +44,6 @@ func Create(path string) (Fingerprint, error) {
 	}
 
 	return createFullFingerprint(path)
-}
-
-func createDirectoryFingerprint(path string) (Fingerprint, error) {
-	file, err := os.Open(path)
-	if err != nil {
-		return EMPTY, err
-	}
-	defer file.Close()
-
-	entries, err := file.Readdir(0)
-	if err != nil {
-		return EMPTY, err
-	}
-	sort.Sort(FileInfoSlice(entries))
-
-	buffer := new(bytes.Buffer)
-	for _, entry := range entries {
-		entryPath := filepath.Join(path, entry.Name())
-		stat, err := os.Stat(entryPath)
-
-		if err != nil {
-			return EMPTY, err
-		}
-
-		binary.Write(buffer, binary.LittleEndian, stat.ModTime().UnixNano())
-	}
-
-	hash := sha256.New()
-	buffer.WriteTo(hash)
-
-	sum := hash.Sum(make([]byte, 0, 64))
-	fingerprint := hex.EncodeToString(sum)
-
-	return Fingerprint(fingerprint), nil
 }
 
 func createSparseFingerprint(path string, fileSize int64) (Fingerprint, error) {

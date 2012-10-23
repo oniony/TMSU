@@ -22,6 +22,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
@@ -56,12 +57,12 @@ func GetDefaultDatabaseConfig() (*DatabaseConfig, error) {
 
 func resolvePath(path string) (string, error) {
 	if strings.HasPrefix(path, "~"+string(filepath.Separator)) {
-		homeDirectory := os.Getenv("HOME")
-		if homeDirectory == "" {
-			return "", errors.New("Could not identify home directory.")
+		user, err := user.Current()
+		if err != nil {
+			return "", errors.New("Could not identify home directory: " + err.Error())
 		}
 
-		path = strings.Join([]string{homeDirectory, path[2:]}, string(filepath.Separator))
+		path = strings.Join([]string{user.HomeDir, path[2:]}, string(filepath.Separator))
 	}
 
 	return path, nil

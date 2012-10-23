@@ -126,7 +126,7 @@ func (FilesCommand) listFiles(args []string, explicit bool) error {
 
 	paths := make([]string, len(files))
 	for _, file := range files {
-		relPath := common.MakeRelative(file.Path())
+		relPath := common.RelPath(file.Path())
 		paths = append(paths, relPath)
 	}
 

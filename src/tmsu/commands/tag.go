@@ -173,22 +173,37 @@ func (command TagCommand) addFile(db *database.Database, path string) (*database
 	if file == nil {
 		// new file
 
-		files, err := db.FilesByFingerprint(fingerprint)
-		if err != nil {
-			return nil, err
-		}
+		if !info.IsDir() {
+			duplicateCount, err := db.FileCountByFingerprint(fingerprint)
+			if err != nil {
+				return nil, err
+			}
 
-		if len(files) > 0 {
-			common.Warn("File is a duplicate of previously tagged files.")
-
-			for _, duplicateFile := range files {
-				common.Warnf("  %v", common.MakeRelative(duplicateFile.Path()))
+			if duplicateCount > 0 {
+				common.Warn("'" + common.RelPath(path) + "' is a duplicate of previously tagged files.")
 			}
 		}
 
 		file, err = db.AddFile(path, fingerprint, modTime)
 		if err != nil {
 			return nil, err
+		}
+
+		if info.IsDir() {
+			fsFile, err := os.Open(file.Path())
+			if err != nil {
+				return nil, err
+			}
+			defer fsFile.Close()
+
+			dirFilenames, err := fsFile.Readdirnames(0)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, dirFilename := range dirFilenames {
+				command.addFile(db, filepath.Join(path, dirFilename))
+			}
 		}
 	} else {
 		// existing file

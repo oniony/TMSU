@@ -85,12 +85,12 @@ func (DeleteCommand) deleteTag(db *database.Database, tagName string) error {
 	}
 
 	for _, fileTag := range fileTags {
-		hasTags, err := db.AnyFileTagsForFile(fileTag.FileId)
+		tags, err := db.TagsByFileId(fileTag.FileId)
 		if err != nil {
 			return err
 		}
 
-		if !hasTags {
+		if len(tags) == 0 {
 			db.RemoveFile(fileTag.FileId)
 		}
 	}

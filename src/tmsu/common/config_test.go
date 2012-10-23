@@ -19,13 +19,11 @@ package common
 
 import (
 	"os"
+	"strings"
 	"testing"
 )
 
 func TestDefaultDatabase(test *testing.T) {
-	os.Clearenv()
-	os.Setenv("HOME", "/foo/bar/home")
-
 	config, err := GetDefaultDatabaseConfig()
 	if err != nil {
 		test.Fatal(err.Error())
@@ -36,7 +34,7 @@ func TestDefaultDatabase(test *testing.T) {
 	if config.Name != "default" {
 		test.Fatal("Default database has incorrect name '" + config.Name + "'.")
 	}
-	if config.DatabasePath != "/foo/bar/home/.tmsu/default.db" {
+	if strings.Index(config.DatabasePath, "/.tmsu/default.db") != len(config.DatabasePath)-17 {
 		test.Fatal("Default database config has incorrect path '" + config.DatabasePath + "'.")
 	}
 }

@@ -73,7 +73,7 @@ func (DupesCommand) findDuplicatesInDb() error {
 		fmt.Printf("Set of %v duplicates:\n", len(fileSet))
 
 		for _, file := range fileSet {
-			relPath := common.MakeRelative(file.Path())
+			relPath := common.RelPath(file.Path())
 			fmt.Printf("  %v\n", relPath)
 		}
 	}
@@ -118,12 +118,12 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 			fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
 
 			for _, dupe := range dupes {
-				relPath := common.MakeRelative(dupe.Path())
+				relPath := common.RelPath(dupe.Path())
 				fmt.Printf("  %v\n", relPath)
 			}
 		} else {
 			for _, dupe := range dupes {
-				relPath := common.MakeRelative(dupe.Path())
+				relPath := common.RelPath(dupe.Path())
 				fmt.Println(relPath)
 			}
 		}

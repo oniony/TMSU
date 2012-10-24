@@ -29,7 +29,6 @@ func main() {
 		"copy":    commands.CopyCommand{},
 		"delete":  commands.DeleteCommand{},
 		"dupes":   commands.DupesCommand{},
-		"export":  commands.ExportCommand{},
 		"files":   commands.FilesCommand{},
 		"help":    helpCommand,
 		"merge":   commands.MergeCommand{},

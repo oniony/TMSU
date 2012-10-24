@@ -141,25 +141,29 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 
 			entryNames, err := dir.Readdirnames(0)
 			for _, entryName := range entryNames {
-				entryPath := filepath.Join(absPath, entryName)
+				entryAbsPath := filepath.Join(absPath, entryName)
+				entryRelPath := common.RelPath(entryAbsPath)
 
-				status, nested, err := command.getStatus(entryPath, db)
+				status, nested, err := command.getStatus(entryAbsPath, db)
 				if err != nil {
 					return err
 				}
 
-				report.Rows = append(report.Rows, Row{entryPath, status, nested})
+				report.Rows = append(report.Rows, Row{entryRelPath, status, nested})
 			}
 
 			files, err := db.FilesByDirectory(absPath)
 			for _, file := range files {
-				status, nested, err := command.getStatus(file.Path(), db)
+				fileAbsPath := file.Path()
+				fileRelPath := common.RelPath(fileAbsPath)
+
+				status, nested, err := command.getStatus(fileAbsPath, db)
 				if err != nil {
 					return err
 				}
 
 				if status == MISSING {
-					report.Rows = append(report.Rows, Row{file.Path(), status, nested})
+					report.Rows = append(report.Rows, Row{fileRelPath, status, nested})
 				}
 			}
 		} else {
@@ -168,7 +172,7 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 				return err
 			}
 
-			report.Rows = append(report.Rows, Row{absPath, status, nested})
+			report.Rows = append(report.Rows, Row{path, status, nested})
 		}
 	}
 

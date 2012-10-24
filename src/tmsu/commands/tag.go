@@ -19,12 +19,10 @@ package commands
 
 import (
 	"errors"
-	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/common"
 	"tmsu/database"
-	"tmsu/fingerprint"
 )
 
 type TagCommand struct{}
@@ -104,7 +102,7 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 		return err
 	}
 
-	file, err := command.addFile(db, absPath)
+	file, err := addFile(db, absPath)
 	if err != nil {
 		return err
 	}
@@ -151,67 +149,4 @@ func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagN
 	}
 
 	return tag, fileTag, nil
-}
-
-func (command TagCommand) addFile(db *database.Database, path string) (*database.File, error) {
-	fingerprint, err := fingerprint.Create(path)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := db.FileByPath(path)
-	if err != nil {
-		return nil, err
-	}
-
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-	modTime := info.ModTime().UTC()
-
-	if file == nil {
-		// new file
-
-		if !info.IsDir() {
-			duplicateCount, err := db.FileCountByFingerprint(fingerprint)
-			if err != nil {
-				return nil, err
-			}
-
-			if duplicateCount > 0 {
-				common.Warn("'" + common.RelPath(path) + "' is a duplicate of previously tagged files.")
-			}
-		}
-
-		file, err = db.AddFile(path, fingerprint, modTime)
-		if err != nil {
-			return nil, err
-		}
-
-		if info.IsDir() {
-			fsFile, err := os.Open(file.Path())
-			if err != nil {
-				return nil, err
-			}
-			defer fsFile.Close()
-
-			dirFilenames, err := fsFile.Readdirnames(0)
-			if err != nil {
-				return nil, err
-			}
-
-			for _, dirFilename := range dirFilenames {
-				command.addFile(db, filepath.Join(path, dirFilename))
-			}
-		}
-	} else {
-		// existing file
-
-		if file.ModTimestamp.Unix() != modTime.Unix() {
-			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
-		}
-	}
-
-	return file, nil
 }

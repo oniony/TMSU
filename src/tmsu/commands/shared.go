@@ -19,7 +19,12 @@ package commands
 
 import (
 	"errors"
+	"os"
+	"path/filepath"
 	"strings"
+	"tmsu/common"
+	"tmsu/database"
+	"tmsu/fingerprint"
 )
 
 func validateTagName(tagName string) error {
@@ -48,4 +53,67 @@ func validateTagName(tagName string) error {
 	}
 
 	return nil
+}
+
+func addFile(db *database.Database, path string) (*database.File, error) {
+	fingerprint, err := fingerprint.Create(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := db.FileByPath(path)
+	if err != nil {
+		return nil, err
+	}
+
+	info, err := os.Stat(path)
+	if err != nil {
+		return nil, err
+	}
+	modTime := info.ModTime().UTC()
+
+	if file == nil {
+		// new file
+
+		if !info.IsDir() {
+			duplicateCount, err := db.FileCountByFingerprint(fingerprint)
+			if err != nil {
+				return nil, err
+			}
+
+			if duplicateCount > 0 {
+				common.Warn("'" + common.RelPath(path) + "' is a duplicate file.")
+			}
+		}
+
+		file, err = db.AddFile(path, fingerprint, modTime)
+		if err != nil {
+			return nil, err
+		}
+
+		if info.IsDir() {
+			fsFile, err := os.Open(file.Path())
+			if err != nil {
+				return nil, err
+			}
+			defer fsFile.Close()
+
+			dirFilenames, err := fsFile.Readdirnames(0)
+			if err != nil {
+				return nil, err
+			}
+
+			for _, dirFilename := range dirFilenames {
+				addFile(db, filepath.Join(path, dirFilename))
+			}
+		}
+	} else {
+		// existing file
+
+		if file.ModTimestamp.Unix() != modTime.Unix() {
+			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
+		}
+	}
+
+	return file, nil
 }

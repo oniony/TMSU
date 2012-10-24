@@ -70,25 +70,11 @@ func (command RepairCommand) Exec(args []string) error {
 	defer db.Close()
 
 	for _, path := range args {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return err
-		}
-
-		entry, err := db.FileByPath(absPath)
-		if err != nil {
-			return err
-		}
-		if entry != nil {
-			err := command.checkEntry(entry, db, pathsByFingerprint)
-			if err != nil {
-				return err
-			}
-		}
-
-		// path might be a directory
-
 		childEntries, err := db.FilesByDirectory(path)
+		if err != nil {
+			return err
+		}
+
 		for _, childEntry := range childEntries {
 			err := command.checkEntry(&childEntry, db, pathsByFingerprint)
 			if err != nil {
@@ -133,6 +119,10 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 		return nil
 	}
 
+	if info.IsDir() {
+		command.processDirectory(db, entry.Path())
+	}
+
 	if modTime.Unix() != entry.ModTimestamp.Unix() || fingerprint != entry.Fingerprint {
 		err := db.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
 		if err != nil {
@@ -140,6 +130,33 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 		}
 
 		fmt.Printf("'%v': Repaired.\n", entry.Path())
+	}
+
+	return nil
+}
+
+func (command RepairCommand) processDirectory(db *database.Database, path string) error {
+	dir, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+	defer dir.Close()
+
+	filenames, err := dir.Readdirnames(0)
+	if err != nil {
+		return err
+	}
+
+	for _, filename := range filenames {
+		childPath := filepath.Join(path, filename)
+
+		file, err := db.FileByPath(childPath)
+		if err != nil {
+			return err
+		}
+		if file == nil {
+			addFile(db, childPath)
+		}
 	}
 
 	return nil

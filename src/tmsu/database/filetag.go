@@ -179,6 +179,24 @@ func (db Database) FileTags() (FileTags, error) {
 	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
+func (db Database) TagsByFileId(fileId uint) (Tags, error) {
+	sql := `SELECT id, name
+            FROM tag
+            WHERE id IN (
+                SELECT tag_id
+                FROM file_tag
+                WHERE file_id = ?
+            )`
+
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readTags(rows, make(Tags, 0, 10))
+}
+
 func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
 	sql := `SELECT id
 	        FROM file_tag

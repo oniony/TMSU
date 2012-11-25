@@ -76,7 +76,7 @@ func (command RepairCommand) Exec(args []string) error {
 		}
 
 		for _, childEntry := range childEntries {
-			err := command.checkEntry(&childEntry, db, pathsByFingerprint)
+			err := command.checkEntry(childEntry, db, pathsByFingerprint)
 			if err != nil {
 				return err
 			}

@@ -242,7 +242,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 			return nil, fuse.ENOENT
 		}
 
-		fileCount, err := db.FileCountWithTags(tagIds, false)
+		fileCount, err := db.FileCountWithTags(tagIds)
 		if err != nil {
 			common.Fatalf("Could not retrieve count of files with tags: %v.", path)
 		}
@@ -293,7 +293,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		common.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
-	files, err := db.FilesWithTags(tagIds, []uint{}, false)
+	files, err := db.FilesWithTags(tagIds, []uint{})
 	if err != nil {
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
@@ -335,7 +335,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	return file.Path(), fuse.OK
 }
 
-func (vfs FuseVfs) getLinkName(file database.File) string {
+func (vfs FuseVfs) getLinkName(file *database.File) string {
 	extension := filepath.Ext(file.Path())
 	fileName := filepath.Base(file.Path())
 	linkName := fileName[0 : len(fileName)-len(extension)]

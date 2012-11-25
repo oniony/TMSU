@@ -164,7 +164,7 @@ func (db Database) FilesByDirectory(path string) (Files, error) {
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil
@@ -223,7 +223,7 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (File
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
+		files = append(files, &File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
 	}
 
 	return files, nil
@@ -273,7 +273,7 @@ func (db Database) DuplicateFiles() ([]Files, error) {
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
+		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
 	}
 
 	// ensure last file set is added
@@ -372,7 +372,7 @@ func (db Database) RemoveFile(fileId uint) error {
 	return nil
 }
 
-type Files []File
+type Files []*File
 
 //
 
@@ -392,7 +392,7 @@ func readFiles(rows *sql.Rows, files Files) (Files, error) {
 			return nil, err
 		}
 
-		files = append(files, File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
 	}
 
 	return files, nil

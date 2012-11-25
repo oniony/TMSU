@@ -95,7 +95,7 @@ func (db Database) TagByName(name string) (*Tag, error) {
 }
 
 func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
-	files, err := db.FilesWithTags(tagIds, []uint{}, false)
+	files, err := db.FilesWithTags(tagIds, []uint{})
 	if err != nil {
 		return nil, err
 	}
@@ -218,7 +218,7 @@ func (db Database) DeleteTag(tagId uint) error {
 	return nil
 }
 
-type Tags []Tag
+type Tags []*Tag
 
 func (tags Tags) Len() int {
 	return len(tags)
@@ -247,7 +247,7 @@ func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
 			return nil, err
 		}
 
-		tags = append(tags, Tag{tagId, tagName})
+		tags = append(tags, &Tag{tagId, tagName})
 	}
 
 	return tags, nil
@@ -263,7 +263,7 @@ func containsTagId(items []uint, searchItem uint) bool {
 	return false
 }
 
-func containsTag(tags Tags, searchTag Tag) bool {
+func containsTag(tags Tags, searchTag *Tag) bool {
 	for _, tag := range tags {
 		if tag.Id == searchTag.Id {
 			return true

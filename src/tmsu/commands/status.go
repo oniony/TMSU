@@ -37,7 +37,7 @@ func (StatusCommand) Synopsis() string {
 }
 
 func (StatusCommand) Description() string {
-	return `tmsu status [PATH]...
+	return `tmsu status [--directory] [PATH]...
 
 Shows the status of PATHs.
 
@@ -132,6 +132,13 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 			return err
 		}
 
+		status, nested, err := command.getStatus(absPath, db)
+		if err != nil {
+			return err
+		}
+
+		report.Rows = append(report.Rows, Row{path, status, nested})
+
 		if !showDirectory && isDir(absPath) {
 			dir, err := os.Open(absPath)
 			if err != nil {
@@ -166,13 +173,6 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 					report.Rows = append(report.Rows, Row{fileRelPath, status, nested})
 				}
 			}
-		} else {
-			status, nested, err := command.getStatus(absPath, db)
-			if err != nil {
-				return err
-			}
-
-			report.Rows = append(report.Rows, Row{path, status, nested})
 		}
 	}
 

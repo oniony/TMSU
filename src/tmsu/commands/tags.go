@@ -197,17 +197,17 @@ func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly 
 	return tags, nil
 }
 
-func uniq(tags []database.Tag) []database.Tag {
-	uniqueTags := make([]database.Tag, 0, len(tags))
+func uniq(tags database.Tags) database.Tags {
+	uniqueTags := make(database.Tags, 0, len(tags))
 
-	var previousTag database.Tag = database.Tag{}
+	var previousTagName string = ""
 	for _, tag := range tags {
-		if tag.Name == previousTag.Name {
+		if tag.Name == previousTagName {
 			continue
 		}
 
 		uniqueTags = append(uniqueTags, tag)
-		previousTag = tag
+		previousTagName = tag.Name
 	}
 
 	return uniqueTags

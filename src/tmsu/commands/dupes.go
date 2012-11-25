@@ -106,7 +106,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 		}
 
 		// filter out the file we're searching on
-		dupes := where(files, func(file database.File) bool { return file.Path() != absPath })
+		dupes := where(files, func(file *database.File) bool { return file.Path() != absPath })
 
 		if len(paths) > 1 && len(dupes) > 0 {
 			if first {
@@ -132,8 +132,8 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 	return nil
 }
 
-func where(files []database.File, predicate func(database.File) bool) []database.File {
-	result := make([]database.File, 0, len(files))
+func where(files database.Files, predicate func(*database.File) bool) database.Files {
+	result := make(database.Files, 0, len(files))
 
 	for _, file := range files {
 		if predicate(file) {

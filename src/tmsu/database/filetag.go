@@ -78,9 +78,9 @@ func (db Database) FilesWithTag(tagId uint) (Files, error) {
 
 func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint) (Files, error) {
 	var files Files
+	var err error
 
 	if len(includeTagIds) > 0 {
-		var err error
 		files, err = db.FilesWithTag(includeTagIds[0])
 		if err != nil {
 			return nil, err
@@ -101,7 +101,25 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint) (Files, er
 	}
 
 	if len(excludeTagIds) > 0 {
-		//TODO
+		if len(includeTagIds) == 0 {
+			files, err = db.Files()
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		for _, tagId := range excludeTagIds {
+			filesWithTag, err := db.FilesWithTag(tagId)
+			if err != nil {
+				return nil, err
+			}
+
+			for index, file := range files {
+				if contains(filesWithTag, file) {
+					files[index] = nil
+				}
+			}
+		}
 	}
 
 	resultFiles := make(Files, 0, len(files))

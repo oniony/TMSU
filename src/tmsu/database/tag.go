@@ -95,7 +95,7 @@ func (db Database) TagByName(name string) (*Tag, error) {
 }
 
 func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
-	files, err := db.FilesWithTags(tagIds, []uint{})
+	files, err := db.FilesWithTags(tagIds, []uint{}, false)
 	if err != nil {
 		return nil, err
 	}

@@ -30,7 +30,7 @@ type FileTag struct {
 
 func (db Database) FileCountWithTags(tagIds []uint) (uint, error) {
 	//TODO optimize
-	files, err := db.FilesWithTags(tagIds, []uint{})
+	files, err := db.FilesWithTags(tagIds, []uint{}, false)
 	if err != nil {
 		return 0, err
 	}
@@ -38,7 +38,7 @@ func (db Database) FileCountWithTags(tagIds []uint) (uint, error) {
 	return uint(len(files)), nil
 }
 
-func (db Database) FilesWithTag(tagId uint) (Files, error) {
+func (db Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
@@ -62,32 +62,34 @@ func (db Database) FilesWithTag(tagId uint) (Files, error) {
 		files[index] = file
 	}
 
-	for _, explicitlyTaggedFile := range explicitlyTaggedFiles {
-		additionalFiles, err := db.FilesByDirectory(explicitlyTaggedFile.Path())
-		if err != nil {
-			return nil, err
-		}
+	if !explicitOnly {
+		for _, explicitlyTaggedFile := range explicitlyTaggedFiles {
+			additionalFiles, err := db.FilesByDirectory(explicitlyTaggedFile.Path())
+			if err != nil {
+				return nil, err
+			}
 
-		for _, additionalFile := range additionalFiles {
-			files = append(files, additionalFile)
+			for _, additionalFile := range additionalFiles {
+				files = append(files, additionalFile)
+			}
 		}
 	}
 
 	return files, nil
 }
 
-func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint) (Files, error) {
+func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint, explicitOnly bool) (Files, error) {
 	var files Files
 	var err error
 
 	if len(includeTagIds) > 0 {
-		files, err = db.FilesWithTag(includeTagIds[0])
+		files, err = db.FilesWithTag(includeTagIds[0], explicitOnly)
 		if err != nil {
 			return nil, err
 		}
 
 		for _, tagId := range includeTagIds[1:] {
-			filesWithTag, err := db.FilesWithTag(tagId)
+			filesWithTag, err := db.FilesWithTag(tagId, explicitOnly)
 			if err != nil {
 				return nil, err
 			}
@@ -109,7 +111,7 @@ func (db Database) FilesWithTags(includeTagIds, excludeTagIds []uint) (Files, er
 		}
 
 		for _, tagId := range excludeTagIds {
-			filesWithTag, err := db.FilesWithTag(tagId)
+			filesWithTag, err := db.FilesWithTag(tagId, explicitOnly)
 			if err != nil {
 				return nil, err
 			}

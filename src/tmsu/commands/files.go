@@ -36,12 +36,13 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files [-]TAG...
+	return `tmsu files [--explicit] [-]TAG...
 tmsu files --all
 
 Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).
 
-  --all         show the complete set of tagged files`
+  --all         show the complete set of tagged files
+  --explicit    show only explicity tagged files`
 }
 
 func (command FilesCommand) Exec(args []string) error {
@@ -51,7 +52,13 @@ func (command FilesCommand) Exec(args []string) error {
 		return command.listAllFiles()
 	}
 
-	return command.listFiles(args)
+	explicitOnly := false
+	if argCount > 0 && args[0] == "--explicit" {
+		explicitOnly = true
+		args = args[1:]
+	}
+
+	return command.listFiles(args, explicitOnly)
 }
 
 func (FilesCommand) listAllFiles() error {
@@ -73,7 +80,7 @@ func (FilesCommand) listAllFiles() error {
 	return nil
 }
 
-func (FilesCommand) listFiles(args []string) error {
+func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	if len(args) == 0 {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
@@ -112,7 +119,7 @@ func (FilesCommand) listFiles(args []string) error {
 		}
 	}
 
-	files, err := db.FilesWithTags(includeTagIds, excludeTagIds)
+	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
 	if err != nil {
 		return err
 	}

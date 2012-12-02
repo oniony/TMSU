@@ -46,6 +46,10 @@ Shows help summary or, where COMMAND is specified, help for COMMAND.
   --list    list commands`
 }
 
+func (HelpCommand) Options() []cli.Option {
+	return []cli.Option{}
+}
+
 func (command HelpCommand) Exec(args []string) error {
 	flagSet := pflag.NewFlagSet("help", pflag.ExitOnError)
 	flagSet.Usage = func() { command.Description() }

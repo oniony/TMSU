@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"tmsu/cli"
 	"tmsu/vfs"
 )
 
@@ -34,6 +35,10 @@ func (VfsCommand) Synopsis() string {
 
 func (VfsCommand) Description() string {
 	return ""
+}
+
+func (VfsCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (VfsCommand) Exec(args []string) error {

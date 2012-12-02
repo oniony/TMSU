@@ -42,6 +42,10 @@ Attempting to rename a tag with a new name for which a tag already exists will r
 To merge tags use the 'merge' command instead.`
 }
 
+func (RenameCommand) Options() []cli.Option {
+	return []cli.Option{}
+}
+
 func (RenameCommand) Exec(args []string) error {
 	db, err := database.Open()
 	if err != nil {

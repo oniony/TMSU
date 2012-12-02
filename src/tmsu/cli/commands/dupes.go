@@ -20,6 +20,7 @@ package commands
 import (
 	"fmt"
 	"path/filepath"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 	"tmsu/fingerprint"
@@ -40,6 +41,10 @@ func (DupesCommand) Description() string {
 
 Identifies all files in the database that are exact duplicates of FILE. If no
 FILE is specified then identifies duplicates between files in the database.`
+}
+
+func (DupesCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command DupesCommand) Exec(args []string) error {

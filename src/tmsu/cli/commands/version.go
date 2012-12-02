@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+	"tmsu/cli"
 	"tmsu/common"
 )
 
@@ -36,6 +37,10 @@ func (VersionCommand) Description() string {
 	return `tmsu version
 
 Displays version and copyright information.`
+}
+
+func (VersionCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (VersionCommand) Exec(args []string) error {

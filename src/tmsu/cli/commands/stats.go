@@ -19,6 +19,7 @@ package commands
 
 import (
 	"fmt"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -36,6 +37,10 @@ func (StatsCommand) Description() string {
 	return `tmsu stats
 
 Shows the database statistics.`
+}
+
+func (StatsCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (StatsCommand) Exec(args []string) error {

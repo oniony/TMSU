@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strconv"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 )
@@ -72,6 +73,10 @@ type Row struct {
 
 func NewReport() *StatusReport {
 	return &StatusReport{make([]Row, 0, 10)}
+}
+
+func (StatusCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command StatusCommand) Exec(args []string) error {

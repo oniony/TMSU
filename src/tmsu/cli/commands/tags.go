@@ -22,6 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -45,6 +46,10 @@ When run with no arguments, tags for the current working directory are listed.
 
   --all         lists all of the tags defined
   --explicit    show only explicitly applied tags (not inherited)`
+}
+
+func (TagsCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command TagsCommand) Exec(args []string) error {

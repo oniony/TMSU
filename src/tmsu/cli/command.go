@@ -21,5 +21,12 @@ type Command interface {
 	Name() string
 	Synopsis() string
 	Description() string
+	Options() []Option
 	Exec(args []string) error
+}
+
+type Option struct {
+	ShortName string
+	LongName  string
+	Optional  bool
 }

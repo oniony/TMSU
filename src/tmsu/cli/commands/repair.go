@@ -54,6 +54,10 @@ the database are checked and their fingerprints updated where modifications are
 found. (In this mode file move repairs are not performed.)`
 }
 
+func (RepairCommand) Options() []cli.Option {
+	return []cli.Option{}
+}
+
 func (command RepairCommand) Exec(args []string) error {
 	if len(args) == 0 {
 		args = []string{"."}

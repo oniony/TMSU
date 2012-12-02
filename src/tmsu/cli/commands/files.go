@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"sort"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 )
@@ -43,6 +44,10 @@ Lists the files, if any, that have all of the TAGs specified. Tags can be exclud
 
   --all         show the complete set of tagged files
   --explicit    show only explicity tagged files`
+}
+
+func (FilesCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command FilesCommand) Exec(args []string) error {

@@ -24,6 +24,7 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/vfs"
 )
@@ -52,6 +53,10 @@ the database at TMSU_DB is mounted.
 
 Where neither FILE is specified nor TMSU_DB defined then the default database
 is mounted.`
+}
+
+func (MountCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command MountCommand) Exec(args []string) error {

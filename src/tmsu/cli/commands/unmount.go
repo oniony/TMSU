@@ -21,6 +21,7 @@ import (
 	"errors"
 	"os"
 	"os/exec"
+	"tmsu/cli"
 	"tmsu/vfs"
 )
 
@@ -41,6 +42,10 @@ tmsu unmount --all
 Unmounts the virtual file-system at MOUNTPOINT.
 
   --all    unmounts all mounted TMSU file-systems`
+}
+
+func (UnmountCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command UnmountCommand) Exec(args []string) error {

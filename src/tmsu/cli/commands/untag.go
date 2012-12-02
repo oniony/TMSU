@@ -21,6 +21,7 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 )
@@ -44,6 +45,10 @@ Disassociates FILE with the TAGs specified.
 
   --all     strip each FILE of all TAGs
   --tags    disassociate multiple FILEs from the same quoted set of TAGs`
+}
+
+func (UntagCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command UntagCommand) Exec(args []string) error {

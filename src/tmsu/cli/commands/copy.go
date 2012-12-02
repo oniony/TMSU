@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -36,6 +37,10 @@ func (CopyCommand) Description() string {
 	return `tmsu copy TAG NEW
 
 Creates a new tag NEW applied to the same set of files as TAG.`
+}
+
+func (CopyCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (CopyCommand) Exec(args []string) error {

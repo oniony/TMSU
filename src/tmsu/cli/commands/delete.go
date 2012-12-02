@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -36,6 +37,10 @@ func (DeleteCommand) Description() string {
 	return `tmsu delete TAG...
 
 Permanently deletes the TAGs specified.`
+}
+
+func (DeleteCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (command DeleteCommand) Exec(args []string) error {

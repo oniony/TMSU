@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -36,6 +37,10 @@ func (MergeCommand) Description() string {
 	return `tmsu merge TAG... DEST
         
 Merges TAGs into tag DEST resulting in a single tag of name DEST.`
+}
+
+func (MergeCommand) Options() []cli.Option {
+	return []cli.Option{}
 }
 
 func (MergeCommand) Exec(args []string) error {

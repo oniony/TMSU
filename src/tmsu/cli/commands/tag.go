@@ -45,6 +45,10 @@ Tags the file FILE with the tag(s) specified.
   --tags    allows multiple FILEs to be tagged with the same quoted set of TAGs`
 }
 
+func (TagCommand) Options() []cli.Option {
+	return []cli.Option{}
+}
+
 func (command TagCommand) Exec(args []string) error {
 	if len(args) < 1 {
 		return errors.New("Too few arguments.")

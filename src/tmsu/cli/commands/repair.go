@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 	"tmsu/fingerprint"
@@ -155,7 +156,7 @@ func (command RepairCommand) processDirectory(db *database.Database, path string
 			return err
 		}
 		if file == nil {
-			addFile(db, childPath)
+			cli.AddFile(db, childPath)
 		}
 	}
 

@@ -19,13 +19,14 @@ package main
 
 import (
 	"os"
-	"tmsu/commands"
+	"tmsu/cli"
+	"tmsu/cli/commands"
 	"tmsu/common"
 )
 
 func main() {
 	helpCommand := &commands.HelpCommand{}
-	commands := map[string]commands.Command{
+	commands := map[string]cli.Command{
 		"copy":    commands.CopyCommand{},
 		"delete":  commands.DeleteCommand{},
 		"dupes":   commands.DupesCommand{},

@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"tmsu/cli"
 	"tmsu/database"
 )
 
@@ -59,7 +60,7 @@ func (RenameCommand) Exec(args []string) error {
 		return errors.New("No such tag '" + sourceTagName + "'.")
 	}
 
-	err = validateTagName(destTagName)
+	err = cli.ValidateTagName(destTagName)
 	if err != nil {
 		return err
 	}

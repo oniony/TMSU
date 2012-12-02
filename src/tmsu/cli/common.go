@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"errors"
@@ -27,7 +27,7 @@ import (
 	"tmsu/fingerprint"
 )
 
-func validateTagName(tagName string) error {
+func ValidateTagName(tagName string) error {
 	if tagName == "." || tagName == ".." {
 		return errors.New("Tag name cannot be '.' or '..'.")
 	}
@@ -55,7 +55,7 @@ func validateTagName(tagName string) error {
 	return nil
 }
 
-func addFile(db *database.Database, path string) (*database.File, error) {
+func AddFile(db *database.Database, path string) (*database.File, error) {
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
 		return nil, err
@@ -104,7 +104,7 @@ func addFile(db *database.Database, path string) (*database.File, error) {
 			}
 
 			for _, dirFilename := range dirFilenames {
-				addFile(db, filepath.Join(path, dirFilename))
+				AddFile(db, filepath.Join(path, dirFilename))
 			}
 		}
 	} else {

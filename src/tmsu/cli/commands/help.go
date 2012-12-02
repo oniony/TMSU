@@ -23,10 +23,11 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"tmsu/cli"
 )
 
 type HelpCommand struct {
-	Commands map[string]Command
+	Commands map[string]cli.Command
 }
 
 func (HelpCommand) Name() string {

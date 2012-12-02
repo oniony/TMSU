@@ -21,6 +21,7 @@ import (
 	"errors"
 	"path/filepath"
 	"strings"
+	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/database"
 )
@@ -102,7 +103,7 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 		return err
 	}
 
-	file, err := addFile(db, absPath)
+	file, err := cli.AddFile(db, absPath)
 	if err != nil {
 		return err
 	}
@@ -118,7 +119,7 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 }
 
 func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
-	err := validateTagName(tagName)
+	err := cli.ValidateTagName(tagName)
 	if err != nil {
 		return nil, nil, err
 	}

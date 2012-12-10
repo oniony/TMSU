@@ -99,6 +99,8 @@ func (UntagCommand) removeFiles(paths []string) error {
 	}
 	defer db.Close()
 
+	//TODO don't remove file if parent directory is tagged
+
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {

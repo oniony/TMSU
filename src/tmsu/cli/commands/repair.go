@@ -164,6 +164,8 @@ func (command RepairCommand) processDirectory(db *database.Database, path string
 		}
 	}
 
+	//TODO remove files in the directory that are no longer on disk
+
 	return nil
 }
 

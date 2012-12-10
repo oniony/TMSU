@@ -37,6 +37,10 @@ func Create(path string) (Fingerprint, error) {
 		return EMPTY, err
 	}
 
+	if stat.IsDir() {
+		return Fingerprint(""), nil
+	}
+
 	fileSize := stat.Size()
 
 	if fileSize > sparseFingerprintThreshold {

@@ -141,9 +141,9 @@ func (db Database) FileByPath(path string) (*File, error) {
 func (db Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
-            WHERE directory = ? OR directory LIKE ?`
+            WHERE name = ? OR directory = ? OR directory LIKE ?`
 
-	rows, err := db.connection.Query(sql, path, filepath.Clean(path+"/%"))
+	rows, err := db.connection.Query(sql, path, path, filepath.Clean(path+"/%"))
 	if err != nil {
 		return nil, err
 	}
@@ -233,9 +233,10 @@ func (db Database) DuplicateFiles() ([]Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
-                                FROM file
-                                GROUP BY fingerprint
-                                HAVING count(1) > 1)
+                                  FROM file
+                                  WHERE fingerprint != ''
+                                  GROUP BY fingerprint
+                                  HAVING count(1) > 1)
             ORDER BY fingerprint`
 
 	rows, err := db.connection.Query(sql)

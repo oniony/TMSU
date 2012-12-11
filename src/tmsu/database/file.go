@@ -366,7 +366,10 @@ func (db Database) RemoveFile(fileId uint) error {
 		}
 
 		if len(filetags) == 0 {
-			db.RemoveFile(file.Id)
+			result, err = db.connection.Exec(sql, file.Id)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

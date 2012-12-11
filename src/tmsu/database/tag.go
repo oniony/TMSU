@@ -102,7 +102,7 @@ func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
 
 	furtherTags := make(Tags, 0, 10)
 	for _, file := range files {
-		tags, err := db.TagsByFileId(file.Id)
+		tags, err := db.ExplicitTagsByFileId(file.Id)
 		if err != nil {
 			return nil, err
 		}

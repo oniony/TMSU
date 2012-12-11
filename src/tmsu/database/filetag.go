@@ -20,6 +20,8 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"path/filepath"
+	"sort"
 )
 
 type FileTag struct {
@@ -173,7 +175,7 @@ func (db Database) FileTags() (FileTags, error) {
 	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
-func (db Database) TagsByFileId(fileId uint) (Tags, error) {
+func (db Database) ExplicitTagsByFileId(fileId uint) (Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -189,6 +191,67 @@ func (db Database) TagsByFileId(fileId uint) (Tags, error) {
 	defer rows.Close()
 
 	return readTags(rows, make(Tags, 0, 10))
+}
+
+func (db Database) TagsForPath(path string, explicitOnly bool) (Tags, error) {
+	if explicitOnly {
+		return db.ExplicitTagsForPath(path)
+	}
+
+	return db.AllTagsForPath(path)
+}
+
+func (db Database) ExplicitTagsForPath(path string) (Tags, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := db.FileByPath(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if file == nil {
+		return Tags{}, nil
+	}
+
+	tags, err := db.ExplicitTagsByFileId(file.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
+func (db Database) AllTagsForPath(path string) (Tags, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	tags := make(Tags, 0, 10)
+	for absPath != "/" {
+		file, err := db.FileByPath(absPath)
+		if err != nil {
+			return nil, err
+		}
+
+		if file != nil {
+			moreTags, err := db.ExplicitTagsByFileId(file.Id)
+			if err != nil {
+				return nil, err
+			}
+			tags = append(tags, moreTags...)
+		}
+
+		absPath = filepath.Dir(absPath)
+	}
+
+	sort.Sort(tags)
+	tags = uniq(tags)
+
+	return tags, nil
 }
 
 func (db Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
@@ -249,6 +312,9 @@ func (db Database) FileTagsByFileId(fileId uint, explicitOnly bool) (FileTags, e
 		file, err := db.File(fileId)
 		if err != nil {
 			return nil, err
+		}
+		if file == nil {
+			return nil, errors.New("File does not exist.")
 		}
 
 		parentFile, err := db.FileByPath(file.Directory)
@@ -394,4 +460,20 @@ func contains(files Files, searchFile *File) bool {
 	}
 
 	return false
+}
+
+func uniq(tags Tags) Tags {
+	uniqueTags := make(Tags, 0, len(tags))
+
+	var previousTagName string = ""
+	for _, tag := range tags {
+		if tag.Name == previousTagName {
+			continue
+		}
+
+		uniqueTags = append(uniqueTags, tag)
+		previousTagName = tag.Name
+	}
+
+	return uniqueTags
 }

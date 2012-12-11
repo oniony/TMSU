@@ -20,7 +20,6 @@ package commands
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"tmsu/cli"
 	"tmsu/database"
@@ -105,7 +104,7 @@ func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 }
 
 func (command TagsCommand) listTagsForPath(db *database.Database, path string, explicitOnly bool) error {
-	tags, err := command.tagsForPath(db, path, explicitOnly)
+	tags, err := db.TagsForPath(path, explicitOnly)
 	if err != nil {
 		return err
 	}
@@ -119,7 +118,7 @@ func (command TagsCommand) listTagsForPath(db *database.Database, path string, e
 
 func (command TagsCommand) listTagsForPaths(db *database.Database, paths []string, explicitOnly bool) error {
 	for _, path := range paths {
-		tags, err := command.tagsForPath(db, path, explicitOnly)
+		tags, err := db.TagsForPath(path, explicitOnly)
 		if err != nil {
 			return err
 		}
@@ -149,7 +148,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, ex
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		tags, err := command.tagsForPath(db, dirName, explicitOnly)
+		tags, err := db.TagsForPath(dirName, explicitOnly)
 		if err != nil {
 			return err
 		}
@@ -166,54 +165,4 @@ func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, ex
 	}
 
 	return nil
-}
-
-func (TagsCommand) tagsForPath(db *database.Database, path string, explicitOnly bool) (database.Tags, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	tags := make(database.Tags, 0, 10)
-	for absPath != "/" {
-		file, err := db.FileByPath(absPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if file != nil {
-			moreTags, err := db.TagsByFileId(file.Id)
-			if err != nil {
-				return nil, err
-			}
-			tags = append(tags, moreTags...)
-		}
-
-		if explicitOnly {
-			break
-		}
-
-		absPath = filepath.Dir(absPath)
-	}
-
-	sort.Sort(tags)
-	tags = uniq(tags)
-
-	return tags, nil
-}
-
-func uniq(tags database.Tags) database.Tags {
-	uniqueTags := make(database.Tags, 0, len(tags))
-
-	var previousTagName string = ""
-	for _, tag := range tags {
-		if tag.Name == previousTagName {
-			continue
-		}
-
-		uniqueTags = append(uniqueTags, tag)
-		previousTagName = tag.Name
-	}
-
-	return uniqueTags
 }

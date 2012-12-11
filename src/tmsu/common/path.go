@@ -23,22 +23,13 @@ import (
 	"strings"
 )
 
-func IsDir(path string) bool {
+func IsDir(path string) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil {
-		switch {
-		case os.IsPermission(err):
-			Warnf("'%v': Permission denied", path)
-		case os.IsNotExist(err):
-			Warnf("'%v': No such file", path)
-		default:
-			Warnf("'%v': Error: %v", err)
-		}
-
-		return false
+		return false, err
 	}
 
-	return info.IsDir()
+	return info.IsDir(), nil
 }
 
 func RelPath(path string) string {

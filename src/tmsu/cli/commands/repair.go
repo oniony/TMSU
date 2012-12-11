@@ -235,7 +235,12 @@ func (command RepairCommand) buildFileSystemFingerprintsRecursive(path string, p
 	paths = append(paths, path)
 	pathsByFingerprint[fingerprint] = paths
 
-	if common.IsDir(path) {
+	isDir, err := common.IsDir(path)
+	if err != nil {
+		return err
+	}
+
+	if isDir {
 		dir, err := os.Open(path)
 		if err != nil {
 			return err

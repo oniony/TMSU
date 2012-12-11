@@ -19,6 +19,7 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -56,6 +57,19 @@ func ValidateTagName(tagName string) error {
 }
 
 func AddFile(db *database.Database, path string) (*database.File, error) {
+	info, err := os.Stat(path)
+	if err != nil {
+		switch {
+		case os.IsPermission(err):
+			return nil, errors.New(fmt.Sprintf("'%v': Permisison denied", path))
+		case os.IsNotExist(err):
+			return nil, errors.New(fmt.Sprintf("'%v': No such file", path))
+		default:
+			return nil, errors.New(fmt.Sprintf("'%v': Error: %v", path, err))
+		}
+	}
+	modTime := info.ModTime().UTC()
+
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
 		return nil, err
@@ -65,12 +79,6 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	info, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-	modTime := info.ModTime().UTC()
 
 	if file == nil {
 		// new file
@@ -104,7 +112,10 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 			}
 
 			for _, dirFilename := range dirFilenames {
-				AddFile(db, filepath.Join(path, dirFilename))
+				_, err = AddFile(db, filepath.Join(path, dirFilename))
+				if err != nil {
+					return nil, err
+				}
 			}
 		}
 	} else {

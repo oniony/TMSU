@@ -223,7 +223,11 @@ func (StatusCommand) printRow(row Row) {
 }
 
 func (command StatusCommand) isNested(path string, db *database.Database) (bool, error) {
-	if !common.IsDir(path) {
+	isDir, err := common.IsDir(path)
+	if err != nil {
+		return false, nil
+	}
+	if !isDir {
 		return false, nil
 	}
 

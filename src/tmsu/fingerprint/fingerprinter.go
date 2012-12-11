@@ -28,7 +28,11 @@ const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
 func Create(path string) (Fingerprint, error) {
-	if common.IsDir(path) {
+	isDir, err := common.IsDir(path)
+	if err != nil {
+		return EMPTY, err
+	}
+	if isDir {
 		return EMPTY, nil
 	}
 

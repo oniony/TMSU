@@ -24,8 +24,9 @@ import (
 	"path/filepath"
 	"strings"
 	"tmsu/common"
-	"tmsu/database"
 	"tmsu/fingerprint"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 func ValidateTagName(tagName string) error {
@@ -56,7 +57,7 @@ func ValidateTagName(tagName string) error {
 	return nil
 }
 
-func AddFile(db *database.Database, path string) (*database.File, error) {
+func AddFile(store *storage.Storage, path string) (*database.File, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		switch {
@@ -75,7 +76,7 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 		return nil, err
 	}
 
-	file, err := db.FileByPath(path)
+	file, err := store.FileByPath(path)
 	if err != nil {
 		return nil, err
 	}
@@ -84,7 +85,7 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 		// new file
 
 		if !info.IsDir() {
-			duplicateCount, err := db.FileCountByFingerprint(fingerprint)
+			duplicateCount, err := store.FileCountByFingerprint(fingerprint)
 			if err != nil {
 				return nil, err
 			}
@@ -94,7 +95,7 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 			}
 		}
 
-		file, err = db.AddFile(path, fingerprint, modTime)
+		file, err = store.AddFile(path, fingerprint, modTime)
 		if err != nil {
 			return nil, err
 		}
@@ -112,7 +113,7 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 			}
 
 			for _, dirFilename := range dirFilenames {
-				_, err = AddFile(db, filepath.Join(path, dirFilename))
+				_, err = AddFile(store, filepath.Join(path, dirFilename))
 				if err != nil {
 					return nil, err
 				}
@@ -122,7 +123,7 @@ func AddFile(db *database.Database, path string) (*database.File, error) {
 		// existing file
 
 		if file.ModTimestamp.Unix() != modTime.Unix() {
-			db.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
+			store.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
 		}
 	}
 

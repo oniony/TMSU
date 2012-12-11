@@ -23,7 +23,7 @@ import (
 	"strings"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type UntagCommand struct{}
@@ -93,11 +93,11 @@ func (command UntagCommand) Exec(args []string) error {
 }
 
 func (UntagCommand) removeFiles(paths []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -105,7 +105,7 @@ func (UntagCommand) removeFiles(paths []string) error {
 			return err
 		}
 
-		file, err := db.FileByPath(absPath)
+		file, err := store.FileByPath(absPath)
 		if err != nil {
 			return err
 		}
@@ -114,18 +114,18 @@ func (UntagCommand) removeFiles(paths []string) error {
 			continue
 		}
 
-		err = db.RemoveFileTagsByFileId(file.Id)
+		err = store.Db.RemoveFileTagsByFileId(file.Id)
 		if err != nil {
 			return err
 		}
 
-		tags, err := db.AllTagsForPath(path)
+		tags, err := store.Db.AllTagsForPath(path)
 		if err != nil {
 			return err
 		}
 
 		if len(tags) == 0 {
-			err = db.RemoveFile(file.Id)
+			err = store.RemoveFile(file.Id)
 			if err != nil {
 				return err
 			}
@@ -152,13 +152,13 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 		return err
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
-	file, err := db.FileByPath(absPath)
+	file, err := store.FileByPath(absPath)
 	if err != nil {
 		return err
 	}
@@ -167,19 +167,19 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 	}
 
 	for _, tagName := range tagNames {
-		err = command.unapplyTag(db, path, file.Id, tagName)
+		err = command.unapplyTag(store, path, file.Id, tagName)
 		if err != nil {
 			return err
 		}
 	}
 
-	filetags, err := db.FileTagsByFileId(file.Id, false)
+	filetags, err := store.Db.FileTagsByFileId(file.Id, false)
 	if err != nil {
 		return err
 	}
 
 	if len(filetags) == 0 {
-		err := db.RemoveFile(file.Id)
+		err := store.RemoveFile(file.Id)
 		if err != nil {
 			return err
 		}
@@ -188,8 +188,8 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 	return nil
 }
 
-func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, tagName string) error {
-	tag, err := db.TagByName(tagName)
+func (UntagCommand) unapplyTag(store *storage.Storage, path string, fileId uint, tagName string) error {
+	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, 
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)
+	fileTag, err := store.Db.FileTagByFileIdAndTagId(fileId, tag.Id)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (UntagCommand) unapplyTag(db *database.Database, path string, fileId uint, 
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
 	}
 
-	err = db.RemoveFileTag(fileId, tag.Id)
+	err = store.Db.RemoveFileTag(fileId, tag.Id)
 	if err != nil {
 		return err
 	}

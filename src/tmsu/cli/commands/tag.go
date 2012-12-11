@@ -23,7 +23,8 @@ import (
 	"strings"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type TagCommand struct{}
@@ -96,24 +97,24 @@ func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
 }
 
 func (command TagCommand) tagPath(path string, tagNames []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return err
 	}
 
-	file, err := cli.AddFile(db, absPath)
+	file, err := cli.AddFile(store, absPath)
 	if err != nil {
 		return err
 	}
 
 	for _, tagName := range tagNames {
-		_, _, err = command.applyTag(db, path, file.Id, tagName)
+		_, _, err = command.applyTag(store, path, file.Id, tagName)
 		if err != nil {
 			return err
 		}
@@ -122,32 +123,32 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 	return nil
 }
 
-func (TagCommand) applyTag(db *database.Database, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
+func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
 	err := cli.ValidateTagName(tagName)
 	if err != nil {
 		return nil, nil, err
 	}
 
-	tag, err := db.TagByName(tagName)
+	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if tag == nil {
 		common.Warnf("New tag '%v'.", tagName)
-		tag, err = db.AddTag(tagName)
+		tag, err = store.Db.AddTag(tagName)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	fileTag, err := db.FileTagByFileIdAndTagId(fileId, tag.Id)
+	fileTag, err := store.Db.FileTagByFileIdAndTagId(fileId, tag.Id)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if fileTag == nil {
-		_, err := db.AddFileTag(fileId, tag.Id)
+		_, err := store.Db.AddFileTag(fileId, tag.Id)
 		if err != nil {
 			return nil, nil, err
 		}

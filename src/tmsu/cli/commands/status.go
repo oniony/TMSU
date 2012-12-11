@@ -24,7 +24,7 @@ import (
 	"strconv"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type StatusCommand struct{}
@@ -126,10 +126,11 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 		paths = []string{"."}
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
+	defer store.Close()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -137,7 +138,7 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 			return err
 		}
 
-		status, nested, err := command.getStatus(absPath, db)
+		status, nested, err := command.getStatus(absPath, store)
 		if err != nil {
 			return err
 		}
@@ -156,7 +157,7 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 				entryAbsPath := filepath.Join(absPath, entryName)
 				entryRelPath := common.RelPath(entryAbsPath)
 
-				status, nested, err := command.getStatus(entryAbsPath, db)
+				status, nested, err := command.getStatus(entryAbsPath, store)
 				if err != nil {
 					return err
 				}
@@ -164,12 +165,12 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 				report.Rows = append(report.Rows, Row{entryRelPath, status, nested})
 			}
 
-			files, err := db.FilesByDirectory(absPath)
+			files, err := store.FilesByDirectory(absPath)
 			for _, file := range files {
 				fileAbsPath := file.Path()
 				fileRelPath := common.RelPath(fileAbsPath)
 
-				status, nested, err := command.getStatus(fileAbsPath, db)
+				status, nested, err := command.getStatus(fileAbsPath, store)
 				if err != nil {
 					return err
 				}
@@ -184,8 +185,8 @@ func (command StatusCommand) status(paths []string, report *StatusReport, showDi
 	return nil
 }
 
-func (command StatusCommand) getStatus(path string, db *database.Database) (Status, bool, error) {
-	entry, err := db.FileByPath(path)
+func (command StatusCommand) getStatus(path string, store *storage.Storage) (Status, bool, error) {
+	entry, err := store.FileByPath(path)
 	if err != nil {
 		return 0, false, err
 	}
@@ -206,7 +207,7 @@ func (command StatusCommand) getStatus(path string, db *database.Database) (Stat
 		status = UNTAGGED
 	}
 
-	nested, err := command.isNested(path, db)
+	nested, err := command.isNested(path, store)
 	if err != nil {
 		return 0, false, err
 	}
@@ -222,7 +223,7 @@ func (StatusCommand) printRow(row Row) {
 	fmt.Printf("%v%v %v\n", statusCode, nestedCode, path)
 }
 
-func (command StatusCommand) isNested(path string, db *database.Database) (bool, error) {
+func (command StatusCommand) isNested(path string, store *storage.Storage) (bool, error) {
 	isDir, err := common.IsDir(path)
 	if err != nil {
 		return false, nil
@@ -239,7 +240,7 @@ func (command StatusCommand) isNested(path string, db *database.Database) (bool,
 	entries, err := dir.Readdir(0)
 	for _, entry := range entries {
 		entryPath := filepath.Join(path, entry.Name())
-		status, nested, err := command.getStatus(entryPath, db)
+		status, nested, err := command.getStatus(entryPath, store)
 		if err != nil {
 			return false, err
 		}

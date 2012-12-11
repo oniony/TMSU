@@ -26,7 +26,8 @@ import (
 	"strings"
 	"time"
 	"tmsu/common"
-	"tmsu/database"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type FuseVfs struct {
@@ -92,13 +93,14 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	path := vfs.splitPath(name)
 	tagNames := path[1 : len(path)-1]
 
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatal(err)
 	}
+	defer store.Close()
 
 	for _, tagName := range tagNames {
-		tag, err := db.TagByName(tagName)
+		tag, err := store.Db.TagByName(tagName)
 		if err != nil {
 			common.Fatal(err)
 		}
@@ -106,7 +108,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			common.Fatalf("Could not retrieve tag '%v'.", tagName)
 		}
 
-		err = db.RemoveFileTag(fileId, tag.Id)
+		err = store.Db.RemoveFileTag(fileId, tag.Id)
 		if err != nil {
 			common.Fatal(err)
 		}
@@ -181,13 +183,13 @@ func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
-	tags, err := db.Tags()
+	tags, err := store.Db.Tags()
 	if err != nil {
 		common.Fatalf("Could not retrieve tags: %v", err)
 	}
@@ -201,13 +203,13 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
-	tagCount, err := db.TagCount()
+	tagCount, err := store.Db.TagCount()
 	if err != nil {
 		common.Fatalf("Could not get tag count: %v", err)
 	}
@@ -220,11 +222,11 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
 	fileId, err := vfs.parseFileId(name)
 	if err != nil {
@@ -234,7 +236,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	if fileId == 0 {
 		// tag directory
 
-		tagIds, err := vfs.tagNamesToIds(db, path)
+		tagIds, err := vfs.tagNamesToIds(store, path)
 		if err != nil {
 			common.Fatalf("Could not lookup tag IDs: %v.", err)
 		}
@@ -242,7 +244,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 			return nil, fuse.ENOENT
 		}
 
-		fileCount, err := db.FileCountWithTags(tagIds)
+		fileCount, err := store.Db.FileCountWithTags(tagIds)
 		if err != nil {
 			common.Fatalf("Could not retrieve count of files with tags: %v.", path)
 		}
@@ -251,7 +253,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 	}
 
-	file, err := db.File(fileId)
+	file, err := store.File(fileId)
 	if err != nil {
 		common.Fatalf("Could not retrieve file #%v: %v", fileId, err)
 	}
@@ -274,13 +276,13 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
-	tagIds, err := vfs.tagNamesToIds(db, path)
+	tagIds, err := vfs.tagNamesToIds(store, path)
 	if err != nil {
 		common.Fatalf("Could not lookup tag IDs: %v.", err)
 	}
@@ -288,12 +290,12 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		return nil, fuse.ENOENT
 	}
 
-	furtherTagIds, err := db.TagsForTags(tagIds)
+	furtherTagIds, err := store.TagsForTags(tagIds)
 	if err != nil {
 		common.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
-	files, err := db.FilesWithTags(tagIds, []uint{}, false)
+	files, err := store.Db.FilesWithTags(tagIds, []uint{}, false)
 	if err != nil {
 		common.Fatalf("Could not retrieve tagged files: %v", err)
 	}
@@ -313,11 +315,11 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	name := path[len(path)-1]
 
-	db, err := database.OpenAt(vfs.databasePath)
+	store, err := storage.OpenAt(vfs.databasePath)
 	if err != nil {
 		common.Fatalf("Could not open database: %v", err)
 	}
-	defer db.Close()
+	defer store.Close()
 
 	fileId, err := vfs.parseFileId(name)
 	if err != nil {
@@ -327,7 +329,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 		return "", fuse.ENOENT
 	}
 
-	file, err := db.File(fileId)
+	file, err := store.File(fileId)
 	if err != nil {
 		common.Fatalf("Could not find file %v in database.", fileId)
 	}
@@ -348,11 +350,11 @@ func (vfs FuseVfs) getLinkName(file *database.File) string {
 	return linkName + suffix
 }
 
-func (vfs FuseVfs) tagNamesToIds(db *database.Database, tagNames []string) ([]uint, error) {
+func (vfs FuseVfs) tagNamesToIds(store *storage.Storage, tagNames []string) ([]uint, error) {
 	tagIds := make([]uint, len(tagNames))
 
 	for index, tagName := range tagNames {
-		tag, err := db.TagByName(tagName)
+		tag, err := store.Db.TagByName(tagName)
 		if err != nil {
 			return nil, err
 		}

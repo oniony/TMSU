@@ -20,7 +20,7 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type CopyCommand struct{}
@@ -44,16 +44,16 @@ func (CopyCommand) Options() []cli.Option {
 }
 
 func (CopyCommand) Exec(args []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	sourceTag, err := db.TagByName(sourceTagName)
+	sourceTag, err := store.Db.TagByName(sourceTagName)
 	if err != nil {
 		return err
 	}
@@ -61,7 +61,7 @@ func (CopyCommand) Exec(args []string) error {
 		return errors.New("No such tag '" + sourceTagName + "'.")
 	}
 
-	destTag, err := db.TagByName(destTagName)
+	destTag, err := store.Db.TagByName(destTagName)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (CopyCommand) Exec(args []string) error {
 		return errors.New("A tag with name '" + destTagName + "' already exists.")
 	}
 
-	_, err = db.CopyTag(sourceTag.Id, destTagName)
+	_, err = store.CopyTag(sourceTag.Id, destTagName)
 	if err != nil {
 		return err
 	}

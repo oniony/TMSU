@@ -22,8 +22,9 @@ import (
 	"path/filepath"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
 	"tmsu/fingerprint"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type DupesCommand struct{}
@@ -59,13 +60,13 @@ func (command DupesCommand) Exec(args []string) error {
 }
 
 func (DupesCommand) findDuplicatesInDb() error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
-	fileSets, err := db.DuplicateFiles()
+	fileSets, err := store.DuplicateFiles()
 	if err != nil {
 		return err
 	}
@@ -87,11 +88,11 @@ func (DupesCommand) findDuplicatesInDb() error {
 }
 
 func (DupesCommand) findDuplicatesOf(paths []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	first := true
 	for _, path := range paths {
@@ -100,7 +101,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 			return err
 		}
 
-		files, err := db.FilesByFingerprint(fingerprint)
+		files, err := store.FilesByFingerprint(fingerprint)
 		if err != nil {
 			return err
 		}

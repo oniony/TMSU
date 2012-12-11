@@ -23,7 +23,7 @@ import (
 	"sort"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type FilesCommand struct{}
@@ -67,13 +67,13 @@ func (command FilesCommand) Exec(args []string) error {
 }
 
 func (FilesCommand) listAllFiles() error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
-	files, err := db.Files()
+	files, err := store.Files()
 	if err != nil {
 		return err
 	}
@@ -90,11 +90,11 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	includeTagIds := make([]uint, 0)
 	excludeTagIds := make([]uint, 0)
@@ -109,7 +109,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 			include = true
 		}
 
-		tag, err := db.TagByName(tagName)
+		tag, err := store.Db.TagByName(tagName)
 		if err != nil {
 			return err
 		}
@@ -124,7 +124,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		}
 	}
 
-	files, err := db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
+	files, err := store.Db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
 	if err != nil {
 		return err
 	}

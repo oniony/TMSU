@@ -20,7 +20,7 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type DeleteCommand struct{}
@@ -48,14 +48,14 @@ func (command DeleteCommand) Exec(args []string) error {
 		return errors.New("No tags to delete specified.")
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	for _, tagName := range args {
-		err = command.deleteTag(db, tagName)
+		err = command.deleteTag(store, tagName)
 		if err != nil {
 			return err
 		}
@@ -64,8 +64,8 @@ func (command DeleteCommand) Exec(args []string) error {
 	return nil
 }
 
-func (DeleteCommand) deleteTag(db *database.Database, tagName string) error {
-	tag, err := db.TagByName(tagName)
+func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
+	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return err
 	}
@@ -74,29 +74,29 @@ func (DeleteCommand) deleteTag(db *database.Database, tagName string) error {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTags, err := db.FileTagsByTagId(tag.Id)
+	fileTags, err := store.Db.FileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
 
-	err = db.RemoveFileTagsByTagId(tag.Id)
+	err = store.Db.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
 
-	err = db.DeleteTag(tag.Id)
+	err = store.Db.DeleteTag(tag.Id)
 	if err != nil {
 		return err
 	}
 
 	for _, fileTag := range fileTags {
-		tags, err := db.ExplicitTagsByFileId(fileTag.FileId)
+		tags, err := store.Db.ExplicitTagsByFileId(fileTag.FileId)
 		if err != nil {
 			return err
 		}
 
 		if len(tags) == 0 {
-			db.RemoveFile(fileTag.FileId)
+			store.RemoveFile(fileTag.FileId)
 		}
 	}
 

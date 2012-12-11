@@ -20,7 +20,7 @@ package commands
 import (
 	"fmt"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type StatsCommand struct{}
@@ -44,23 +44,23 @@ func (StatsCommand) Options() []cli.Option {
 }
 
 func (StatsCommand) Exec(args []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
-	tagCount, err := db.TagCount()
-	if err != nil {
-		return err
-	}
-
-	fileCount, err := db.FileCount()
+	tagCount, err := store.Db.TagCount()
 	if err != nil {
 		return err
 	}
 
-	fileTagCount, err := db.FileTagCount()
+	fileCount, err := store.FileCount()
+	if err != nil {
+		return err
+	}
+
+	fileTagCount, err := store.Db.FileTagCount()
 	if err != nil {
 		return err
 	}

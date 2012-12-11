@@ -22,7 +22,7 @@ import (
 	"os"
 	"sort"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type TagsCommand struct{}
@@ -66,13 +66,13 @@ func (command TagsCommand) Exec(args []string) error {
 }
 
 func (TagsCommand) listAllTags() error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
-	tags, err := db.Tags()
+	tags, err := store.Db.Tags()
 	if err != nil {
 		return err
 	}
@@ -85,26 +85,26 @@ func (TagsCommand) listAllTags() error {
 }
 
 func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	switch len(paths) {
 	case 0:
-		return command.listTagsForWorkingDirectory(db, explicitOnly)
+		return command.listTagsForWorkingDirectory(store, explicitOnly)
 	case 1:
-		return command.listTagsForPath(db, paths[0], explicitOnly)
+		return command.listTagsForPath(store, paths[0], explicitOnly)
 	default:
-		return command.listTagsForPaths(db, paths, explicitOnly)
+		return command.listTagsForPaths(store, paths, explicitOnly)
 	}
 
 	return nil
 }
 
-func (command TagsCommand) listTagsForPath(db *database.Database, path string, explicitOnly bool) error {
-	tags, err := db.TagsForPath(path, explicitOnly)
+func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, explicitOnly bool) error {
+	tags, err := store.Db.TagsForPath(path, explicitOnly)
 	if err != nil {
 		return err
 	}
@@ -116,9 +116,9 @@ func (command TagsCommand) listTagsForPath(db *database.Database, path string, e
 	return nil
 }
 
-func (command TagsCommand) listTagsForPaths(db *database.Database, paths []string, explicitOnly bool) error {
+func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string, explicitOnly bool) error {
 	for _, path := range paths {
-		tags, err := db.TagsForPath(path, explicitOnly)
+		tags, err := store.Db.TagsForPath(path, explicitOnly)
 		if err != nil {
 			return err
 		}
@@ -133,7 +133,7 @@ func (command TagsCommand) listTagsForPaths(db *database.Database, paths []strin
 	return nil
 }
 
-func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, explicitOnly bool) error {
+func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, explicitOnly bool) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return err
@@ -148,7 +148,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(db *database.Database, ex
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		tags, err := db.TagsForPath(dirName, explicitOnly)
+		tags, err := store.Db.TagsForPath(dirName, explicitOnly)
 		if err != nil {
 			return err
 		}

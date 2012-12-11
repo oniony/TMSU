@@ -23,8 +23,9 @@ import (
 	"path/filepath"
 	"tmsu/cli"
 	"tmsu/common"
-	"tmsu/database"
 	"tmsu/fingerprint"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type RepairCommand struct{}
@@ -68,20 +69,20 @@ func (command RepairCommand) Exec(args []string) error {
 		return err
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	for _, path := range args {
-		childEntries, err := db.FilesByDirectory(path)
+		childEntries, err := store.FilesByDirectory(path)
 		if err != nil {
 			return err
 		}
 
 		for _, childEntry := range childEntries {
-			err := command.checkEntry(childEntry, db, pathsByFingerprint)
+			err := command.checkEntry(childEntry, store, pathsByFingerprint)
 			if err != nil {
 				return err
 			}
@@ -91,12 +92,12 @@ func (command RepairCommand) Exec(args []string) error {
 	return nil
 }
 
-func (command RepairCommand) checkEntry(entry *database.File, db *database.Database, pathsByFingerprint map[fingerprint.Fingerprint][]string) error {
+func (command RepairCommand) checkEntry(entry *database.File, store *storage.Storage, pathsByFingerprint map[fingerprint.Fingerprint][]string) error {
 	info, err := os.Stat(entry.Path())
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			err = command.processMissingEntry(entry, pathsByFingerprint, db)
+			err = command.processMissingEntry(entry, pathsByFingerprint, store)
 			if err != nil {
 				return err
 			}
@@ -125,11 +126,11 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 	}
 
 	if info.IsDir() {
-		command.processDirectory(db, entry.Path())
+		command.processDirectory(store, entry.Path())
 	}
 
 	if modTime.Unix() != entry.ModTimestamp.Unix() || fingerprint != entry.Fingerprint {
-		err := db.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
+		err := store.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime)
 		if err != nil {
 			return err
 		}
@@ -140,7 +141,7 @@ func (command RepairCommand) checkEntry(entry *database.File, db *database.Datab
 	return nil
 }
 
-func (command RepairCommand) processDirectory(db *database.Database, path string) error {
+func (command RepairCommand) processDirectory(store *storage.Storage, path string) error {
 	dir, err := os.Open(path)
 	if err != nil {
 		return err
@@ -155,12 +156,12 @@ func (command RepairCommand) processDirectory(db *database.Database, path string
 	for _, filename := range filenames {
 		childPath := filepath.Join(path, filename)
 
-		file, err := db.FileByPath(childPath)
+		file, err := store.FileByPath(childPath)
 		if err != nil {
 			return err
 		}
 		if file == nil {
-			cli.AddFile(db, childPath)
+			cli.AddFile(store, childPath)
 		}
 	}
 
@@ -169,7 +170,7 @@ func (command RepairCommand) processDirectory(db *database.Database, path string
 	return nil
 }
 
-func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFingerprint map[fingerprint.Fingerprint][]string, db *database.Database) error {
+func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFingerprint map[fingerprint.Fingerprint][]string, store *storage.Storage) error {
 	paths, ok := pathsByFingerprint[entry.Fingerprint]
 	if !ok {
 		common.Warnf("'%v': Missing.", entry.Path())
@@ -190,7 +191,7 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFi
 			return err
 		}
 
-		db.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime().UTC())
+		store.UpdateFile(entry.Id, newPath, entry.Fingerprint, info.ModTime().UTC())
 
 		fmt.Printf("'%v': Repaired (moved to '%v').\n", entry.Path(), newPath)
 	default:

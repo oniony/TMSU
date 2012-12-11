@@ -20,7 +20,7 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type MergeCommand struct{}
@@ -48,16 +48,16 @@ func (MergeCommand) Exec(args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	destTagName := args[len(args)-1]
 
 	for _, sourceTagName := range args[0 : len(args)-1] {
-		sourceTag, err := db.TagByName(sourceTagName)
+		sourceTag, err := store.Db.TagByName(sourceTagName)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (MergeCommand) Exec(args []string) error {
 			return errors.New("No such tag '" + sourceTagName + "'.")
 		}
 
-		destTag, err := db.TagByName(destTagName)
+		destTag, err := store.Db.TagByName(destTagName)
 		if err != nil {
 			return err
 		}
@@ -73,13 +73,13 @@ func (MergeCommand) Exec(args []string) error {
 			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
-		fileTags, err := db.FileTagsByTagId(sourceTag.Id)
+		fileTags, err := store.Db.FileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
 
 		for _, fileTag := range fileTags {
-			destFileTag, err := db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+			destFileTag, err := store.Db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
 			if err != nil {
 				return err
 			}
@@ -87,18 +87,18 @@ func (MergeCommand) Exec(args []string) error {
 				continue
 			}
 
-			_, err = db.AddFileTag(fileTag.FileId, destTag.Id)
+			_, err = store.Db.AddFileTag(fileTag.FileId, destTag.Id)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = db.RemoveFileTagsByTagId(sourceTag.Id)
+		err = store.Db.RemoveFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
 
-		err = db.DeleteTag(sourceTag.Id)
+		err = store.Db.DeleteTag(sourceTag.Id)
 		if err != nil {
 			return err
 		}

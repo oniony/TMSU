@@ -20,7 +20,7 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
-	"tmsu/database"
+	"tmsu/storage"
 )
 
 type RenameCommand struct{}
@@ -47,16 +47,16 @@ func (RenameCommand) Options() []cli.Option {
 }
 
 func (RenameCommand) Exec(args []string) error {
-	db, err := database.Open()
+	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
-	defer db.Close()
+	defer store.Close()
 
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	sourceTag, err := db.TagByName(sourceTagName)
+	sourceTag, err := store.Db.TagByName(sourceTagName)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (RenameCommand) Exec(args []string) error {
 		return err
 	}
 
-	destTag, err := db.TagByName(destTagName)
+	destTag, err := store.Db.TagByName(destTagName)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (RenameCommand) Exec(args []string) error {
 		return errors.New("A tag with name '" + destTagName + "' already exists.")
 	}
 
-	_, err = db.RenameTag(sourceTag.Id, destTagName)
+	_, err = store.Db.RenameTag(sourceTag.Id, destTagName)
 	if err != nil {
 		return err
 	}

@@ -104,13 +104,13 @@ func (db *Database) File(id uint) (*File, error) {
 	var directory string
 	var name string
 	var fp string
-	var modTime string
+	var modTime time.Time
 	err = rows.Scan(&directory, &name, &fp, &modTime)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp), modTime}, nil
 }
 
 // Retrieves the file with the specified path.
@@ -137,13 +137,13 @@ func (db *Database) FileByPath(path string) (*File, error) {
 
 	var id uint
 	var fp string
-	var modTime string
+	var modTime time.Time
 	err = rows.Scan(&id, &fp, &modTime)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
+	return &File{id, directory, name, fingerprint.Fingerprint(fp), modTime}, nil
 }
 
 // Retrieves all files that are under the specified directory.
@@ -168,12 +168,12 @@ func (db *Database) FilesByDirectory(path string) (Files, error) {
 		var dir string
 		var name string
 		var fp string
-		var modTime string
+		var modTime time.Time
 		err = rows.Scan(&fileId, &dir, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
-		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), modTime})
 	}
 
 	return files, nil
@@ -228,13 +228,13 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 		var fileId uint
 		var directory string
 		var name string
-		var modTime string
+		var modTime time.Time
 		err = rows.Scan(&fileId, &directory, &name, &modTime)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
+		files = append(files, &File{fileId, directory, name, fingerprint, modTime})
 	}
 
 	return files, nil
@@ -270,7 +270,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 		var directory string
 		var name string
 		var fp string
-		var modTime string
+		var modTime time.Time
 		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
@@ -286,7 +286,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, parseTimestamp(modTime)})
+		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, modTime})
 	}
 
 	// ensure last file set is added
@@ -305,7 +305,7 @@ func (db *Database) AddFile(path string, fingerprint fingerprint.Fingerprint, mo
 	sql := `INSERT INTO file (directory, name, fingerprint, mod_time)
 	        VALUES (?, ?, ?, ?)`
 
-	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), formatTimestamp(modTime))
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime)
 	if err != nil {
 		return nil, err
 	}
@@ -335,7 +335,7 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?
 	        WHERE id = ?`
 
-	_, err := db.connection.Exec(sql, directory, name, string(fingerprint), formatTimestamp(modTime), int(fileId))
+	_, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, int(fileId))
 	if err != nil {
 		return err
 	}
@@ -403,13 +403,13 @@ func readFiles(rows *sql.Rows, files Files) (Files, error) {
 		var directory string
 		var name string
 		var fp string
-		var modTime string
+		var modTime time.Time
 		err := rows.Scan(&fileId, &directory, &name, &fp, &modTime)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)})
+		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime})
 	}
 
 	return files, nil

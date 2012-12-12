@@ -23,7 +23,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path/filepath"
-	"time"
 	"tmsu/common"
 )
 
@@ -153,16 +152,4 @@ func (db Database) CreateSchema() error {
 	}
 
 	return nil
-}
-
-func parseTimestamp(text string) time.Time {
-	t, err := time.Parse(DateLayout, text)
-	if err != nil {
-		return time.Unix(0, 0)
-	}
-	return t
-}
-
-func formatTimestamp(t time.Time) string {
-	return t.Format(DateLayout)
 }

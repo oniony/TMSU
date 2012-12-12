@@ -21,7 +21,7 @@ import (
 	"os"
 	"tmsu/cli"
 	"tmsu/cli/commands"
-	"tmsu/common"
+	"tmsu/log"
 )
 
 func main() {
@@ -74,11 +74,11 @@ func main() {
 
 	command := commands[commandName]
 	if command == nil {
-		common.Fatalf("unknown command '%v'.", commandName)
+		log.Fatalf("unknown command '%v'.", commandName)
 	}
 
 	err := command.Exec(args)
 	if err != nil {
-		common.Fatal(err.Error())
+		log.Fatal(err.Error())
 	}
 }

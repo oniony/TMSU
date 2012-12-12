@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
-	"tmsu/common"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -110,16 +110,16 @@ func (UntagCommand) removeFiles(paths []string) error {
 			return err
 		}
 		if file == nil {
-			common.Warnf("'%v': file is not tagged.", path)
+			log.Warnf("'%v': file is not tagged.", path)
 			continue
 		}
 
-		err = store.Db.RemoveFileTagsByFileId(file.Id)
+		err = store.RemoveFileTagsByFileId(file.Id)
 		if err != nil {
 			return err
 		}
 
-		tags, err := store.Db.AllTagsForPath(path)
+		tags, err := store.TagsForPath(path, false)
 		if err != nil {
 			return err
 		}
@@ -173,7 +173,7 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 		}
 	}
 
-	filetags, err := store.Db.FileTagsByFileId(file.Id, false)
+	filetags, err := store.FileTagsByFileId(file.Id, false)
 	if err != nil {
 		return err
 	}
@@ -189,7 +189,7 @@ func (command UntagCommand) untagPath(path string, tagNames []string) error {
 }
 
 func (UntagCommand) unapplyTag(store *storage.Storage, path string, fileId uint, tagName string) error {
-	tag, err := store.Db.TagByName(tagName)
+	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return err
 	}
@@ -197,7 +197,7 @@ func (UntagCommand) unapplyTag(store *storage.Storage, path string, fileId uint,
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTag, err := store.Db.FileTagByFileIdAndTagId(fileId, tag.Id)
+	fileTag, err := store.FileTagByFileIdAndTagId(fileId, tag.Id)
 	if err != nil {
 		return err
 	}
@@ -205,7 +205,7 @@ func (UntagCommand) unapplyTag(store *storage.Storage, path string, fileId uint,
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
 	}
 
-	err = store.Db.RemoveFileTag(fileId, tag.Id)
+	err = store.RemoveFileTag(fileId, tag.Id)
 	if err != nil {
 		return err
 	}

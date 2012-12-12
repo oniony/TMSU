@@ -22,7 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
-	"tmsu/common"
+	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -129,26 +129,26 @@ func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tag
 		return nil, nil, err
 	}
 
-	tag, err := store.Db.TagByName(tagName)
+	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if tag == nil {
-		common.Warnf("New tag '%v'.", tagName)
-		tag, err = store.Db.AddTag(tagName)
+		log.Warnf("New tag '%v'.", tagName)
+		tag, err = store.AddTag(tagName)
 		if err != nil {
 			return nil, nil, err
 		}
 	}
 
-	fileTag, err := store.Db.FileTagByFileIdAndTagId(fileId, tag.Id)
+	fileTag, err := store.FileTagByFileIdAndTagId(fileId, tag.Id)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if fileTag == nil {
-		_, err := store.Db.AddFileTag(fileId, tag.Id)
+		_, err := store.AddFileTag(fileId, tag.Id)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -15,30 +15,34 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package common
+package storage
 
 import (
-	"fmt"
-	"os"
+	"tmsu/storage/database"
 )
 
-func Fatal(values ...interface{}) {
-	Warn(values...)
-	os.Exit(1)
+type Storage struct {
+	Db *database.Database
 }
 
-func Fatalf(format string, values ...interface{}) {
-	Warnf(format, values...)
-	os.Exit(1)
+func Open() (*Storage, error) {
+	db, err := database.Open()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Storage{db}, nil
 }
 
-func Warn(values ...interface{}) {
-	fmt.Fprint(os.Stderr, "tmsu: ")
-	fmt.Fprint(os.Stderr, values...)
-	fmt.Fprint(os.Stderr, "\n")
+func OpenAt(path string) (*Storage, error) {
+	db, err := database.OpenAt(path)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Storage{db}, nil
 }
 
-func Warnf(format string, values ...interface{}) {
-	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(os.Stderr, format, values...)
+func (storage *Storage) Close() error {
+	return storage.Db.Close()
 }

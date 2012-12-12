@@ -50,7 +50,7 @@ func (StatsCommand) Exec(args []string) error {
 	}
 	defer store.Close()
 
-	tagCount, err := store.Db.TagCount()
+	tagCount, err := store.TagCount()
 	if err != nil {
 		return err
 	}
@@ -60,7 +60,7 @@ func (StatsCommand) Exec(args []string) error {
 		return err
 	}
 
-	fileTagCount, err := store.Db.FileTagCount()
+	fileTagCount, err := store.FileTagCount()
 	if err != nil {
 		return err
 	}

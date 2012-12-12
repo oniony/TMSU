@@ -27,7 +27,22 @@ type Tag struct {
 	Name string
 }
 
-func (db Database) TagCount() (uint, error) {
+type Tags []*Tag
+
+func (tags Tags) Len() int {
+	return len(tags)
+}
+
+func (tags Tags) Swap(i, j int) {
+	tags[i], tags[j] = tags[j], tags[i]
+}
+
+func (tags Tags) Less(i, j int) bool {
+	return tags[i].Name < tags[j].Name
+}
+
+// The number of tags in the database.
+func (db *Database) TagCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM tag`
 
@@ -53,6 +68,7 @@ func (db Database) TagCount() (uint, error) {
 	return count, nil
 }
 
+// The set of tags.
 func (db Database) Tags() (Tags, error) {
 	sql := `SELECT id, name
             FROM tag
@@ -67,6 +83,7 @@ func (db Database) Tags() (Tags, error) {
 	return readTags(rows, make(Tags, 0, 10))
 }
 
+// Retrieves a specific tag.
 func (db Database) TagByName(name string) (*Tag, error) {
 	sql := `SELECT id
 	        FROM tag
@@ -94,29 +111,7 @@ func (db Database) TagByName(name string) (*Tag, error) {
 	return &Tag{id, name}, nil
 }
 
-func (db Database) TagsForTags(tagIds []uint) (Tags, error) {
-	files, err := db.FilesWithTags(tagIds, []uint{}, false)
-	if err != nil {
-		return nil, err
-	}
-
-	furtherTags := make(Tags, 0, 10)
-	for _, file := range files {
-		tags, err := db.ExplicitTagsByFileId(file.Id)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, tag := range tags {
-			if !containsTagId(tagIds, tag.Id) && !containsTag(furtherTags, tag) {
-				furtherTags = append(furtherTags, tag)
-			}
-		}
-	}
-
-	return furtherTags, nil
-}
-
+// Adds a tag.
 func (db Database) AddTag(name string) (*Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
@@ -142,6 +137,7 @@ func (db Database) AddTag(name string) (*Tag, error) {
 	return &Tag{uint(id), name}, nil
 }
 
+// Renames a tag.
 func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
@@ -163,41 +159,7 @@ func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 	return &Tag{tagId, name}, nil
 }
 
-func (db Database) CopyTag(sourceTagId uint, name string) (*Tag, error) {
-	sql := `INSERT INTO tag (name)
-            VALUES (?)`
-
-	result, err := db.connection.Exec(sql, name)
-	if err != nil {
-		return nil, err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, err
-	}
-	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
-	}
-
-	destTagId, err := result.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	sql = `INSERT INTO file_tag (file_id, tag_id)
-           SELECT file_id, ?
-           FROM file_tag
-           WHERE tag_id = ?`
-
-	result, err = db.connection.Exec(sql, destTagId, sourceTagId)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tag{uint(destTagId), name}, nil
-}
-
+// Deletes a tag.
 func (db Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
@@ -216,20 +178,6 @@ func (db Database) DeleteTag(tagId uint) error {
 	}
 
 	return nil
-}
-
-type Tags []*Tag
-
-func (tags Tags) Len() int {
-	return len(tags)
-}
-
-func (tags Tags) Swap(i, j int) {
-	tags[i], tags[j] = tags[j], tags[i]
-}
-
-func (tags Tags) Less(i, j int) bool {
-	return tags[i].Name < tags[j].Name
 }
 
 // 
@@ -251,24 +199,4 @@ func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
 	}
 
 	return tags, nil
-}
-
-func containsTagId(items []uint, searchItem uint) bool {
-	for _, item := range items {
-		if item == searchItem {
-			return true
-		}
-	}
-
-	return false
-}
-
-func containsTag(tags Tags, searchTag *Tag) bool {
-	for _, tag := range tags {
-		if tag.Id == searchTag.Id {
-			return true
-		}
-	}
-
-	return false
 }

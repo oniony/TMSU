@@ -57,7 +57,7 @@ func (MergeCommand) Exec(args []string) error {
 	destTagName := args[len(args)-1]
 
 	for _, sourceTagName := range args[0 : len(args)-1] {
-		sourceTag, err := store.Db.TagByName(sourceTagName)
+		sourceTag, err := store.TagByName(sourceTagName)
 		if err != nil {
 			return err
 		}
@@ -65,7 +65,7 @@ func (MergeCommand) Exec(args []string) error {
 			return errors.New("No such tag '" + sourceTagName + "'.")
 		}
 
-		destTag, err := store.Db.TagByName(destTagName)
+		destTag, err := store.TagByName(destTagName)
 		if err != nil {
 			return err
 		}
@@ -73,13 +73,13 @@ func (MergeCommand) Exec(args []string) error {
 			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
-		fileTags, err := store.Db.FileTagsByTagId(sourceTag.Id)
+		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
 
 		for _, fileTag := range fileTags {
-			destFileTag, err := store.Db.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+			destFileTag, err := store.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
 			if err != nil {
 				return err
 			}
@@ -87,18 +87,18 @@ func (MergeCommand) Exec(args []string) error {
 				continue
 			}
 
-			_, err = store.Db.AddFileTag(fileTag.FileId, destTag.Id)
+			_, err = store.AddFileTag(fileTag.FileId, destTag.Id)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = store.Db.RemoveFileTagsByTagId(sourceTag.Id)
+		err = store.RemoveFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
 
-		err = store.Db.DeleteTag(sourceTag.Id)
+		err = store.DeleteTag(sourceTag.Id)
 		if err != nil {
 			return err
 		}

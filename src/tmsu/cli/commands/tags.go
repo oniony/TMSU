@@ -22,6 +22,7 @@ import (
 	"os"
 	"sort"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -72,7 +73,7 @@ func (TagsCommand) listAllTags() error {
 	}
 	defer store.Close()
 
-	tags, err := store.Db.Tags()
+	tags, err := store.Tags()
 	if err != nil {
 		return err
 	}
@@ -104,7 +105,7 @@ func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 }
 
 func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, explicitOnly bool) error {
-	tags, err := store.Db.TagsForPath(path, explicitOnly)
+	tags, err := store.TagsForPath(path, explicitOnly)
 	if err != nil {
 		return err
 	}
@@ -118,9 +119,10 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 
 func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string, explicitOnly bool) error {
 	for _, path := range paths {
-		tags, err := store.Db.TagsForPath(path, explicitOnly)
+		tags, err := store.TagsForPath(path, explicitOnly)
 		if err != nil {
-			return err
+			log.Warn(err.Error())
+			continue
 		}
 
 		fmt.Print(path + ":")
@@ -148,7 +150,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		tags, err := store.Db.TagsForPath(dirName, explicitOnly)
+		tags, err := store.TagsForPath(dirName, explicitOnly)
 		if err != nil {
 			return err
 		}

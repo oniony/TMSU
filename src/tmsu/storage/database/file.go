@@ -25,6 +25,7 @@ import (
 	"tmsu/fingerprint"
 )
 
+// A tracked file.
 type File struct {
 	Id           uint
 	Directory    string
@@ -33,11 +34,15 @@ type File struct {
 	ModTimestamp time.Time
 }
 
+type Files []*File
+
+// Retrieves the file's path.
 func (file File) Path() string {
 	return filepath.Join(file.Directory, file.Name)
 }
 
-func (db Database) FileCount() (uint, error) {
+// Retrieves the total number of tracked files.
+func (db *Database) FileCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM file`
 
@@ -63,7 +68,8 @@ func (db Database) FileCount() (uint, error) {
 	return count, nil
 }
 
-func (db Database) Files() (Files, error) {
+// The complete set of tracke files.
+func (db *Database) Files() (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
 	        FROM file`
 
@@ -76,7 +82,8 @@ func (db Database) Files() (Files, error) {
 	return readFiles(rows, make(Files, 0, 10))
 }
 
-func (db Database) File(id uint) (*File, error) {
+// Retrieves a specific file.
+func (db *Database) File(id uint) (*File, error) {
 	sql := `SELECT directory, name, fingerprint, mod_time
 	        FROM file
 	        WHERE id = ?`
@@ -106,7 +113,8 @@ func (db Database) File(id uint) (*File, error) {
 	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
-func (db Database) FileByPath(path string) (*File, error) {
+// Retrieves the file with the specified path.
+func (db *Database) FileByPath(path string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -138,7 +146,8 @@ func (db Database) FileByPath(path string) (*File, error) {
 	return &File{id, directory, name, fingerprint.Fingerprint(fp), parseTimestamp(modTime)}, nil
 }
 
-func (db Database) FilesByDirectory(path string) (Files, error) {
+// Retrieves all files that are under the specified directory.
+func (db *Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE name = ? OR directory = ? OR directory LIKE ?`
@@ -170,7 +179,8 @@ func (db Database) FilesByDirectory(path string) (Files, error) {
 	return files, nil
 }
 
-func (db Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (uint, error) {
+// Retrieves the number of files with the specified fingerprint.
+func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (uint, error) {
 	sql := `SELECT count(id)
             FROM file
             WHERE fingerprint = ?`
@@ -197,7 +207,8 @@ func (db Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (
 	return count, nil
 }
 
-func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
+// Retrieves the set of files with the specified fingerprint.
+func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
 	sql := `SELECT id, directory, name, mod_time
 	        FROM file
 	        WHERE fingerprint = ?`
@@ -229,7 +240,8 @@ func (db Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (File
 	return files, nil
 }
 
-func (db Database) DuplicateFiles() ([]Files, error) {
+// Retrieves the sets of duplicate files within the database.
+func (db *Database) DuplicateFiles() ([]Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
@@ -285,7 +297,8 @@ func (db Database) DuplicateFiles() ([]Files, error) {
 	return fileSets, nil
 }
 
-func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*File, error) {
+// Adds a file to the database.
+func (db *Database) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -313,7 +326,8 @@ func (db Database) AddFile(path string, fingerprint fingerprint.Fingerprint, mod
 	return &File{uint(id), directory, name, fingerprint, modTime}, nil
 }
 
-func (db Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
+// Updates a file in the database.
+func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -329,7 +343,8 @@ func (db Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.
 	return nil
 }
 
-func (db Database) RemoveFile(fileId uint) error {
+// Removes a file from the database.
+func (db *Database) RemoveFile(fileId uint) error {
 	file, err := db.File(fileId)
 	if err != nil {
 		return err
@@ -360,7 +375,7 @@ func (db Database) RemoveFile(fileId uint) error {
 	}
 
 	for _, file := range files {
-		filetags, err := db.FileTagsByFileId(file.Id, false)
+		filetags, err := db.FileTagsByFileId(file.Id)
 		if err != nil {
 			return err
 		}
@@ -375,8 +390,6 @@ func (db Database) RemoveFile(fileId uint) error {
 
 	return nil
 }
-
-type Files []*File
 
 //
 

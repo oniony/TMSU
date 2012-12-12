@@ -24,6 +24,7 @@ import (
 	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/fingerprint"
+	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -102,9 +103,9 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 				return err
 			}
 		case os.IsPermission(err):
-			common.Warnf("'%v': Permission denied.", entry.Path())
+			log.Warnf("'%v': Permission denied.", entry.Path())
 		default:
-			common.Warn("'%v': %v", err)
+			log.Warn("'%v': %v", err)
 		}
 
 		return nil
@@ -115,11 +116,11 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			common.Warnf("'%v': Missing", entry.Path())
+			log.Warnf("'%v': Missing", entry.Path())
 		case os.IsPermission(err):
-			common.Warnf("'%v': Permission denied", entry.Path())
+			log.Warnf("'%v': Permission denied", entry.Path())
 		default:
-			common.Warn("'%v': %v", err)
+			log.Warn("'%v': %v", err)
 		}
 
 		return nil
@@ -173,7 +174,7 @@ func (command RepairCommand) processDirectory(store *storage.Storage, path strin
 func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFingerprint map[fingerprint.Fingerprint][]string, store *storage.Storage) error {
 	paths, ok := pathsByFingerprint[entry.Fingerprint]
 	if !ok {
-		common.Warnf("'%v': Missing.", entry.Path())
+		log.Warnf("'%v': Missing.", entry.Path())
 		return nil
 	}
 
@@ -195,7 +196,7 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsByFi
 
 		fmt.Printf("'%v': Repaired (moved to '%v').\n", entry.Path(), newPath)
 	default:
-		common.Warnf("'%v': Cannot repair: file moved to multiple destinations.", entry.Path())
+		log.Warnf("'%v': Cannot repair: file moved to multiple destinations.", entry.Path())
 	}
 
 	return nil

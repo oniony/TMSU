@@ -36,10 +36,10 @@ func (RenameCommand) Synopsis() string {
 func (RenameCommand) Description() string {
 	return `tmsu rename OLD NEW
 
-Renames a tag from OLD to NEW.
+    Renames a tag from OLD to NEW.
 
-Attempting to rename a tag with a new name for which a tag already exists will result in an error.
-To merge tags use the 'merge' command instead.`
+    Attempting to rename a tag with a new name for which a tag already exists will result in an error.
+    To merge tags use the 'merge' command instead.`
 }
 
 func (RenameCommand) Options() []cli.Option {
@@ -56,7 +56,7 @@ func (RenameCommand) Exec(args []string) error {
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	sourceTag, err := store.Db.TagByName(sourceTagName)
+	sourceTag, err := store.TagByName(sourceTagName)
 	if err != nil {
 		return err
 	}
@@ -69,7 +69,7 @@ func (RenameCommand) Exec(args []string) error {
 		return err
 	}
 
-	destTag, err := store.Db.TagByName(destTagName)
+	destTag, err := store.TagByName(destTagName)
 	if err != nil {
 		return err
 	}
@@ -77,7 +77,7 @@ func (RenameCommand) Exec(args []string) error {
 		return errors.New("A tag with name '" + destTagName + "' already exists.")
 	}
 
-	_, err = store.Db.RenameTag(sourceTag.Id, destTagName)
+	_, err = store.RenameTag(sourceTag.Id, destTagName)
 	if err != nil {
 		return err
 	}

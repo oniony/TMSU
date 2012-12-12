@@ -65,7 +65,7 @@ func (command DeleteCommand) Exec(args []string) error {
 }
 
 func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
-	tag, err := store.Db.TagByName(tagName)
+	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return err
 	}
@@ -74,23 +74,23 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTags, err := store.Db.FileTagsByTagId(tag.Id)
+	fileTags, err := store.FileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
 
-	err = store.Db.RemoveFileTagsByTagId(tag.Id)
+	err = store.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
 
-	err = store.Db.DeleteTag(tag.Id)
+	err = store.DeleteTag(tag.Id)
 	if err != nil {
 		return err
 	}
 
 	for _, fileTag := range fileTags {
-		tags, err := store.Db.ExplicitTagsByFileId(fileTag.FileId)
+		tags, err := store.TagsByFileId(fileTag.FileId, false)
 		if err != nil {
 			return err
 		}

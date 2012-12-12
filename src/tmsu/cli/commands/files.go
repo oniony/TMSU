@@ -23,6 +23,7 @@ import (
 	"sort"
 	"tmsu/cli"
 	"tmsu/common"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -109,12 +110,12 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 			include = true
 		}
 
-		tag, err := store.Db.TagByName(tagName)
+		tag, err := store.TagByName(tagName)
 		if err != nil {
 			return err
 		}
 		if tag == nil {
-			return errors.New("No such tag '" + tagName + "'.")
+			log.Fatalf("No such tag '%v'.", tagName)
 		}
 
 		if include {
@@ -124,7 +125,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		}
 	}
 
-	files, err := store.Db.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
+	files, err := store.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
 	if err != nil {
 		return err
 	}

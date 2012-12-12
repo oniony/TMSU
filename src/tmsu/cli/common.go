@@ -25,6 +25,7 @@ import (
 	"strings"
 	"tmsu/common"
 	"tmsu/fingerprint"
+	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -91,7 +92,7 @@ func AddFile(store *storage.Storage, path string) (*database.File, error) {
 			}
 
 			if duplicateCount > 0 {
-				common.Warn("'" + common.RelPath(path) + "' is a duplicate file.")
+				log.Warn("'" + common.RelPath(path) + "' is a duplicate file.")
 			}
 		}
 

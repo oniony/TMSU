@@ -19,7 +19,6 @@ package commands
 
 import (
 	"fmt"
-	"github.com/ogier/pflag"
 	"math"
 	"sort"
 	"strconv"
@@ -51,15 +50,7 @@ func (HelpCommand) Options() []cli.Option {
 }
 
 func (command HelpCommand) Exec(args []string) error {
-	flagSet := pflag.NewFlagSet("help", pflag.ExitOnError)
-	flagSet.Usage = func() { command.Description() }
-
-	var list bool
-	flagSet.BoolVarP(&list, "list", "l", false, "List all commands.")
-
-	flagSet.Parse(args)
-
-	if list {
+	if args[0] == "--list" {
 		command.listCommands()
 	} else {
 		switch len(args) {

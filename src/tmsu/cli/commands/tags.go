@@ -152,7 +152,14 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 	for _, dirName := range dirNames {
 		tags, err := store.TagsForPath(dirName, explicitOnly)
 		if err != nil {
-			return err
+			switch {
+			case os.IsNotExist(err):
+				// do nothing
+			case os.IsPermission(err):
+				log.Warnf("%v: Permission denied")
+			default:
+				return err
+			}
 		}
 
 		if len(tags) == 0 {

@@ -19,7 +19,6 @@ package storage
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"sort"
 	"tmsu/storage/database"
@@ -185,7 +184,7 @@ func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Ta
 	}
 
 	if file == nil {
-		return nil, errors.New(fmt.Sprintf("No such file '%v'.", path))
+		return database.Tags{}, nil
 	}
 
 	return storage.TagsByFileId(file.Id, explicitOnly)

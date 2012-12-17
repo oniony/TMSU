@@ -24,9 +24,9 @@ import (
 	"tmsu/storage/database"
 )
 
-func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
+func (storage *Storage) FileCountWithTags(tagIds []uint, explicitOnly bool) (uint, error) {
 	//TODO optimize
-	files, err := storage.FilesWithTags(tagIds, []uint{}, false)
+	files, err := storage.FilesWithTags(tagIds, []uint{}, explicitOnly)
 	if err != nil {
 		return 0, err
 	}

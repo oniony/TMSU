@@ -27,7 +27,7 @@ import (
 
 type UnmountCommand struct{}
 
-func (UnmountCommand) Name() string {
+func (UnmountCommand) Name() cli.CommandName {
 	return "unmount"
 }
 
@@ -39,22 +39,20 @@ func (UnmountCommand) Description() string {
 	return `tmsu unmount MOUNTPOINT
 tmsu unmount --all
 
-Unmounts the virtual file-system at MOUNTPOINT.
-
-  --all    unmounts all mounted TMSU file-systems`
+Unmounts the virtual file-system at MOUNTPOINT.`
 }
 
-func (UnmountCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (UnmountCommand) Options() cli.Options {
+	return cli.Options{{"-a", "--all", "unmounts all mounted TMSU file-systems"}}
 }
 
-func (command UnmountCommand) Exec(args []string) error {
-	if len(args) < 1 {
-		return errors.New("Path to unmount not speciified.")
+func (command UnmountCommand) Exec(options cli.Options, args []string) error {
+	if cli.HasOption(options, "--all") {
+		return command.unmountAll()
 	}
 
-	if args[0] == "--all" {
-		return command.unmountAll()
+	if len(args) < 1 {
+		return errors.New("Path to unmount not speciified.")
 	}
 
 	return command.unmount(args[0])

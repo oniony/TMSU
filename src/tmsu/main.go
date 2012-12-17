@@ -26,7 +26,7 @@ import (
 
 func main() {
 	helpCommand := &commands.HelpCommand{}
-	commands := map[string]cli.Command{
+	commands := map[cli.CommandName]cli.Command{
 		"copy":    commands.CopyCommand{},
 		"delete":  commands.DeleteCommand{},
 		"dupes":   commands.DupesCommand{},
@@ -47,29 +47,12 @@ func main() {
 	}
 	helpCommand.Commands = commands
 
-	aliases := map[string]string{
-		"-?":        "help",
-		"-h":        "help",
-		"-help":     "help",
-		"--help":    "help",
-		"-V":        "version",
-		"-version":  "version",
-		"--version": "version",
-	}
-
 	args := os.Args[1:] // strip off binary name
 
-	var commandName string
-	if len(args) > 0 {
-		commandName = args[0]
-		args = args[1:]
-	} else {
-		commandName = "help"
-	}
-
-	dealiased, found := aliases[commandName]
-	if found {
-		commandName = dealiased
+	parser := cli.NewParser(commands)
+	_, commandName, commandOptions, arguments, err := parser.Parse(args)
+	if err != nil {
+		log.Fatal(err)
 	}
 
 	command := commands[commandName]
@@ -77,7 +60,7 @@ func main() {
 		log.Fatalf("unknown command '%v'.", commandName)
 	}
 
-	err := command.Exec(args)
+	err = command.Exec(commandOptions, arguments)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

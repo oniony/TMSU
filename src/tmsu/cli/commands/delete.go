@@ -25,7 +25,7 @@ import (
 
 type DeleteCommand struct{}
 
-func (DeleteCommand) Name() string {
+func (DeleteCommand) Name() cli.CommandName {
 	return "delete"
 }
 
@@ -39,11 +39,11 @@ func (DeleteCommand) Description() string {
 Permanently deletes the TAGs specified.`
 }
 
-func (DeleteCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (DeleteCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (command DeleteCommand) Exec(args []string) error {
+func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 	if len(args) == 0 {
 		return errors.New("No tags to delete specified.")
 	}

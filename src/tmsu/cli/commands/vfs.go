@@ -25,7 +25,7 @@ import (
 
 type VfsCommand struct{}
 
-func (VfsCommand) Name() string {
+func (VfsCommand) Name() cli.CommandName {
 	return "vfs"
 }
 
@@ -37,11 +37,11 @@ func (VfsCommand) Description() string {
 	return ""
 }
 
-func (VfsCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (VfsCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (VfsCommand) Exec(args []string) error {
+func (VfsCommand) Exec(options cli.Options, args []string) error {
 	if len(args) == 0 {
 		errors.New("Mountpoint not specified.")
 	}

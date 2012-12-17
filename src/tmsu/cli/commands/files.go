@@ -29,7 +29,7 @@ import (
 
 type FilesCommand struct{}
 
-func (FilesCommand) Name() string {
+func (FilesCommand) Name() cli.CommandName {
 	return "files"
 }
 
@@ -41,28 +41,20 @@ func (FilesCommand) Description() string {
 	return `tmsu files [--explicit] [-]TAG...
 tmsu files --all
 
-Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).
-
-  --all         show the complete set of tagged files
-  --explicit    show only explicity tagged files`
+Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).`
 }
 
-func (FilesCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (FilesCommand) Options() cli.Options {
+	return cli.Options{{"-a", "--all", "show the complete set of tagged files"},
+		{"-e", "--explicit", "show only the explicitly tagged files"}}
 }
 
-func (command FilesCommand) Exec(args []string) error {
-	argCount := len(args)
-
-	if argCount == 1 && args[0] == "--all" {
+func (command FilesCommand) Exec(options cli.Options, args []string) error {
+	if cli.HasOption(options, "--all") {
 		return command.listAllFiles()
 	}
 
-	explicitOnly := false
-	if argCount > 0 && args[0] == "--explicit" {
-		explicitOnly = true
-		args = args[1:]
-	}
+	explicitOnly := cli.HasOption(options, "--explicit")
 
 	return command.listFiles(args, explicitOnly)
 }

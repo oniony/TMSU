@@ -29,7 +29,7 @@ import (
 
 type DupesCommand struct{}
 
-func (DupesCommand) Name() string {
+func (DupesCommand) Name() cli.CommandName {
 	return "dupes"
 }
 
@@ -44,11 +44,11 @@ Identifies all files in the database that are exact duplicates of FILE. If no
 FILE is specified then identifies duplicates between files in the database.`
 }
 
-func (DupesCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (DupesCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (command DupesCommand) Exec(args []string) error {
+func (command DupesCommand) Exec(options cli.Options, args []string) error {
 	switch len(args) {
 	case 0:
 		command.findDuplicatesInDb()

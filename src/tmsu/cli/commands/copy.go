@@ -25,7 +25,7 @@ import (
 
 type CopyCommand struct{}
 
-func (CopyCommand) Name() string {
+func (CopyCommand) Name() cli.CommandName {
 	return "copy"
 }
 
@@ -39,11 +39,11 @@ func (CopyCommand) Description() string {
 Creates a new tag NEW applied to the same set of files as TAG.`
 }
 
-func (CopyCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (CopyCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (CopyCommand) Exec(args []string) error {
+func (CopyCommand) Exec(options cli.Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return err

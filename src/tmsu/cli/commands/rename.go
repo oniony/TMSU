@@ -25,7 +25,7 @@ import (
 
 type RenameCommand struct{}
 
-func (RenameCommand) Name() string {
+func (RenameCommand) Name() cli.CommandName {
 	return "rename"
 }
 
@@ -42,11 +42,11 @@ func (RenameCommand) Description() string {
     To merge tags use the 'merge' command instead.`
 }
 
-func (RenameCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (RenameCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (RenameCommand) Exec(args []string) error {
+func (RenameCommand) Exec(options cli.Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return err

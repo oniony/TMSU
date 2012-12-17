@@ -28,7 +28,7 @@ import (
 
 type TagsCommand struct{}
 
-func (TagsCommand) Name() string {
+func (TagsCommand) Name() cli.CommandName {
 	return "tags"
 }
 
@@ -37,31 +37,25 @@ func (TagsCommand) Synopsis() string {
 }
 
 func (TagsCommand) Description() string {
-	return `tmsu tags [--explicit] [FILE]...
+	return `tmsu tags [OPTION] [FILE]...
 tmsu tags --all
 
 Lists the tags applied to FILEs.
 
-When run with no arguments, tags for the current working directory are listed.
-
-  --all         lists all of the tags defined
-  --explicit    show only explicitly applied tags (not inherited)`
+When run with no arguments, tags for the current working directory are listed.`
 }
 
-func (TagsCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (TagsCommand) Options() cli.Options {
+	return cli.Options{{"-a", "--all", "lists all of the tags defined"},
+		{"-e", "--explicit", "show only explicitly applied tags"}}
 }
 
-func (command TagsCommand) Exec(args []string) error {
-	if len(args) == 1 && args[0] == "--all" {
+func (command TagsCommand) Exec(options cli.Options, args []string) error {
+	if cli.HasOption(options, "--all") {
 		return command.listAllTags()
 	}
 
-	explicitOnly := false
-	if len(args) > 0 && args[0] == "--explicit" {
-		explicitOnly = true
-		args = args[1:]
-	}
+	explicitOnly := cli.HasOption(options, "--explicit")
 
 	return command.listTags(args, explicitOnly)
 }

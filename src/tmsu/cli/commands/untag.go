@@ -28,7 +28,7 @@ import (
 
 type UntagCommand struct{}
 
-func (UntagCommand) Name() string {
+func (UntagCommand) Name() cli.CommandName {
 	return "untag"
 }
 
@@ -41,46 +41,43 @@ func (UntagCommand) Description() string {
 tmsu untag --all FILE...
 tmsu untag --tags "TAG..." FILE...
 
-Disassociates FILE with the TAGs specified.
-
-  --all     strip each FILE of all TAGs
-  --tags    disassociate multiple FILEs from the same quoted set of TAGs`
+Disassociates FILE with the TAGs specified.`
 }
 
-func (UntagCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (UntagCommand) Options() cli.Options {
+	return cli.Options{{"-a", "--all", "strip each file of all tags"},
+		{"-t", "--tags", "the set of tags to remove"}}
 }
 
-func (command UntagCommand) Exec(args []string) error {
+func (command UntagCommand) Exec(options cli.Options, args []string) error {
 	if len(args) < 1 {
 		return errors.New("No arguments specified.")
 	}
 
-	switch args[0] {
-	case "--all":
-		if len(args) < 2 {
+	if cli.HasOption(options, "--all") {
+		if len(args) < 1 {
 			return errors.New("Files to untag must be specified.")
 		}
 
-		err := command.removeFiles(args[1:])
+		err := command.removeFiles(args)
 		if err != nil {
 			return err
 		}
-	case "--tags":
-		if len(args) < 3 {
+	} else if cli.HasOption(options, "--tags") {
+		if len(args) < 2 {
 			return errors.New("Quoted set of tags and at least one file to untag must be specified.")
 		}
 
-		tagNames := strings.Fields(args[1])
-		paths := args[2:]
+		tagNames := strings.Fields(args[0])
+		paths := args[1:]
 
 		err := command.untagPaths(paths, tagNames)
 		if err != nil {
 			return err
 		}
-	default:
+	} else {
 		if len(args) < 2 {
-			return errors.New("Tags to remove must be specified.")
+			return errors.New("Tag to remove and files to untag must be specified.")
 		}
 
 		err := command.untagPath(args[0], args[1:])

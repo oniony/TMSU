@@ -31,7 +31,7 @@ import (
 
 type MountCommand struct{}
 
-func (MountCommand) Name() string {
+func (MountCommand) Name() cli.CommandName {
 	return "mount"
 }
 
@@ -55,11 +55,11 @@ Where neither FILE is specified nor TMSU_DB defined then the default database
 is mounted.`
 }
 
-func (MountCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (MountCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (command MountCommand) Exec(args []string) error {
+func (command MountCommand) Exec(options cli.Options, args []string) error {
 	argCount := len(args)
 
 	switch argCount {

@@ -25,7 +25,7 @@ import (
 
 type VersionCommand struct{}
 
-func (VersionCommand) Name() string {
+func (VersionCommand) Name() cli.CommandName {
 	return "version"
 }
 
@@ -39,18 +39,18 @@ func (VersionCommand) Description() string {
 Displays version and copyright information.`
 }
 
-func (VersionCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (VersionCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (VersionCommand) Exec(args []string) error {
+func (VersionCommand) Exec(options cli.Options, args []string) error {
 	fmt.Println("TMSU", common.Version)
 	fmt.Println()
 	fmt.Println(`Copyright © 2011-2012 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.
-See the accompanying LICENSE file for further details.`)
+See the accompanying COPYING file for further details.`)
 
 	return nil
 }

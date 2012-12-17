@@ -29,7 +29,7 @@ import (
 
 type TagCommand struct{}
 
-func (TagCommand) Name() string {
+func (TagCommand) Name() cli.CommandName {
 	return "tag"
 }
 
@@ -41,34 +41,31 @@ func (TagCommand) Description() string {
 	return `tmsu tag FILE TAG...
 tmsu tag --tags "TAG..." FILE...
 
-Tags the file FILE with the tag(s) specified.
-
-  --tags    allows multiple FILEs to be tagged with the same quoted set of TAGs`
+Tags the file FILE with the tag(s) specified.`
 }
 
-func (TagCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (TagCommand) Options() cli.Options {
+	return cli.Options{{"-t", "--tags", "the set of tags to apply"}}
 }
 
-func (command TagCommand) Exec(args []string) error {
+func (command TagCommand) Exec(options cli.Options, args []string) error {
 	if len(args) < 1 {
 		return errors.New("Too few arguments.")
 	}
 
-	switch args[0] {
-	case "--tags":
-		if len(args) < 3 {
+	if cli.HasOption(options, "--tags") {
+		if len(args) < 2 {
 			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
 		}
 
-		tagNames := strings.Fields(args[1])
-		paths := args[2:]
+		tagNames := strings.Fields(args[0])
+		paths := args[1:]
 
 		err := command.tagPaths(paths, tagNames)
 		if err != nil {
 			return err
 		}
-	default:
+	} else {
 		if len(args) < 2 {
 			return errors.New("File to tag and tags to apply must be specified.")
 		}

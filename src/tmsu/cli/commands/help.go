@@ -26,10 +26,10 @@ import (
 )
 
 type HelpCommand struct {
-	Commands map[string]cli.Command
+	Commands map[cli.CommandName]cli.Command
 }
 
-func (HelpCommand) Name() string {
+func (HelpCommand) Name() cli.CommandName {
 	return "help"
 }
 
@@ -40,24 +40,23 @@ func (HelpCommand) Synopsis() string {
 func (HelpCommand) Description() string {
 	return `tmsu help [OPTION] [COMMAND]
 
-Shows help summary or, where COMMAND is specified, help for COMMAND.
-
-  --list    list commands`
+Shows help summary or, where COMMAND is specified, help for COMMAND.`
 }
 
-func (HelpCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (HelpCommand) Options() cli.Options {
+	return cli.Options{{"-l", "--list", "list commands"}}
 }
 
-func (command HelpCommand) Exec(args []string) error {
-	if args[0] == "--list" {
+func (command HelpCommand) Exec(options cli.Options, args []string) error {
+	if cli.HasOption(options, "--list") {
 		command.listCommands()
 	} else {
 		switch len(args) {
 		case 0:
 			command.summary()
 		default:
-			command.describeCommand(args[0])
+			commandName := cli.CommandName(args[0])
+			command.describeCommand(commandName)
 		}
 	}
 
@@ -69,14 +68,14 @@ func (helpCommand HelpCommand) summary() {
 	fmt.Println()
 
 	var maxWidth int = 0
-	commandNames := make([]string, 0, len(helpCommand.Commands))
+	commandNames := make(cli.CommandNames, 0, len(helpCommand.Commands))
 	for _, command := range helpCommand.Commands {
 		commandName := command.Name()
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
 	}
 
-	sort.Strings(commandNames)
+	sort.Sort(commandNames)
 
 	for _, commandName := range commandNames {
 		command, _ := helpCommand.Commands[commandName]
@@ -91,7 +90,7 @@ func (helpCommand HelpCommand) summary() {
 }
 
 func (helpCommand HelpCommand) listCommands() {
-	commandNames := make([]string, 0, len(helpCommand.Commands))
+	commandNames := make(cli.CommandNames, 0, len(helpCommand.Commands))
 
 	for _, command := range helpCommand.Commands {
 		if command.Synopsis() == "" {
@@ -101,14 +100,14 @@ func (helpCommand HelpCommand) listCommands() {
 		commandNames = append(commandNames, command.Name())
 	}
 
-	sort.Strings(commandNames)
+	sort.Sort(commandNames)
 
 	for _, commandName := range commandNames {
 		fmt.Println(commandName)
 	}
 }
 
-func (helpCommand HelpCommand) describeCommand(commandName string) {
+func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
 	command := helpCommand.Commands[commandName]
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)
@@ -116,4 +115,15 @@ func (helpCommand HelpCommand) describeCommand(commandName string) {
 	}
 
 	fmt.Println(command.Description())
+
+	if len(command.Options()) > 0 {
+		fmt.Println()
+
+		for _, option := range command.Options() {
+			fmt.Println(" ", option.ShortName, option.LongName)
+			fmt.Println("     ", option.Description)
+		}
+	}
+
+	fmt.Println()
 }

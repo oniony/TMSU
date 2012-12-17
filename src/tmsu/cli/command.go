@@ -18,15 +18,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 type Command interface {
-	Name() string
+	Name() CommandName
 	Synopsis() string
 	Description() string
-	Options() []Option
-	Exec(args []string) error
+	Options() Options
+	Exec(options Options, args []string) error
 }
 
-type Option struct {
-	ShortName string
-	LongName  string
-	Optional  bool
+func HasOption(options Options, longName string) bool {
+	for _, iterOption := range options {
+		if iterOption.LongName == longName {
+			return true
+		}
+	}
+
+	return false
 }

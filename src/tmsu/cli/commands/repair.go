@@ -31,7 +31,7 @@ import (
 
 type RepairCommand struct{}
 
-func (RepairCommand) Name() string {
+func (RepairCommand) Name() cli.CommandName {
 	return "repair"
 }
 
@@ -56,11 +56,11 @@ the database are checked and their fingerprints updated where modifications are
 found. (In this mode file move repairs are not performed.)`
 }
 
-func (RepairCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (RepairCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (command RepairCommand) Exec(args []string) error {
+func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	if len(args) == 0 {
 		args = []string{"."}
 	}

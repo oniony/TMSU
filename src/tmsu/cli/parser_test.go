@@ -48,15 +48,18 @@ func TestParseVanillaArguments(test *testing.T) {
 func TestParseGlobalOptions(test *testing.T) {
 	parser := Create()
 
-	globalOptions, commandName, commandOptions, args, err := parser.Parse([]string{"--debug", "a", "b"})
+	globalOptions, commandName, commandOptions, args, err := parser.Parse([]string{"--verbose", "a", "b"})
 	if err != nil {
 		test.Fatal(err)
 	}
 	if len(globalOptions) != 1 {
 		test.Fatalf("Expected one global option but were %v.", len(globalOptions))
 	}
-	if globalOptions[0] != "--debug" {
-		test.Fatalf("Expected global option of '--debug' but was '%v'.", globalOptions[0])
+	if globalOptions[0].LongName != "--verbose" {
+		test.Fatalf("Expected global option long name of '--verbose' but was '%v'.", globalOptions[0])
+	}
+	if globalOptions[0].ShortName != "-v" {
+		test.Fatalf("Expected global option short name of '-v' but was '%v'.", globalOptions[0])
 	}
 	if commandName != "a" {
 		test.Fatalf("Expected command name of 'a' but was '%v'.", commandName)

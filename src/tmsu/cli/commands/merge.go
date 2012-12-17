@@ -25,7 +25,7 @@ import (
 
 type MergeCommand struct{}
 
-func (MergeCommand) Name() string {
+func (MergeCommand) Name() cli.CommandName {
 	return "merge"
 }
 
@@ -39,11 +39,11 @@ func (MergeCommand) Description() string {
 Merges TAGs into tag DEST resulting in a single tag of name DEST.`
 }
 
-func (MergeCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (MergeCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (MergeCommand) Exec(args []string) error {
+func (MergeCommand) Exec(options cli.Options, args []string) error {
 	if len(args) < 2 {
 		return errors.New("Too few arguments.")
 	}

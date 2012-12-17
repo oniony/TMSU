@@ -29,7 +29,7 @@ import (
 
 type StatusCommand struct{}
 
-func (StatusCommand) Name() string {
+func (StatusCommand) Name() cli.CommandName {
 	return "status"
 }
 
@@ -44,8 +44,6 @@ Shows the status of PATHs.
 
 Where PATHs are not specified, the statuses of the contents of the working
 directory are shown.
-
-  --directory    list directory entries instead of contents
 
 Status codes are shown in the first column:
 
@@ -75,17 +73,12 @@ func NewReport() *StatusReport {
 	return &StatusReport{make([]Row, 0, 10)}
 }
 
-func (StatusCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (StatusCommand) Options() cli.Options {
+	return cli.Options{{"-d", "--directory", "list directory entries instead of contents"}}
 }
 
-func (command StatusCommand) Exec(args []string) error {
-	showDirectory := false
-
-	if len(args) > 0 && args[0] == "--directory" {
-		showDirectory = true
-		args = args[1:]
-	}
+func (command StatusCommand) Exec(options cli.Options, args []string) error {
+	showDirectory := cli.HasOption(options, "--directory")
 
 	report := NewReport()
 

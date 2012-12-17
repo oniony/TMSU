@@ -25,7 +25,7 @@ import (
 
 type StatsCommand struct{}
 
-func (StatsCommand) Name() string {
+func (StatsCommand) Name() cli.CommandName {
 	return "stats"
 }
 
@@ -39,11 +39,11 @@ func (StatsCommand) Description() string {
 Shows the database statistics.`
 }
 
-func (StatsCommand) Options() []cli.Option {
-	return []cli.Option{}
+func (StatsCommand) Options() cli.Options {
+	return cli.Options{}
 }
 
-func (StatsCommand) Exec(args []string) error {
+func (StatsCommand) Exec(options cli.Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return err

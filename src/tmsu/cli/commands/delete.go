@@ -74,7 +74,7 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	fileTags, err := store.FileTagsByTagId(tag.Id)
+	fileTags, err := store.FileTagsByTagId(tag.Id, true)
 	if err != nil {
 		return err
 	}

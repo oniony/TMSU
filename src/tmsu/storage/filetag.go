@@ -82,6 +82,10 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint, expli
 			}
 
 			for index, file := range files {
+				if file == nil {
+					continue
+				}
+
 				if !contains(filesWithTag, file) {
 					files[index] = nil
 				}
@@ -104,6 +108,10 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint, expli
 			}
 
 			for index, file := range files {
+				if file == nil {
+					continue
+				}
+
 				if contains(filesWithTag, file) {
 					files[index] = nil
 				}
@@ -196,8 +204,11 @@ func (storage *Storage) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*datab
 }
 
 // Retrieves the file tags with the specified tag ID.
-func (storage *Storage) FileTagsByTagId(tagId uint) (database.FileTags, error) {
-	//TODO explicit/implicit
+func (storage *Storage) FileTagsByTagId(tagId uint, explicitOnly bool) (database.FileTags, error) {
+	if !explicitOnly {
+		panic("Not implemented.")
+	} //TODO implement implicit
+
 	return storage.Db.FileTagsByTagId(tagId)
 }
 

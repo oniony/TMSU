@@ -73,7 +73,7 @@ func (MergeCommand) Exec(args []string) error {
 			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
-		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
+		fileTags, err := store.FileTagsByTagId(sourceTag.Id, true)
 		if err != nil {
 			return err
 		}

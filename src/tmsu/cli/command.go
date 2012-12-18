@@ -25,12 +25,34 @@ type Command interface {
 	Exec(options Options, args []string) error
 }
 
-func HasOption(options Options, longName string) bool {
-	for _, iterOption := range options {
-		if iterOption.LongName == longName {
+func LookupOption(command Command, name string) *Option {
+	for _, option := range globalOptions {
+		if option.LongName == name || option.ShortName == name {
+			return &option
+		}
+	}
+
+	if command != nil {
+		for _, option := range command.Options() {
+			if option.LongName == name || option.ShortName == name {
+				return &option
+			}
+		}
+	}
+
+	return nil
+}
+
+func HasOption(options Options, name string) bool {
+	for _, option := range options {
+		if option.LongName == name || option.ShortName == name {
 			return true
 		}
 	}
 
 	return false
 }
+
+var globalOptions = Options{Option{"-v", "--verbose", "show verbose messages"},
+	Option{"-h", "--help", "show help and exit"},
+	Option{"-V", "--version", "show version information and exit"}}

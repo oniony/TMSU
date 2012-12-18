@@ -19,89 +19,61 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 )
 
 type Parser struct {
 	commandByName map[CommandName]Command
-	globalOptions Options
 }
 
 func NewParser(commandByName map[CommandName]Command) *Parser {
-	parser := Parser{commandByName,
-		Options{Option{"-v", "--verbose", "show verbose messages"},
-			Option{"-h", "--help", "show help and exit"},
-			Option{"-V", "--version", "show version information and exit"}}}
+	parser := Parser{commandByName}
 	return &parser
 }
 
-func (parser *Parser) Parse(args []string) (Options, CommandName, Options, []string, error) {
-	globalOptions := make(Options, 0)
-	commandName := CommandName("help")
-	commandOptions := make(Options, 0)
+func (parser *Parser) Parse(args []string) (CommandName, Options, []string, error) {
+	optionNames := make([]string, 0)
 	arguments := make([]string, 0)
 
-	index := 0
-	for ; index < len(args); index += 1 {
-		arg := args[index]
-
-		if arg[0] == '-' {
-			globalOption := parser.lookupGlobalOption(arg)
-			if globalOption != nil {
-				switch globalOption.LongName {
-				case "--version":
-					return Options{}, "version", Options{}, []string{}, nil
-				case "--help":
-					return Options{}, "help", Options{}, []string{}, nil
-				default:
-					globalOptions = append(globalOptions, *globalOption)
-				}
-			} else {
-				return globalOptions, commandName, commandOptions, arguments, errors.New("Invalid global option '" + arg + "'.")
-			}
+	parseOptions := true
+	for _, arg := range args {
+		if arg == "--" {
+			parseOptions = false
 		} else {
-			commandName = CommandName(arg)
-			break
-		}
-	}
-
-	command := parser.commandByName[commandName]
-
-	if command != nil {
-		for index += 1; index < len(args); index += 1 {
-			arg := args[index]
-
-			if arg[0] == '-' {
-				commandOption := parser.lookupCommandOption(command, arg)
-				if commandOption == nil {
-					return globalOptions, commandName, commandOptions, arguments, errors.New("Invalid command option '" + arg + "'.")
-				}
-
-				commandOptions = append(commandOptions, *commandOption)
+			if parseOptions && arg[0] == '-' {
+				optionNames = append(optionNames, arg)
 			} else {
 				arguments = append(arguments, arg)
 			}
 		}
 	}
 
-	return globalOptions, commandName, commandOptions, arguments, nil
-}
+	commandName := CommandName("")
 
-func (parser *Parser) lookupGlobalOption(option string) *Option {
-	for _, globalOption := range parser.globalOptions {
-		if globalOption.ShortName == option || globalOption.LongName == option {
-			return &globalOption
-		}
+	if len(arguments) > 0 {
+		commandName = CommandName(arguments[0])
+		arguments = arguments[1:]
 	}
 
-	return nil
-}
+	command := parser.commandByName[commandName]
 
-func (parser *Parser) lookupCommandOption(command Command, option string) *Option {
-	for _, commandOption := range command.Options() {
-		if commandOption.ShortName == option || commandOption.LongName == option {
-			return &commandOption
+	options := make(Options, 0)
+	for _, optionName := range optionNames {
+		option := LookupOption(command, optionName)
+
+		if option == nil {
+			return "", nil, nil, errors.New(fmt.Sprintf("Invalid option '%v'.", optionName))
 		}
+
+		options = append(options, *option)
 	}
 
-	return nil
+	if HasOption(options, "--version") {
+		commandName = "version"
+	}
+	if HasOption(options, "--help") {
+		commandName = "help"
+	}
+
+	return commandName, options, arguments, nil
 }

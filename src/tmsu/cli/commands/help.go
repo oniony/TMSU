@@ -120,8 +120,7 @@ func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
 		fmt.Println()
 
 		for _, option := range command.Options() {
-			fmt.Println(" ", option.ShortName, option.LongName)
-			fmt.Println("     ", option.Description)
+			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 		}
 	}
 

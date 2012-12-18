@@ -50,17 +50,21 @@ func main() {
 	args := os.Args[1:] // strip off binary name
 
 	parser := cli.NewParser(commands)
-	_, commandName, commandOptions, arguments, err := parser.Parse(args)
+	commandName, options, arguments, err := parser.Parse(args)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	command := commands[commandName]
-	if command == nil {
-		log.Fatalf("unknown command '%v'.", commandName)
+	if commandName == "" {
+		log.Fatal("Command must be specified.")
 	}
 
-	err = command.Exec(commandOptions, arguments)
+	command := commands[commandName]
+	if command == nil {
+		log.Fatalf("Invalid command '%v'.", commandName)
+	}
+
+	err = command.Exec(options, arguments)
 	if err != nil {
 		log.Fatal(err.Error())
 	}

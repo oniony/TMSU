@@ -10,6 +10,9 @@ _tmsu() {
 	local cmd ret=1
 
 	_arguments -C \
+	    ''{--verbose,-v}'[show verbose messages]' \
+	    ''{--version,-V}'[show version information and exit]' \
+	    ''{--help,-h}'[show help and exit]' \
 		'1: :_tmsu_commands' \
 		'*::arg:->args' \
 		&& ret=0
@@ -62,18 +65,17 @@ _tmsu_cmd_dupes() {
 	_arguments -s -w '*:file:_files' && ret=0
 }
 
-_tmsu_cmd_export() {
-	# no arguments
-}
-
 _tmsu_cmd_files() {
-	_arguments -s -w '*:tag:_tmsu_tags' && ret=0
+	_arguments -s -w ''{--all,-a}'[show all files]' \
+                     ''{--explicit,-e}'[show only explicitly tagged files]' \
+	                 '*:tag:_tmsu_tags' \
+	&& ret=0
 }
 
 _tmsu_cmd_help() {
-	_arguments -s -w '--list' \
-	                 '1:command:_tmsu_commands' &&
-	                 ret=0
+	_arguments -s -w ''{--list,-l}'[list commands]' \
+	                 '1:command:_tmsu_commands' \
+	&& ret=0
 }
 
 _tmsu_cmd_merge() {
@@ -103,7 +105,7 @@ _tmsu_cmd_status() {
 }
 
 _tmsu_cmd_tag() {
-	_arguments -s -w '--tags' \
+	_arguments -s -w ''{--tags,-t}'[apply set of tags to multiple files]' \
 	                 '*:: :->items' \
 	&& ret=0
 
@@ -134,18 +136,21 @@ _tmsu_cmd_tag() {
 }
 
 _tmsu_cmd_tags() {
-	_arguments -s -w '*:file:_files' && ret=0
+	_arguments -s -w ''{--all,-a}'[show all tags]' \
+                     ''{--explicit,-e}'[show only explicitly applied tags]' \
+	                 '*:file:_files' \
+	&& ret=0
 }
 
 _tmsu_cmd_unmount() {
-	_arguments -s -w '--all' \
+	_arguments -s -w ''{--all,-a}'[unmount all]' \
 	                 '1:mountpoint:_files' \
 	&& ret=0
 }
 
 _tmsu_cmd_untag() {
-	_arguments -s -w '--all' \
-	                 '--tags' \
+	_arguments -s -w ''{--all,-a}'[remove all tags]' \
+	                 ''{--tags,-t}'[remove set of tags from multiple files]' \
 	                 '*:: :->items' \
 	&& ret=0
 

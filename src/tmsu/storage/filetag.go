@@ -184,19 +184,3 @@ func contains(files database.Files, searchFile *database.File) bool {
 
 	return false
 }
-
-func uniq(tags database.Tags) database.Tags {
-	uniqueTags := make(database.Tags, 0, len(tags))
-
-	var previousTagName string = ""
-	for _, tag := range tags {
-		if tag.Name == previousTagName {
-			continue
-		}
-
-		uniqueTags = append(uniqueTags, tag)
-		previousTagName = tag.Name
-	}
-
-	return uniqueTags
-}

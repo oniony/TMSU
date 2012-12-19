@@ -19,6 +19,8 @@ package commands
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
@@ -61,7 +63,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		tagNames := strings.Fields(args[0])
 		paths := args[1:]
 
-		err := command.tagPaths(paths, tagNames)
+		err := command.tagPaths(paths, tagNames, true)
 		if err != nil {
 			return err
 		}
@@ -73,7 +75,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		path := args[0]
 		tagNames := args[1:]
 
-		err := command.tagPath(path, tagNames)
+		err := command.tagPath(path, tagNames, true)
 		if err != nil {
 			return err
 		}
@@ -82,9 +84,9 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
+func (command TagCommand) tagPaths(paths []string, tagNames []string, explicit bool) error {
 	for _, path := range paths {
-		err := command.tagPath(path, tagNames)
+		err := command.tagPath(path, tagNames, explicit)
 		if err != nil {
 			return err
 		}
@@ -93,7 +95,12 @@ func (command TagCommand) tagPaths(paths []string, tagNames []string) error {
 	return nil
 }
 
-func (command TagCommand) tagPath(path string, tagNames []string) error {
+func (command TagCommand) tagPath(path string, tagNames []string, explicit bool) error {
+	osInfo, err := os.Stat(path)
+	if err != nil {
+		return err
+	}
+
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -111,16 +118,36 @@ func (command TagCommand) tagPath(path string, tagNames []string) error {
 	}
 
 	for _, tagName := range tagNames {
-		_, _, err = command.applyTag(store, path, file.Id, tagName)
+		_, _, err = command.applyTag(store, path, file.Id, tagName, explicit)
 		if err != nil {
 			return err
 		}
 	}
 
+	if !osInfo.IsDir() {
+		return nil
+	}
+
+	osFile, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	entryNames, err := osFile.Readdirnames(0)
+	osFile.Close()
+	if err != nil {
+		return err
+	}
+
+	for _, entryName := range entryNames {
+		entryPath := filepath.Join(path, entryName)
+		command.tagPath(entryPath, tagNames, false)
+	}
+
 	return nil
 }
 
-func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tagName string) (*database.Tag, *database.FileTag, error) {
+func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tagName string, explicit bool) (*database.Tag, *database.FileTag, error) {
 	err := cli.ValidateTagName(tagName)
 	if err != nil {
 		return nil, nil, err
@@ -139,13 +166,20 @@ func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tag
 		}
 	}
 
+	//TODO move this logic into Storage
 	fileTag, err := store.FileTagByFileIdAndTagId(fileId, tag.Id)
+	fmt.Println("Found filetag", fileTag)
 	if err != nil {
 		return nil, nil, err
 	}
 
 	if fileTag == nil {
-		_, err := store.AddFileTag(fileId, tag.Id)
+		_, err := store.AddFileTag(fileId, tag.Id, explicit, !explicit)
+		if err != nil {
+			return nil, nil, err
+		}
+	} else {
+		err := store.UpdateFileTag(fileTag.Id, fileTag.Explicit || explicit, fileTag.Implicit || !explicit)
 		if err != nil {
 			return nil, nil, err
 		}

@@ -59,7 +59,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 			return errors.New("Files to untag must be specified.")
 		}
 
-		err := command.removeFiles(args)
+		err := command.untagAllPaths(args)
 		if err != nil {
 			return err
 		}
@@ -89,7 +89,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (UntagCommand) removeFiles(paths []string) error {
+func (UntagCommand) untagAllPaths(paths []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -111,17 +111,29 @@ func (UntagCommand) removeFiles(paths []string) error {
 			continue
 		}
 
-		err = store.RemoveFileTagsByFileId(file.Id)
-		if err != nil {
-			return err
+		removeFile := true
+		fileTags, err := store.FileTagsByFileId(file.Id, false)
+		for _, fileTag := range fileTags {
+			if fileTag.Explicit {
+				if !fileTag.Implicit {
+					err = store.RemoveFileTag(fileTag.Id)
+					if err != nil {
+						return err
+					}
+
+					//TODO recursively remove implicit file tags beneath
+				} else {
+					err = store.UpdateFileTag(fileTag.Id, false, true)
+					if err != nil {
+						return err
+					}
+				}
+			} else {
+				removeFile = false
+			}
 		}
 
-		tags, err := store.TagsForPath(path, false)
-		if err != nil {
-			return err
-		}
-
-		if len(tags) == 0 {
+		if removeFile {
 			err = store.RemoveFile(file.Id)
 			if err != nil {
 				return err
@@ -202,7 +214,7 @@ func (UntagCommand) unapplyTag(store *storage.Storage, path string, fileId uint,
 		return errors.New("File '" + path + "' is not tagged '" + tagName + "'.")
 	}
 
-	err = store.RemoveFileTag(fileId, tag.Id)
+	err = store.RemoveFileTag(fileTag.Id)
 	if err != nil {
 		return err
 	}

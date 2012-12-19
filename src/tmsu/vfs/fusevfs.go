@@ -108,7 +108,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("Could not retrieve tag '%v'.", tagName)
 		}
 
-		err = store.Db.RemoveFileTag(fileId, tag.Id)
+		err = store.RemoveFileTagByFileAndTagId(fileId, tag.Id)
 		if err != nil {
 			log.Fatal(err)
 		}

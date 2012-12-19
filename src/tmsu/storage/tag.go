@@ -63,7 +63,7 @@ func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
 
 // Adds a tag.
 func (storage *Storage) AddTag(name string) (*database.Tag, error) {
-	return storage.Db.AddTag(name)
+	return storage.Db.InsertTag(name)
 }
 
 // Renames a tag.
@@ -73,7 +73,7 @@ func (storage Storage) RenameTag(tagId uint, name string) (*database.Tag, error)
 
 // Copies a tag.
 func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, error) {
-	tag, err := storage.Db.AddTag(name)
+	tag, err := storage.Db.InsertTag(name)
 	if err != nil {
 		return nil, err
 	}

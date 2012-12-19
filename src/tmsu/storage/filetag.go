@@ -18,9 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"errors"
 	"path/filepath"
-	"sort"
 	"tmsu/storage/database"
 )
 
@@ -36,32 +34,7 @@ func (storage *Storage) FileCountWithTags(tagIds []uint, explicitOnly bool) (uin
 
 // Retrieves the set of files with the specified tag.
 func (storage *Storage) FilesWithTag(tagId uint, explicitOnly bool) (database.Files, error) {
-	explicitlyTaggedFiles, err := storage.Db.FilesWithTag(tagId)
-	if err != nil {
-		return nil, err
-	}
-
-	if explicitOnly {
-		return explicitlyTaggedFiles, nil
-	}
-
-	files := make(database.Files, len(explicitlyTaggedFiles))
-	for index, file := range explicitlyTaggedFiles {
-		files[index] = file
-	}
-
-	for _, explicitlyTaggedFile := range explicitlyTaggedFiles {
-		additionalFiles, err := storage.Db.FilesByDirectory(explicitlyTaggedFile.Path())
-		if err != nil {
-			return nil, err
-		}
-
-		for _, additionalFile := range additionalFiles {
-			files = append(files, additionalFile)
-		}
-	}
-
-	return files, nil
+	return storage.Db.FilesWithTag(tagId, explicitOnly)
 }
 
 // Retrieves the set of files with the specified set of tags.
@@ -70,26 +43,9 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint, expli
 	var err error
 
 	if len(includeTagIds) > 0 {
-		files, err = storage.FilesWithTag(includeTagIds[0], explicitOnly)
+		files, err = storage.Db.FilesWithTags(includeTagIds, explicitOnly)
 		if err != nil {
 			return nil, err
-		}
-
-		for _, tagId := range includeTagIds[1:] {
-			filesWithTag, err := storage.FilesWithTag(tagId, explicitOnly)
-			if err != nil {
-				return nil, err
-			}
-
-			for index, file := range files {
-				if file == nil {
-					continue
-				}
-
-				if !contains(filesWithTag, file) {
-					files[index] = nil
-				}
-			}
 		}
 	}
 
@@ -101,20 +57,14 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint, expli
 			}
 		}
 
-		for _, tagId := range excludeTagIds {
-			filesWithTag, err := storage.FilesWithTag(tagId, explicitOnly)
-			if err != nil {
-				return nil, err
-			}
+		excludeFiles, err := storage.Db.FilesWithTags(excludeTagIds, explicitOnly)
+		if err != nil {
+			return nil, err
+		}
 
-			for index, file := range files {
-				if file == nil {
-					continue
-				}
-
-				if contains(filesWithTag, file) {
-					files[index] = nil
-				}
+		for index, file := range files {
+			if contains(excludeFiles, file) {
+				files[index] = nil
 			}
 		}
 	}
@@ -130,53 +80,18 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint, expli
 }
 
 // Retrieves the total count of file tags in the database.
-func (storage *Storage) FileTagCount() (uint, error) {
-	return storage.Db.FileTagCount()
+func (storage *Storage) FileTagCount(explicitOnly bool) (uint, error) {
+	return storage.Db.FileTagCount(explicitOnly)
 }
 
 // Retrieves the complete set of file tags.
-func (storage *Storage) FileTags() (database.FileTags, error) {
-	return storage.Db.FileTags()
+func (storage *Storage) FileTags(explicitOnly bool) (database.FileTags, error) {
+	return storage.Db.FileTags(explicitOnly)
 }
 
 // Retrieves the set of explicit file tags for the specified file.
 func (storage *Storage) TagsByFileId(fileId uint, explicitOnly bool) (database.Tags, error) {
-	tags, err := storage.Db.TagsByFileId(fileId)
-	if err != nil {
-		return nil, err
-	}
-
-	if explicitOnly {
-		return tags, nil
-	}
-
-	file, err := storage.File(fileId)
-	if err != nil {
-		return nil, err
-	}
-
-	absPath := filepath.Dir(file.Path())
-	for absPath != "/" {
-		file, err = storage.Db.FileByPath(absPath)
-		if err != nil {
-			return nil, err
-		}
-
-		if file != nil {
-			moreTags, err := storage.Db.TagsByFileId(file.Id)
-			if err != nil {
-				return nil, err
-			}
-			tags = append(tags, moreTags...)
-		}
-
-		absPath = filepath.Dir(absPath)
-	}
-
-	sort.Sort(tags)
-	tags = uniq(tags)
-
-	return tags, nil
+	return storage.Db.TagsByFileId(fileId, explicitOnly)
 }
 
 // Retrieves the set of tags for the specified path.
@@ -195,7 +110,7 @@ func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Ta
 		return database.Tags{}, nil
 	}
 
-	return storage.TagsByFileId(file.Id, explicitOnly)
+	return storage.Db.TagsByFileId(file.Id, explicitOnly)
 }
 
 // Retrieves the file tag with the specified file ID and tag ID.
@@ -205,69 +120,42 @@ func (storage *Storage) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*datab
 
 // Retrieves the file tags with the specified tag ID.
 func (storage *Storage) FileTagsByTagId(tagId uint, explicitOnly bool) (database.FileTags, error) {
-	if !explicitOnly {
-		panic("Not implemented.")
-	} //TODO implement implicit
-
-	return storage.Db.FileTagsByTagId(tagId)
+	return storage.Db.FileTagsByTagId(tagId, explicitOnly)
 }
 
 // Retrieves the file tags with the specified file ID.
 func (storage *Storage) FileTagsByFileId(fileId uint, explicitOnly bool) (database.FileTags, error) {
-	fileTags, err := storage.Db.FileTagsByFileId(fileId)
-	if err != nil {
-		return nil, err
-	}
-
-	if explicitOnly {
-		return fileTags, nil
-	}
-
-	file, err := storage.Db.File(fileId)
-	if err != nil {
-		return nil, err
-	}
-	if file == nil {
-		return nil, errors.New("File does not exist.")
-	}
-
-	parentFile, err := storage.Db.FileByPath(file.Directory)
-	if err != nil {
-		return nil, err
-	}
-
-	if parentFile != nil {
-		additionalFileTags, err := storage.FileTagsByFileId(parentFile.Id, explicitOnly)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, additionalFileTag := range additionalFileTags {
-			fileTags = append(fileTags, additionalFileTag)
-		}
-	}
-
-	return fileTags, nil
+	return storage.Db.FileTagsByFileId(fileId, explicitOnly)
 }
 
 // Adds a file tag.
-func (storage *Storage) AddFileTag(fileId uint, tagId uint) (*database.FileTag, error) {
-	return storage.Db.AddFileTag(fileId, tagId)
+func (storage *Storage) AddFileTag(fileId uint, tagId uint, explicit bool, implicit bool) (*database.FileTag, error) {
+	return storage.Db.InsertFileTag(fileId, tagId, explicit, implicit)
 }
 
 // Removes a file tag.
-func (storage *Storage) RemoveFileTag(fileId uint, tagId uint) error {
-	return storage.Db.RemoveFileTag(fileId, tagId)
+func (storage *Storage) RemoveFileTag(fileTagId uint) error {
+	return storage.Db.DeleteFileTag(fileTagId)
+}
+
+// Removes a file tag by file and tag ID.
+func (storage *Storage) RemoveFileTagByFileAndTagId(fileId uint, tagId uint) error {
+	return storage.Db.DeleteFileTagByFileAndTagId(fileId, tagId)
 }
 
 // Removes all of the file tags for the specified file.
-func (storage *Storage) RemoveFileTagsByFileId(fileId uint) error {
-	return storage.Db.RemoveFileTagsByFileId(fileId)
+func (storage *Storage) RemoveFileTagsByFileId(fileId uint, explicitOnly bool) error {
+	return storage.Db.DeleteFileTagsByFileId(fileId, explicitOnly)
 }
 
 // Removes all of the file tags for the specified tag.
-func (storage *Storage) RemoveFileTagsByTagId(tagId uint) error {
-	return storage.Db.RemoveFileTagsByTagId(tagId)
+func (storage *Storage) RemoveFileTagsByTagId(tagId uint, explicitOnly bool) error {
+	return storage.Db.DeleteFileTagsByTagId(tagId, explicitOnly)
+}
+
+// Updates a file tag.
+func (storage *Storage) UpdateFileTag(fileTagId uint, explicit bool, implicit bool) error {
+	return storage.Db.UpdateFileTag(fileTagId, explicit, implicit)
 }
 
 // Updates file tags to a new tag.

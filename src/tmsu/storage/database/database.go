@@ -74,12 +74,24 @@ func (db *Database) Close() error {
 }
 
 func (db Database) CreateSchema() error {
-	sql := `CREATE TABLE IF NOT EXISTS tag (
+	var sql string
+	var err error
+
+	sql = `CREATE TABLE IF NOT EXISTS tmsu (
+                schema_version TEXT
+            )`
+
+	_, err = db.connection.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = `CREATE TABLE IF NOT EXISTS tag (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
             )`
 
-	_, err := db.connection.Exec(sql)
+	_, err = db.connection.Exec(sql)
 	if err != nil {
 		return err
 	}
@@ -126,6 +138,8 @@ func (db Database) CreateSchema() error {
                id INTEGER PRIMARY KEY,
                file_id INTEGER NOT NULL,
                tag_id INTEGER NOT NULL,
+               explicit BOOL NOT NULL,
+               implicit BOOL NOT NULL,
                FOREIGN KEY (file_id) REFERENCES file(id),
                FOREIGN KEY (tag_id) REFERENCES tag(id)
            )`

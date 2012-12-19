@@ -60,17 +60,26 @@ func (StatsCommand) Exec(options cli.Options, args []string) error {
 		return err
 	}
 
-	fileTagCount, err := store.FileTagCount()
+	fileTagCount, err := store.FileTagCount(false)
+	if err != nil {
+		return err
+	}
+
+	explicitFileTagCount, err := store.FileTagCount(true)
+	implicitFileTagCount := fileTagCount - explicitFileTagCount
 	if err != nil {
 		return err
 	}
 
 	fmt.Printf("Database Contents\n")
 
-	fmt.Printf(" Tags:      %v\n", tagCount)
-	fmt.Printf(" Files:     %v\n", fileCount)
-	fmt.Printf(" Taggings:  %v\n", fileTagCount)
-	fmt.Printf(" Average:   %v\n", fileTagCount/fileCount)
+	fmt.Printf(" Tags:        %v\n", tagCount)
+	fmt.Printf(" Files:       %v\n", fileCount)
+	fmt.Println()
+	fmt.Printf(" Taggings     total  per file\n")
+	fmt.Printf("   all:       %v     %v\n", fileTagCount, fileTagCount/fileCount)
+	fmt.Printf("   explicit:  %v     %v\n", explicitFileTagCount, explicitFileTagCount/fileCount)
+	fmt.Printf("   implicit:  %v     %v\n", implicitFileTagCount, implicitFileTagCount/fileCount)
 
 	return nil
 }

@@ -65,7 +65,7 @@ func (storage *Storage) DuplicateFiles() ([]database.Files, error) {
 
 // Adds a file to the database.
 func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*database.File, error) {
-	return storage.Db.AddFile(path, fingerprint, modTime)
+	return storage.Db.InsertFile(path, fingerprint, modTime)
 }
 
 // Updates a file in the database.
@@ -80,7 +80,7 @@ func (storage *Storage) RemoveFile(fileId uint) error {
 		return err
 	}
 
-	err = storage.Db.RemoveFile(fileId)
+	err = storage.Db.DeleteFile(fileId)
 	if err != nil {
 		return err
 	}
@@ -91,14 +91,14 @@ func (storage *Storage) RemoveFile(fileId uint) error {
 	}
 
 	for _, file := range files {
-		filetags, err := storage.Db.FileTagsByFileId(file.Id)
+		filetags, err := storage.Db.FileTagsByFileId(file.Id, false)
 		if err != nil {
 			return err
 		}
 
 		// remove only untagged descendents
 		if len(filetags) == 0 {
-			err = storage.Db.RemoveFile(fileId)
+			err = storage.Db.DeleteFile(fileId)
 			if err != nil {
 				return err
 			}

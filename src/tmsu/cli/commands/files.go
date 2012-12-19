@@ -20,7 +20,6 @@ package commands
 import (
 	"errors"
 	"fmt"
-	"sort"
 	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/log"
@@ -72,7 +71,8 @@ func (FilesCommand) listAllFiles() error {
 	}
 
 	for _, file := range files {
-		fmt.Println(file.Path())
+		relPath := common.RelPath(file.Path())
+		fmt.Println(relPath)
 	}
 
 	return nil
@@ -94,6 +94,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	for _, arg := range args {
 		var tagName string
 		var include bool
+
 		if arg[0] == '-' {
 			tagName = arg[1:]
 			include = false
@@ -122,21 +123,9 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		return err
 	}
 
-	paths := make([]string, len(files))
 	for _, file := range files {
 		relPath := common.RelPath(file.Path())
-		paths = append(paths, relPath)
-	}
-
-	sort.Strings(paths)
-
-	previousPath := ""
-	for _, path := range paths {
-		if path != previousPath {
-			fmt.Println(path)
-		}
-
-		previousPath = path
+		fmt.Println(relPath)
 	}
 
 	return nil

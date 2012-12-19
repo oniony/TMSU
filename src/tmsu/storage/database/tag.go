@@ -112,7 +112,7 @@ func (db Database) TagByName(name string) (*Tag, error) {
 }
 
 // Adds a tag.
-func (db Database) AddTag(name string) (*Tag, error) {
+func (db Database) InsertTag(name string) (*Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 

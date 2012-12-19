@@ -84,6 +84,34 @@ func (db Database) Tags() (Tags, error) {
 }
 
 // Retrieves a specific tag.
+func (db Database) Tag(id uint) (*Tag, error) {
+	sql := `SELECT name
+	        FROM tag
+	        WHERE id = ?`
+
+	rows, err := db.connection.Query(sql, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return nil, nil
+	}
+	if rows.Err() != nil {
+		return nil, err
+	}
+
+	var name string
+	err = rows.Scan(&name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tag{id, name}, nil
+}
+
+// Retrieves a specific tag.
 func (db Database) TagByName(name string) (*Tag, error) {
 	sql := `SELECT id
 	        FROM tag

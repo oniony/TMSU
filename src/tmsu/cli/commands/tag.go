@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -168,7 +167,6 @@ func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tag
 
 	//TODO move this logic into Storage
 	fileTag, err := store.FileTagByFileIdAndTagId(fileId, tag.Id)
-	fmt.Println("Found filetag", fileTag)
 	if err != nil {
 		return nil, nil, err
 	}

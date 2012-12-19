@@ -140,6 +140,38 @@ func (db *Database) FileTags(explicitOnly bool) (FileTags, error) {
 	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
+// Retrieves the count of file tags for the specified file.
+func (db *Database) FileTagCountByFileId(fileId uint, explicitOnly bool) (uint, error) {
+	sql := `SELECT count(1)
+            FROM file_tag
+            WHERE file_id = ?`
+
+	if explicitOnly {
+		sql += " AND explicit"
+	}
+
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	if !rows.Next() {
+		return 0, errors.New("Could not get file-tag count.")
+	}
+	if rows.Err() != nil {
+		return 0, err
+	}
+
+	var count uint
+	err = rows.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
+}
+
 // Retrieves the set of tags for the specified file.
 func (db *Database) TagsByFileId(fileId uint, explicitOnly bool) (Tags, error) {
 	sql := `SELECT id, name

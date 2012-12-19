@@ -89,7 +89,12 @@ func (storage *Storage) FileTags(explicitOnly bool) (database.FileTags, error) {
 	return storage.Db.FileTags(explicitOnly)
 }
 
-// Retrieves the set of explicit file tags for the specified file.
+// Retrieves the count of file tags for the specified file.
+func (storage *Storage) FileTagCountByFileId(fileId uint, explicitOnly bool) (uint, error) {
+	return storage.Db.FileTagCountByFileId(fileId, explicitOnly)
+}
+
+// Retrieves the set of file tags for the specified file.
 func (storage *Storage) TagsByFileId(fileId uint, explicitOnly bool) (database.Tags, error) {
 	return storage.Db.TagsByFileId(fileId, explicitOnly)
 }

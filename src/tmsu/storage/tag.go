@@ -31,6 +31,11 @@ func (storage *Storage) Tags() (database.Tags, error) {
 	return storage.Db.Tags()
 }
 
+// Retrieves a spceific tag.
+func (storage Storage) Tag(id uint) (*database.Tag, error) {
+	return storage.Db.Tag(id)
+}
+
 // Retrieves a specific tag.
 func (storage Storage) TagByName(name string) (*database.Tag, error) {
 	return storage.Db.TagByName(name)

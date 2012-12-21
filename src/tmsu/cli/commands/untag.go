@@ -242,16 +242,9 @@ func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.Fil
 		return errors.New("File '" + file.Path() + "' is not tagged '" + tag.Name + "'.")
 	}
 
-	if !filetag.Implicit {
-		err = store.RemoveFileTag(filetag.Id)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = store.UpdateFileTag(filetag.Id, false, true)
-		if err != nil {
-			return err
-		}
+	err = store.RemoveExplicitFileTag(filetag.Id)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -266,16 +259,9 @@ func (UntagCommand) removeImplicitTag(store *storage.Storage, file *database.Fil
 		return errors.New("File '" + file.Path() + "' is not tagged '" + tag.Name + "'.")
 	}
 
-	if !filetag.Explicit {
-		err = store.RemoveFileTag(filetag.Id)
-		if err != nil {
-			return err
-		}
-	} else {
-		err = store.UpdateFileTag(filetag.Id, true, false)
-		if err != nil {
-			return err
-		}
+	err = store.RemoveImplicitFileTag(filetag.Id)
+	if err != nil {
+		return err
 	}
 
 	return nil

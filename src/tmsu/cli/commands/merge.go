@@ -79,23 +79,9 @@ func (MergeCommand) Exec(options cli.Options, args []string) error {
 		}
 
 		for _, fileTag := range fileTags {
-			destFileTag, err := store.FileTagByFileIdAndTagId(fileTag.FileId, destTag.Id)
+			_, err = store.AddFileTag(fileTag.FileId, destTag.Id, fileTag.Explicit, fileTag.Implicit)
 			if err != nil {
 				return err
-			}
-			if destFileTag != nil {
-				if destFileTag.Explicit != fileTag.Explicit || destFileTag.Implicit != fileTag.Implicit {
-					//TODO bug if existing tagging
-					err = store.UpdateFileTag(destFileTag.Id, fileTag.Explicit || destFileTag.Explicit, fileTag.Implicit || destFileTag.Implicit)
-					if err != nil {
-						return err
-					}
-				}
-			} else {
-				_, err = store.AddFileTag(fileTag.FileId, destTag.Id, fileTag.Explicit, fileTag.Implicit)
-				if err != nil {
-					return err
-				}
 			}
 		}
 

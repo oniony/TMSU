@@ -197,8 +197,31 @@ func (db *Database) TagsByFileId(fileId uint, explicitOnly bool) (Tags, error) {
 	return readTags(rows, make(Tags, 0, 10))
 }
 
+// Retrieves the specified file tag
+func (db *Database) FileTag(fileTagId uint) (*FileTag, error) {
+	sql := `SELECT id, file_id, tag_id, explicit, implicit
+	        FROM file_tag
+	        WHERE id = ?`
+
+	rows, err := db.connection.Query(sql, fileTagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	fileTags, err := readFileTags(rows, make(FileTags, 0, 1))
+	if err != nil {
+		return nil, err
+	}
+	if len(fileTags) == 0 {
+		return nil, nil
+	}
+
+	return fileTags[0], nil
+}
+
 // Retrieves the file tag with the specified file ID and tag ID.
-func (db *Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, error) {
+func (db *Database) FileTagByFileIdAndTagId(fileId, tagId uint) (*FileTag, error) {
 	sql := `SELECT id, file_id, tag_id, explicit, implicit
 	        FROM file_tag
 	        WHERE file_id = ?
@@ -223,7 +246,7 @@ func (db *Database) FileTagByFileIdAndTagId(fileId uint, tagId uint) (*FileTag, 
 
 // Retrieves the set of file tags with the specified tag ID.
 func (db *Database) FileTagsByTagId(tagId uint, explicitOnly bool) (FileTags, error) {
-	sql := `SELECT id, file_id, tag_id
+	sql := `SELECT id, file_id, tag_id, explicit, implicit
 	        FROM file_tag
 	        WHERE tag_id = ?`
 
@@ -285,25 +308,28 @@ func (db *Database) InsertFileTag(fileId uint, tagId uint, explicit bool, implic
 	return &FileTag{uint(id), fileId, tagId, explicit, implicit}, nil
 }
 
-func (db *Database) UpdateFileTag(fileTagId uint, explicit bool, implicit bool) error {
+func (db *Database) UpdateFileTag(fileTagId, fileId, tagId uint, explicit bool, implicit bool) (*FileTag, error) {
 	sql := `UPDATE file_tag
-            SET explicit = ?, implicit = ?
+            SET file_id = ?,
+                tag_id = ?,
+                explicit = ?,
+                implicit = ?
             WHERE id = ?`
 
-	result, err := db.connection.Exec(sql, explicit, implicit, fileTagId)
+	result, err := db.connection.Exec(sql, fileId, tagId, explicit, implicit, fileTagId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if rowsAffected != 1 {
-		return errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return nil
+	return &FileTag{fileTagId, fileId, tagId, explicit, implicit}, nil
 }
 
 // Removes a file tag.

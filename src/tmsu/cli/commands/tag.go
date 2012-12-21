@@ -28,6 +28,8 @@ import (
 	"tmsu/storage/database"
 )
 
+//TODO the recursive tagPath checks the tag exists on every iteration
+
 type TagCommand struct{}
 
 func (TagCommand) Name() cli.CommandName {
@@ -54,6 +56,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
+	store, err := storage.Open()
+	if err != nil {
+		return err
+	}
+	defer store.Close()
+
 	if cli.HasOption(options, "--tags") {
 		if len(args) < 2 {
 			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
@@ -62,7 +70,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		tagNames := strings.Fields(args[0])
 		paths := args[1:]
 
-		err := command.tagPaths(paths, tagNames, true)
+		tags, err := command.lookupTags(store, tagNames)
+		if err != nil {
+			return err
+		}
+
+		err = command.tagPaths(store, paths, tags, true)
 		if err != nil {
 			return err
 		}
@@ -74,7 +87,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		path := args[0]
 		tagNames := args[1:]
 
-		err := command.tagPath(path, tagNames, true)
+		tags, err := command.lookupTags(store, tagNames)
+		if err != nil {
+			return err
+		}
+
+		err = command.tagPath(store, path, tags, true)
 		if err != nil {
 			return err
 		}
@@ -83,9 +101,37 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (command TagCommand) tagPaths(paths []string, tagNames []string, explicit bool) error {
+func (command TagCommand) lookupTags(store *storage.Storage, names []string) (database.Tags, error) {
+	tags := make(database.Tags, len(names))
+
+	for index, name := range names {
+		err := cli.ValidateTagName(name)
+		if err != nil {
+			return nil, err
+		}
+
+		tag, err := store.TagByName(name)
+		if err != nil {
+			return nil, err
+		}
+
+		if tag == nil {
+			log.Warnf("New tag '%v'.", name)
+			tag, err = store.AddTag(name)
+			if err != nil {
+				return nil, err
+			}
+		}
+
+		tags[index] = tag
+	}
+
+	return tags, nil
+}
+
+func (command TagCommand) tagPaths(store *storage.Storage, paths []string, tags database.Tags, explicit bool) error {
 	for _, path := range paths {
-		err := command.tagPath(path, tagNames, explicit)
+		err := command.tagPath(store, path, tags, explicit)
 		if err != nil {
 			return err
 		}
@@ -94,17 +140,11 @@ func (command TagCommand) tagPaths(paths []string, tagNames []string, explicit b
 	return nil
 }
 
-func (command TagCommand) tagPath(path string, tagNames []string, explicit bool) error {
+func (command TagCommand) tagPath(store *storage.Storage, path string, tags database.Tags, explicit bool) error {
 	osInfo, err := os.Stat(path)
 	if err != nil {
 		return err
 	}
-
-	store, err := storage.Open()
-	if err != nil {
-		return err
-	}
-	defer store.Close()
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
@@ -116,8 +156,13 @@ func (command TagCommand) tagPath(path string, tagNames []string, explicit bool)
 		return err
 	}
 
-	for _, tagName := range tagNames {
-		_, _, err = command.applyTag(store, path, file.Id, tagName, explicit)
+	for _, tag := range tags {
+		if explicit {
+			_, err = store.AddExplicitFileTag(file.Id, tag.Id)
+		} else {
+			_, err = store.AddImplicitFileTag(file.Id, tag.Id)
+		}
+
 		if err != nil {
 			return err
 		}
@@ -140,48 +185,8 @@ func (command TagCommand) tagPath(path string, tagNames []string, explicit bool)
 
 	for _, entryName := range entryNames {
 		entryPath := filepath.Join(path, entryName)
-		command.tagPath(entryPath, tagNames, false)
+		command.tagPath(store, entryPath, tags, false)
 	}
 
 	return nil
-}
-
-func (TagCommand) applyTag(store *storage.Storage, path string, fileId uint, tagName string, explicit bool) (*database.Tag, *database.FileTag, error) {
-	err := cli.ValidateTagName(tagName)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	tag, err := store.TagByName(tagName)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if tag == nil {
-		log.Warnf("New tag '%v'.", tagName)
-		tag, err = store.AddTag(tagName)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	//TODO move this logic into Storage
-	fileTag, err := store.FileTagByFileIdAndTagId(fileId, tag.Id)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	if fileTag == nil {
-		_, err := store.AddFileTag(fileId, tag.Id, explicit, !explicit)
-		if err != nil {
-			return nil, nil, err
-		}
-	} else {
-		err := store.UpdateFileTag(fileTag.Id, fileTag.Explicit || explicit, fileTag.Implicit || !explicit)
-		if err != nil {
-			return nil, nil, err
-		}
-	}
-
-	return tag, fileTag, nil
 }

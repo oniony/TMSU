@@ -64,13 +64,13 @@ func (storage *Storage) DuplicateFiles() ([]database.Files, error) {
 }
 
 // Adds a file to the database.
-func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*database.File, error) {
-	return storage.Db.InsertFile(path, fingerprint, modTime)
+func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*database.File, error) {
+	return storage.Db.InsertFile(path, fingerprint, modTime, size)
 }
 
 // Updates a file in the database.
-func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
-	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime)
+func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) error {
+	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size)
 }
 
 // Removes a file from the database.

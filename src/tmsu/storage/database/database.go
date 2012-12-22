@@ -77,15 +77,6 @@ func (db Database) CreateSchema() error {
 	var sql string
 	var err error
 
-	sql = `CREATE TABLE IF NOT EXISTS tmsu (
-                schema_version TEXT
-            )`
-
-	_, err = db.connection.Exec(sql)
-	if err != nil {
-		return err
-	}
-
 	sql = `CREATE TABLE IF NOT EXISTS tag (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
@@ -110,6 +101,7 @@ func (db Database) CreateSchema() error {
                name TEXT NOT NULL,
                fingerprint TEXT NOT NULL,
                mod_time DATETIME NOT NULL,
+               size INTEGER NOT NULL,
                CONSTRAINT con_file_path UNIQUE (directory, name)
            )`
 

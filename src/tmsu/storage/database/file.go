@@ -32,6 +32,7 @@ type File struct {
 	Name         string
 	Fingerprint  fingerprint.Fingerprint
 	ModTimestamp time.Time
+	Size         int64
 }
 
 type Files []*File
@@ -70,7 +71,7 @@ func (db *Database) FileCount() (uint, error) {
 
 // The complete set of tracked files.
 func (db *Database) Files() (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        ORDER BY directory, name`
 
@@ -85,7 +86,7 @@ func (db *Database) Files() (Files, error) {
 
 // Retrieves a specific file.
 func (db *Database) File(id uint) (*File, error) {
-	sql := `SELECT directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        WHERE id = ?`
 
@@ -95,23 +96,15 @@ func (db *Database) File(id uint) (*File, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
-	if rows.Err() != nil {
-		return nil, err
-	}
-
-	var directory string
-	var name string
-	var fp string
-	var modTime time.Time
-	err = rows.Scan(&directory, &name, &fp, &modTime)
+	files, err := readFiles(rows, make(Files, 0, 1))
 	if err != nil {
 		return nil, err
 	}
+	if len(files) == 0 {
+		return nil, nil
+	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp), modTime}, nil
+	return files[0], nil
 }
 
 // Retrieves the file with the specified path.
@@ -119,7 +112,7 @@ func (db *Database) FileByPath(path string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `SELECT id, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
@@ -129,27 +122,20 @@ func (db *Database) FileByPath(path string) (*File, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
-	if rows.Err() != nil {
-		return nil, err
-	}
-
-	var id uint
-	var fp string
-	var modTime time.Time
-	err = rows.Scan(&id, &fp, &modTime)
+	files, err := readFiles(rows, make(Files, 0, 1))
 	if err != nil {
 		return nil, err
 	}
+	if len(files) == 0 {
+		return nil, nil
+	}
 
-	return &File{id, directory, name, fingerprint.Fingerprint(fp), modTime}, nil
+	return files[0], nil
 }
 
 // Retrieves all files that are under the specified directory.
 func (db *Database) FilesByDirectory(path string) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE name = ? OR directory = ? OR directory LIKE ?
             ORDER BY directory, name`
@@ -160,22 +146,9 @@ func (db *Database) FilesByDirectory(path string) (Files, error) {
 	}
 	defer rows.Close()
 
-	files := make(Files, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var fileId uint
-		var dir string
-		var name string
-		var fp string
-		var modTime time.Time
-		err = rows.Scan(&fileId, &dir, &name, &fp, &modTime)
-		if err != nil {
-			return nil, err
-		}
-		files = append(files, &File{fileId, dir, name, fingerprint.Fingerprint(fp), modTime})
+	files, err := readFiles(rows, make(Files, 0, 1))
+	if err != nil {
+		return nil, err
 	}
 
 	return files, nil
@@ -211,7 +184,7 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
 
 // Retrieves the set of files with the specified fingerprint.
 func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
-	sql := `SELECT id, directory, name, mod_time
+	sql := `SELECT id, directory, name, mod_time, size
 	        FROM file
 	        WHERE fingerprint = ?
 	        ORDER BY directory, name`
@@ -222,30 +195,12 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 	}
 	defer rows.Close()
 
-	files := make(Files, 0, 10)
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, err
-		}
-
-		var fileId uint
-		var directory string
-		var name string
-		var modTime time.Time
-		err = rows.Scan(&fileId, &directory, &name, &modTime)
-		if err != nil {
-			return nil, err
-		}
-
-		files = append(files, &File{fileId, directory, name, fingerprint, modTime})
-	}
-
-	return files, nil
+	return readFiles(rows, make(Files, 0, 1))
 }
 
 // Retrieves the sets of duplicate files within the database.
 func (db *Database) DuplicateFiles() ([]Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE fingerprint IN (SELECT fingerprint
                                   FROM file
@@ -270,11 +225,10 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 		}
 
 		var fileId uint
-		var directory string
-		var name string
-		var fp string
+		var directory, name, fp string
 		var modTime time.Time
-		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime)
+		var size int64
+		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
 		if err != nil {
 			return nil, err
 		}
@@ -289,7 +243,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, modTime})
+		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, modTime, size})
 	}
 
 	// ensure last file set is added
@@ -301,14 +255,14 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 }
 
 // Adds a file to the database.
-func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time) (*File, error) {
+func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `INSERT INTO file (directory, name, fingerprint, mod_time)
-	        VALUES (?, ?, ?, ?)`
+	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size)
+	        VALUES (?, ?, ?, ?, ?)`
 
-	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime)
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size)
 	if err != nil {
 		return nil, err
 	}
@@ -326,21 +280,29 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return &File{uint(id), directory, name, fingerprint, modTime}, nil
+	return &File{uint(id), directory, name, fingerprint, modTime, size}, nil
 }
 
 // Updates a file in the database.
-func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time) error {
+func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) error {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
 	sql := `UPDATE file
-	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?
+	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?
 	        WHERE id = ?`
 
-	_, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, int(fileId))
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size, int(fileId))
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return errors.New("Expected exactly one row to be affected.")
 	}
 
 	return nil
@@ -372,6 +334,7 @@ func (db *Database) DeleteFile(fileId uint) error {
 		return errors.New("Expected exactly one row to be affected.")
 	}
 
+	//TODO move up to storage
 	files, err := db.FilesByDirectory(file.Path())
 	if err != nil {
 		return err
@@ -387,6 +350,14 @@ func (db *Database) DeleteFile(fileId uint) error {
 			result, err = db.connection.Exec(sql, file.Id)
 			if err != nil {
 				return err
+			}
+
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				return err
+			}
+			if rowsAffected != 1 {
+				return errors.New("Expected exactly one row to be affected.")
 			}
 		}
 	}
@@ -405,12 +376,13 @@ func readFiles(rows *sql.Rows, files Files) (Files, error) {
 		var fileId uint
 		var directory, name, fp string
 		var modTime time.Time
-		err := rows.Scan(&fileId, &directory, &name, &fp, &modTime)
+		var size int64
+		err := rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
 		if err != nil {
 			return nil, err
 		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime})
+		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime, size})
 	}
 
 	return files, nil

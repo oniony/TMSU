@@ -141,9 +141,6 @@ func (storage *Storage) AddExplicitFileTag(fileId, tagId uint) (*database.FileTa
 	if err != nil {
 		return nil, err
 	}
-	if fileTag == nil {
-		return nil, errors.New(fmt.Sprintf("No file tag for file '%v' and tag '%v'.", fileId, tagId))
-	}
 
 	if fileTag == nil {
 		fileTag, err = storage.Db.InsertFileTag(fileId, tagId, true, false)
@@ -163,9 +160,6 @@ func (storage *Storage) AddImplicitFileTag(fileId, tagId uint) (*database.FileTa
 	fileTag, err := storage.Db.FileTagByFileIdAndTagId(fileId, tagId)
 	if err != nil {
 		return nil, err
-	}
-	if fileTag == nil {
-		return nil, errors.New(fmt.Sprintf("No file tag for file '%v' and tag '%v'.", fileId, tagId))
 	}
 
 	if fileTag == nil {

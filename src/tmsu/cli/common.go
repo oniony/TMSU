@@ -71,6 +71,7 @@ func AddFile(store *storage.Storage, path string) (*database.File, error) {
 		}
 	}
 	modTime := info.ModTime().UTC()
+	size := info.Size()
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
@@ -96,7 +97,7 @@ func AddFile(store *storage.Storage, path string) (*database.File, error) {
 			}
 		}
 
-		file, err = store.AddFile(path, fingerprint, modTime)
+		file, err = store.AddFile(path, fingerprint, modTime, size)
 		if err != nil {
 			return nil, err
 		}
@@ -124,7 +125,7 @@ func AddFile(store *storage.Storage, path string) (*database.File, error) {
 		// existing file
 
 		if file.ModTimestamp.Unix() != modTime.Unix() {
-			store.UpdateFile(file.Id, file.Path(), fingerprint, modTime)
+			store.UpdateFile(file.Id, file.Path(), fingerprint, modTime, size)
 		}
 	}
 

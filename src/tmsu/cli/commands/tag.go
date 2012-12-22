@@ -28,8 +28,6 @@ import (
 	"tmsu/storage/database"
 )
 
-//TODO the recursive tagPath checks the tag exists on every iteration
-
 type TagCommand struct{}
 
 func (TagCommand) Name() cli.CommandName {

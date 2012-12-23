@@ -59,7 +59,7 @@ func (db *Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
 }
 
 func (db *Database) FilesWithTags(tagIds []uint, explicitOnly bool) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE id IN (
                 SELECT file_id

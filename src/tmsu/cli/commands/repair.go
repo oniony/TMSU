@@ -29,7 +29,6 @@ import (
 )
 
 //TODO add missing implicit taggings
-//TODO add missing fingerprints, mod_times and sizes
 //TODO delete implicitly tagged files that are missing
 //TODO handle directory being replaced by a file (currently causes error)
 
@@ -91,7 +90,12 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	defer store.Close()
 
 	for _, path := range args {
-		entries, err := store.FilesByDirectory(path)
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
+
+		entries, err := store.FilesByDirectory(absPath)
 		if err != nil {
 			return err
 		}

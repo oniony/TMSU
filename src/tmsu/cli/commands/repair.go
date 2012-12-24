@@ -113,7 +113,7 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 
 func (command RepairCommand) checkEntry(entry *database.File, store *storage.Storage, pathsBySize map[int64][]string) error {
 	if command.verbose {
-		fmt.Printf("Checking '%v'.\n", entry.Path())
+		fmt.Printf("'%v': checking.\n", entry.Path())
 	}
 
 	info, err := os.Stat(entry.Path())
@@ -125,7 +125,7 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 				return err
 			}
 		case os.IsPermission(err):
-			log.Warnf("'%v': Permission denied.", entry.Path())
+			log.Warnf("'%v': permission denied.", entry.Path())
 		default:
 			log.Warnf("'%v': %v", entry.Path(), err)
 		}
@@ -135,13 +135,9 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 	modTime := info.ModTime().UTC()
 	size := info.Size()
 
-	if info.IsDir() {
-		command.processDirectory(store, entry.Path())
-	}
-
 	if modTime.Unix() != entry.ModTimestamp.Unix() || size != entry.Size {
 		if command.verbose {
-			fmt.Printf("'%v' is modified: updating entry in database.\n", entry.Path())
+			fmt.Printf("'%v': updating entry in database.\n", entry.Path())
 		}
 
 		fingerprint, err := fingerprint.Create(entry.Path())
@@ -154,22 +150,30 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 			return err
 		}
 
-		fmt.Printf("'%v': Modified.\n", entry.Path())
+		fmt.Printf("'%v': modified.\n", entry.Path())
 	} else {
 		if command.verbose {
-			fmt.Printf("'%v': Unchanged.\n", entry.Path())
+			fmt.Printf("'%v': unchanged.\n", entry.Path())
+		}
+	}
+
+	if info.IsDir() {
+		tags, err := store.TagsByFileId(entry.Id, false)
+		if err != nil {
+			return err
+		}
+
+		err = command.processDirectory(store, entry, tags)
+		if err != nil {
+			return err
 		}
 	}
 
 	return nil
 }
 
-func (command RepairCommand) processDirectory(store *storage.Storage, path string) error {
-	if command.verbose {
-		fmt.Printf("Checking directory contents.\n")
-	}
-
-	dir, err := os.Open(path)
+func (command RepairCommand) processDirectory(store *storage.Storage, entry *database.File, tags database.Tags) error {
+	dir, err := os.Open(entry.Path())
 	if err != nil {
 		return err
 	}
@@ -183,30 +187,54 @@ func (command RepairCommand) processDirectory(store *storage.Storage, path strin
 	dir.Close()
 
 	for _, filename := range filenames {
-		childPath := filepath.Join(path, filename)
+		childPath := filepath.Join(entry.Path(), filename)
 
-		file, err := store.FileByPath(childPath)
+		childFile, err := store.FileByPath(childPath)
 		if err != nil {
 			return err
 		}
-		if file == nil {
+		if childFile == nil {
 			if command.verbose {
-				fmt.Printf("'%v' is new: adding to database.\n", childPath)
+				fmt.Printf("'%v': new.\n", childPath)
 			}
 
-			cli.AddFile(store, childPath)
-			//TODO add implicit tags
+			childFile, err = cli.AddFile(store, childPath)
+			if err != nil {
+				return err
+			}
+		}
+
+		for _, tag := range tags {
+			filetag, err := store.FileTagByFileIdAndTagId(childFile.Id, tag.Id)
+			if err != nil {
+				return err
+			}
+
+			if filetag == nil || !filetag.Implicit {
+				fmt.Printf("'%v': creating missing implicit tagging '%v'.\n", childPath, tag.Name)
+
+				_, err := store.AddImplicitFileTag(childFile.Id, tag.Id)
+				if err != nil {
+					return err
+				}
+			}
 		}
 	}
-
-	//TODO remove files in the directory that are no longer on disk
 
 	return nil
 }
 
 func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySize map[int64][]string, store *storage.Storage) error {
+	if entry.Fingerprint == "" {
+		if command.verbose {
+			fmt.Printf("'%v': not searching for new location (no fingerprint).\n", entry.Path())
+		}
+
+		return nil
+	}
+
 	if command.verbose {
-		fmt.Printf("Missing: searching for new location.\n")
+		fmt.Printf("'%v': searching for new location.\n", entry.Path())
 	}
 
 	paths, found := pathsBySize[entry.Size]
@@ -217,13 +245,9 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 				return err
 			}
 
-			if fingerprint == "" {
-				break
-			}
-
 			if fingerprint == entry.Fingerprint {
 				if command.verbose {
-					fmt.Printf("'%v' found at '%v': updating location in database.\n", entry.Path(), path)
+					fmt.Printf("'%v': file with same fingerprint found at '%v'\n", entry.Path(), path)
 				}
 
 				info, err := os.Stat(path)
@@ -236,13 +260,13 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 					return err
 				}
 
-				fmt.Printf("'%v': Moved to '%v'.\n", entry.Path(), path)
+				fmt.Printf("'%v': moved to '%v'.\n", entry.Path(), path)
 				return nil
 			}
 		}
 	}
 
-	log.Warnf("'%v': Missing.", entry.Path())
+	log.Warnf("'%v': missing.", entry.Path())
 	return nil
 }
 
@@ -258,7 +282,7 @@ func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]str
 		if err != nil {
 			switch {
 			case os.IsPermission(err):
-				log.Warnf("'%v': Permission denied.")
+				log.Warnf("'%v': permission denied.")
 				continue
 			}
 

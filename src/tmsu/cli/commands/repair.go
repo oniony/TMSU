@@ -56,6 +56,7 @@ Repairs tagged files and directories under PATHs by:
     1. Identifying modified files.
     2. Identifying new files.
     3. Identifying moved files.
+    4. Adding missing implicit taggings.
 
 Where no PATHS are specified all tagged files and directories fingerprints in
 the database are checked and their fingerprints updated where modifications are
@@ -144,18 +145,16 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 			return err
 		}
 
-		if fingerprint != entry.Fingerprint {
-			err = store.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime, size)
-			if err != nil {
-				return err
-			}
-
-			fmt.Printf("'%v': Modified.\n", entry.Path())
+		err = store.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime, size)
+		if err != nil {
+			return err
 		}
-	}
 
-	if command.verbose {
-		fmt.Printf("'%v': Unchanged.\n", entry.Path())
+		fmt.Printf("'%v': Modified.\n", entry.Path())
+	} else {
+		if command.verbose {
+			fmt.Printf("'%v': Unchanged.\n", entry.Path())
+		}
 	}
 
 	return nil

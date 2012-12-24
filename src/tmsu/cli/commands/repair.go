@@ -28,6 +28,8 @@ import (
 	"tmsu/storage/database"
 )
 
+//TODO add missing implicit taggings
+//TODO add missing fingerprints, mod_times and sizes
 //TODO delete implicitly tagged files that are missing
 //TODO handle directory being replaced by a file (currently causes error)
 
@@ -74,10 +76,6 @@ func (RepairCommand) Options() cli.Options {
 }
 
 func (command RepairCommand) Exec(options cli.Options, args []string) error {
-	if len(args) == 0 {
-		args = []string{"."}
-	}
-
 	command.verbose = cli.HasOption(options, "--verbose")
 
 	pathsBySize, err := command.buildFileSystemMap(args)
@@ -265,6 +263,10 @@ func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]str
 		}
 	}
 
+	if command.verbose {
+		fmt.Printf("Finished building map of files by size.\n")
+	}
+
 	return pathsBySize, nil
 }
 
@@ -285,13 +287,6 @@ func (command RepairCommand) buildFileSystemMapRecursive(path string, pathsBySiz
 		return err
 	}
 
-	paths, found := pathsBySize[info.Size()]
-	if !found {
-		paths = make([]string, 0, 10)
-	}
-	paths = append(paths, path)
-	pathsBySize[info.Size()] = paths
-
 	if info.IsDir() {
 		dirEntries, err := file.Readdir(0)
 		if err != nil {
@@ -305,6 +300,15 @@ func (command RepairCommand) buildFileSystemMapRecursive(path string, pathsBySiz
 		}
 	} else {
 		file.Close()
+
+		if info.Size() > 0 {
+			paths, found := pathsBySize[info.Size()]
+			if !found {
+				paths = make([]string, 0, 10)
+			}
+			paths = append(paths, path)
+			pathsBySize[info.Size()] = paths
+		}
 	}
 
 	return nil

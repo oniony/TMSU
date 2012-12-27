@@ -3,8 +3,11 @@
     o Batch insert.
     o FileTag creation.
     o Tag removal.
-* Add verbosity.
+    o Think about putting explicit and implict taggings in separate tables.
+* Add verbosity to all commands.
 * Make implict tags an option.
+* Repair command fixes
+    o Implicit files and taggings should be remove if file has gone.
+    o Renamed/moved implicitly tagged files should be detected and repaired.
 * Repair command should remove implicit files and taggings if file has gone.
 * Command line options that take an argument do not work properly.
-* Replace literal bools with enum type.

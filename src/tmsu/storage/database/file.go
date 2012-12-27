@@ -184,7 +184,7 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
 
 // Retrieves the set of files with the specified fingerprint.
 func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
-	sql := `SELECT id, directory, name, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        WHERE fingerprint = ?
 	        ORDER BY directory, name`

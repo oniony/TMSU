@@ -106,6 +106,17 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 				return err
 			}
 		}
+
+		entry, err := store.FileByPath(absPath)
+		if err != nil {
+			return err
+		}
+
+		err = command.checkEntry(entry, store, pathsBySize)
+		if err != nil {
+			return err
+		}
+
 	}
 
 	return nil

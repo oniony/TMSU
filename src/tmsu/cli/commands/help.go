@@ -48,7 +48,7 @@ func (HelpCommand) Options() cli.Options {
 }
 
 func (command HelpCommand) Exec(options cli.Options, args []string) error {
-	if cli.HasOption(options, "--list") {
+	if options.HasOption("--list") {
 		command.listCommands()
 	} else {
 		switch len(args) {

@@ -43,16 +43,6 @@ func LookupOption(command Command, name string) *Option {
 	return nil
 }
 
-func HasOption(options Options, name string) bool {
-	for _, option := range options {
-		if option.LongName == name || option.ShortName == name {
-			return true
-		}
-	}
-
-	return false
-}
-
 var globalOptions = Options{Option{"-v", "--verbose", "show verbose messages"},
 	Option{"-h", "--help", "show help and exit"},
 	Option{"-V", "--version", "show version information and exit"}}

@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -28,7 +29,9 @@ import (
 	"tmsu/storage/database"
 )
 
-type TagCommand struct{}
+type TagCommand struct {
+	verbose bool
+}
 
 func (TagCommand) Name() cli.CommandName {
 	return "tag"
@@ -54,13 +57,15 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		return errors.New("Too few arguments.")
 	}
 
+	command.verbose = options.HasOption("--verbose")
+
 	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
 	defer store.Close()
 
-	if cli.HasOption(options, "--tags") {
+	if options.HasOption("--tags") {
 		if len(args) < 2 {
 			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
 		}
@@ -100,28 +105,22 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 }
 
 func (command TagCommand) lookupTags(store *storage.Storage, names []string) (database.Tags, error) {
-	tags := make(database.Tags, len(names))
+	tags, err := store.TagsByNames(names)
+	if err != nil {
+		return nil, err
+	}
 
-	for index, name := range names {
-		err := cli.ValidateTagName(name)
-		if err != nil {
-			return nil, err
-		}
-
-		tag, err := store.TagByName(name)
-		if err != nil {
-			return nil, err
-		}
-
-		if tag == nil {
+	for _, name := range names {
+		if !tags.Any(func(tag *database.Tag) bool { return tag.Name == name }) {
 			log.Warnf("New tag '%v'.", name)
-			tag, err = store.AddTag(name)
+
+			tag, err := store.AddTag(name)
 			if err != nil {
 				return nil, err
 			}
-		}
 
-		tags[index] = tag
+			tags = append(tags, tag)
+		}
 	}
 
 	return tags, nil
@@ -149,15 +148,26 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 		return err
 	}
 
-	file, err := cli.AddFile(store, absPath)
+	if command.verbose {
+		fmt.Printf("'%v': adding/updating file.\n", path)
+	}
+
+	file, err := cli.AddOrUpdateFile(store, absPath)
 	if err != nil {
 		return err
 	}
 
 	for _, tag := range tags {
 		if explicit {
+			if command.verbose {
+				fmt.Printf("'%v': adding explicit tag '%v'.\n", path, tag.Name)
+			}
+
 			_, err = store.AddExplicitFileTag(file.Id, tag.Id)
 		} else {
+			if command.verbose {
+				fmt.Printf("'%v': adding implicit tag '%v'.\n", path, tag.Name)
+			}
 			_, err = store.AddImplicitFileTag(file.Id, tag.Id)
 		}
 

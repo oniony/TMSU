@@ -49,11 +49,11 @@ func (FilesCommand) Options() cli.Options {
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
-	if cli.HasOption(options, "--all") {
+	if options.HasOption("--all") {
 		return command.listAllFiles()
 	}
 
-	explicitOnly := cli.HasOption(options, "--explicit")
+	explicitOnly := options.HasOption("--explicit")
 
 	return command.listFiles(args, explicitOnly)
 }

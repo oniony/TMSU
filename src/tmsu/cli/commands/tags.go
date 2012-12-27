@@ -51,11 +51,11 @@ func (TagsCommand) Options() cli.Options {
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {
-	if cli.HasOption(options, "--all") {
+	if options.HasOption("--all") {
 		return command.listAllTags()
 	}
 
-	explicitOnly := cli.HasOption(options, "--explicit")
+	explicitOnly := options.HasOption("--explicit")
 
 	return command.listTags(args, explicitOnly)
 }

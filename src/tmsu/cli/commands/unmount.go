@@ -47,7 +47,7 @@ func (UnmountCommand) Options() cli.Options {
 }
 
 func (command UnmountCommand) Exec(options cli.Options, args []string) error {
-	if cli.HasOption(options, "--all") {
+	if options.HasOption("--all") {
 		return command.unmountAll()
 	}
 

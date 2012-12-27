@@ -20,6 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"strings"
 )
 
 type Tag struct {
@@ -39,6 +40,16 @@ func (tags Tags) Swap(i, j int) {
 
 func (tags Tags) Less(i, j int) bool {
 	return tags[i].Name < tags[j].Name
+}
+
+func (tags Tags) Any(predicate func(*Tag) bool) bool {
+	for _, tag := range tags {
+		if predicate(tag) {
+			return true
+		}
+	}
+
+	return false
 }
 
 // The number of tags in the database.
@@ -137,6 +148,31 @@ func (db Database) TagByName(name string) (*Tag, error) {
 	}
 
 	return &Tag{id, name}, nil
+}
+
+// Retrieves the set of named tags.
+func (db Database) TagsByNames(names []string) (Tags, error) {
+	if len(names) == 0 {
+		return make(Tags, 0), nil
+	}
+
+	sql := `SELECT id, name
+            FROM tag
+            WHERE name IN (?`
+	sql += strings.Repeat(",?", len(names)-1)
+	sql += ")"
+
+	castNames := make([]interface{}, len(names))
+	for index, name := range names {
+		castNames[index] = name
+	}
+
+	result, err := db.connection.Query(sql, castNames...)
+	if err != nil {
+		return nil, err
+	}
+
+	return readTags(result, make(Tags, 0, len(names)))
 }
 
 // Adds a tag.

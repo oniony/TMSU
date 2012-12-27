@@ -40,3 +40,13 @@ type Option struct {
 }
 
 type Options []Option
+
+func (options Options) HasOption(name string) bool {
+	for _, option := range options {
+		if option.LongName == name || option.ShortName == name {
+			return true
+		}
+	}
+
+	return false
+}

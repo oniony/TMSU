@@ -76,7 +76,7 @@ func (RepairCommand) Options() cli.Options {
 }
 
 func (command RepairCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = cli.HasOption(options, "--verbose")
+	command.verbose = options.HasOption("--verbose")
 
 	pathsBySize, err := command.buildFileSystemMap(args)
 	if err != nil {
@@ -209,7 +209,7 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 				fmt.Printf("'%v': new.\n", childPath)
 			}
 
-			childFile, err = cli.AddFile(store, childPath)
+			childFile, err = cli.AddOrUpdateFile(store, childPath)
 			if err != nil {
 				return err
 			}

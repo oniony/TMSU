@@ -78,7 +78,7 @@ func (StatusCommand) Options() cli.Options {
 }
 
 func (command StatusCommand) Exec(options cli.Options, args []string) error {
-	showDirectory := cli.HasOption(options, "--directory")
+	showDirectory := options.HasOption("--directory")
 
 	report := NewReport()
 

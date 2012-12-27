@@ -57,7 +57,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 		return errors.New("No arguments specified.")
 	}
 
-	command.verbose = cli.HasOption(options, "--verbose")
+	command.verbose = options.HasOption("--verbose")
 
 	store, err := storage.Open()
 	if err != nil {
@@ -65,7 +65,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 	}
 	defer store.Close()
 
-	if cli.HasOption(options, "--all") {
+	if options.HasOption("--all") {
 		if len(args) < 1 {
 			return errors.New("Files to untag must be specified.")
 		}
@@ -76,7 +76,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 		if err != nil {
 			return err
 		}
-	} else if cli.HasOption(options, "--tags") {
+	} else if options.HasOption("--tags") {
 		if len(args) < 2 {
 			return errors.New("Quoted set of tags and at least one file to untag must be specified.")
 		}

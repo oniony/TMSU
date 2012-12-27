@@ -1,5 +1,8 @@
-* Batch insert.
-* Optimize tag removal.
+* Fix 'status' command.
+* Optimizations
+    o Batch insert.
+    o FileTag creation.
+    o Tag removal.
 * Add verbosity.
 * Make implict tags an option.
 * Repair command should remove implicit files and taggings if file has gone.

@@ -20,7 +20,6 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"tmsu/storage/database"
 )
 
@@ -99,25 +98,6 @@ func (storage *Storage) FileTagCountByFileId(fileId uint, explicitOnly bool) (ui
 // Retrieves the set of file tags for the specified file.
 func (storage *Storage) TagsByFileId(fileId uint, explicitOnly bool) (database.Tags, error) {
 	return storage.Db.TagsByFileId(fileId, explicitOnly)
-}
-
-// Retrieves the set of tags for the specified path.
-func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Tags, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, err
-	}
-
-	file, err := storage.Db.FileByPath(absPath)
-	if err != nil {
-		return nil, err
-	}
-
-	if file == nil {
-		return database.Tags{}, nil
-	}
-
-	return storage.Db.TagsByFileId(file.Id, explicitOnly)
 }
 
 // Retrieves the file tag with the specified file ID and tag ID.

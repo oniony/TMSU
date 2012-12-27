@@ -58,7 +58,7 @@ func ValidateTagName(tagName string) error {
 	return nil
 }
 
-func AddFile(store *storage.Storage, path string) (*database.File, error) {
+func AddOrUpdateFile(store *storage.Storage, path string) (*database.File, error) {
 	info, err := os.Stat(path)
 	if err != nil {
 		switch {
@@ -115,7 +115,7 @@ func AddFile(store *storage.Storage, path string) (*database.File, error) {
 			}
 
 			for _, dirFilename := range dirFilenames {
-				_, err = AddFile(store, filepath.Join(path, dirFilename))
+				_, err = AddOrUpdateFile(store, filepath.Join(path, dirFilename))
 				if err != nil {
 					return nil, err
 				}

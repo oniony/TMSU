@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"path/filepath"
 	"tmsu/storage/database"
 )
 
@@ -39,6 +40,30 @@ func (storage Storage) Tag(id uint) (*database.Tag, error) {
 // Retrieves a specific tag.
 func (storage Storage) TagByName(name string) (*database.Tag, error) {
 	return storage.Db.TagByName(name)
+}
+
+// Retrieves the set of named tags.
+func (storage Storage) TagsByNames(names []string) (database.Tags, error) {
+	return storage.Db.TagsByNames(names)
+}
+
+// Retrieves the set of tags for the specified path.
+func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Tags, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := storage.Db.FileByPath(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if file == nil {
+		return database.Tags{}, nil
+	}
+
+	return storage.Db.TagsByFileId(file.Id, explicitOnly)
 }
 
 // The set of further tags for which there are tagged files given

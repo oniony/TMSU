@@ -68,10 +68,10 @@ func (parser *Parser) Parse(args []string) (CommandName, Options, []string, erro
 		options = append(options, *option)
 	}
 
-	if HasOption(options, "--version") {
+	if options.HasOption("--version") {
 		commandName = "version"
 	}
-	if HasOption(options, "--help") {
+	if options.HasOption("--help") {
 		commandName = "help"
 	}
 

@@ -1,0 +1,7 @@
+* Batch insert.
+* Optimize tag removal.
+* Add verbosity.
+* Make implict tags an option.
+* Repair command should remove implicit files and taggings if file has gone.
+* Command line options that take an argument do not work properly.
+* Replace literal bools with enum type.

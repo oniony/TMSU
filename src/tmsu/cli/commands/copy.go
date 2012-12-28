@@ -1,5 +1,5 @@
 /*
-Copyright 2011-2012 Paul Ruane.
+Copyright 2011-2013 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -23,7 +23,9 @@ import (
 	"tmsu/storage"
 )
 
-type CopyCommand struct{}
+type CopyCommand struct {
+	verbose bool
+}
 
 func (CopyCommand) Name() cli.CommandName {
 	return "copy"

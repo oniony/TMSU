@@ -1,10 +1,10 @@
 * Fix 'status' command.
-* Optimizations
-    o Batch insert.
-    o FileTag creation.
-    o Tag removal.
-    o Think about putting explicit and implict taggings in separate tables.
 * Add verbosity to all commands.
+* Optimizations
+    o Batch insert where possible.
+    o FileTag creation is slow, especially for implicit files.
+    o Tag removal is painfully slow.
+    o Think about putting explicit and implict taggings in separate tables to facilitate batch insert.
 * Make implict tags an option.
 * Repair command fixes
     o Implicit files and taggings should be remove if file has gone.

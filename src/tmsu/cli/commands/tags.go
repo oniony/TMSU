@@ -24,6 +24,7 @@ import (
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type TagsCommand struct{}
@@ -99,7 +100,15 @@ func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 }
 
 func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, explicitOnly bool) error {
-	tags, err := store.TagsForPath(path, explicitOnly)
+	var tags database.Tags
+	var err error
+
+	if explicitOnly {
+		tags, err = store.ExplicitTagsForPath(path)
+	} else {
+		tags, err = store.TagsForPath(path)
+	}
+
 	if err != nil {
 		return err
 	}
@@ -113,7 +122,15 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 
 func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string, explicitOnly bool) error {
 	for _, path := range paths {
-		tags, err := store.TagsForPath(path, explicitOnly)
+		var tags database.Tags
+		var err error
+
+		if explicitOnly {
+			tags, err = store.ExplicitTagsForPath(path)
+		} else {
+			tags, err = store.TagsForPath(path)
+		}
+
 		if err != nil {
 			log.Warn(err.Error())
 			continue
@@ -144,7 +161,13 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		tags, err := store.TagsForPath(dirName, explicitOnly)
+		var tags database.Tags
+		if explicitOnly {
+			tags, err = store.ExplicitTagsForPath(dirName)
+		} else {
+			tags, err = store.TagsForPath(dirName)
+		}
+
 		if err != nil {
 			switch {
 			case os.IsNotExist(err):

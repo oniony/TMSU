@@ -63,20 +63,7 @@ func (db *Database) TagCount() (uint, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, errors.New("Could not get tag count.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
-
-	var count uint
-	err = rows.Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return readCount(rows)
 }
 
 // The set of tags.
@@ -96,7 +83,7 @@ func (db Database) Tags() (Tags, error) {
 
 // Retrieves a specific tag.
 func (db Database) Tag(id uint) (*Tag, error) {
-	sql := `SELECT name
+	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
 
@@ -106,25 +93,12 @@ func (db Database) Tag(id uint) (*Tag, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
-	if rows.Err() != nil {
-		return nil, err
-	}
-
-	var name string
-	err = rows.Scan(&name)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tag{id, name}, nil
+	return readTag(rows)
 }
 
 // Retrieves a specific tag.
 func (db Database) TagByName(name string) (*Tag, error) {
-	sql := `SELECT id
+	sql := `SELECT id, name
 	        FROM tag
 	        WHERE name = ?`
 
@@ -134,20 +108,7 @@ func (db Database) TagByName(name string) (*Tag, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return nil, nil
-	}
-	if rows.Err() != nil {
-		return nil, err
-	}
-
-	var id uint
-	err = rows.Scan(&id)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Tag{id, name}, nil
+	return readTag(rows)
 }
 
 // Retrieves the set of named tags.
@@ -162,17 +123,77 @@ func (db Database) TagsByNames(names []string) (Tags, error) {
 	sql += strings.Repeat(",?", len(names)-1)
 	sql += ")"
 
-	castNames := make([]interface{}, len(names))
+	params := make([]interface{}, len(names))
 	for index, name := range names {
-		castNames[index] = name
+		params[index] = name
 	}
 
-	result, err := db.connection.Query(sql, castNames...)
+	result, err := db.connection.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
 
 	return readTags(result, make(Tags, 0, len(names)))
+}
+
+// Retrieves the set of tags for the specified file.
+func (db *Database) TagsByFileId(fileId uint) (Tags, error) {
+	sql := `SELECT id, name
+            FROM tag
+            WHERE id IN (
+                SELECT tag_id
+                FROM explicit_file_tag
+                WHERE file_id = ?1
+		        UNION SELECT tag_id
+		              FROM implicit_file_tag
+		              WHERE file_id = ?1)
+            ORDER BY name`
+
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readTags(rows, make(Tags, 0, 10))
+}
+
+// Retrieves the set of explicit tags for the specified file.
+func (db *Database) ExplicitTagsByFileId(fileId uint) (Tags, error) {
+	sql := `SELECT id, name
+            FROM tag
+            WHERE id IN (
+                SELECT tag_id
+                FROM explicit_file_tag
+                WHERE file_id = ?1)
+            ORDER BY name`
+
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readTags(rows, make(Tags, 0, 10))
+}
+
+// Retrieves the set of implicit tags for the specified file.
+func (db *Database) ImplicitTagsByFileId(fileId uint) (Tags, error) {
+	sql := `SELECT id, name
+            FROM tag
+            WHERE id IN (
+                SELECT tag_id
+                FROM implicit_file_tag
+                WHERE file_id = ?1)
+            ORDER BY name`
+
+	rows, err := db.connection.Query(sql, fileId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readTags(rows, make(Tags, 0, 10))
 }
 
 // Adds a tag.
@@ -246,20 +267,35 @@ func (db Database) DeleteTag(tagId uint) error {
 
 // 
 
-func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
+func readTag(rows *sql.Rows) (*Tag, error) {
+	if !rows.Next() {
+		return nil, nil
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
-		var tagId uint
-		var tagName string
-		err := rows.Scan(&tagId, &tagName)
+	var id uint
+	var name string
+	err := rows.Scan(&id, &name)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tag{id, name}, nil
+}
+
+func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
+	for {
+		tag, err := readTag(rows)
 		if err != nil {
 			return nil, err
 		}
+		if tag == nil {
+			break
+		}
 
-		tags = append(tags, &Tag{tagId, tagName})
+		tags = append(tags, tag)
 	}
 
 	return tags, nil

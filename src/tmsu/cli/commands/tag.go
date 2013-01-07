@@ -157,20 +157,26 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 		return err
 	}
 
-	for _, tag := range tags {
-		if explicit {
-			if command.verbose {
-				fmt.Printf("'%v': adding explicit tag '%v'.\n", path, tag.Name)
-			}
+	tagIds := make([]uint, len(tags))
+	for index, tag := range tags {
+		tagIds[index] = tag.Id
+	}
 
-			_, err = store.AddExplicitFileTag(file.Id, tag.Id)
-		} else {
-			if command.verbose {
-				fmt.Printf("'%v': adding implicit tag '%v'.\n", path, tag.Name)
-			}
-			_, err = store.AddImplicitFileTag(file.Id, tag.Id)
+	if explicit {
+		if command.verbose {
+			fmt.Printf("'%v': applying explicit tags.\n", path)
 		}
 
+		err = store.AddExplicitFileTags(file.Id, tagIds)
+		if err != nil {
+			return err
+		}
+	} else {
+		if command.verbose {
+			fmt.Printf("'%v': applying implicit tags.\n", path)
+		}
+
+		err = store.AddImplicitFileTags(file.Id, tagIds)
 		if err != nil {
 			return err
 		}

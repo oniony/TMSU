@@ -108,7 +108,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("Could not retrieve tag '%v'.", tagName)
 		}
 
-		err = store.RemoveFileTagByFileAndTagId(fileId, tag.Id)
+		err = store.RemoveExplicitFileTag(fileId, tag.Id)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -168,9 +168,9 @@ func (vfs FuseVfs) parseFileId(name string) (uint, error) {
 	id, err := Atoui(parts[count-2])
 	if err != nil {
 		id, err = Atoui(parts[count-1])
-	}
-	if err != nil {
-		return 0, nil
+		if err != nil {
+			return 0, nil
+		}
 	}
 
 	return id, nil
@@ -244,7 +244,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 			return nil, fuse.ENOENT
 		}
 
-		fileCount, err := store.FileCountWithTags(tagIds, false)
+		fileCount, err := store.FileCountWithTags(tagIds)
 		if err != nil {
 			log.Fatalf("Could not retrieve count of files with tags: %v. (%v)", path, err)
 		}
@@ -295,7 +295,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		log.Fatalf("Could not retrieve tags for tags: %v", err)
 	}
 
-	files, err := store.FilesWithTags(tagIds, []uint{}, false)
+	files, err := store.FilesWithTags(tagIds, []uint{})
 	if err != nil {
 		log.Fatalf("Could not retrieve tagged files: %v", err)
 	}

@@ -149,7 +149,7 @@ func (command UntagCommand) untagPathAll(store *storage.Storage, path string) er
 		fmt.Printf("'%v': identifying tags applied.\n", path)
 	}
 
-	filetags, err := store.FileTagsByFileId(file.Id, true)
+	filetags, err := store.ExplicitFileTagsByFileId(file.Id)
 	if err != nil {
 		return err
 	}
@@ -234,7 +234,7 @@ func (command UntagCommand) untagFile(store *storage.Storage, file *database.Fil
 }
 
 func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *database.File) error {
-	filetagCount, err := store.FileTagCountByFileId(file.Id, false)
+	filetagCount, err := store.FileTagCountByFileId(file.Id)
 	if err != nil {
 		return err
 	}
@@ -289,15 +289,15 @@ func (command UntagCommand) untagDescendent(store *storage.Storage, file *databa
 }
 
 func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.File, tag *database.Tag) error {
-	filetag, err := store.FileTagByFileIdAndTagId(file.Id, tag.Id)
+	exists, err := store.ExplicitFileTagExists(file.Id, tag.Id)
 	if err != nil {
 		return err
 	}
-	if filetag == nil {
+	if !exists {
 		return errors.New("File '" + file.Path() + "' is not tagged '" + tag.Name + "'.")
 	}
 
-	err = store.RemoveExplicitFileTag(filetag.Id)
+	err = store.RemoveExplicitFileTag(file.Id, tag.Id)
 	if err != nil {
 		return err
 	}
@@ -306,15 +306,15 @@ func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.Fil
 }
 
 func (UntagCommand) removeImplicitTag(store *storage.Storage, file *database.File, tag *database.Tag) error {
-	filetag, err := store.FileTagByFileIdAndTagId(file.Id, tag.Id)
+	exists, err := store.ImplicitFileTagExists(file.Id, tag.Id)
 	if err != nil {
 		return err
 	}
-	if filetag == nil {
+	if !exists {
 		return errors.New("File '" + file.Path() + "' is not tagged '" + tag.Name + "'.")
 	}
 
-	err = store.RemoveImplicitFileTag(filetag.Id)
+	err = store.RemoveImplicitFileTag(file.Id, tag.Id)
 	if err != nil {
 		return err
 	}

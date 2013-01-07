@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"errors"
 	"path/filepath"
+	"strconv"
 	"time"
 	"tmsu/fingerprint"
 )
@@ -53,27 +54,14 @@ func (db *Database) FileCount() (uint, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, errors.New("Could not get file count.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
-
-	var count uint
-	err = rows.Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return readCount(rows)
 }
 
 // The complete set of tracked files.
 func (db *Database) Files() (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
-	        ORDER BY directory, name`
+	        ORDER BY directory + '/' + name`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -96,15 +84,7 @@ func (db *Database) File(id uint) (*File, error) {
 	}
 	defer rows.Close()
 
-	files, err := readFiles(rows, make(Files, 0, 1))
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		return nil, nil
-	}
-
-	return files[0], nil
+	return readFile(rows)
 }
 
 // Retrieves the file with the specified path.
@@ -122,15 +102,7 @@ func (db *Database) FileByPath(path string) (*File, error) {
 	}
 	defer rows.Close()
 
-	files, err := readFiles(rows, make(Files, 0, 1))
-	if err != nil {
-		return nil, err
-	}
-	if len(files) == 0 {
-		return nil, nil
-	}
-
-	return files[0], nil
+	return readFile(rows)
 }
 
 // Retrieves all files that are under the specified directory.
@@ -138,7 +110,7 @@ func (db *Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE name = ? OR directory = ? OR directory LIKE ?
-            ORDER BY directory, name`
+            ORDER BY directory + '/' + name`
 
 	rows, err := db.connection.Query(sql, path, path, filepath.Clean(path+"/%"))
 	if err != nil {
@@ -146,12 +118,7 @@ func (db *Database) FilesByDirectory(path string) (Files, error) {
 	}
 	defer rows.Close()
 
-	files, err := readFiles(rows, make(Files, 0, 1))
-	if err != nil {
-		return nil, err
-	}
-
-	return files, nil
+	return readFiles(rows, make(Files, 0, 1))
 }
 
 // Retrieves the number of files with the specified fingerprint.
@@ -166,20 +133,7 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, errors.New("Could not get file count.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
-
-	var count uint
-	err = rows.Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return readCount(rows)
 }
 
 // Retrieves the set of files with the specified fingerprint.
@@ -187,7 +141,7 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        WHERE fingerprint = ?
-	        ORDER BY directory, name`
+	        ORDER BY directory + '/' + name`
 
 	rows, err := db.connection.Query(sql, string(fingerprint))
 	if err != nil {
@@ -196,6 +150,194 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 	defer rows.Close()
 
 	return readFiles(rows, make(Files, 0, 1))
+}
+
+// Retrieves the set of files with the specified tag.
+func (db *Database) FilesWithTag(tagId uint) (Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM explicit_file_tag
+                WHERE tag_id = ?1
+                UNION SELECT file_id
+		              FROM implicit_file_tag
+		              WHERE tag_id = ?1
+		    )
+            ORDER BY directory + '/' + name`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
+// Retrieves the set of files with the specified explicit tag.
+func (db *Database) FilesWithExplicitTag(tagId uint) (Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM explicit_file_tag
+                WHERE tag_id = ?1
+		    )
+            ORDER BY directory + '/' + name`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
+// Retrieves the set of files with the specified implicit tag.
+func (db *Database) FilesWithImplicitTag(tagId uint) (Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM implicit_file_tag
+                WHERE tag_id = ?1
+		    )
+            ORDER BY directory + '/' + name`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
+// Retrieves the set of files with the specified tags.
+func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
+	tagCount := len(tagIds)
+
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM (
+                    SELECT file_id, count(tag_id)
+                    FROM (
+                        SELECT file_id, tag_id
+                        FROM explicit_file_tag
+                        WHERE tag_id IN (?1`
+
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
+	}
+
+	sql += `)
+                        UNION SELECT file_id, tag_id
+                            FROM implicit_file_tag
+                            WHERE tag_id IN (?1`
+
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
+	}
+
+	sql += `)
+                     )
+                     GROUP BY file_id
+                     HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
+                )
+            )
+            ORDER BY directory + '/' + name`
+
+	params := make([]interface{}, tagCount+1)
+	for index, tagId := range tagIds {
+		params[index] = interface{}(tagId)
+	}
+	params[tagCount] = tagCount
+
+	rows, err := db.connection.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
+// Retrieves the set of files with the specified implicit tags.
+func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM explicit_file_tag
+                WHERE tag_id IN (?1`
+
+	tagCount := len(tagIds)
+
+	for idx := 2; idx < tagCount; idx += 1 {
+		sql += ", ?" + string(idx)
+	}
+	sql += ")"
+
+	sql += `
+                GROUP BY file_id
+                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
+            )
+            ORDER BY directory + '/' + name`
+
+	params := make([]interface{}, tagCount+1)
+	for index, tagId := range tagIds {
+		params[index] = interface{}(tagId)
+	}
+	params[tagCount] = tagCount
+
+	rows, err := db.connection.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
+// Retrieves the set of files with the specified implicit tags.
+func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+            FROM file
+            WHERE id IN (
+                SELECT file_id
+                FROM implicit_file_tag
+                WHERE tag_id IN (?1`
+
+	tagCount := len(tagIds)
+
+	for idx := 2; idx < tagCount; idx += 1 {
+		sql += ", ?" + string(idx)
+	}
+	sql += ")"
+
+	sql += `
+                GROUP BY file_id
+                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
+            )
+            ORDER BY directory + '/' + name`
+
+	params := make([]interface{}, tagCount+1)
+	for index, tagId := range tagIds {
+		params[index] = interface{}(tagId)
+	}
+	params[tagCount] = tagCount
+
+	rows, err := db.connection.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
 }
 
 // Retrieves the sets of duplicate files within the database.
@@ -207,7 +349,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
                                   WHERE fingerprint != ''
                                   GROUP BY fingerprint
                                   HAVING count(1) > 1)
-            ORDER BY fingerprint, directory, name`
+            ORDER BY fingerprint, directory + '/' + name`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -334,55 +476,42 @@ func (db *Database) DeleteFile(fileId uint) error {
 		return errors.New("Expected exactly one row to be affected.")
 	}
 
-	//TODO move up to storage
-	files, err := db.FilesByDirectory(file.Path())
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		filetags, err := db.FileTagsByFileId(file.Id, false)
-		if err != nil {
-			return err
-		}
-
-		if len(filetags) == 0 {
-			result, err = db.connection.Exec(sql, file.Id)
-			if err != nil {
-				return err
-			}
-
-			rowsAffected, err := result.RowsAffected()
-			if err != nil {
-				return err
-			}
-			if rowsAffected != 1 {
-				return errors.New("Expected exactly one row to be affected.")
-			}
-		}
-	}
-
 	return nil
 }
 
 //
 
-func readFiles(rows *sql.Rows, files Files) (Files, error) {
-	for rows.Next() {
-		if rows.Err() != nil {
-			return nil, rows.Err()
-		}
+func readFile(rows *sql.Rows) (*File, error) {
+	if !rows.Next() {
+		return nil, nil
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
-		var fileId uint
-		var directory, name, fp string
-		var modTime time.Time
-		var size int64
-		err := rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
+	var fileId uint
+	var directory, name, fp string
+	var modTime time.Time
+	var size int64
+	err := rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
+	if err != nil {
+		return nil, err
+	}
+
+	return &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime, size}, nil
+}
+
+func readFiles(rows *sql.Rows, files Files) (Files, error) {
+	for {
+		file, err := readFile(rows)
 		if err != nil {
 			return nil, err
 		}
+		if file == nil {
+			break
+		}
 
-		files = append(files, &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime, size})
+		files = append(files, file)
 	}
 
 	return files, nil

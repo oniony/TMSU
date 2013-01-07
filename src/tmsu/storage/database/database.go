@@ -26,10 +26,6 @@ import (
 	"tmsu/common"
 )
 
-const (
-	DateLayout = "2006-01-02 15:04:05"
-)
-
 type Database struct {
 	connection *sql.DB
 }
@@ -126,12 +122,10 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS file_tag (
-               id INTEGER PRIMARY KEY,
+	sql = `CREATE TABLE IF NOT EXISTS explicit_file_tag (
                file_id INTEGER NOT NULL,
                tag_id INTEGER NOT NULL,
-               explicit BOOL NOT NULL,
-               implicit BOOL NOT NULL,
+               PRIMARY KEY (file_id, tag_id),
                FOREIGN KEY (file_id) REFERENCES file(id),
                FOREIGN KEY (tag_id) REFERENCES tag(id)
            )`
@@ -141,16 +135,45 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
-           ON file_tag(file_id)`
+	sql = `CREATE INDEX IF NOT EXISTS idx_explicit_file_tag_file_id
+           ON explicit_file_tag(file_id)`
 
 	_, err = db.connection.Exec(sql)
 	if err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
-           ON file_tag(tag_id)`
+	sql = `CREATE INDEX IF NOT EXISTS idx_explicit_file_tag_tag_id
+           ON explicit_file_tag(tag_id)`
+
+	_, err = db.connection.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = `CREATE TABLE IF NOT EXISTS implicit_file_tag (
+               file_id INTEGER NOT NULL,
+               tag_id INTEGER NOT NULL,
+               PRIMARY KEY (file_id, tag_id),
+               FOREIGN KEY (file_id) REFERENCES file(id),
+               FOREIGN KEY (tag_id) REFERENCES tag(id)
+           )`
+
+	_, err = db.connection.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = `CREATE INDEX IF NOT EXISTS idx_implicit_file_tag_file_id
+           ON implicit_file_tag(file_id)`
+
+	_, err = db.connection.Exec(sql)
+	if err != nil {
+		return err
+	}
+
+	sql = `CREATE INDEX IF NOT EXISTS idx_implicit_file_tag_tag_id
+           ON implicit_file_tag(tag_id)`
 
 	_, err = db.connection.Exec(sql)
 	if err != nil {
@@ -158,4 +181,21 @@ func (db Database) CreateSchema() error {
 	}
 
 	return nil
+}
+
+func readCount(rows *sql.Rows) (uint, error) {
+	if !rows.Next() {
+		return 0, errors.New("Could not get count.")
+	}
+	if rows.Err() != nil {
+		return 0, rows.Err()
+	}
+
+	var count uint
+	err := rows.Scan(&count)
+	if err != nil {
+		return 0, err
+	}
+
+	return count, nil
 }

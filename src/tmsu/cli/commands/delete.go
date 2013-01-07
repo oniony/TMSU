@@ -74,12 +74,12 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 		return errors.New("No such tag '" + tagName + "'.")
 	}
 
-	explicitFileTags, err := store.FileTagsByTagId(tag.Id, true)
+	explicitFileTags, err := store.ExplicitFileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
 
-	err = store.RemoveFileTagsByTagId(tag.Id, false)
+	err = store.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
@@ -90,12 +90,12 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 	}
 
 	for _, explicitFileTag := range explicitFileTags {
-		tags, err := store.TagsByFileId(explicitFileTag.FileId, false)
+		count, err := store.ImplicitFileTagCountByFileId(explicitFileTag.FileId)
 		if err != nil {
 			return err
 		}
 
-		if len(tags) == 0 {
+		if count == 0 {
 			store.RemoveFile(explicitFileTag.FileId)
 		}
 	}

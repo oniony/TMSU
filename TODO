@@ -1,13 +1,19 @@
-* Fix 'status' command.
+HIGH
+
+* Fix bug in 'repair' command when run on 'tmp'.
 * Add verbosity to all commands.
-* Optimizations
-    o Batch insert where possible.
-    o FileTag creation is slow, especially for implicit files.
-    o Tag removal is painfully slow.
-    o Think about putting explicit and implict taggings in separate tables to facilitate batch insert.
-* Make implict tags an option.
+* Fix 'status' command.
 * Repair command fixes
-    o Implicit files and taggings should be remove if file has gone.
+    o Implicit files and taggings should be removed if file has gone.
     o Renamed/moved implicitly tagged files should be detected and repaired.
-* Repair command should remove implicit files and taggings if file has gone.
 * Command line options that take an argument do not work properly.
+* Improve unit-test coverage.
+* Untagging via the VFS does not remove implicit taggings.
+* Make implict tags an option.
+* Storage level operations should ensure database consistency.
+    o E.g. deleting a tag should result in corresponding taggings being deleted.
+
+MEDIUM
+
+* Add benchmarks.
+* Rename 'filetag' to 'tagging'.

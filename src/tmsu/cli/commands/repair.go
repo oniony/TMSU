@@ -169,7 +169,7 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 	}
 
 	if info.IsDir() {
-		tags, err := store.TagsByFileId(entry.Id, false)
+		tags, err := store.TagsByFileId(entry.Id)
 		if err != nil {
 			return err
 		}
@@ -216,18 +216,11 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 		}
 
 		for _, tag := range tags {
-			filetag, err := store.FileTagByFileIdAndTagId(childFile.Id, tag.Id)
+			fmt.Printf("'%v': ensuring implicit tagging '%v' exists.\n", childPath, tag.Name)
+
+			_, err := store.AddImplicitFileTag(childFile.Id, tag.Id)
 			if err != nil {
 				return err
-			}
-
-			if filetag == nil || !filetag.Implicit {
-				fmt.Printf("'%v': creating missing implicit tagging '%v'.\n", childPath, tag.Name)
-
-				_, err := store.AddImplicitFileTag(childFile.Id, tag.Id)
-				if err != nil {
-					return err
-				}
 			}
 		}
 	}

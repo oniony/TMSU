@@ -48,7 +48,7 @@ func (storage Storage) TagsByNames(names []string) (database.Tags, error) {
 }
 
 // Retrieves the set of tags for the specified path.
-func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Tags, error) {
+func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, err
@@ -63,20 +63,58 @@ func (storage *Storage) TagsForPath(path string, explicitOnly bool) (database.Ta
 		return database.Tags{}, nil
 	}
 
-	return storage.Db.TagsByFileId(file.Id, explicitOnly)
+	return storage.Db.TagsByFileId(file.Id)
+}
+
+// Retrieves the set of explicit tags for the specified path.
+func (storage *Storage) ExplicitTagsForPath(path string) (database.Tags, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := storage.Db.FileByPath(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if file == nil {
+		return database.Tags{}, nil
+	}
+
+	return storage.Db.ExplicitTagsByFileId(file.Id)
+}
+
+// Retrieves the set of implicit tags for the specified path.
+func (storage *Storage) ImplicitTagsForPath(path string) (database.Tags, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err := storage.Db.FileByPath(absPath)
+	if err != nil {
+		return nil, err
+	}
+
+	if file == nil {
+		return database.Tags{}, nil
+	}
+
+	return storage.Db.ImplicitTagsByFileId(file.Id)
 }
 
 // The set of further tags for which there are tagged files given
 // a particular set of tags.
 func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
-	files, err := storage.FilesWithTags(tagIds, []uint{}, false)
+	files, err := storage.FilesWithTags(tagIds, []uint{})
 	if err != nil {
 		return nil, err
 	}
 
 	furtherTags := make(database.Tags, 0, 10)
 	for _, file := range files {
-		tags, err := storage.TagsByFileId(file.Id, false)
+		tags, err := storage.TagsByFileId(file.Id)
 		if err != nil {
 			return nil, err
 		}
@@ -108,7 +146,12 @@ func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, er
 		return nil, err
 	}
 
-	err = storage.Db.CopyFileTags(sourceTagId, tag.Id)
+	err = storage.Db.CopyExplicitFileTags(sourceTagId, tag.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = storage.Db.CopyImplicitFileTags(sourceTagId, tag.Id)
 	if err != nil {
 		return nil, err
 	}

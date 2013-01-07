@@ -24,6 +24,7 @@ import (
 	"tmsu/common"
 	"tmsu/log"
 	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type FilesCommand struct{}
@@ -118,9 +119,17 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		}
 	}
 
-	files, err := store.FilesWithTags(includeTagIds, excludeTagIds, explicitOnly)
-	if err != nil {
-		return err
+	var files database.Files
+	if explicitOnly {
+		files, err = store.FilesWithExplicitTags(includeTagIds, excludeTagIds)
+		if err != nil {
+			return err
+		}
+	} else {
+		files, err = store.FilesWithTags(includeTagIds, excludeTagIds)
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, file := range files {

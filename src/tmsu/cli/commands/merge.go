@@ -73,19 +73,36 @@ func (MergeCommand) Exec(options cli.Options, args []string) error {
 			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
-		fileTags, err := store.FileTagsByTagId(sourceTag.Id, false)
+		explicitFileTags, err := store.ExplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
 
-		for _, fileTag := range fileTags {
-			_, err = store.AddFileTag(fileTag.FileId, destTag.Id, fileTag.Explicit, fileTag.Implicit)
+		for _, explicitFileTag := range explicitFileTags {
+			_, err = store.AddExplicitFileTag(explicitFileTag.FileId, destTag.Id)
 			if err != nil {
 				return err
 			}
 		}
 
-		err = store.RemoveFileTagsByTagId(sourceTag.Id, false)
+		err = store.RemoveExplicitFileTagsByTagId(sourceTag.Id)
+		if err != nil {
+			return err
+		}
+
+		implicitFileTags, err := store.ImplicitFileTagsByTagId(sourceTag.Id)
+		if err != nil {
+			return err
+		}
+
+		for _, implicitFileTag := range implicitFileTags {
+			_, err = store.AddImplicitFileTag(implicitFileTag.FileId, destTag.Id)
+			if err != nil {
+				return err
+			}
+		}
+
+		err = store.RemoveImplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}

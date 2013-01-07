@@ -20,85 +20,74 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"strings"
+	"fmt"
+	"strconv"
 )
 
 type FileTag struct {
-	Id       uint
-	FileId   uint
-	TagId    uint
-	Explicit bool
-	Implicit bool
+	FileId uint
+	TagId  uint
 }
 
 type FileTags []*FileTag
 
-// Retrieves the set of files with the specified tag.
-func (db *Database) FilesWithTag(tagId uint, explicitOnly bool) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id = ?`
+// Determines whether the specified file has the specified tag applied.
+func (db *Database) FileTagExists(fileId, tagId uint) (bool, error) {
+	sql := `SELECT count(1)
+            FROM explicit_file_tag
+            WHERE file_id = ?1 AND tag_id = ?2
+            UNION SELECT count(1)
+                  FROM implicit_file_tag
+                  WHERE file_id = ?1 AND tag_id = ?2`
 
-	if explicitOnly {
-		sql += " AND explicit"
-	}
-
-	sql += `    )
-            ORDER BY directory, name`
-
-	rows, err := db.connection.Query(sql, tagId)
+	rows, err := db.connection.Query(sql)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	defer rows.Close()
 
-	return readFiles(rows, make(Files, 0, 10))
+	count, err := readCount(rows)
+	return count > 0, err
 }
 
-func (db *Database) FilesWithTags(tagIds []uint, explicitOnly bool) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (?`
+// Determines whether the specified file has the specified explicit tag applied.
+func (db *Database) ExplicitFileTagExists(fileId, tagId uint) (bool, error) {
+	sql := `SELECT count(1)
+            FROM explicit_file_tag
+            WHERE file_id = ?1 AND tag_id = ?2`
 
-	sql += strings.Repeat(",?", len(tagIds)-1) + ")"
-
-	if explicitOnly {
-		sql += " AND explicit"
-	}
-
-	sql += `    GROUP BY file_id
-                HAVING count(tag_id) == ?)
-            ORDER BY directory, name`
-
-	params := make([]interface{}, len(tagIds)+1)
-	for index, tagId := range tagIds {
-		params[index] = interface{}(tagId)
-	}
-	params[len(tagIds)] = len(tagIds)
-
-	rows, err := db.connection.Query(sql, params...)
+	rows, err := db.connection.Query(sql)
 	if err != nil {
-		return nil, err
+		return false, err
 	}
 	defer rows.Close()
 
-	return readFiles(rows, make(Files, 0, 10))
+	count, err := readCount(rows)
+	return count > 0, err
+}
+
+// Determines whether the specified file has the specified implicit tag applied.
+func (db *Database) ImplicitFileTagExists(fileId, tagId uint) (bool, error) {
+	sql := `SELECT count(1)
+            FROM implicit_file_tag
+            WHERE file_id = ?1 AND tag_id = ?2`
+
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return false, err
+	}
+	defer rows.Close()
+
+	count, err := readCount(rows)
+	return count > 0, err
 }
 
 // Retrieves the total count of file tags in the database.
-func (db *Database) FileTagCount(explicitOnly bool) (uint, error) {
-	sql := `SELECT count(1)
-			FROM file_tag`
+func (db *Database) FileTagCount() (uint, error) {
+	var sql string
 
-	if explicitOnly {
-		sql += " WHERE explicit"
-	}
+	sql = `SELECT (SELECT count(1) FROM explicit_file_tag) +
+                  (SELECT count(1) FROM implicit_file_tag)`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -106,30 +95,75 @@ func (db *Database) FileTagCount(explicitOnly bool) (uint, error) {
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, errors.New("Could not get file-tag count.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
+	return readCount(rows)
+}
 
-	var count uint
-	err = rows.Scan(&count)
+// Retrieves the total count of explicit file tags in the database.
+func (db *Database) ExplicitFileTagCount() (uint, error) {
+	var sql string
+
+	sql = `SELECT count(1)
+           FROM explicit_file_tag`
+
+	rows, err := db.connection.Query(sql)
 	if err != nil {
 		return 0, err
 	}
+	defer rows.Close()
 
-	return count, nil
+	return readCount(rows)
+}
+
+// Retrieves the total count of implicit file tags in the database.
+func (db *Database) ImplicitFileTagCount() (uint, error) {
+	var sql string
+
+	sql = `SELECT count(1)
+           FROM implicit_file_tag`
+
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return readCount(rows)
 }
 
 // Retrieves the complete set of file tags.
-func (db *Database) FileTags(explicitOnly bool) (FileTags, error) {
-	sql := `SELECT id, file_id, tag_id, explicit, implicit
-	        FROM file_tag`
+func (db *Database) FileTags() (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM explicit_file_tag
+            UNION SELECT file_id, tag_id
+		          FROM implicit_file_tag`
 
-	if explicitOnly {
-		sql += " WHERE explicit"
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
+
+	return readFileTags(rows, make(FileTags, 0, 10))
+}
+
+// Retrieves the complete set of file tags.
+func (db *Database) ExplicitFileTags() (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM explicit_file_tag`
+
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFileTags(rows, make(FileTags, 0, 10))
+}
+
+// Retrieves the complete set of file tags.
+func (db *Database) ImplicitFileTags() (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM explicit_file_tag`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -141,14 +175,11 @@ func (db *Database) FileTags(explicitOnly bool) (FileTags, error) {
 }
 
 // Retrieves the count of file tags for the specified file.
-func (db *Database) FileTagCountByFileId(fileId uint, explicitOnly bool) (uint, error) {
-	sql := `SELECT count(1)
-            FROM file_tag
-            WHERE file_id = ?`
+func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
+	var sql string
 
-	if explicitOnly {
-		sql += " AND explicit"
-	}
+	sql = `SELECT (SELECT count(1) FROM explicit_file_tag WHERE file_id = ?1) +
+                  (SELECT count(1) FROM implicit_file_tag WHERE file_id = ?1)`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
@@ -156,103 +187,82 @@ func (db *Database) FileTagCountByFileId(fileId uint, explicitOnly bool) (uint, 
 	}
 	defer rows.Close()
 
-	if !rows.Next() {
-		return 0, errors.New("Could not get file-tag count.")
-	}
-	if rows.Err() != nil {
-		return 0, err
-	}
-
-	var count uint
-	err = rows.Scan(&count)
-	if err != nil {
-		return 0, err
-	}
-
-	return count, nil
+	return readCount(rows)
 }
 
-// Retrieves the set of tags for the specified file.
-func (db *Database) TagsByFileId(fileId uint, explicitOnly bool) (Tags, error) {
-	sql := `SELECT id, name
-            FROM tag
-            WHERE id IN (
-                SELECT tag_id
-                FROM file_tag
-                WHERE file_id = ?`
+// Retrieves the count of explicit file tags for the specified file.
+func (db *Database) ExplicitFileTagCountByFileId(fileId uint) (uint, error) {
+	var sql string
 
-	if explicitOnly {
-		sql += " AND explicit"
-	}
-
-	sql += `    )
-            ORDER BY name`
+	sql = `SELECT count(1)
+           FROM explicit_file_tag
+           WHERE file_id = ?`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer rows.Close()
 
-	return readTags(rows, make(Tags, 0, 10))
+	return readCount(rows)
 }
 
-// Retrieves the specified file tag
-func (db *Database) FileTag(fileTagId uint) (*FileTag, error) {
-	sql := `SELECT id, file_id, tag_id, explicit, implicit
-	        FROM file_tag
-	        WHERE id = ?`
+// Retrieves the count of implicit file tags for the specified file.
+func (db *Database) ImplicitFileTagCountByFileId(fileId uint) (uint, error) {
+	var sql string
 
-	rows, err := db.connection.Query(sql, fileTagId)
+	sql = `SELECT count(1)
+           FROM implicit_file_tag
+           WHERE file_id = ?`
+
+	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 	defer rows.Close()
 
-	fileTags, err := readFileTags(rows, make(FileTags, 0, 1))
-	if err != nil {
-		return nil, err
-	}
-	if len(fileTags) == 0 {
-		return nil, nil
-	}
-
-	return fileTags[0], nil
-}
-
-// Retrieves the file tag with the specified file ID and tag ID.
-func (db *Database) FileTagByFileIdAndTagId(fileId, tagId uint) (*FileTag, error) {
-	sql := `SELECT id, file_id, tag_id, explicit, implicit
-	        FROM file_tag
-	        WHERE file_id = ?
-	        AND tag_id = ?`
-
-	rows, err := db.connection.Query(sql, fileId, tagId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	fileTags, err := readFileTags(rows, make(FileTags, 0, 1))
-	if err != nil {
-		return nil, err
-	}
-	if len(fileTags) == 0 {
-		return nil, nil
-	}
-
-	return fileTags[0], nil
+	return readCount(rows)
 }
 
 // Retrieves the set of file tags with the specified tag ID.
-func (db *Database) FileTagsByTagId(tagId uint, explicitOnly bool) (FileTags, error) {
-	sql := `SELECT id, file_id, tag_id, explicit, implicit
-	        FROM file_tag
-	        WHERE tag_id = ?`
+func (db *Database) FileTagsByTagId(tagId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM explicit_file_tag
+	        WHERE tag_id = ?1
+            UNION
+		    SELECT file_id, tag_id
+		    FROM implicit_file_tag
+		    WHERE tag_id = ?1`
 
-	if explicitOnly {
-		sql += " AND explicit"
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
+
+	return readFileTags(rows, make(FileTags, 0, 10))
+}
+
+// Retrieves the set of explicit file tags with the specified tag ID.
+func (db *Database) ExplicitFileTagsByTagId(tagId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM explicit_file_tag
+	        WHERE tag_id = ?1`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFileTags(rows, make(FileTags, 0, 10))
+}
+
+// Retrieves the set of implicit file tags with the specified tag ID.
+func (db *Database) ImplicitFileTagsByTagId(tagId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+	        FROM implicit_file_tag
+	        WHERE tag_id = ?1`
 
 	rows, err := db.connection.Query(sql, tagId)
 	if err != nil {
@@ -264,14 +274,14 @@ func (db *Database) FileTagsByTagId(tagId uint, explicitOnly bool) (FileTags, er
 }
 
 // Retrieves the set of file tags with the specified file ID.
-func (db *Database) FileTagsByFileId(fileId uint, explicitOnly bool) (FileTags, error) {
-	sql := `SELECT id, file_id, tag_id, explicit, implicit
-            FROM file_tag
-            WHERE file_id = ?`
-
-	if explicitOnly {
-		sql += " AND explicit"
-	}
+func (db *Database) FileTagsByFileId(fileId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+            FROM explicit_file_tag
+            WHERE file_id = ?1
+		    UNION
+		    SELECT file_id, tag_id
+		    FROM implicit_file_tag
+		    WHERE file_id = ?1`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
@@ -282,81 +292,118 @@ func (db *Database) FileTagsByFileId(fileId uint, explicitOnly bool) (FileTags, 
 	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
-// Adds a file tag.
-func (db *Database) InsertFileTag(fileId uint, tagId uint, explicit bool, implicit bool) (*FileTag, error) {
-	sql := `INSERT INTO file_tag (file_id, tag_id, explicit, implicit)
-	        VALUES (?, ?, ?, ?)`
+// Retrieves the set of explicit file tags with the specified file ID.
+func (db *Database) ExplicitFileTagsByFileId(fileId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+            FROM explicit_file_tag
+            WHERE file_id = ?1`
 
-	result, err := db.connection.Exec(sql, fileId, tagId, explicit, implicit)
+	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	id, err := result.LastInsertId()
-	if err != nil {
-		return nil, err
-	}
-
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, err
-	}
-	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
-	}
-
-	return &FileTag{uint(id), fileId, tagId, explicit, implicit}, nil
+	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
-func (db *Database) UpdateFileTag(fileTagId, fileId, tagId uint, explicit bool, implicit bool) (*FileTag, error) {
-	sql := `UPDATE file_tag
-            SET file_id = ?,
-                tag_id = ?,
-                explicit = ?,
-                implicit = ?
-            WHERE id = ?`
+// Retrieves the set of implicit file tags with the specified file ID.
+func (db *Database) ImplicitFileTagsByFileId(fileId uint) (FileTags, error) {
+	sql := `SELECT file_id, tag_id
+            FROM implicit_file_tag
+            WHERE file_id = ?1`
 
-	result, err := db.connection.Exec(sql, fileId, tagId, explicit, implicit, fileTagId)
+	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
-	rowsAffected, err := result.RowsAffected()
-	if err != nil {
-		return nil, err
-	}
-	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
-	}
-
-	return &FileTag{fileTagId, fileId, tagId, explicit, implicit}, nil
+	return readFileTags(rows, make(FileTags, 0, 10))
 }
 
-// Removes a file tag.
-func (db *Database) DeleteFileTag(fileTagId uint) error {
-	sql := `DELETE FROM file_tag
-	        WHERE id = ?`
+// Adds an explicit file tag.
+func (db *Database) AddExplicitFileTag(fileId, tagId uint) (*FileTag, error) {
+	sql := `INSERT OR IGNORE INTO explicit_file_tag (file_id, tag_id)
+            VALUES (?1, ?2)`
 
-	result, err := db.connection.Exec(sql, fileTagId)
+	_, err := db.connection.Exec(sql, fileId, tagId)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	rowsAffected, err := result.RowsAffected()
+	return &FileTag{fileId, tagId}, nil
+}
+
+// Adds an implicit file tag.
+func (db *Database) AddImplicitFileTag(fileId, tagId uint) (*FileTag, error) {
+	sql := `INSERT OR IGNORE INTO implicit_file_tag (file_id, tag_id)
+            VALUES (?1, ?2)`
+
+	_, err := db.connection.Exec(sql, fileId, tagId)
+	if err != nil {
+		return nil, err
+	}
+
+	return &FileTag{fileId, tagId}, nil
+}
+
+// Adds a set of explicit file tags.
+func (db *Database) AddExplicitFileTags(fileId uint, tagIds []uint) error {
+	sql := `INSERT OR IGNORE INTO explicit_file_tag (file_id, tag_id)
+            VALUES `
+
+	params := make([]interface{}, len(tagIds)+1)
+	params[0] = fileId
+
+	for index, tagId := range tagIds {
+		params[index+1] = tagId
+
+		if index > 0 {
+			sql += ", "
+		}
+
+		sql += fmt.Sprintf("(?1, ?%v)", strconv.Itoa(index+2))
+	}
+
+	_, err := db.connection.Exec(sql, params...)
 	if err != nil {
 		return err
-	}
-	if rowsAffected != 1 {
-		return errors.New("Expected exactly one row to be affected.")
 	}
 
 	return nil
 }
 
-// Remove a file tag by file and tag ID.
-func (db *Database) DeleteFileTagByFileAndTagId(fileId uint, tagId uint) error {
-	sql := `DELETE FROM file_tag
-	        WHERE file_id = ? AND tag_id = ?`
+// Adds a set of implicit file tags.
+func (db *Database) AddImplicitFileTags(fileId uint, tagIds []uint) error {
+	sql := `INSERT OR IGNORE INTO implicit_file_tag (file_id, tag_id)
+            VALUES `
+
+	params := make([]interface{}, len(tagIds)+1)
+	params[0] = fileId
+
+	for index, tagId := range tagIds {
+		params[index+1] = tagId
+
+		if index > 0 {
+			sql += ", "
+		}
+
+		sql += fmt.Sprintf("(?1, ?%v)", strconv.Itoa(index+2))
+	}
+
+	_, err := db.connection.Exec(sql, params...)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Removes an explicit file tag.
+func (db *Database) DeleteExplicitFileTag(fileId, tagId uint) error {
+	sql := `DELETE FROM explicit_file_tag
+	        WHERE file_id = ?1 AND tag_id = ?2`
 
 	result, err := db.connection.Exec(sql, fileId, tagId)
 	if err != nil {
@@ -374,47 +421,12 @@ func (db *Database) DeleteFileTagByFileAndTagId(fileId uint, tagId uint) error {
 	return nil
 }
 
-// Removes all of the file tags for the specified file.
-func (db *Database) DeleteFileTagsByFileId(fileId uint, explicitOnly bool) error {
-	sql := `DELETE FROM file_tag
-	        WHERE file_id = ?`
+// Removes an implicit file tag.
+func (db *Database) DeleteImplicitFileTag(fileId, tagId uint) error {
+	sql := `DELETE FROM implicit_file_tag
+	        WHERE file_id = ?1 AND tag_id = ?2`
 
-	if explicitOnly {
-		sql += " AND explicit"
-	}
-
-	_, err := db.connection.Exec(sql, fileId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Removes all of the file tags for the specified tag.
-func (db *Database) DeleteFileTagsByTagId(tagId uint, explicitOnly bool) error {
-	sql := `DELETE FROM file_tag
-	        WHERE tag_id = ?`
-
-	if explicitOnly {
-		sql += " AND explicit"
-	}
-
-	_, err := db.connection.Exec(sql, tagId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-// Updates file tags to a new tag.
-func (db *Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
-	sql := `UPDATE file_tag
-	        SET tag_id = ?
-	        WHERE tag_id = ?`
-
-	result, err := db.connection.Exec(sql, newTagId, oldTagId)
+	result, err := db.connection.Exec(sql, fileId, tagId)
 	if err != nil {
 		return err
 	}
@@ -430,14 +442,81 @@ func (db *Database) UpdateFileTags(oldTagId uint, newTagId uint) error {
 	return nil
 }
 
-// Copies file tags from one tag to another.
-func (db *Database) CopyFileTags(sourceTagId uint, destTagId uint) error {
-	sql := `INSERT INTO file_tag (file_id, tag_id, explicit, implicit)
-            SELECT file_id, ?, explicit, implicit
-            FROM file_tag
-            WHERE tag_id = ?`
+// Removes all of the explicit file tags for the specified file.
+func (db *Database) DeleteExplicitFileTagsByFileId(fileId uint) error {
+	sql := `DELETE FROM explicit_file_tag
+	        WHERE file_id = ?`
 
-	_, err := db.connection.Exec(sql, destTagId, sourceTagId)
+	_, err := db.connection.Exec(sql, fileId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Removes all of the implicit file tags for the specified file.
+func (db *Database) DeleteImplicitFileTagsByFileId(fileId uint) error {
+	sql := `DELETE FROM implicit_file_tag
+	        WHERE file_id = ?`
+
+	_, err := db.connection.Exec(sql, fileId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Removes all of the explicit file tags for the specified tag.
+func (db *Database) DeleteExplicitFileTagsByTagId(tagId uint) error {
+	sql := `DELETE FROM explicit_file_tag
+	        WHERE tag_id = ?`
+
+	_, err := db.connection.Exec(sql, tagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Removes all of the implicit file tags for the specified tag.
+func (db *Database) DeleteImplicitFileTagsByTagId(tagId uint) error {
+	sql := `DELETE FROM implicit_file_tag
+	        WHERE tag_id = ?`
+
+	_, err := db.connection.Exec(sql, tagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Copies explicit file tags from one tag to another.
+func (db *Database) CopyExplicitFileTags(sourceTagId uint, destTagId uint) error {
+	sql := `INSERT INTO explicit_file_tag (file_id, tag_id)
+            SELECT file_id, ?2
+            FROM explicit_file_tag
+            WHERE tag_id = ?1`
+
+	_, err := db.connection.Exec(sql, sourceTagId, destTagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Copies implicit file tags from one tag to another.
+func (db *Database) CopyImplicitFileTags(sourceTagId uint, destTagId uint) error {
+	sql := `INSERT INTO implicit_file_tag (file_id, tag_id)
+	        SELECT file_id, ?2
+	        FROM implicit_file_tag
+	        WHERE tag_id = ?1`
+
+	_, err := db.connection.Exec(sql, sourceTagId, destTagId)
 	if err != nil {
 		return err
 	}
@@ -453,41 +532,14 @@ func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 			return nil, rows.Err()
 		}
 
-		var fileTagId, fileId, tagId uint
-		var explicit, implicit bool
-		err := rows.Scan(&fileTagId, &fileId, &tagId, &explicit, &implicit)
+		var fileId, tagId uint
+		err := rows.Scan(&fileId, &tagId)
 		if err != nil {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, &FileTag{fileTagId, fileId, tagId, explicit, implicit})
+		fileTags = append(fileTags, &FileTag{fileId, tagId})
 	}
 
 	return fileTags, nil
-}
-
-func contains(files Files, searchFile *File) bool {
-	for _, file := range files {
-		if file.Path() == searchFile.Path() {
-			return true
-		}
-	}
-
-	return false
-}
-
-func uniq(tags Tags) Tags {
-	uniqueTags := make(Tags, 0, len(tags))
-
-	var previousTagName string = ""
-	for _, tag := range tags {
-		if tag.Name == previousTagName {
-			continue
-		}
-
-		uniqueTags = append(uniqueTags, tag)
-		previousTagName = tag.Name
-	}
-
-	return uniqueTags
 }

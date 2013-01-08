@@ -116,7 +116,6 @@ trunk
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
     $ tmsu repair
 
-
   * Implicit taggings are now stored in the database rather than calculated on
     the fly.
   * Improved command-line parsing: now supports global options, short options

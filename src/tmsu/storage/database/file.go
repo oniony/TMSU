@@ -268,6 +268,8 @@ func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
 
 // Retrieves the set of files with the specified implicit tags.
 func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
+	tagCount := len(tagIds)
+
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE id IN (
@@ -275,10 +277,8 @@ func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
                 FROM explicit_file_tag
                 WHERE tag_id IN (?1`
 
-	tagCount := len(tagIds)
-
-	for idx := 2; idx < tagCount; idx += 1 {
-		sql += ", ?" + string(idx)
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
 	}
 	sql += ")"
 
@@ -305,6 +305,8 @@ func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
 
 // Retrieves the set of files with the specified implicit tags.
 func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
+	tagCount := len(tagIds)
+
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE id IN (
@@ -312,10 +314,8 @@ func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
                 FROM implicit_file_tag
                 WHERE tag_id IN (?1`
 
-	tagCount := len(tagIds)
-
-	for idx := 2; idx < tagCount; idx += 1 {
-		sql += ", ?" + string(idx)
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
 	}
 	sql += ")"
 

@@ -28,7 +28,6 @@ import (
 	"tmsu/storage/database"
 )
 
-//TODO add missing implicit taggings
 //TODO delete implicitly tagged files that are missing
 //TODO handle directory being replaced by a file (currently causes error)
 
@@ -110,6 +109,9 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 		entry, err := store.FileByPath(absPath)
 		if err != nil {
 			return err
+		}
+		if entry == nil {
+			continue
 		}
 
 		err = command.checkEntry(entry, store, pathsBySize)
@@ -216,7 +218,9 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 		}
 
 		for _, tag := range tags {
-			fmt.Printf("'%v': ensuring implicit tagging '%v' exists.\n", childPath, tag.Name)
+			if command.verbose {
+				fmt.Printf("'%v': ensuring implicit tagging '%v' exists.\n", childPath, tag.Name)
+			}
 
 			_, err := store.AddImplicitFileTag(childFile.Id, tag.Id)
 			if err != nil {

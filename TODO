@@ -1,6 +1,6 @@
 HIGH
 
-* Fix bug in 'repair' command when run on 'tmp'.
+* Fix bug in 'repair' command when run on '.' from 'tmp'.
 * Add verbosity to all commands.
 * Fix 'status' command.
 * Repair command fixes

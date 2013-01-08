@@ -77,7 +77,37 @@ func (RepairCommand) Options() cli.Options {
 func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 
-	pathsBySize, err := command.buildFileSystemMap(args)
+	if len(args) == 0 {
+		return command.repairAll()
+	}
+
+	return command.repairPaths(args)
+}
+
+func (command RepairCommand) repairAll() error {
+	store, err := storage.Open()
+	if err != nil {
+		return err
+	}
+	defer store.Close()
+
+	entries, err := store.Files()
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		err := command.checkEntry(entry, store, make(map[int64][]string))
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (command RepairCommand) repairPaths(paths []string) error {
+	pathsBySize, err := command.buildFileSystemMap(paths)
 	if err != nil {
 		return err
 	}
@@ -88,7 +118,7 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	}
 	defer store.Close()
 
-	for _, path := range args {
+	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return err
@@ -118,7 +148,6 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 		if err != nil {
 			return err
 		}
-
 	}
 
 	return nil

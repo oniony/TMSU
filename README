@@ -106,6 +106,40 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 -------------
 
+trunk
+
+  IMPORTANT: This release changes the database format so that implicit taggings
+  are stored rather than calculated on the fly. If you wish to use an existing
+  database it must be first upgraded:
+  
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db~  # back up
+    $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
+    $ tmsu repair
+
+
+  * Implicit taggings are now stored in the database rather than calculated on
+    the fly.
+  * Improved command-line parsing: now supports global options, short options
+    and mixed option ordering.
+  * Added upgrade script to convert old databases to new format (and to remove
+    any invalid timestamps which cause problems with the latest Sqlite3
+    bindings).
+  * 'repair' command updated to create missing implicit taggings.
+  * Fixed bug where 'repair' command was operating upon all files in the
+    database with the same name as the arguments rather than those with
+    matching path.
+  * 'repair' command now updates stored modification time if it has changed but
+    fingerprint has not.
+  * Size field was not being read from the database preventing 'files' command
+    from functioning.
+  * Fingerprints for directories no longer calculated. (Implicit tagging means
+    that duplicate files are identified instead. I may revisit this decision.)
+  * Removed the 'export' command: Sqlite3 database is already in a readily
+    queryable format.
+  * Tags containing '/' confuse the VFS. Such tags are no longer legal.
+  * Updated Zsh completion.
+  * Minor bug fixes.
+
 v0.0.9
 
   * Fixed bug which caused process hosting the virtual file-system to crash if

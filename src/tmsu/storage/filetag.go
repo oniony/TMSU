@@ -28,12 +28,12 @@ func (storage *Storage) FileTagExists(fileId, tagId uint) (bool, error) {
 
 // Determines whether the specified file has the specified explicit tag applied.
 func (storage *Storage) ExplicitFileTagExists(fileId, tagId uint) (bool, error) {
-	return storage.Db.FileTagExists(fileId, tagId)
+	return storage.Db.ExplicitFileTagExists(fileId, tagId)
 }
 
 // Determines whether the specified file has the specified implicit tag applied.
 func (storage *Storage) ImplicitFileTagExists(fileId, tagId uint) (bool, error) {
-	return storage.Db.FileTagExists(fileId, tagId)
+	return storage.Db.ImplicitFileTagExists(fileId, tagId)
 }
 
 // Retrieves the total count of file tags in the database.
@@ -79,21 +79,6 @@ func (storage *Storage) ExplicitFileTagCountByFileId(fileId uint) (uint, error) 
 // Retrieves the count of implicit file tags for the specified file.
 func (storage *Storage) ImplicitFileTagCountByFileId(fileId uint) (uint, error) {
 	return storage.Db.ImplicitFileTagCountByFileId(fileId)
-}
-
-// Retrieves the set of file tags for the specified file.
-func (storage *Storage) TagsByFileId(fileId uint) (database.Tags, error) {
-	return storage.Db.TagsByFileId(fileId)
-}
-
-// Retrieves the set of explicit file tags for the specified file.
-func (storage *Storage) ExplicitTagsByFileId(fileId uint) (database.Tags, error) {
-	return storage.Db.ExplicitTagsByFileId(fileId)
-}
-
-// Retrieves the set of file tags for the specified file.
-func (storage *Storage) ImplicitTagsByFileId(fileId uint) (database.Tags, error) {
-	return storage.Db.ImplicitTagsByFileId(fileId)
 }
 
 // Retrieves the file tags with the specified tag ID.
@@ -154,6 +139,16 @@ func (storage *Storage) RemoveExplicitFileTag(fileId, tagId uint) error {
 // Remove implicit file tag.
 func (storage *Storage) RemoveImplicitFileTag(fileId, tagId uint) error {
 	return storage.Db.DeleteImplicitFileTag(fileId, tagId)
+}
+
+// Removes all of the file tags for the specified file.
+func (storage *Storage) RemoveFileTagsByFileId(fileId uint) error {
+	err := storage.Db.DeleteImplicitFileTagsByFileId(fileId)
+	if err != nil {
+		return err
+	}
+
+	return storage.Db.DeleteExplicitFileTagsByFileId(fileId)
 }
 
 // Removes all of the explicit file tags for the specified file.

@@ -40,7 +40,7 @@ func (db *Database) FileTagExists(fileId, tagId uint) (bool, error) {
                   FROM implicit_file_tag
                   WHERE file_id = ?1 AND tag_id = ?2`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.connection.Query(sql, fileId, tagId)
 	if err != nil {
 		return false, err
 	}
@@ -56,7 +56,7 @@ func (db *Database) ExplicitFileTagExists(fileId, tagId uint) (bool, error) {
             FROM explicit_file_tag
             WHERE file_id = ?1 AND tag_id = ?2`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.connection.Query(sql, fileId, tagId)
 	if err != nil {
 		return false, err
 	}
@@ -72,7 +72,7 @@ func (db *Database) ImplicitFileTagExists(fileId, tagId uint) (bool, error) {
             FROM implicit_file_tag
             WHERE file_id = ?1 AND tag_id = ?2`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.connection.Query(sql, fileId, tagId)
 	if err != nil {
 		return false, err
 	}

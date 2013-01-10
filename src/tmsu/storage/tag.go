@@ -47,6 +47,21 @@ func (storage Storage) TagsByNames(names []string) (database.Tags, error) {
 	return storage.Db.TagsByNames(names)
 }
 
+// Retrieves the set of tags for the specified file.
+func (storage *Storage) TagsByFileId(fileId uint) (database.Tags, error) {
+	return storage.Db.TagsByFileId(fileId)
+}
+
+// Retrieves the set of tags for the specified file.
+func (storage *Storage) ExplicitTagsByFileId(fileId uint) (database.Tags, error) {
+	return storage.Db.ExplicitTagsByFileId(fileId)
+}
+
+// Retrieves the set of implicit tags for the specified file.
+func (storage *Storage) ImplicitTagsByFileId(fileId uint) (database.Tags, error) {
+	return storage.Db.ImplicitTagsByFileId(fileId)
+}
+
 // Retrieves the set of tags for the specified path.
 func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)

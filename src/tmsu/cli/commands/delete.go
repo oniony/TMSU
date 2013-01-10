@@ -86,7 +86,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 		fmt.Printf("Finding files explicitly tagged '%v'.\n", tagName)
 	}
 
-	explicitFileTags, err := store.ExplicitFileTagsByTagId(tag.Id)
+	fileTags, err := store.FileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
 	}
@@ -114,15 +114,14 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	removedFileCount := 0
-	for _, explicitFileTag := range explicitFileTags {
-		count, err := store.ImplicitFileTagCountByFileId(explicitFileTag.FileId)
+	for _, fileTag := range fileTags {
+		count, err := store.FileTagCountByFileId(fileTag.FileId)
 		if err != nil {
 			return err
 		}
 		if count == 0 {
-			err := store.RemoveFile(explicitFileTag.FileId)
+			err := store.RemoveFile(fileTag.FileId)
 			if err != nil {
-				fmt.Println("1")
 				return err
 			}
 

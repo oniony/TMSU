@@ -19,6 +19,7 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/storage"
 )
@@ -45,7 +46,9 @@ func (CopyCommand) Options() cli.Options {
 	return cli.Options{}
 }
 
-func (CopyCommand) Exec(options cli.Options, args []string) error {
+func (command CopyCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -71,9 +74,17 @@ func (CopyCommand) Exec(options cli.Options, args []string) error {
 		return errors.New("A tag with name '" + destTagName + "' already exists.")
 	}
 
+	if command.verbose {
+		fmt.Printf("Copying tag '%v' to '%v'.\n", sourceTagName, destTagName)
+	}
+
 	_, err = store.CopyTag(sourceTag.Id, destTagName)
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		fmt.Println("Tag successfully copied.")
 	}
 
 	return nil

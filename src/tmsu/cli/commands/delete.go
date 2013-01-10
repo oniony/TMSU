@@ -19,11 +19,14 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/storage"
 )
 
-type DeleteCommand struct{}
+type DeleteCommand struct {
+	verbose bool
+}
 
 func (DeleteCommand) Name() cli.CommandName {
 	return "delete"
@@ -48,6 +51,8 @@ func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 		return errors.New("No tags to delete specified.")
 	}
 
+	command.verbose = options.HasOption("--verbose")
+
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -64,14 +69,21 @@ func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
+func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
+	if command.verbose {
+		fmt.Printf("Looking up tag '%v'.\n", tagName)
+	}
+
 	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return err
 	}
-
 	if tag == nil {
 		return errors.New("No such tag '" + tagName + "'.")
+	}
+
+	if command.verbose {
+		fmt.Printf("Finding files explicitly tagged '%v'.\n", tagName)
 	}
 
 	explicitFileTags, err := store.ExplicitFileTagsByTagId(tag.Id)
@@ -79,9 +91,17 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 		return err
 	}
 
+	if command.verbose {
+		fmt.Printf("Removing applications of tag '%v'.\n", tagName)
+	}
+
 	err = store.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		fmt.Printf("Deleting tag '%v'.\n", tagName)
 	}
 
 	err = store.DeleteTag(tag.Id)
@@ -89,15 +109,29 @@ func (DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 		return err
 	}
 
+	if command.verbose {
+		fmt.Printf("Identifying files left untagged as a result of tag deletion.\n")
+	}
+
+	removedFileCount := 0
 	for _, explicitFileTag := range explicitFileTags {
 		count, err := store.ImplicitFileTagCountByFileId(explicitFileTag.FileId)
 		if err != nil {
 			return err
 		}
-
 		if count == 0 {
-			store.RemoveFile(explicitFileTag.FileId)
+			err := store.RemoveFile(explicitFileTag.FileId)
+			if err != nil {
+				fmt.Println("1")
+				return err
+			}
+
+			removedFileCount += 1
 		}
+	}
+
+	if command.verbose {
+		fmt.Printf("Removing %v untagged files.\n", removedFileCount)
 	}
 
 	return nil

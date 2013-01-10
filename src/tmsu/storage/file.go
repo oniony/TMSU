@@ -181,35 +181,5 @@ func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerp
 
 // Removes a file from the database.
 func (storage *Storage) RemoveFile(fileId uint) error {
-	file, err := storage.File(fileId)
-	if err != nil {
-		return err
-	}
-
-	err = storage.Db.DeleteFile(fileId)
-	if err != nil {
-		return err
-	}
-
-	files, err := storage.Db.FilesByDirectory(file.Path())
-	if err != nil {
-		return err
-	}
-
-	for _, file := range files {
-		filetags, err := storage.Db.FileTagsByFileId(file.Id)
-		if err != nil {
-			return err
-		}
-
-		// remove only untagged descendents
-		if len(filetags) == 0 {
-			err = storage.Db.DeleteFile(fileId)
-			if err != nil {
-				return err
-			}
-		}
-	}
-
-	return nil
+	return storage.Db.DeleteFile(fileId)
 }

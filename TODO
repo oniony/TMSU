@@ -1,8 +1,7 @@
 HIGH
 
-* Improve unit-test coverage.
-* Fix 'status' command.
 * Add verbosity to all commands.
+* Improve unit-test coverage.
 * Command line options that take an argument do not work properly.
 * Untagging via the VFS does not remove implicit taggings.
 * Repair command improvements

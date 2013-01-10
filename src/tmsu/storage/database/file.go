@@ -457,7 +457,7 @@ func (db *Database) DeleteFile(fileId uint) error {
 		return err
 	}
 	if file == nil {
-		return errors.New("No such file '" + string(fileId) + "'.")
+		return errors.New("No such file '" + strconv.Itoa(int(fileId)) + "'.")
 	}
 
 	sql := `DELETE FROM file

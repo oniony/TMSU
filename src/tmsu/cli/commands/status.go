@@ -39,7 +39,7 @@ func (StatusCommand) Synopsis() string {
 }
 
 func (StatusCommand) Description() string {
-	return `tmsu status [--directory] [PATH]...
+	return `tmsu status [PATH]...
 
 Shows the status of PATHs.
 

@@ -19,8 +19,8 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -75,16 +75,12 @@ func (command CopyCommand) Exec(options cli.Options, args []string) error {
 	}
 
 	if command.verbose {
-		fmt.Printf("Copying tag '%v' to '%v'.\n", sourceTagName, destTagName)
+		log.Infof("copying tag '%v' to '%v'.", sourceTagName, destTagName)
 	}
 
 	_, err = store.CopyTag(sourceTag.Id, destTagName)
 	if err != nil {
 		return err
-	}
-
-	if command.verbose {
-		fmt.Println("Tag successfully copied.")
 	}
 
 	return nil

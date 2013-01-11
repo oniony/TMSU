@@ -19,8 +19,8 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -70,10 +70,6 @@ func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 }
 
 func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
-	if command.verbose {
-		fmt.Printf("Looking up tag '%v'.\n", tagName)
-	}
-
 	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return err
@@ -83,7 +79,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		fmt.Printf("Finding files explicitly tagged '%v'.\n", tagName)
+		log.Infof("finding files explicitly tagged '%v'.", tagName)
 	}
 
 	fileTags, err := store.FileTagsByTagId(tag.Id)
@@ -92,7 +88,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		fmt.Printf("Removing applications of tag '%v'.\n", tagName)
+		log.Infof("removing applications of tag '%v'.", tagName)
 	}
 
 	err = store.RemoveFileTagsByTagId(tag.Id)
@@ -101,7 +97,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		fmt.Printf("Deleting tag '%v'.\n", tagName)
+		log.Infof("deleting tag '%v'.", tagName)
 	}
 
 	err = store.DeleteTag(tag.Id)
@@ -110,7 +106,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		fmt.Printf("Identifying files left untagged as a result of tag deletion.\n")
+		log.Infof("identifying files left untagged as a result of tag deletion.")
 	}
 
 	removedFileCount := 0
@@ -130,7 +126,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		fmt.Printf("Removing %v untagged files.\n", removedFileCount)
+		log.Infof("removed %v untagged files.", removedFileCount)
 	}
 
 	return nil

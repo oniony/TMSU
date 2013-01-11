@@ -20,10 +20,13 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
-type RenameCommand struct{}
+type RenameCommand struct {
+	verbose bool
+}
 
 func (RenameCommand) Name() cli.CommandName {
 	return "rename"
@@ -46,7 +49,9 @@ func (RenameCommand) Options() cli.Options {
 	return cli.Options{}
 }
 
-func (RenameCommand) Exec(options cli.Options, args []string) error {
+func (command RenameCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -75,6 +80,10 @@ func (RenameCommand) Exec(options cli.Options, args []string) error {
 	}
 	if destTag != nil {
 		return errors.New("A tag with name '" + destTagName + "' already exists.")
+	}
+
+	if command.verbose {
+		log.Infof("renaming tag '%v' to '%v'.", sourceTagName, destTagName)
 	}
 
 	_, err = store.RenameTag(sourceTag.Id, destTagName)

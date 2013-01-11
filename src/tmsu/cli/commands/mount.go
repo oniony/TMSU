@@ -26,10 +26,13 @@ import (
 	"time"
 	"tmsu/cli"
 	"tmsu/common"
+	"tmsu/log"
 	"tmsu/vfs"
 )
 
-type MountCommand struct{}
+type MountCommand struct {
+	verbose bool
+}
 
 func (MountCommand) Name() cli.CommandName {
 	return "mount"
@@ -60,6 +63,8 @@ func (MountCommand) Options() cli.Options {
 }
 
 func (command MountCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	argCount := len(args)
 
 	switch argCount {
@@ -91,9 +96,17 @@ func (command MountCommand) Exec(options cli.Options, args []string) error {
 }
 
 func (command MountCommand) listMounts() error {
+	if command.verbose {
+		log.Info("retrieving mount table.")
+	}
+
 	mt, err := vfs.GetMountTable()
 	if err != nil {
 		return err
+	}
+
+	if command.verbose && len(mt) == 0 {
+		log.Info("mount table is empty.")
 	}
 
 	for _, mount := range mt {
@@ -126,7 +139,7 @@ func (command MountCommand) mountSelected(mountPath string) error {
 	return nil
 }
 
-func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
+func (command MountCommand) mountExplicit(databasePath string, mountPath string) error {
 	fileInfo, err := os.Stat(mountPath)
 	if err != nil {
 		return err
@@ -146,24 +159,36 @@ func (MountCommand) mountExplicit(databasePath string, mountPath string) error {
 		return errors.New("Database '" + databasePath + "' does not exist.")
 	}
 
-	command := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
+	if command.verbose {
+		log.Infof("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
+	}
 
-	errorPipe, err := command.StderrPipe()
+	daemon := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
+
+	errorPipe, err := daemon.StderrPipe()
 	if err != nil {
 		return err
 	}
 
-	err = command.Start()
+	err = daemon.Start()
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		log.Info("sleeping.")
 	}
 
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
+	if command.verbose {
+		log.Info("checking whether daemon started successfully.")
+	}
+
 	var waitStatus syscall.WaitStatus
 	var rusage syscall.Rusage
-	_, err = syscall.Wait4(command.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
+	_, err = syscall.Wait4(daemon.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
 	if err != nil {
 		return err
 	}

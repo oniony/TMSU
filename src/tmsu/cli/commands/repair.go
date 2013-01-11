@@ -30,6 +30,7 @@ import (
 
 //TODO delete implicitly tagged files that are missing
 //TODO handle directory being replaced by a file (currently causes error)
+//TODO need to look for new files right at the end otherwise moves are not identified
 
 type RepairCommand struct {
 	verbose bool
@@ -91,6 +92,10 @@ func (command RepairCommand) repairAll() error {
 	}
 	defer store.Close()
 
+	if command.verbose {
+		log.Info("retrieving all files from the database.")
+	}
+
 	entries, err := store.Files()
 	if err != nil {
 		return err
@@ -124,6 +129,10 @@ func (command RepairCommand) repairPaths(paths []string) error {
 			return err
 		}
 
+		if command.verbose {
+			log.Infof("'%v': retrieving files from database.", path)
+		}
+
 		entries, err := store.FilesByDirectory(absPath)
 		if err != nil {
 			return err
@@ -155,7 +164,7 @@ func (command RepairCommand) repairPaths(paths []string) error {
 
 func (command RepairCommand) checkEntry(entry *database.File, store *storage.Storage, pathsBySize map[int64][]string) error {
 	if command.verbose {
-		fmt.Printf("'%v': checking.\n", entry.Path())
+		log.Infof("'%v': checking file status.", entry.Path())
 	}
 
 	info, err := os.Stat(entry.Path())
@@ -179,7 +188,7 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 
 	if modTime.Unix() != entry.ModTimestamp.Unix() || size != entry.Size {
 		if command.verbose {
-			fmt.Printf("'%v': updating entry in database.\n", entry.Path())
+			log.Infof("'%v': updating entry in database.", entry.Path())
 		}
 
 		fingerprint, err := fingerprint.Create(entry.Path())
@@ -195,7 +204,7 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 		fmt.Printf("'%v': modified.\n", entry.Path())
 	} else {
 		if command.verbose {
-			fmt.Printf("'%v': unchanged.\n", entry.Path())
+			log.Infof("'%v': unchanged.", entry.Path())
 		}
 	}
 
@@ -237,7 +246,7 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 		}
 		if childFile == nil {
 			if command.verbose {
-				fmt.Printf("'%v': new.\n", childPath)
+				log.Infof("'%v': new.", childPath)
 			}
 
 			childFile, err = cli.AddOrUpdateFile(store, childPath)
@@ -248,7 +257,7 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 
 		for _, tag := range tags {
 			if command.verbose {
-				fmt.Printf("'%v': ensuring implicit tagging '%v' exists.\n", childPath, tag.Name)
+				log.Infof("'%v': ensuring implicit tagging '%v' exists.", childPath, tag.Name)
 			}
 
 			_, err := store.AddImplicitFileTag(childFile.Id, tag.Id)
@@ -264,14 +273,14 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySize map[int64][]string, store *storage.Storage) error {
 	if entry.Fingerprint == "" {
 		if command.verbose {
-			fmt.Printf("'%v': not searching for new location (no fingerprint).\n", entry.Path())
+			log.Infof("'%v': not searching for new location (no fingerprint).", entry.Path())
 		}
 
 		return nil
 	}
 
 	if command.verbose {
-		fmt.Printf("'%v': searching for new location.\n", entry.Path())
+		log.Infof("'%v': searching for new location.", entry.Path())
 	}
 
 	paths, found := pathsBySize[entry.Size]
@@ -284,7 +293,7 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 
 			if fingerprint == entry.Fingerprint {
 				if command.verbose {
-					fmt.Printf("'%v': file with same fingerprint found at '%v'\n", entry.Path(), path)
+					log.Infof("'%v': file with same fingerprint found at '%v'.", entry.Path(), path)
 				}
 
 				info, err := os.Stat(path)
@@ -303,13 +312,14 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 		}
 	}
 
-	log.Warnf("'%v': missing.", entry.Path())
+	fmt.Printf("'%v': missing.\n", entry.Path())
+
 	return nil
 }
 
 func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]string, error) {
 	if command.verbose {
-		fmt.Printf("Building map of files by size.\n")
+		log.Infof("building map of files by size.")
 	}
 
 	pathsBySize := make(map[int64][]string)
@@ -325,10 +335,6 @@ func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]str
 
 			return nil, err
 		}
-	}
-
-	if command.verbose {
-		fmt.Printf("Finished building map of files by size.\n")
 	}
 
 	return pathsBySize, nil
@@ -347,7 +353,6 @@ func (command RepairCommand) buildFileSystemMapRecursive(path string, pathsBySiz
 
 	info, err := os.Stat(path)
 	if err != nil {
-		fmt.Println("3")
 		return err
 	}
 

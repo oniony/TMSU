@@ -27,7 +27,9 @@ import (
 	"tmsu/storage/database"
 )
 
-type TagsCommand struct{}
+type TagsCommand struct {
+	verbose bool
+}
 
 func (TagsCommand) Name() cli.CommandName {
 	return "tags"
@@ -52,6 +54,8 @@ func (TagsCommand) Options() cli.Options {
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	if options.HasOption("--all") {
 		return command.listAllTags()
 	}
@@ -61,12 +65,16 @@ func (command TagsCommand) Exec(options cli.Options, args []string) error {
 	return command.listTags(args, explicitOnly)
 }
 
-func (TagsCommand) listAllTags() error {
+func (command TagsCommand) listAllTags() error {
 	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
 	defer store.Close()
+
+	if command.verbose {
+		log.Info("retrieving all tags.")
+	}
 
 	tags, err := store.Tags()
 	if err != nil {
@@ -103,6 +111,10 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 	var tags database.Tags
 	var err error
 
+	if command.verbose {
+		log.Infof("'%v': retrieving tags.", path)
+	}
+
 	if explicitOnly {
 		tags, err = store.ExplicitTagsForPath(path)
 	} else {
@@ -124,6 +136,10 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 	for _, path := range paths {
 		var tags database.Tags
 		var err error
+
+		if command.verbose {
+			log.Infof("'%v': retrieving tags.", path)
+		}
 
 		if explicitOnly {
 			tags, err = store.ExplicitTagsForPath(path)
@@ -161,6 +177,10 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
+		if command.verbose {
+			log.Infof("'%v': retrieving tags.", dirName)
+		}
+
 		var tags database.Tags
 		if explicitOnly {
 			tags, err = store.ExplicitTagsForPath(dirName)
@@ -169,14 +189,8 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 		}
 
 		if err != nil {
-			switch {
-			case os.IsNotExist(err):
-				// do nothing
-			case os.IsPermission(err):
-				log.Warnf("%v: Permission denied")
-			default:
-				return err
-			}
+			log.Warn(err.Error())
+			continue
 		}
 
 		if len(tags) == 0 {

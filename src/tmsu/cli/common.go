@@ -93,7 +93,7 @@ func AddOrUpdateFile(store *storage.Storage, path string) (*database.File, error
 			}
 
 			if duplicateCount > 0 {
-				log.Warn("'" + common.RelPath(path) + "' is a duplicate file.")
+				log.Info("'" + common.RelPath(path) + "' is a duplicate file.")
 			}
 		}
 

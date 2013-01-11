@@ -19,10 +19,10 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -142,7 +142,7 @@ func (command UntagCommand) untagPathAll(store *storage.Storage, path string) er
 	}
 
 	if command.verbose {
-		fmt.Printf("'%v': identifying tags applied.\n", absPath)
+		log.Infof("'%v': identifying tags applied.", absPath)
 	}
 
 	explicitTags, err := store.ExplicitTagsByFileId(file.Id)
@@ -156,7 +156,7 @@ func (command UntagCommand) untagPathAll(store *storage.Storage, path string) er
 	}
 
 	if command.verbose {
-		fmt.Printf("'%v': removing all tags.\n", absPath)
+		log.Infof("'%v': removing all tags.", absPath)
 	}
 
 	err = store.RemoveExplicitFileTagsByFileId(file.Id)
@@ -207,7 +207,7 @@ func (command UntagCommand) untagPath(store *storage.Storage, path string, tagNa
 func (command UntagCommand) untagFile(store *storage.Storage, file *database.File, tags database.Tags) error {
 	for _, tag := range tags {
 		if command.verbose {
-			fmt.Printf("'%v': unapplying tag '%v'.\n", file.Path(), tag.Name)
+			log.Infof("'%v': unapplying tag '%v'.", file.Path(), tag.Name)
 		}
 
 		err := command.removeExplicitTag(store, file, tag)
@@ -232,7 +232,7 @@ func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *dat
 
 	if filetagCount == 0 {
 		if command.verbose {
-			fmt.Printf("'%v': removing untagged file.\n", file.Path())
+			log.Infof("'%v': removing untagged file.", file.Path())
 		}
 
 		err = store.RemoveFile(file.Id)
@@ -251,7 +251,7 @@ func (command UntagCommand) removeImplicitFileTags(store *storage.Storage, path 
 	}
 
 	if command.verbose && len(descendents) > 0 {
-		fmt.Printf("'%v': removing implicit taggings.\n", path)
+		log.Infof("'%v': removing implicit taggings.", path)
 	}
 
 	for _, descendent := range descendents {
@@ -267,7 +267,7 @@ func (command UntagCommand) removeImplicitFileTags(store *storage.Storage, path 
 func (command UntagCommand) removeImplicitFileTag(store *storage.Storage, file *database.File, tags database.Tags) error {
 	for _, tag := range tags {
 		if command.verbose {
-			fmt.Printf("'%v': removing implicit tag '%v'.\n", file.Path(), tag.Name)
+			log.Infof("'%v': removing implicit tag '%v'.", file.Path(), tag.Name)
 		}
 
 		err := command.removeImplicitTag(store, file, tag)

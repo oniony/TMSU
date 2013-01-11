@@ -38,6 +38,18 @@ type File struct {
 
 type Files []*File
 
+func (files Files) Where(predicate func(*File) bool) Files {
+	result := make(Files, 0, 10)
+
+	for _, file := range files {
+		if predicate(file) {
+			result = append(result, file)
+		}
+	}
+
+	return result
+}
+
 // Retrieves the file's path.
 func (file File) Path() string {
 	return filepath.Join(file.Directory, file.Name)

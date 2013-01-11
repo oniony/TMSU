@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -112,7 +111,7 @@ func (command TagCommand) lookupTags(store *storage.Storage, names []string) (da
 
 	for _, name := range names {
 		if !tags.Any(func(tag *database.Tag) bool { return tag.Name == name }) {
-			log.Warnf("New tag '%v'.", name)
+			log.Infof("New tag '%v'.", name)
 
 			tag, err := store.AddTag(name)
 			if err != nil {
@@ -149,7 +148,7 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 	}
 
 	if command.verbose {
-		fmt.Printf("'%v': adding/updating file.\n", path)
+		log.Infof("'%v': adding/updating file.", path)
 	}
 
 	file, err := cli.AddOrUpdateFile(store, absPath)
@@ -164,7 +163,7 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 
 	if explicit {
 		if command.verbose {
-			fmt.Printf("'%v': applying explicit tags.\n", path)
+			log.Infof("'%v': applying explicit tags.", path)
 		}
 
 		err = store.AddExplicitFileTags(file.Id, tagIds)
@@ -173,7 +172,7 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 		}
 	} else {
 		if command.verbose {
-			fmt.Printf("'%v': applying implicit tags.\n", path)
+			log.Infof("'%v': applying implicit tags.", path)
 		}
 
 		err = store.AddImplicitFileTags(file.Id, tagIds)

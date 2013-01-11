@@ -20,10 +20,13 @@ package commands
 import (
 	"errors"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
-type MergeCommand struct{}
+type MergeCommand struct {
+	verbose bool
+}
 
 func (MergeCommand) Name() cli.CommandName {
 	return "merge"
@@ -43,7 +46,9 @@ func (MergeCommand) Options() cli.Options {
 	return cli.Options{}
 }
 
-func (MergeCommand) Exec(options cli.Options, args []string) error {
+func (command MergeCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	if len(args) < 2 {
 		return errors.New("Too few arguments.")
 	}
@@ -73,19 +78,11 @@ func (MergeCommand) Exec(options cli.Options, args []string) error {
 			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
+		if command.verbose {
+			log.Infof("finding files tagged '%v'.", sourceTagName)
+		}
+
 		explicitFileTags, err := store.ExplicitFileTagsByTagId(sourceTag.Id)
-		if err != nil {
-			return err
-		}
-
-		for _, explicitFileTag := range explicitFileTags {
-			_, err = store.AddExplicitFileTag(explicitFileTag.FileId, destTag.Id)
-			if err != nil {
-				return err
-			}
-		}
-
-		err = store.RemoveExplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
 		}
@@ -95,6 +92,17 @@ func (MergeCommand) Exec(options cli.Options, args []string) error {
 			return err
 		}
 
+		if command.verbose {
+			log.Infof("applying tag '%v' to these files.", destTagName)
+		}
+
+		for _, explicitFileTag := range explicitFileTags {
+			_, err = store.AddExplicitFileTag(explicitFileTag.FileId, destTag.Id)
+			if err != nil {
+				return err
+			}
+		}
+
 		for _, implicitFileTag := range implicitFileTags {
 			_, err = store.AddImplicitFileTag(implicitFileTag.FileId, destTag.Id)
 			if err != nil {
@@ -102,9 +110,22 @@ func (MergeCommand) Exec(options cli.Options, args []string) error {
 			}
 		}
 
+		if command.verbose {
+			log.Infof("untagging files '%v'.", sourceTagName)
+		}
+
+		err = store.RemoveExplicitFileTagsByTagId(sourceTag.Id)
+		if err != nil {
+			return err
+		}
+
 		err = store.RemoveImplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return err
+		}
+
+		if command.verbose {
+			log.Infof("deleting tag '%v'.", sourceTagName)
 		}
 
 		err = store.DeleteTag(sourceTag.Id)

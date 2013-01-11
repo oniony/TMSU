@@ -28,7 +28,9 @@ import (
 	"tmsu/storage/database"
 )
 
-type StatusCommand struct{}
+type StatusCommand struct {
+	verbose bool
+}
 
 func (StatusCommand) Name() cli.CommandName {
 	return "status"
@@ -100,6 +102,8 @@ func (StatusCommand) Options() cli.Options {
 }
 
 func (command StatusCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	var report *StatusReport
 	var err error
 
@@ -148,6 +152,10 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 	}
 	defer store.Close()
 
+	if command.verbose {
+		log.Info("retrieving all files from database.")
+	}
+
 	files, err := store.Files()
 	if err != nil {
 		return nil, err
@@ -189,6 +197,10 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 			}
 		}
 
+		if command.verbose {
+			log.Infof("'%v': retrieving files from database.", path)
+		}
+
 		files, err := store.FilesByDirectory(absPath)
 		if err != nil {
 			return nil, err
@@ -222,12 +234,20 @@ func (command *StatusCommand) checkFiles(files database.Files, report *StatusRep
 func (command *StatusCommand) checkFile(file *database.File, report *StatusReport) error {
 	relPath := common.RelPath(file.Path())
 
+	if command.verbose {
+		log.Infof("'%v': checking file status.", file.Path())
+	}
+
 	info, err := os.Stat(file.Path())
 	if err != nil {
 		pathError := err.(*os.PathError)
 
 		switch {
 		case os.IsNotExist(pathError.Err):
+			if command.verbose {
+				log.Infof("'%v': file is missing.", file.Path())
+			}
+
 			report.AddRow(Row{relPath, MISSING})
 			return nil
 		case os.IsPermission(pathError.Err):
@@ -237,8 +257,16 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 		}
 	} else {
 		if info.Size() != file.Size || info.ModTime().Unix() != file.ModTimestamp.Unix() {
+			if command.verbose {
+				log.Infof("'%v': file is modified.", file.Path())
+			}
+
 			report.AddRow(Row{relPath, MODIFIED})
 		} else {
+			if command.verbose {
+				log.Infof("'%v': file is unchanged.", file.Path())
+			}
+
 			report.AddRow(Row{relPath, TAGGED})
 		}
 	}
@@ -247,6 +275,10 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 }
 
 func (command *StatusCommand) findNewFiles(path string, report *StatusReport) error {
+	if command.verbose {
+		log.Infof("'%v': finding new files.", path)
+	}
+
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return err

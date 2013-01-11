@@ -23,11 +23,14 @@ import (
 	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/fingerprint"
+	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
 
-type DupesCommand struct{}
+type DupesCommand struct {
+	verbose bool
+}
 
 func (DupesCommand) Name() cli.CommandName {
 	return "dupes"
@@ -49,6 +52,8 @@ func (DupesCommand) Options() cli.Options {
 }
 
 func (command DupesCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	switch len(args) {
 	case 0:
 		command.findDuplicatesInDb()
@@ -59,16 +64,24 @@ func (command DupesCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (DupesCommand) findDuplicatesInDb() error {
+func (command DupesCommand) findDuplicatesInDb() error {
 	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
 	defer store.Close()
 
+	if command.verbose {
+		log.Info("identifying duplicate files.")
+	}
+
 	fileSets, err := store.DuplicateFiles()
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		log.Infof("found %v sets of duplicate files.", len(fileSets))
 	}
 
 	for index, fileSet := range fileSets {
@@ -87,7 +100,7 @@ func (DupesCommand) findDuplicatesInDb() error {
 	return nil
 }
 
-func (DupesCommand) findDuplicatesOf(paths []string) error {
+func (command DupesCommand) findDuplicatesOf(paths []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return err
@@ -96,6 +109,10 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 
 	first := true
 	for _, path := range paths {
+		if command.verbose {
+			log.Infof("'%v': identifying duplicate files.\n", path)
+		}
+
 		fingerprint, err := fingerprint.Create(path)
 		if err != nil {
 			return err
@@ -112,7 +129,7 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 		}
 
 		// filter out the file we're searching on
-		dupes := where(files, func(file *database.File) bool { return file.Path() != absPath })
+		dupes := files.Where(func(file *database.File) bool { return file.Path() != absPath })
 
 		if len(paths) > 1 && len(dupes) > 0 {
 			if first {
@@ -136,16 +153,4 @@ func (DupesCommand) findDuplicatesOf(paths []string) error {
 	}
 
 	return nil
-}
-
-func where(files database.Files, predicate func(*database.File) bool) database.Files {
-	result := make(database.Files, 0, len(files))
-
-	for _, file := range files {
-		if predicate(file) {
-			result = append(result, file)
-		}
-	}
-
-	return result
 }

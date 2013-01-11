@@ -42,3 +42,13 @@ func Warnf(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
 	fmt.Fprintf(os.Stderr, format, values...)
 }
+
+func Info(values ...interface{}) {
+	fmt.Printf("tmsu: ")
+	fmt.Println(values...)
+}
+
+func Infof(format string, values ...interface{}) {
+	format = "tmsu: " + format + "\n"
+	fmt.Printf(format, values...)
+}

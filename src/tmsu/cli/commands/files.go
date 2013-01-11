@@ -27,7 +27,9 @@ import (
 	"tmsu/storage/database"
 )
 
-type FilesCommand struct{}
+type FilesCommand struct {
+	verbose bool
+}
 
 func (FilesCommand) Name() cli.CommandName {
 	return "files"
@@ -50,6 +52,8 @@ func (FilesCommand) Options() cli.Options {
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	if options.HasOption("--all") {
 		return command.listAllFiles()
 	}
@@ -59,12 +63,16 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	return command.listFiles(args, explicitOnly)
 }
 
-func (FilesCommand) listAllFiles() error {
+func (command FilesCommand) listAllFiles() error {
 	store, err := storage.Open()
 	if err != nil {
 		return err
 	}
 	defer store.Close()
+
+	if command.verbose {
+		log.Info("retrieving all files from database.")
+	}
 
 	files, err := store.Files()
 	if err != nil {
@@ -79,7 +87,7 @@ func (FilesCommand) listAllFiles() error {
 	return nil
 }
 
-func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
+func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	if len(args) == 0 {
 		return errors.New("At least one tag must be specified. Use --all to show all files.")
 	}
@@ -109,7 +117,7 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 			return err
 		}
 		if tag == nil {
-			log.Fatalf("No such tag '%v'.", tagName)
+			log.Fatalf("no such tag '%v'.", tagName)
 		}
 
 		if include {
@@ -117,6 +125,10 @@ func (FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		} else {
 			excludeTagIds = append(excludeTagIds, tag.Id)
 		}
+	}
+
+	if command.verbose {
+		log.Info("retrieving set of tagged files from the database.")
 	}
 
 	var files database.Files

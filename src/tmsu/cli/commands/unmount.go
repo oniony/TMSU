@@ -22,10 +22,13 @@ import (
 	"os"
 	"os/exec"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/vfs"
 )
 
-type UnmountCommand struct{}
+type UnmountCommand struct {
+	verbose bool
+}
 
 func (UnmountCommand) Name() cli.CommandName {
 	return "unmount"
@@ -47,6 +50,8 @@ func (UnmountCommand) Options() cli.Options {
 }
 
 func (command UnmountCommand) Exec(options cli.Options, args []string) error {
+	command.verbose = options.HasOption("--verbose")
+
 	if options.HasOption("--all") {
 		return command.unmountAll()
 	}
@@ -58,15 +63,27 @@ func (command UnmountCommand) Exec(options cli.Options, args []string) error {
 	return command.unmount(args[0])
 }
 
-func (UnmountCommand) unmount(path string) error {
+func (command UnmountCommand) unmount(path string) error {
+	if command.verbose {
+		log.Info("searching path for fusermount.")
+	}
+
 	fusermountPath, err := exec.LookPath("fusermount")
 	if err != nil {
 		return err
 	}
 
+	if command.verbose {
+		log.Infof("running: %v -u %v.", fusermountPath, path)
+	}
+
 	process, err := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		log.Info("waiting for process to exit.")
 	}
 
 	processState, err := process.Wait()
@@ -81,9 +98,17 @@ func (UnmountCommand) unmount(path string) error {
 }
 
 func (command UnmountCommand) unmountAll() error {
+	if command.verbose {
+		log.Info("retrieving mount table.")
+	}
+
 	mt, err := vfs.GetMountTable()
 	if err != nil {
 		return errors.New("Could not get mount table: " + err.Error())
+	}
+
+	if command.verbose && len(mt) == 0 {
+		log.Info("mount table is empty.")
 	}
 
 	for _, mount := range mt {

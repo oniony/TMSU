@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"tmsu/cli"
@@ -201,7 +200,7 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 			return err
 		}
 
-		fmt.Printf("'%v': modified.\n", entry.Path())
+		log.Printf("'%v': modified.", entry.Path())
 	} else {
 		if command.verbose {
 			log.Infof("'%v': unchanged.", entry.Path())
@@ -306,13 +305,13 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 					return err
 				}
 
-				fmt.Printf("'%v': moved to '%v'.\n", entry.Path(), path)
+				log.Printf("'%v': moved to '%v'.", entry.Path(), path)
 				return nil
 			}
 		}
 	}
 
-	fmt.Printf("'%v': missing.\n", entry.Path())
+	log.Printf("'%v': missing.", entry.Path())
 
 	return nil
 }

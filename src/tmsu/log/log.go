@@ -22,6 +22,9 @@ import (
 	"os"
 )
 
+var Outfile = os.Stdout
+var Errfile = os.Stderr
+
 func Fatal(values ...interface{}) {
 	Warn(values...)
 	os.Exit(1)
@@ -33,22 +36,30 @@ func Fatalf(format string, values ...interface{}) {
 }
 
 func Warn(values ...interface{}) {
-	fmt.Fprint(os.Stderr, "tmsu: ")
-	fmt.Fprint(os.Stderr, values...)
-	fmt.Fprint(os.Stderr, "\n")
+	fmt.Fprint(Errfile, "tmsu: ")
+	fmt.Fprintln(Errfile, values...)
 }
 
 func Warnf(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(os.Stderr, format, values...)
+	fmt.Fprintf(Errfile, format, values...)
 }
 
 func Info(values ...interface{}) {
-	fmt.Printf("tmsu: ")
-	fmt.Println(values...)
+	fmt.Fprintf(Outfile, "tmsu: ")
+	fmt.Fprintln(Errfile, values...)
 }
 
 func Infof(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
-	fmt.Printf(format, values...)
+	fmt.Fprintf(Outfile, format, values...)
+}
+
+func Print(values ...interface{}) {
+	fmt.Fprintln(Outfile, values...)
+}
+
+func Printf(format string, values ...interface{}) {
+	format = format + "\n"
+	fmt.Fprintf(Outfile, format, values...)
 }

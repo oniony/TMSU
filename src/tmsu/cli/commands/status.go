@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"tmsu/cli"
@@ -324,5 +323,5 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 }
 
 func (command *StatusCommand) printRow(row Row) {
-	fmt.Printf("%v %v\n", string(row.Status), row.Path)
+	log.Printf("%v %n", string(row.Status), row.Path)
 }

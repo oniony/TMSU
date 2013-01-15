@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -110,7 +109,7 @@ func (command MountCommand) listMounts() error {
 	}
 
 	for _, mount := range mt {
-		fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
+		log.Printf("'%v' at '%v'", mount.DatabasePath, mount.MountPath)
 	}
 
 	return nil

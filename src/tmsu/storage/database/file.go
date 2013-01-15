@@ -73,7 +73,7 @@ func (db *Database) FileCount() (uint, error) {
 func (db *Database) Files() (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
-	        ORDER BY directory + '/' + name`
+	        ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -122,7 +122,7 @@ func (db *Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
             WHERE name = ? OR directory = ? OR directory LIKE ?
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql, path, path, filepath.Clean(path+"/%"))
 	if err != nil {
@@ -153,7 +153,7 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
 	        FROM file
 	        WHERE fingerprint = ?
-	        ORDER BY directory + '/' + name`
+	        ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql, string(fingerprint))
 	if err != nil {
@@ -176,7 +176,7 @@ func (db *Database) FilesWithTag(tagId uint) (Files, error) {
 		              FROM implicit_file_tag
 		              WHERE tag_id = ?1
 		    )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql, tagId)
 	if err != nil {
@@ -196,7 +196,7 @@ func (db *Database) FilesWithExplicitTag(tagId uint) (Files, error) {
                 FROM explicit_file_tag
                 WHERE tag_id = ?1
 		    )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql, tagId)
 	if err != nil {
@@ -216,7 +216,7 @@ func (db *Database) FilesWithImplicitTag(tagId uint) (Files, error) {
                 FROM implicit_file_tag
                 WHERE tag_id = ?1
 		    )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	rows, err := db.connection.Query(sql, tagId)
 	if err != nil {
@@ -261,7 +261,7 @@ func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
                      HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
                 )
             )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	params := make([]interface{}, tagCount+1)
 	for index, tagId := range tagIds {
@@ -298,7 +298,7 @@ func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
                 GROUP BY file_id
                 HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
             )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	params := make([]interface{}, tagCount+1)
 	for index, tagId := range tagIds {
@@ -335,7 +335,7 @@ func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
                 GROUP BY file_id
                 HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
             )
-            ORDER BY directory + '/' + name`
+            ORDER BY directory || '/' || name`
 
 	params := make([]interface{}, tagCount+1)
 	for index, tagId := range tagIds {
@@ -361,7 +361,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
                                   WHERE fingerprint != ''
                                   GROUP BY fingerprint
                                   HAVING count(1) > 1)
-            ORDER BY fingerprint, directory + '/' + name`
+            ORDER BY fingerprint, directory || '/' || name`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {

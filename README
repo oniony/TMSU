@@ -5,11 +5,11 @@
 Overview
 --------
 
-tmsu is an application that allows you to organise your files by associating
+TMSU is an application that allows you to organise your files by associating
 them with tags. It provides a tool for managing these tags and a virtual file-
 system to allow tag based access to your files.
 
-tmsu's virtual file system does not store your files: it merely provides an
+TMSU's virtual file system does not store your files: it merely provides an
 alternative, tagged based view of your files stored elsewhere in the file-
 system. That way you have the freedom to choose the most suitable file system
 for storage whilst still benefiting from tag based access.
@@ -22,7 +22,7 @@ integrated help:
 
   $ tmsu help
 
-Full documentation is maintained online in the tmsu wiki:
+Full documentation is maintained online in the TMSU wiki:
 
   http://bitbucket.org/oniony/tmsu/wiki
 
@@ -44,8 +44,8 @@ The following steps are for compiling from source.
 
 1. Installing Go
 
-tmsu is written in the Go programming language. To compile from source you must
-first install Go and the packages that tmsu depends upon. You can get that from
+TMSU is written in the Go programming language. To compile from source you must
+first install Go and the packages that TMSU depends upon. You can get that from
 the Go website:
 
   http://www.golang.org/
@@ -54,7 +54,7 @@ Go can be installed per the instructions on the Go website or it may be
 available in the package management system that comes with your operating
 system.
 
-tmsu is currently built against the Go weekly builds. See VERSIONS for the
+TMSU is currently built against the Go weekly builds. See VERSIONS for the
 latest version that is known to work with the dependent packages.
 
 2. Install the dependent packages.
@@ -62,7 +62,7 @@ latest version that is known to work with the dependent packages.
   $ go get github.com/mattn/go-sqlite3
   $ go get github.com/hanwen/go-fuse/fuse
 
-3. Clone the tmsu respository:
+3. Clone the TMSU respository:
 
   $ hg clone https://bitbucket.org/oniony/tmsu
 
@@ -77,7 +77,7 @@ This will compile to 'bin/tmsu' within the working directory.
 
   $ sudo make install
 
-This will install tmsu to /usr/bin/tmsu.
+This will install TMSU to /usr/bin/tmsu.
 It will also install the Zsh completion to /usr/share/zsh/site-functions.
 
 To change the paths used override the environment variables in the Makefile.
@@ -89,17 +89,17 @@ The project website is at:
 
   http://www.tmsu.org/
 
-There is a tmsu mailing list which can be used for asking questions, making
+There is a TMSU mailing list which can be used for asking questions, making
 suggestions, reporting bugs, &c. Release announcements are also made on this
 list.
 
   http://groups.google.com/group/tmsu
 
-tmsu is written in Go. For more information visit:
+TMSU is written in Go. For more information visit:
 
   http://www.golang.org/.
 
-tmsu itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
+TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
 much of the functionality it provides is made possible by the Fuse and Sqlite3
 libraries, their Go bindings and, of course, the Go language standard library.
 
@@ -136,7 +136,9 @@ trunk
   * Removed the 'export' command: Sqlite3 database is already in a readily
     queryable format.
   * Tags containing '/' confuse the VFS. Such tags are no longer legal.
+  * File lists are now shown sorted alphanumerically.
   * Updated Zsh completion.
+  * Improved unit-test coverage.
   * Minor bug fixes.
 
 v0.0.9
@@ -179,7 +181,7 @@ v0.0.6
 
   IMPORTANT: This version adds a column to one of the database tables to record
   the file's modification timestamep. The new code will not work with an
-  existing tmsu database until it has been upgraded.
+  existing TMSU database until it has been upgraded.
 
   To upgrade the database, run the upgrade script using the Sqlite3 tooling:
 

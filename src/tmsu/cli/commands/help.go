@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"math"
 	"sort"
 	"strconv"
 	"tmsu/cli"
+	"tmsu/log"
 )
 
 type HelpCommand struct {
@@ -64,8 +64,8 @@ func (command HelpCommand) Exec(options cli.Options, args []string) error {
 }
 
 func (helpCommand HelpCommand) summary() {
-	fmt.Println("TMSU")
-	fmt.Println()
+	log.Print("TMSU")
+	log.Print()
 
 	var maxWidth int = 0
 	commandNames := make(cli.CommandNames, 0, len(helpCommand.Commands))
@@ -85,7 +85,7 @@ func (helpCommand HelpCommand) summary() {
 			continue
 		}
 
-		fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name(), commandSummary)
+		log.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v", command.Name(), commandSummary)
 	}
 }
 
@@ -103,26 +103,26 @@ func (helpCommand HelpCommand) listCommands() {
 	sort.Sort(commandNames)
 
 	for _, commandName := range commandNames {
-		fmt.Println(commandName)
+		log.Print(commandName)
 	}
 }
 
 func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
 	command := helpCommand.Commands[commandName]
 	if command == nil {
-		fmt.Printf("No such command '%v'.\n", commandName)
+		log.Printf("No such command '%v'.", commandName)
 		return
 	}
 
-	fmt.Println(command.Description())
+	log.Print(command.Description())
 
 	if len(command.Options()) > 0 {
-		fmt.Println()
+		log.Print()
 
 		for _, option := range command.Options() {
-			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
+			log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
 		}
 	}
 
-	fmt.Println()
+	log.Print()
 }

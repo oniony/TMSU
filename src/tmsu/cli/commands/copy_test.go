@@ -19,7 +19,6 @@ package commands
 
 import (
 	"os"
-	"path/filepath"
 	"testing"
 	"time"
 	"tmsu/cli"
@@ -30,7 +29,7 @@ import (
 func TestSuccessfulCopy(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -112,7 +111,7 @@ func TestSuccessfulCopy(test *testing.T) {
 func TestNonExistentFromTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
 	command := CopyCommand{false}
@@ -131,7 +130,7 @@ func TestNonExistentFromTag(test *testing.T) {
 func TestInvalidToTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
 	command := CopyCommand{false}
@@ -150,7 +149,7 @@ func TestInvalidToTag(test *testing.T) {
 func TestToTagAlreadyExists(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -180,13 +179,4 @@ func TestToTagAlreadyExists(test *testing.T) {
 	if err == nil {
 		test.Fatal("Existing to tag not identified.")
 	}
-}
-
-//-
-
-func configureDatabase() string {
-	databasePath := filepath.Join(os.TempDir(), "tmsu_test.db")
-	os.Setenv("TMSU_DB", databasePath)
-
-	return databasePath
 }

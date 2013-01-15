@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -72,15 +72,15 @@ func (StatsCommand) Exec(options cli.Options, args []string) error {
 
 	fileTagCount := explicitFileTagCount + implicitFileTagCount
 
-	fmt.Printf("Database Contents\n")
+	log.Printf("Database Contents")
 
-	fmt.Printf(" Tags:        %v\n", tagCount)
-	fmt.Printf(" Files:       %v\n", fileCount)
-	fmt.Println()
-	fmt.Printf(" Taggings     total\n")
-	fmt.Printf("   all:       %v\n", fileTagCount)
-	fmt.Printf("   explicit:  %v\n", explicitFileTagCount)
-	fmt.Printf("   implicit:  %v\n", implicitFileTagCount)
+	log.Printf(" Tags:        %v", tagCount)
+	log.Printf(" Files:       %v", fileCount)
+	log.Print()
+	log.Printf(" Taggings     total")
+	log.Printf("   all:       %v", fileTagCount)
+	log.Printf("   explicit:  %v", explicitFileTagCount)
+	log.Printf("   implicit:  %v", implicitFileTagCount)
 
 	return nil
 }

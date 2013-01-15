@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"path/filepath"
 	"tmsu/cli"
 	"tmsu/common"
@@ -86,14 +85,14 @@ func (command DupesCommand) findDuplicatesInDb() error {
 
 	for index, fileSet := range fileSets {
 		if index > 0 {
-			fmt.Println()
+			log.Print()
 		}
 
-		fmt.Printf("Set of %v duplicates:\n", len(fileSet))
+		log.Printf("Set of %v duplicates:", len(fileSet))
 
 		for _, file := range fileSet {
 			relPath := common.RelPath(file.Path())
-			fmt.Printf("  %v\n", relPath)
+			log.Printf("  %v", relPath)
 		}
 	}
 
@@ -135,19 +134,19 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 			if first {
 				first = false
 			} else {
-				fmt.Println()
+				log.Print()
 			}
 
-			fmt.Printf("%v duplicates of %v:\n", len(dupes), path)
+			log.Printf("%v duplicates of %v:", len(dupes), path)
 
 			for _, dupe := range dupes {
 				relPath := common.RelPath(dupe.Path())
-				fmt.Printf("  %v\n", relPath)
+				log.Printf("  %v", relPath)
 			}
 		} else {
 			for _, dupe := range dupes {
 				relPath := common.RelPath(dupe.Path())
-				fmt.Println(relPath)
+				log.Print(relPath)
 			}
 		}
 	}

@@ -19,7 +19,6 @@ package commands
 
 import (
 	"errors"
-	"fmt"
 	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/log"
@@ -40,8 +39,7 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files [--explicit] [-]TAG...
-tmsu files --all
+	return `tmsu files OPTIONS [-]TAG...
 
 Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).`
 }
@@ -81,7 +79,7 @@ func (command FilesCommand) listAllFiles() error {
 
 	for _, file := range files {
 		relPath := common.RelPath(file.Path())
-		fmt.Println(relPath)
+		log.Print(relPath)
 	}
 
 	return nil
@@ -146,7 +144,7 @@ func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 
 	for _, file := range files {
 		relPath := common.RelPath(file.Path())
-		fmt.Println(relPath)
+		log.Print(relPath)
 	}
 
 	return nil

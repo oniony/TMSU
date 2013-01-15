@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"os"
 	"sort"
+	"strings"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -82,7 +82,7 @@ func (command TagsCommand) listAllTags() error {
 	}
 
 	for _, tag := range tags {
-		fmt.Println(tag.Name)
+		log.Print(tag.Name)
 	}
 
 	return nil
@@ -126,7 +126,7 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 	}
 
 	for _, tag := range tags {
-		fmt.Println(tag.Name)
+		log.Print(tag.Name)
 	}
 
 	return nil
@@ -152,11 +152,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 			continue
 		}
 
-		fmt.Print(path + ":")
-		for _, tag := range tags {
-			fmt.Print(" " + tag.Name)
-		}
-		fmt.Print("\n")
+		log.Print(path + ":" + tagLine(tags))
 	}
 
 	return nil
@@ -197,12 +193,17 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 			continue
 		}
 
-		fmt.Print(dirName + ":")
-		for _, tag := range tags {
-			fmt.Print(" " + tag.Name)
-		}
-		fmt.Print("\n")
+		log.Print(dirName + ": " + tagLine(tags))
 	}
 
 	return nil
+}
+
+func tagLine(tags database.Tags) string {
+	tagNames := make([]string, len(tags))
+	for index, tag := range tags {
+		tagNames[index] = tag.Name
+	}
+
+	return strings.Join(tagNames, " ")
 }

@@ -18,9 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"fmt"
 	"tmsu/cli"
 	"tmsu/common"
+	"tmsu/log"
 )
 
 type VersionCommand struct{}
@@ -44,9 +44,9 @@ func (VersionCommand) Options() cli.Options {
 }
 
 func (VersionCommand) Exec(options cli.Options, args []string) error {
-	fmt.Println("TMSU", common.Version)
-	fmt.Println()
-	fmt.Println(`Copyright © 2011-2013 Paul Ruane.
+	log.Print("TMSU", common.Version)
+	log.Print()
+	log.Print(`Copyright © 2011-2013 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

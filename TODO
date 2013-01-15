@@ -1,17 +1,20 @@
 HIGH
 
-* Add verbosity to all commands.
-* Improve unit-test coverage.
-* Command line options that take an argument do not work properly.
-* Untagging via the VFS does not remove implicit taggings.
-* Repair command improvements
-    o Implicit files and taggings should be removed if file has gone.
-    o Renamed/moved implicitly tagged files should be detected and repaired.
-* Storage level operations should ensure database consistency.
-    o E.g. deleting a tag should result in corresponding taggings being deleted.
+E Add unit-tests for each command.
+B Command line options that take an argument do not work properly.
+B Untagging via the VFS does not remove implicit taggings.
+E Repair command: Implicit files and taggings should be removed if file is no longer on disk.
+B Renamed/moved implicitly tagged files should be detected and repaired.
+E Storage level operations should ensure database consistency. E.g. deleting a
+  tag should result in corresponding taggings being deleted.
 
 MEDIUM
 
-* Make implict tags an option.
-* Add benchmarks.
-* Rename 'filetag' to 'tagging'.
+E Make implict tags an option.
+E Issue #29: Option to allow just files or directories to be listed.
+E Add benchmarks.
+C Rename 'filetag' to 'tagging'.
+E Issue #35: print0 support.
+E Issue #33: cross compile binary for 64 bit Linux.
+
+Key: [B]ug [E]nhancement [C]lean-up [R]efactoring

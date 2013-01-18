@@ -48,7 +48,7 @@ Tags the file FILE with the tag(s) specified.`
 }
 
 func (TagCommand) Options() cli.Options {
-	return cli.Options{{"-t", "--tags", "the set of tags to apply"}}
+	return cli.Options{{"--tags", "-t", "the set of tags to apply"}}
 }
 
 func (command TagCommand) Exec(options cli.Options, args []string) error {

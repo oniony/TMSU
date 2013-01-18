@@ -34,8 +34,8 @@ func (commandNames CommandNames) Swap(i, j int) {
 }
 
 type Option struct {
-	ShortName   string
 	LongName    string
+	ShortName   string
 	Description string
 }
 

@@ -46,7 +46,7 @@ Unmounts the virtual file-system at MOUNTPOINT.`
 }
 
 func (UnmountCommand) Options() cli.Options {
-	return cli.Options{{"-a", "--all", "unmounts all mounted TMSU file-systems"}}
+	return cli.Options{{"--all", "-a", "unmounts all mounted TMSU file-systems"}}
 }
 
 func (command UnmountCommand) Exec(options cli.Options, args []string) error {

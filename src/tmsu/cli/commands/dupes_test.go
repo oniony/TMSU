@@ -31,10 +31,14 @@ import (
 
 func TestSingleDupe(test *testing.T) {
 	// set-up
+
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
 	err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
 
 	store, err := storage.Open()
 	if err != nil {
@@ -65,7 +69,7 @@ func TestSingleDupe(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, string(bytes), "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n")
+	CompareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n", string(bytes))
 }
 
 func TestMultipleDupes(test *testing.T) {

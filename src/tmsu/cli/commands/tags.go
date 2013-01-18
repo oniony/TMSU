@@ -49,8 +49,8 @@ When run with no arguments, tags for the current working directory are listed.`
 }
 
 func (TagsCommand) Options() cli.Options {
-	return cli.Options{{"-a", "--all", "lists all of the tags defined"},
-		{"-e", "--explicit", "show only explicitly applied tags"}}
+	return cli.Options{{"--all", "-a", "lists all of the tags defined"},
+		{"--explicit", "-e", "show only explicitly applied tags"}}
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {

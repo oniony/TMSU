@@ -45,8 +45,8 @@ Lists the files, if any, that have all of the TAGs specified. Tags can be exclud
 }
 
 func (FilesCommand) Options() cli.Options {
-	return cli.Options{{"-a", "--all", "show the complete set of tagged files"},
-		{"-e", "--explicit", "show only the explicitly tagged files"}}
+	return cli.Options{{"--all", "-a", "show the complete set of tagged files"},
+		{"--explicit", "-e", "show only the explicitly tagged files"}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {

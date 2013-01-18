@@ -44,7 +44,7 @@ Shows help summary or, where COMMAND is specified, help for COMMAND.`
 }
 
 func (HelpCommand) Options() cli.Options {
-	return cli.Options{{"-l", "--list", "list commands"}}
+	return cli.Options{{"--list", "-l", "list commands"}}
 }
 
 func (command HelpCommand) Exec(options cli.Options, args []string) error {

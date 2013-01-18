@@ -43,6 +43,6 @@ func LookupOption(command Command, name string) *Option {
 	return nil
 }
 
-var globalOptions = Options{Option{"-v", "--verbose", "show verbose messages"},
-	Option{"-h", "--help", "show help and exit"},
-	Option{"-V", "--version", "show version information and exit"}}
+var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages"},
+	Option{"--help", "-h", "show help and exit"},
+	Option{"--version", "-V", "show version information and exit"}}

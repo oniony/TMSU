@@ -48,8 +48,8 @@ Disassociates FILE with the TAGs specified.`
 }
 
 func (UntagCommand) Options() cli.Options {
-	return cli.Options{{"-a", "--all", "strip each file of all tags"},
-		{"-t", "--tags", "the set of tags to remove"}}
+	return cli.Options{{"--all", "-a", "strip each file of all tags"},
+		{"--tags", "-t", "the set of tags to remove"}}
 }
 
 func (command UntagCommand) Exec(options cli.Options, args []string) error {

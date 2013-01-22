@@ -1,5 +1,6 @@
 HIGH
 
+B 'untag --all' no longer works to untag a removed file when it is implicitly tagged.
 E Add unit-tests for each command.
 B Command line options that take an argument do not work properly.
 B Untagging via the VFS does not remove implicit taggings.

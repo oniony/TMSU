@@ -60,22 +60,25 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 	defer store.Close()
 
 	destTagName := args[len(args)-1]
+	destTag, err := store.TagByName(destTagName)
+	if err != nil {
+		return err
+	}
+	if destTag == nil {
+		return errors.New("No such tag '" + destTagName + "'.")
+	}
 
 	for _, sourceTagName := range args[0 : len(args)-1] {
+		if sourceTagName == destTagName {
+			return errors.New("Source and destination names are the same.")
+		}
+
 		sourceTag, err := store.TagByName(sourceTagName)
 		if err != nil {
 			return err
 		}
 		if sourceTag == nil {
 			return errors.New("No such tag '" + sourceTagName + "'.")
-		}
-
-		destTag, err := store.TagByName(destTagName)
-		if err != nil {
-			return err
-		}
-		if destTag == nil {
-			return errors.New("No such tag '" + destTagName + "'.")
 		}
 
 		if command.verbose {

@@ -1,6 +1,13 @@
 HIGH
 
 B 'repair' command does not always identify moved files.
+    * If an explicitly tagged file './a' is moved under an explicitly tagged
+      directory './b', then the file './b/a' is identified as an added file
+      rather than a move of file './a'. The repair should update the path of
+      the existing file and add additional implict taggings from its new parent
+      directory.
+    * Moving a file './c/d' to './d' should remove the implicit taggings
+      inherited from './c' but keep any explicit taggings.
 B Command line options that take an argument do not work properly.
 E Use fmt.Errorf rather than just propagating existing errors.
 E Add unit-tests for each command.

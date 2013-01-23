@@ -29,7 +29,7 @@ import (
 	"tmsu/storage/database"
 )
 
-//TODO handle directory being replaced by a file (currently causes error)
+//TODO need to remove implicitly tagged missing files right at the end otherwise moves not identified
 //TODO need to look for new files right at the end otherwise moves are not identified
 
 type RepairCommand struct {

@@ -323,5 +323,5 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 }
 
 func (command *StatusCommand) printRow(row Row) {
-	log.Printf("%v %n", string(row.Status), row.Path)
+	log.Printf("%v %v", string(row.Status), row.Path)
 }

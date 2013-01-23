@@ -19,10 +19,12 @@ package commands
 
 import (
 	"errors"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
+	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
@@ -77,8 +79,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 			return err
 		}
 
-		err = command.tagPaths(store, paths, tags, true)
+		files, err := command.addFiles(store, paths)
 		if err != nil {
+			return err
+		}
+
+		if err := command.tagFiles(store, files, tags, true); err != nil {
 			return err
 		}
 	} else {
@@ -94,8 +100,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 			return err
 		}
 
-		err = command.tagPath(store, path, tags, true)
+		file, err := command.addFile(store, path)
 		if err != nil {
+			return err
+		}
+
+		if err = command.tagFile(store, file, tags, true); err != nil {
 			return err
 		}
 	}
@@ -125,10 +135,71 @@ func (command TagCommand) lookupTags(store *storage.Storage, names []string) (da
 	return tags, nil
 }
 
-func (command TagCommand) tagPaths(store *storage.Storage, paths []string, tags database.Tags, explicit bool) error {
-	for _, path := range paths {
-		err := command.tagPath(store, path, tags, explicit)
+func (command TagCommand) addFiles(store *storage.Storage, paths []string) (database.Files, error) {
+	files := make(database.Files, len(paths))
+
+	for index, path := range paths {
+		file, err := command.addFile(store, path)
 		if err != nil {
+			return nil, err
+		}
+
+		files[index] = file
+	}
+
+	return files, nil
+}
+
+func (command TagCommand) addFile(store *storage.Storage, path string) (*database.File, error) {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("'%v': could not get absolute path.", path, err)
+	}
+
+	file, err := store.FileByPath(absPath)
+	if err != nil {
+		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
+	}
+
+	if file != nil {
+		return file, nil
+	}
+
+	if command.verbose {
+		log.Infof("'%v': adding file.", path)
+	}
+
+	stat, err := os.Stat(path)
+	if err != nil {
+		switch {
+		case os.IsPermission(err):
+			return nil, fmt.Errorf("'%v': permisison denied", path)
+		case os.IsNotExist(err):
+			return nil, fmt.Errorf("'%v': no such file", path)
+		default:
+			return nil, fmt.Errorf("'%v': could not stat file: %v", path, err)
+		}
+	}
+
+	modTime := stat.ModTime().UTC()
+	size := stat.Size()
+
+	fingerprint, err := fingerprint.Create(path)
+	if err != nil {
+		return nil, err
+	}
+
+	file, err = store.AddFile(absPath, fingerprint, modTime, size)
+	if err != nil {
+		return nil, fmt.Errorf("'%v': could not add file to database: %v", path, err)
+	}
+
+	return file, nil
+}
+
+func (command TagCommand) tagFiles(store *storage.Storage, files database.Files, tags database.Tags, explicit bool) error {
+	for _, file := range files {
+		if err := command.tagFile(store, file, tags, explicit); err != nil {
 			return err
 		}
 	}
@@ -136,26 +207,7 @@ func (command TagCommand) tagPaths(store *storage.Storage, paths []string, tags 
 	return nil
 }
 
-func (command TagCommand) tagPath(store *storage.Storage, path string, tags database.Tags, explicit bool) error {
-	osInfo, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return err
-	}
-
-	if command.verbose {
-		log.Infof("'%v': adding/updating file.", path)
-	}
-
-	file, err := cli.AddOrUpdateFile(store, absPath)
-	if err != nil {
-		return err
-	}
-
+func (command TagCommand) tagFile(store *storage.Storage, file *database.File, tags database.Tags, explicit bool) error {
 	tagIds := make([]uint, len(tags))
 	for index, tag := range tags {
 		tagIds[index] = tag.Id
@@ -163,42 +215,62 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tags data
 
 	if explicit {
 		if command.verbose {
-			log.Infof("'%v': applying explicit tags.", path)
+			log.Infof("'%v': applying explicit tags.", file.Path())
 		}
 
-		err = store.AddExplicitFileTags(file.Id, tagIds)
+		err := store.AddExplicitFileTags(file.Id, tagIds)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not apply explicit tags: %v", file.Path(), err)
 		}
 	} else {
 		if command.verbose {
-			log.Infof("'%v': applying implicit tags.", path)
+			log.Infof("'%v': applying implicit tags.", file.Path())
 		}
 
-		err = store.AddImplicitFileTags(file.Id, tagIds)
+		err := store.AddImplicitFileTags(file.Id, tagIds)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not apply implicit tags: %v", file.Path(), err)
 		}
 	}
 
-	if !osInfo.IsDir() {
+	stat, err := os.Stat(file.Path())
+	if err != nil {
+		return fmt.Errorf("'%v': could not stat path: %v", file.Path(), err)
+	}
+
+	if !stat.IsDir() {
 		return nil
 	}
 
-	osFile, err := os.Open(path)
+	osFile, err := os.Open(file.Path())
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not open path: %v", file.Path(), err)
 	}
 
-	entryNames, err := osFile.Readdirnames(0)
+	childNames, err := osFile.Readdirnames(0)
 	osFile.Close()
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not retrieve directory contents: %v", file.Path(), err)
 	}
 
-	for _, entryName := range entryNames {
-		entryPath := filepath.Join(path, entryName)
-		command.tagPath(store, entryPath, tags, false)
+	for _, childName := range childNames {
+		childPath := filepath.Join(file.Path(), childName)
+
+		childFile, err := store.FileByPath(childPath)
+		if err != nil {
+			return fmt.Errorf("'%v': could not lookup file: %v", childPath, err)
+		}
+		if childFile == nil {
+			childFile, err = command.addFile(store, childPath)
+			if err != nil {
+				return fmt.Errorf("'%v': could not add child file: %v", childPath, err)
+			}
+		}
+
+		err = command.tagFile(store, childFile, tags, false)
+		if err != nil {
+			return fmt.Errorf("'%v': could not tag path: %v", childPath, err)
+		}
 	}
 
 	return nil

@@ -137,7 +137,13 @@ trunk
     queryable format.
   * Tags containing '/' confuse the VFS. Such tags are no longer legal.
   * File lists are now shown sorted alphanumerically.
+  * 'repair' command now removes from the database files that are missing on
+    disk and have no explicit tags.
+  * As a performance enhancement 'tag' command no longer calculates fingerprints
+    for files that are already in the database. As a consequence the 'tag'
+    command no longer identifies modified files.
   * Updated Zsh completion.
+  * The full context of errors is now reported when an error occurs.
   * Improved unit-test coverage.
   * Minor bug fixes.
 

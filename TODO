@@ -1,16 +1,19 @@
 HIGH
 
-B 'untag --all' no longer works to untag a removed file when it is implicitly tagged.
-E Add unit-tests for each command.
+B 'repair' command does not always identify moved files.
 B Command line options that take an argument do not work properly.
+E Use fmt.Errorf rather than just propagating existing errors.
+E Add unit-tests for each command.
 B Untagging via the VFS does not remove implicit taggings.
-E Repair command: Implicit files and taggings should be removed if file is no longer on disk.
-B Renamed/moved implicitly tagged files should be detected and repaired.
 E Storage level operations should ensure database consistency. E.g. deleting a
   tag should result in corresponding taggings being deleted.
+B 'repair' command does not handle the case where a previously tagged
+  file is replaced with a directory (and vice versa).
 
 MEDIUM
 
+E Consolidate 'status' and 'repair' commands.
+B 'tmsu tags a' should report files that exist neither on disk nor database.
 E Make implict tags an option.
 E Issue #29: Option to allow just files or directories to be listed.
 E Add benchmarks.

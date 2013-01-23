@@ -175,7 +175,7 @@ func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint
 }
 
 // Updates a file in the database.
-func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) error {
+func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*database.File, error) {
 	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size)
 }
 

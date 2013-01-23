@@ -438,7 +438,7 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 }
 
 // Updates a file in the database.
-func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) error {
+func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -448,18 +448,18 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 
 	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size, int(fileId))
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
-		return err
+		return nil, err
 	}
 	if rowsAffected != 1 {
-		return errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("Expected exactly one row to be affected.")
 	}
 
-	return nil
+	return &File{uint(fileId), directory, name, fingerprint, modTime, size}, nil
 }
 
 // Removes a file from the database.

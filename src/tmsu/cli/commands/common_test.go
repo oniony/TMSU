@@ -7,9 +7,11 @@ import (
 	"strings"
 	"testing"
 	"tmsu/log"
+	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
-func ConfigureOutput() (string, string, error) {
+func configureOutput() (string, string, error) {
 	outPath := filepath.Join(os.TempDir(), "tmsu_test.out")
 	outFile, err := os.Create(outPath)
 	if err != nil {
@@ -27,15 +29,49 @@ func ConfigureOutput() (string, string, error) {
 	return outPath, errPath, nil
 }
 
-func ConfigureDatabase() string {
+func configureDatabase() string {
 	databasePath := filepath.Join(os.TempDir(), "tmsu_test.db")
 	os.Setenv("TMSU_DB", databasePath)
 
 	return databasePath
 }
 
-func CompareOutput(test *testing.T, expected, actual string) {
+func compareOutput(test *testing.T, expected, actual string) {
 	if actual != expected {
 		test.Fatal("Output was not as expected.\nExpected: " + strings.Replace(expected, "\n", "\\n", -1) + "\nActual: " + strings.Replace(actual, "\n", "\\n", -1))
+	}
+}
+
+func expectExplicitTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
+	fileTags, err := store.ExplicitFileTagsByFileId(file.Id)
+	if err != nil {
+		test.Fatal(err)
+	}
+	if len(fileTags) != len(tags) {
+		test.Fatalf("File '%v' has %v tags but expected %v.", file.Path(), len(fileTags), len(tags))
+	}
+	for index, filetag := range fileTags {
+		tag := tags[index]
+
+		if filetag.TagId != tag.Id {
+			test.Fatal("File '%v' is tagged %v but expected %v.", file.Path(), filetag.TagId, tag.Id)
+		}
+	}
+}
+
+func expectImplicitTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
+	fileTags, err := store.ImplicitFileTagsByFileId(file.Id)
+	if err != nil {
+		test.Fatal(err)
+	}
+	if len(fileTags) != len(tags) {
+		test.Fatalf("File '%v' has %v tags but expected %v.", file.Path(), len(fileTags), len(tags))
+	}
+	for index, filetag := range fileTags {
+		tag := tags[index]
+
+		if filetag.TagId != tag.Id {
+			test.Fatal("File '%v' is tagged %v but expected %v.", file.Path(), filetag.TagId, tag.Id)
+		}
 	}
 }

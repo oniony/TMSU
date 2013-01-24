@@ -26,10 +26,10 @@ import (
 	"tmsu/storage"
 )
 
-func TestSuccessfulCopy(test *testing.T) {
+func TestCopySuccessful(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -43,21 +43,21 @@ func TestSuccessfulCopy(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileAB, err := store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fromTag, err := store.AddTag("from")
+	sourceTag, err := store.AddTag("source")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileA.Id, fromTag.Id); err != nil {
+	if _, err := store.AddExplicitFileTag(fileA.Id, sourceTag.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileB.Id, fromTag.Id); err != nil {
+	if _, err := store.AddImplicitFileTag(fileAB.Id, sourceTag.Id); err != nil {
 		test.Fatal(err)
 	}
 
@@ -65,91 +65,66 @@ func TestSuccessfulCopy(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"from", "to"}); err != nil {
+	if err := command.Exec(cli.Options{}, []string{"source", "dest"}); err != nil {
 		test.Fatal(err)
 	}
 
 	// validate
 
-	toTag, err := store.TagByName("to")
+	destTag, err := store.TagByName("dest")
 	if err != nil {
 		test.Fatal(err)
 	}
-	if toTag == nil {
+	if destTag == nil {
 		test.Fatal("Destination tag does not exist.")
 	}
 
-	explicitFileTagsA, err := store.ExplicitFileTagsByFileId(fileA.Id)
-	if err != nil {
-		test.Fatal(err)
-	}
-	if len(explicitFileTagsA) != 2 {
-		test.Fatal("Expected two file-tags for file 'a'.")
-	}
-	if explicitFileTagsA[0].TagId != fromTag.Id {
-		test.Fatalf("Explicit file-tag for from tag has wrong tag ID '%v'.", explicitFileTagsA[0].TagId)
-	}
-	if explicitFileTagsA[1].TagId != toTag.Id {
-		test.Fatalf("Explicit file-tag for to tag has wrong tag ID '%v'.", explicitFileTagsA[1].TagId)
-	}
-
-	implicitFileTagsA, err := store.ImplicitFileTagsByFileId(fileB.Id)
-	if err != nil {
-		test.Fatal(err)
-	}
-	if len(implicitFileTagsA) != 2 {
-		test.Fatal("impected two file-tags for file 'a'.")
-	}
-	if implicitFileTagsA[0].TagId != fromTag.Id {
-		test.Fatalf("implicit file-tag for from tag has wrong tag ID '%v'.", implicitFileTagsA[0].TagId)
-	}
-	if implicitFileTagsA[1].TagId != toTag.Id {
-		test.Fatalf("implicit file-tag for to tag has wrong tag ID '%v'.", implicitFileTagsA[1].TagId)
-	}
+	expectExplicitTags(test, store, fileA, sourceTag, destTag)
+	expectImplicitTags(test, store, fileAB, sourceTag, destTag)
 }
 
-func TestNonExistentFromTag(test *testing.T) {
+func TestCopyNonExistentSourceTag(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	command := CopyCommand{false}
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"from", "to"})
+	err := command.Exec(cli.Options{}, []string{"source", "dest"})
 
 	// validate
 
 	if err == nil {
-		test.Fatal("Non-existent from tag was not identified.")
+		test.Fatal("Non-existent source tag was not identified.")
 	}
 }
 
-func TestInvalidToTag(test *testing.T) {
+func TestCopyInvalidDestTag(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	command := CopyCommand{false}
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"from", "to/dest"})
+	err := command.Exec(cli.Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 
 	if err == nil {
-		test.Fatal("Invalid to tag not identified.")
+		test.Fatal("Invalid dest tag not identified.")
 	}
 }
 
-func TestToTagAlreadyExists(test *testing.T) {
+func TestCopyDestTagAlreadyExists(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -158,12 +133,12 @@ func TestToTagAlreadyExists(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("from")
+	_, err = store.AddTag("source")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddTag("to")
+	_, err = store.AddTag("dest")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -172,11 +147,11 @@ func TestToTagAlreadyExists(test *testing.T) {
 
 	// test
 
-	err = command.Exec(cli.Options{}, []string{"from", "to"})
+	err = command.Exec(cli.Options{}, []string{"source", "dest"})
 
 	// validate
 
 	if err == nil {
-		test.Fatal("Existing to tag not identified.")
+		test.Fatal("Existing dest tag not identified.")
 	}
 }

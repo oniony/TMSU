@@ -28,13 +28,13 @@ import (
 	"tmsu/storage"
 )
 
-func TestAllFiles(test *testing.T) {
+func TestFilesAll(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -75,16 +75,16 @@ func TestAllFiles(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b\n/tmp/b/a\n/tmp/d\n", string(bytes))
+	compareOutput(test, "/tmp/b\n/tmp/b/a\n/tmp/d\n", string(bytes))
 }
 
-func TestSingleTag(test *testing.T) {
+func TestFilesSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -147,16 +147,16 @@ func TestSingleTag(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
+	compareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
 }
 
-func TestNotSingleTag(test *testing.T) {
+func TestFilesNotSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -219,16 +219,16 @@ func TestNotSingleTag(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/d\n", string(bytes))
+	compareOutput(test, "/tmp/d\n", string(bytes))
 }
 
-func TestAnd(test *testing.T) {
+func TestFilesAnd(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -300,16 +300,16 @@ func TestAnd(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b/a\n", string(bytes))
+	compareOutput(test, "/tmp/b/a\n", string(bytes))
 }
 
-func TestAndNot(test *testing.T) {
+func TestFilesAndNot(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -381,16 +381,16 @@ func TestAndNot(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b\n", string(bytes))
+	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
-func TestSingleTagExplicit(test *testing.T) {
+func TestFilesSingleTagExplicit(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -453,16 +453,16 @@ func TestSingleTagExplicit(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b\n", string(bytes))
+	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
-func TestNotSingleTagExplicit(test *testing.T) {
+func TestFilesNotSingleTagExplicit(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -529,5 +529,5 @@ func TestNotSingleTagExplicit(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/b\n", string(bytes))
+	compareOutput(test, "/tmp/b\n", string(bytes))
 }

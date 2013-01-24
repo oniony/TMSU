@@ -26,10 +26,10 @@ import (
 	"tmsu/storage"
 )
 
-func TestSuccessfulTagDeletion(test *testing.T) {
+func TestDeleteSuccessful(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -127,10 +127,10 @@ func TestSuccessfulTagDeletion(test *testing.T) {
 	}
 }
 
-func TestNonExistentDeletionTag(test *testing.T) {
+func TestDeleteNonExistentTag(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
 	command := DeleteCommand{false}

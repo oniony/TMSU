@@ -29,13 +29,13 @@ import (
 	"tmsu/storage"
 )
 
-func TestSingleDupe(test *testing.T) {
+func TestDupesSingle(test *testing.T) {
 	// set-up
 
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -71,15 +71,15 @@ func TestSingleDupe(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n", string(bytes))
+	compareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n", string(bytes))
 }
 
-func TestMultipleDupes(test *testing.T) {
+func TestDupesMultiple(test *testing.T) {
 	// set-up
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -127,15 +127,15 @@ func TestMultipleDupes(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n\nSet of 3 duplicates:\n  /tmp/a/d\n  /tmp/b\n  /tmp/e/f\n", string(bytes))
+	compareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n\nSet of 3 duplicates:\n  /tmp/a/d\n  /tmp/b\n  /tmp/e/f\n", string(bytes))
 }
 
-func TestNoDupes(test *testing.T) {
+func TestDupesNone(test *testing.T) {
 	// set-up
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -182,15 +182,15 @@ func TestNoDupes(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "", string(bytes))
+	compareOutput(test, "", string(bytes))
 }
 
-func TestSingleDupeOfFile(test *testing.T) {
+func TestDupesSingleUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -244,15 +244,15 @@ func TestSingleDupeOfFile(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/a\n", string(bytes))
+	compareOutput(test, "/tmp/a\n", string(bytes))
 }
 
-func TestMultipleDupeOfFile(test *testing.T) {
+func TestDupesMultipleUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -306,15 +306,15 @@ func TestMultipleDupeOfFile(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "/tmp/a\n/tmp/a/b\n/tmp/e/f\n", string(bytes))
+	compareOutput(test, "/tmp/a\n/tmp/a/b\n/tmp/e/f\n", string(bytes))
 }
 
-func TestNoDupeOfFile(test *testing.T) {
+func TestDupesNoneUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := ConfigureDatabase()
+	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := ConfigureOutput()
+	outPath, errPath, err := configureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -368,5 +368,5 @@ func TestNoDupeOfFile(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	CompareOutput(test, "", string(bytes))
+	compareOutput(test, "", string(bytes))
 }

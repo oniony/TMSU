@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+	"fmt"
 	"path/filepath"
 	"tmsu/cli"
 	"tmsu/common"
@@ -66,7 +67,7 @@ func (command DupesCommand) Exec(options cli.Options, args []string) error {
 func (command DupesCommand) findDuplicatesInDb() error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -76,7 +77,7 @@ func (command DupesCommand) findDuplicatesInDb() error {
 
 	fileSets, err := store.DuplicateFiles()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not identify duplicate files: %v", err)
 	}
 
 	if command.verbose {
@@ -102,7 +103,7 @@ func (command DupesCommand) findDuplicatesInDb() error {
 func (command DupesCommand) findDuplicatesOf(paths []string) error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -114,17 +115,17 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 
 		fingerprint, err := fingerprint.Create(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("%v': could not create fingerprint: %v", path, err)
 		}
 
 		files, err := store.FilesByFingerprint(fingerprint)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not retrieve files matching fingerprint '%v': %v", path, fingerprint, err)
 		}
 
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not determine absolute path: %v", path, err)
 		}
 
 		// filter out the file we're searching on

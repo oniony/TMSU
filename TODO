@@ -1,28 +1,21 @@
 HIGH
 
 B 'repair' command does not always identify moved files.
-    * If an explicitly tagged file './a' is moved under an explicitly tagged
-      directory './b', then the file './b/a' is identified as an added file
-      rather than a move of file './a'. The repair should update the path of
-      the existing file and add additional implict taggings from its new parent
-      directory.
-    * Moving a file './c/d' to './d' should remove the implicit taggings
-      inherited from './c' but keep any explicit taggings.
-B Command line options that take an argument do not work properly.
-E Use fmt.Errorf rather than just propagating existing errors.
+    * If an explicitly tagged file './a' is moved under an explicitly tagged directory './b', then the file './b/a' is identified as an added file rather than a move of file './a'. The repair should update the path of the existing file and add additional implict taggings from its new parent directory.
+    * Moving a file './c/d' to './d' should remove the implicit taggings inherited from './c' but keep any explicit taggings.  B Command line options that take an argument do not work properly.  E Use fmt.Errorf rather than just propagating existing errors.
 E Add unit-tests for each command.
+B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
+E Issue #29: Option to allow just files or directories to be listed.
+E 'tmsu tag' should bulk add files and then bulk add taggings.
 B Untagging via the VFS does not remove implicit taggings.
-E Storage level operations should ensure database consistency. E.g. deleting a
-  tag should result in corresponding taggings being deleted.
-B 'repair' command does not handle the case where a previously tagged
-  file is replaced with a directory (and vice versa).
+E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
+B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
+B 'tmsu untag file x' command reports file is not tagged 'x' if file is implicitly tagged 'x'.
 
 MEDIUM
 
 E Consolidate 'status' and 'repair' commands.
-B 'tmsu tags a' should report files that exist neither on disk nor database.
 E Make implict tags an option.
-E Issue #29: Option to allow just files or directories to be listed.
 E Add benchmarks.
 C Rename 'filetag' to 'tagging'.
 E Issue #35: print0 support.

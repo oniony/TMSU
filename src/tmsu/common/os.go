@@ -19,38 +19,8 @@ package common
 
 import (
 	"os"
-	"path/filepath"
 )
 
 func IsRegular(fileInfo os.FileInfo) bool {
 	return fileInfo.Mode()&os.ModeType == 0
-}
-
-func DirectoryEntries(path string) ([]string, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return nil, err
-	}
-
-	if !stat.IsDir() {
-		return []string{}, nil
-	}
-
-	file, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	entryNames, err := file.Readdirnames(0)
-	if err != nil {
-		return nil, err
-	}
-
-	entryPaths := make([]string, len(entryNames))
-	for index, entryName := range entryNames {
-		entryPaths[index] = filepath.Join(path, entryName)
-	}
-
-	return entryPaths, nil
 }

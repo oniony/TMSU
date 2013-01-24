@@ -34,10 +34,12 @@ func TestAllFiles(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -82,10 +84,12 @@ func TestSingleTag(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -152,10 +156,12 @@ func TestNotSingleTag(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -222,10 +228,12 @@ func TestAnd(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -301,10 +309,12 @@ func TestAndNot(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -380,10 +390,12 @@ func TestSingleTagExplicit(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -450,10 +462,12 @@ func TestNotSingleTagExplicit(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {

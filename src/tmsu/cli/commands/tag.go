@@ -18,12 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
+	"tmsu/common"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
@@ -55,20 +55,20 @@ func (TagCommand) Options() cli.Options {
 
 func (command TagCommand) Exec(options cli.Options, args []string) error {
 	if len(args) < 1 {
-		return errors.New("Too few arguments.")
+		return fmt.Errorf("Too few arguments.")
 	}
 
 	command.verbose = options.HasOption("--verbose")
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	if options.HasOption("--tags") {
 		if len(args) < 2 {
-			return errors.New("Quoted set of tags and at least one file to tag must be specified.")
+			return fmt.Errorf("quoted set of tags and at least one file to tag must be specified.")
 		}
 
 		tagNames := strings.Fields(args[0])
@@ -89,7 +89,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		}
 	} else {
 		if len(args) < 2 {
-			return errors.New("File to tag and tags to apply must be specified.")
+			return fmt.Errorf("File to tag and tags to apply must be specified.")
 		}
 
 		path := args[0]
@@ -116,7 +116,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 func (command TagCommand) lookupTags(store *storage.Storage, names []string) (database.Tags, error) {
 	tags, err := store.TagsByNames(names)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve tags %v: %v", names, err)
 	}
 
 	for _, name := range names {
@@ -125,7 +125,7 @@ func (command TagCommand) lookupTags(store *storage.Storage, names []string) (da
 
 			tag, err := store.AddTag(name)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("could not add tag '%v': %v", name, err)
 			}
 
 			tags = append(tags, tag)
@@ -141,7 +141,7 @@ func (command TagCommand) addFiles(store *storage.Storage, paths []string) (data
 	for index, path := range paths {
 		file, err := command.addFile(store, path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not add file: %v", path, err)
 		}
 
 		files[index] = file
@@ -153,12 +153,12 @@ func (command TagCommand) addFiles(store *storage.Storage, paths []string) (data
 func (command TagCommand) addFile(store *storage.Storage, path string) (*database.File, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, fmt.Errorf("'%v': could not get absolute path.", path, err)
+		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
 	file, err := store.FileByPath(absPath)
 	if err != nil {
-		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
+		return nil, fmt.Errorf("'%v': could not retrieve file: %v", path, err)
 	}
 
 	if file != nil {
@@ -186,7 +186,7 @@ func (command TagCommand) addFile(store *storage.Storage, path string) (*databas
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not create fingerprint: %v", path, err)
 	}
 
 	file, err = store.AddFile(absPath, fingerprint, modTime, size)
@@ -233,12 +233,11 @@ func (command TagCommand) tagFile(store *storage.Storage, file *database.File, t
 		}
 	}
 
-	stat, err := os.Stat(file.Path())
+	dir, err := common.IsDir(file.Path())
 	if err != nil {
-		return fmt.Errorf("'%v': could not stat path: %v", file.Path(), err)
+		return fmt.Errorf("'%v': could not determine if path is directory: %v", file.Path(), err)
 	}
-
-	if !stat.IsDir() {
+	if !dir {
 		return nil
 	}
 
@@ -263,13 +262,13 @@ func (command TagCommand) tagFile(store *storage.Storage, file *database.File, t
 		if childFile == nil {
 			childFile, err = command.addFile(store, childPath)
 			if err != nil {
-				return fmt.Errorf("'%v': could not add child file: %v", childPath, err)
+				return err
 			}
 		}
 
 		err = command.tagFile(store, childFile, tags, false)
 		if err != nil {
-			return fmt.Errorf("'%v': could not tag path: %v", childPath, err)
+			return err
 		}
 	}
 

@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package common
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -26,7 +27,7 @@ import (
 func IsDir(path string) (bool, error) {
 	info, err := os.Stat(path)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("'%v': could not stat: %v", path, err)
 	}
 
 	return info.IsDir(), nil

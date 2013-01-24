@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/log"
@@ -64,7 +64,7 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 func (command FilesCommand) listAllFiles() error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -74,7 +74,7 @@ func (command FilesCommand) listAllFiles() error {
 
 	files, err := store.Files()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
 	for _, file := range files {
@@ -87,12 +87,12 @@ func (command FilesCommand) listAllFiles() error {
 
 func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	if len(args) == 0 {
-		return errors.New("At least one tag must be specified. Use --all to show all files.")
+		return fmt.Errorf("at least one tag must be specified. Use --all to show all files.")
 	}
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -112,7 +112,7 @@ func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 
 		tag, err := store.TagByName(tagName)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
 			log.Fatalf("no such tag '%v'.", tagName)
@@ -133,12 +133,12 @@ func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	if explicitOnly {
 		files, err = store.FilesWithExplicitTags(includeTagIds, excludeTagIds)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve files with explicit tags %v and without explicit tags %v: %v", includeTagIds, excludeTagIds, err)
 		}
 	} else {
 		files, err = store.FilesWithTags(includeTagIds, excludeTagIds)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
 		}
 	}
 

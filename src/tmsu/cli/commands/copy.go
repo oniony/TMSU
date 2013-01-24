@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -51,7 +51,7 @@ func (command CopyCommand) Exec(options cli.Options, args []string) error {
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -60,27 +60,26 @@ func (command CopyCommand) Exec(options cli.Options, args []string) error {
 
 	sourceTag, err := store.Db.TagByName(sourceTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
 	if sourceTag == nil {
-		return errors.New("No such tag '" + sourceTagName + "'.")
+		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
 	destTag, err := store.Db.TagByName(destTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
 	if destTag != nil {
-		return errors.New("A tag with name '" + destTagName + "' already exists.")
+		return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
 	}
 
 	if command.verbose {
 		log.Infof("copying tag '%v' to '%v'.", sourceTagName, destTagName)
 	}
 
-	_, err = store.CopyTag(sourceTag.Id, destTagName)
-	if err != nil {
-		return err
+	if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
+		return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 	}
 
 	return nil

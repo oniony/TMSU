@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"fmt"
 	"path/filepath"
 	"tmsu/storage/database"
 )
@@ -66,12 +67,12 @@ func (storage *Storage) ImplicitTagsByFileId(fileId uint) (database.Tags, error)
 func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
 	file, err := storage.Db.FileByPath(absPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
 	}
 
 	if file == nil {
@@ -85,12 +86,12 @@ func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 func (storage *Storage) ExplicitTagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
 	file, err := storage.Db.FileByPath(absPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
 	}
 
 	if file == nil {
@@ -104,12 +105,12 @@ func (storage *Storage) ExplicitTagsForPath(path string) (database.Tags, error) 
 func (storage *Storage) ImplicitTagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
 	file, err := storage.Db.FileByPath(absPath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
 	}
 
 	if file == nil {
@@ -124,14 +125,14 @@ func (storage *Storage) ImplicitTagsForPath(path string) (database.Tags, error) 
 func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
 	files, err := storage.FilesWithTags(tagIds, []uint{})
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve tags for tags %v: %v", tagIds, err)
 	}
 
 	furtherTags := make(database.Tags, 0, 10)
 	for _, file := range files {
 		tags, err := storage.TagsByFileId(file.Id)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve tags for file #%v: %v", file.Id, err)
 		}
 
 		for _, tag := range tags {
@@ -158,17 +159,17 @@ func (storage Storage) RenameTag(tagId uint, name string) (*database.Tag, error)
 func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, error) {
 	tag, err := storage.Db.InsertTag(name)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not create tag '%v': %v", name, err)
 	}
 
 	err = storage.Db.CopyExplicitFileTags(sourceTagId, tag.Id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not copy explicit file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
 	}
 
 	err = storage.Db.CopyImplicitFileTags(sourceTagId, tag.Id)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not copy implicit file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
 	}
 
 	return tag, nil

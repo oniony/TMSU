@@ -43,7 +43,7 @@ func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
 	pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
 	state, _, err := fuse.MountNodeFileSystem(mountPath, pathNodeFs, nil)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
 	}
 
 	fuseVfs.databasePath = databasePath
@@ -356,7 +356,7 @@ func (vfs FuseVfs) tagNamesToIds(store *storage.Storage, tagNames []string) ([]u
 	for index, tagName := range tagNames {
 		tag, err := store.Db.TagByName(tagName)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
 			return nil, nil

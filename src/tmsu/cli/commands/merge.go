@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -50,35 +50,35 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 
 	if len(args) < 2 {
-		return errors.New("Too few arguments.")
+		return fmt.Errorf("too few arguments.")
 	}
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	destTagName := args[len(args)-1]
 	destTag, err := store.TagByName(destTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
 	if destTag == nil {
-		return errors.New("No such tag '" + destTagName + "'.")
+		return fmt.Errorf("no such tag '%v'.", destTagName)
 	}
 
 	for _, sourceTagName := range args[0 : len(args)-1] {
 		if sourceTagName == destTagName {
-			return errors.New("Source and destination names are the same.")
+			return fmt.Errorf("source and destination names are the same.")
 		}
 
 		sourceTag, err := store.TagByName(sourceTagName)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 		}
 		if sourceTag == nil {
-			return errors.New("No such tag '" + sourceTagName + "'.")
+			return fmt.Errorf("no such tag '%v'.", sourceTagName)
 		}
 
 		if command.verbose {
@@ -87,12 +87,12 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 
 		explicitFileTags, err := store.ExplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve explicit taggings for tag '%v': %v", sourceTagName, err)
 		}
 
 		implicitFileTags, err := store.ImplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve implicit taggings for tag '%v': %v", sourceTagName, err)
 		}
 
 		if command.verbose {
@@ -102,14 +102,14 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 		for _, explicitFileTag := range explicitFileTags {
 			_, err = store.AddExplicitFileTag(explicitFileTag.FileId, destTag.Id)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not add explicit tag '%v' to file #%v: %v", destTagName, explicitFileTag.FileId, err)
 			}
 		}
 
 		for _, implicitFileTag := range implicitFileTags {
 			_, err = store.AddImplicitFileTag(implicitFileTag.FileId, destTag.Id)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not add implicit tag '%v' to file #%v: %v", destTagName, implicitFileTag.FileId, err)
 			}
 		}
 
@@ -119,12 +119,12 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 
 		err = store.RemoveExplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not remove all explicit taggings of tag '%v': %v", sourceTagName, err)
 		}
 
 		err = store.RemoveImplicitFileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not remove all implicit taggings of tag '%v': %v", sourceTagName, err)
 		}
 
 		if command.verbose {
@@ -133,7 +133,7 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 
 		err = store.DeleteTag(sourceTag.Id)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err)
 		}
 	}
 

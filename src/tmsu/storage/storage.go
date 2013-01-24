@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"fmt"
 	"tmsu/storage/database"
 )
 
@@ -28,7 +29,7 @@ type Storage struct {
 func Open() (*Storage, error) {
 	db, err := database.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open database: %v", err)
 	}
 
 	return &Storage{db}, nil
@@ -37,12 +38,17 @@ func Open() (*Storage, error) {
 func OpenAt(path string) (*Storage, error) {
 	db, err := database.OpenAt(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open database at '%v': %v", path, err)
 	}
 
 	return &Storage{db}, nil
 }
 
 func (storage *Storage) Close() error {
-	return storage.Db.Close()
+	err := storage.Db.Close()
+	if err != nil {
+		return fmt.Errorf("could not close database: %v", err)
+	}
+
+	return nil
 }

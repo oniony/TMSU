@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/vfs"
 )
@@ -43,15 +43,15 @@ func (VfsCommand) Options() cli.Options {
 
 func (VfsCommand) Exec(options cli.Options, args []string) error {
 	if len(args) == 0 {
-		errors.New("Mountpoint not specified.")
+		fmt.Errorf("Mountpoint not specified.")
 	}
 
-	database := args[0]
+	databasePath := args[0]
 	mountPath := args[1]
 
-	vfs, err := vfs.MountVfs(database, mountPath)
+	vfs, err := vfs.MountVfs(databasePath, mountPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not mount virtual filesystem for database '%v' at '%v': %v", databasePath, mountPath, err)
 	}
 	defer vfs.Unmount()
 

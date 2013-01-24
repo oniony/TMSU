@@ -19,7 +19,6 @@ package cli
 
 import (
 	"errors"
-	"strings"
 )
 
 func ValidateTagName(tagName string) error {
@@ -27,24 +26,21 @@ func ValidateTagName(tagName string) error {
 		return errors.New("Tag name cannot be '.' or '..'.")
 	}
 
-	if strings.Index(tagName, ",") != -1 {
-		return errors.New("Tag names cannot contain commas.")
-	}
-
-	if strings.Index(tagName, "=") != -1 {
-		return errors.New("Tag names cannot contain '='.")
-	}
-
-	if strings.Index(tagName, " ") != -1 {
-		return errors.New("Tag names cannot contain spaces.")
-	}
-
-	if strings.Index(tagName, "/") != -1 {
-		return errors.New("Tag names cannot contain slashes.")
-	}
-
 	if tagName[0] == '-' {
 		return errors.New("Tag names cannot start with '-'.")
+	}
+
+	for _, ch := range tagName {
+		switch ch {
+		case ',':
+			return errors.New("tag names cannot contain ','.")
+		case '=':
+			return errors.New("tag names cannot contain '='.")
+		case ' ':
+			return errors.New("tag names cannot contain ' '.")
+		case '/':
+			return errors.New("tag names cannot contain '/'.")
+		}
 	}
 
 	return nil

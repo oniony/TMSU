@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"tmsu/cli"
@@ -108,11 +109,14 @@ func (command StatusCommand) Exec(options cli.Options, args []string) error {
 
 	if len(args) == 0 {
 		report, err = command.statusDatabase()
+		if err != nil {
+			return err
+		}
 	} else {
 		report, err = command.statusPaths(args)
-	}
-	if err != nil {
-		return err
+		if err != nil {
+			return err
+		}
 	}
 
 	for _, row := range report.Rows {
@@ -147,7 +151,7 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 
 	store, err := storage.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -157,7 +161,7 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 
 	files, err := store.Files()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not retrieve files: %v", err)
 	}
 
 	err = command.checkFiles(files, report)
@@ -173,20 +177,20 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 
 	store, err := storage.Open()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 		}
 
 		if path != "." {
 			file, err := store.FileByPath(absPath)
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("'%v': could not retrieve file: %v", path, err)
 			}
 			if file != nil {
 				err = command.checkFile(file, report)
@@ -202,7 +206,7 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 
 		files, err := store.FilesByDirectory(absPath)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not retrieve files for directory: %v", path, err)
 		}
 
 		err = command.checkFiles(files, report)
@@ -252,7 +256,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 		case os.IsPermission(pathError.Err):
 			log.Warnf("%v: Permission denied.", file.Path())
 		default:
-			return err
+			return fmt.Errorf("'%v': could not stat: %v", file.Path(), err)
 		}
 	} else {
 		if info.Size() != file.Size || info.ModTime().Unix() != file.ModTimestamp.Unix() {
@@ -280,14 +284,14 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
 	if !report.ContainsRow(path) {
 		report.AddRow(Row{path, UNTAGGED})
 	}
 
-	info, err := os.Stat(absPath)
+	stat, err := os.Stat(absPath)
 	if err != nil {
 		pathError := err.(*os.PathError)
 
@@ -298,24 +302,27 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 			log.Warnf("%v: Permission denied.", path)
 			return nil
 		default:
-			return err
+			return fmt.Errorf("'%v': could not stat: %v", path, err)
 		}
 	}
 
-	if info.IsDir() {
+	if stat.IsDir() {
 		dir, err := os.Open(absPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not open file: %v", path, err)
 		}
 
 		dirNames, err := dir.Readdirnames(0)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not read directory listing: %v", path, err)
 		}
 
 		for _, dirName := range dirNames {
 			dirPath := filepath.Join(path, dirName)
-			command.findNewFiles(dirPath, report)
+			err = command.findNewFiles(dirPath, report)
+			if err != nil {
+				return err
+			}
 		}
 	}
 

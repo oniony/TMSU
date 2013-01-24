@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -48,21 +48,21 @@ func (DeleteCommand) Options() cli.Options {
 
 func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 	if len(args) == 0 {
-		return errors.New("No tags to delete specified.")
+		return fmt.Errorf("no tags to delete specified.")
 	}
 
 	command.verbose = options.HasOption("--verbose")
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	for _, tagName := range args {
 		err = command.deleteTag(store, tagName)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 		}
 	}
 
@@ -72,10 +72,10 @@ func (command DeleteCommand) Exec(options cli.Options, args []string) error {
 func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) error {
 	tag, err := store.TagByName(tagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 	}
 	if tag == nil {
-		return errors.New("No such tag '" + tagName + "'.")
+		return fmt.Errorf("no such tag '%v'.", tagName)
 	}
 
 	if command.verbose {
@@ -84,7 +84,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 
 	fileTags, err := store.FileTagsByTagId(tag.Id)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve taggings for tag '%v': %v", tagName, err)
 	}
 
 	if command.verbose {
@@ -93,7 +93,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 
 	err = store.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not remove taggings for tag '%v': %v", tagName, err)
 	}
 
 	if command.verbose {
@@ -102,7 +102,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 
 	err = store.DeleteTag(tag.Id)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 	}
 
 	if command.verbose {
@@ -113,12 +113,12 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	for _, fileTag := range fileTags {
 		count, err := store.FileTagCountByFileId(fileTag.FileId)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not retrieve taggings count for file #%v: %v", fileTag.FileId, err)
 		}
 		if count == 0 {
 			err := store.RemoveFile(fileTag.FileId)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not remove file #%v: %v", fileTag.FileId, err)
 			}
 
 			removedFileCount += 1

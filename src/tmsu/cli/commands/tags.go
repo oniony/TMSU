@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+	"fmt"
 	"os"
 	"sort"
 	"strings"
@@ -68,7 +69,7 @@ func (command TagsCommand) Exec(options cli.Options, args []string) error {
 func (command TagsCommand) listAllTags() error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -78,7 +79,7 @@ func (command TagsCommand) listAllTags() error {
 
 	tags, err := store.Tags()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tags: %v", err)
 	}
 
 	for _, tag := range tags {
@@ -91,7 +92,7 @@ func (command TagsCommand) listAllTags() error {
 func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -117,12 +118,14 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 
 	if explicitOnly {
 		tags, err = store.ExplicitTagsForPath(path)
+		if err != nil {
+			return fmt.Errorf("'%v': could not retrieve explicit tags: %v", path, err)
+		}
 	} else {
 		tags, err = store.TagsForPath(path)
-	}
-
-	if err != nil {
-		return err
+		if err != nil {
+			return fmt.Errorf("'%v': could not retrieve tags: %v", path, err)
+		}
 	}
 
 	for _, tag := range tags {
@@ -152,7 +155,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 			continue
 		}
 
-		log.Print(path + ":" + tagLine(tags))
+		log.Print(path + ": " + tagLine(tags))
 	}
 
 	return nil
@@ -161,13 +164,13 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, explicitOnly bool) error {
 	file, err := os.Open(".")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open working directory: %v", err)
 	}
 	defer file.Close()
 
 	dirNames, err := file.Readdirnames(0)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not list working directory contents: %v", err)
 	}
 
 	sort.Strings(dirNames)

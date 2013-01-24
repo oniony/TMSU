@@ -93,7 +93,7 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 func (command RepairCommand) repairAll() error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -101,15 +101,15 @@ func (command RepairCommand) repairAll() error {
 		log.Info("retrieving all files from the database.")
 	}
 
-	entries, err := store.Files()
+	files, err := store.Files()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve files from storage: %v", err)
 	}
 
-	for _, entry := range entries {
-		err := command.checkEntry(entry, store, make(map[int64][]string))
+	for _, file := range files {
+		err := command.checkFile(file, store, make(map[int64][]string))
 		if err != nil {
-			return err
+			return fmt.Errorf("could not check file #%v: %v", file.Id, err)
 		}
 	}
 
@@ -124,102 +124,102 @@ func (command RepairCommand) repairPaths(paths []string) error {
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 		}
 
 		if command.verbose {
 			log.Infof("'%v': retrieving files from database.", path)
 		}
 
-		entries, err := store.FilesByDirectory(absPath)
+		files, err := store.FilesByDirectory(absPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not retrieve files for directory from storage: %v", path, err)
 		}
 
-		for _, entry := range entries {
-			err := command.checkEntry(entry, store, pathsBySize)
+		for _, file := range files {
+			err := command.checkFile(file, store, pathsBySize)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not check file #%v: %v", file.Id, err)
 			}
 		}
 
-		entry, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(absPath)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not retrieve file: %v", path, err)
 		}
-		if entry == nil {
+		if file == nil {
 			continue
 		}
 
-		err = command.checkEntry(entry, store, pathsBySize)
+		err = command.checkFile(file, store, pathsBySize)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not check file: %v", path, err)
 		}
 	}
 
 	return nil
 }
 
-func (command RepairCommand) checkEntry(entry *database.File, store *storage.Storage, pathsBySize map[int64][]string) error {
+func (command RepairCommand) checkFile(file *database.File, store *storage.Storage, pathsBySize map[int64][]string) error {
 	if command.verbose {
-		log.Infof("'%v': checking file status.", entry.Path())
+		log.Infof("'%v': checking file status.", file.Path())
 	}
 
-	info, err := os.Stat(entry.Path())
+	stat, err := os.Stat(file.Path())
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			err = command.processMissingEntry(entry, pathsBySize, store)
+			err = command.processMissingfile(file, pathsBySize, store)
 			if err != nil {
-				return err
+				return fmt.Errorf("'%v': could not process missing file: %v", file.Path(), err)
 			}
 		case os.IsPermission(err):
-			log.Warnf("'%v': permission denied.", entry.Path())
+			log.Warnf("'%v': permission denied.", file.Path())
 		default:
-			log.Warnf("'%v': %v", entry.Path(), err)
+			log.Warnf("'%v': %v", file.Path(), err)
 		}
 
 		return nil
 	}
-	modTime := info.ModTime().UTC()
-	size := info.Size()
+	modTime := stat.ModTime().UTC()
+	size := stat.Size()
 
-	if modTime.Unix() != entry.ModTimestamp.Unix() || size != entry.Size {
+	if modTime.Unix() != file.ModTimestamp.Unix() || size != file.Size {
 		if command.verbose {
-			log.Infof("'%v': updating entry in database.", entry.Path())
+			log.Infof("'%v': updating file in database.", file.Path())
 		}
 
-		fingerprint, err := fingerprint.Create(entry.Path())
+		fingerprint, err := fingerprint.Create(file.Path())
 		if err != nil {
 			return err
 		}
 
-		_, err = store.UpdateFile(entry.Id, entry.Path(), fingerprint, modTime, size)
+		_, err = store.UpdateFile(file.Id, file.Path(), fingerprint, modTime, size)
 		if err != nil {
 			return err
 		}
 
-		log.Printf("'%v': modified.", entry.Path())
+		log.Printf("'%v': modified.", file.Path())
 	} else {
 		if command.verbose {
-			log.Infof("'%v': unchanged.", entry.Path())
+			log.Infof("'%v': unchanged.", file.Path())
 		}
 	}
 
-	if info.IsDir() {
-		tags, err := store.TagsByFileId(entry.Id)
+	if stat.IsDir() {
+		tags, err := store.TagsByFileId(file.Id)
 		if err != nil {
 			return err
 		}
 
-		err = command.processDirectory(store, entry, tags)
+		err = command.processDirectory(store, file, tags)
 		if err != nil {
 			return err
 		}
@@ -228,8 +228,8 @@ func (command RepairCommand) checkEntry(entry *database.File, store *storage.Sto
 	return nil
 }
 
-func (command RepairCommand) processDirectory(store *storage.Storage, entry *database.File, tags database.Tags) error {
-	dir, err := os.Open(entry.Path())
+func (command RepairCommand) processDirectory(store *storage.Storage, file *database.File, tags database.Tags) error {
+	dir, err := os.Open(file.Path())
 	if err != nil {
 		return err
 	}
@@ -243,7 +243,7 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 	dir.Close()
 
 	for _, filename := range filenames {
-		childPath := filepath.Join(entry.Path(), filename)
+		childPath := filepath.Join(file.Path(), filename)
 
 		childFile, err := store.FileByPath(childPath)
 		if err != nil {
@@ -273,20 +273,20 @@ func (command RepairCommand) processDirectory(store *storage.Storage, entry *dat
 	return nil
 }
 
-func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySize map[int64][]string, store *storage.Storage) error {
-	if entry.Fingerprint == "" {
+func (command RepairCommand) processMissingfile(file *database.File, pathsBySize map[int64][]string, store *storage.Storage) error {
+	if file.Fingerprint == "" {
 		if command.verbose {
-			log.Infof("'%v': not searching for new location (no fingerprint).", entry.Path())
+			log.Infof("'%v': not searching for new location (no fingerprint).", file.Path())
 		}
 
 		return nil
 	}
 
 	if command.verbose {
-		log.Infof("'%v': searching for new location.", entry.Path())
+		log.Infof("'%v': searching for new location.", file.Path())
 	}
 
-	paths, sizeFound := pathsBySize[entry.Size]
+	paths, sizeFound := pathsBySize[file.Size]
 	if sizeFound {
 		for _, path := range paths {
 			fingerprint, err := fingerprint.Create(path)
@@ -294,46 +294,46 @@ func (command RepairCommand) processMissingEntry(entry *database.File, pathsBySi
 				return err
 			}
 
-			if fingerprint == entry.Fingerprint {
+			if fingerprint == file.Fingerprint {
 				if command.verbose {
-					log.Infof("'%v': file with same fingerprint found at '%v'.", entry.Path(), path)
+					log.Infof("'%v': file with same fingerprint found at '%v'.", file.Path(), path)
 				}
 
-				info, err := os.Stat(path)
+				stat, err := os.Stat(path)
 				if err != nil {
 					return err
 				}
 
-				_, err = store.UpdateFile(entry.Id, path, entry.Fingerprint, info.ModTime().UTC(), info.Size())
+				_, err = store.UpdateFile(file.Id, path, file.Fingerprint, stat.ModTime().UTC(), stat.Size())
 				if err != nil {
 					return err
 				}
 
-				log.Printf("'%v': moved to '%v'.", entry.Path(), path)
+				log.Printf("'%v': moved to '%v'.", file.Path(), path)
 				return nil
 			}
 		}
 	}
 
-	explicitFileTagCount, err := store.ExplicitFileTagCountByFileId(entry.Id)
+	explicitFileTagCount, err := store.ExplicitFileTagCountByFileId(file.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get explicit file-tag count: %v", entry.Path(), err)
+		return fmt.Errorf("'%v': could not get explicit file-tag count: %v", file.Path(), err)
 	}
 
 	if explicitFileTagCount == 0 {
-		err := store.RemoveImplicitFileTagsByFileId(entry.Id)
+		err := store.RemoveImplicitFileTagsByFileId(file.Id)
 		if err != nil {
-			return fmt.Errorf("'%v': could not remove implicit file tags: %v", entry.Path(), err)
+			return fmt.Errorf("'%v': could not remove implicit file tags: %v", file.Path(), err)
 		}
 
-		err = store.RemoveFile(entry.Id)
+		err = store.RemoveFile(file.Id)
 		if err != nil {
-			return fmt.Errorf("'%v': could not remove file: %v", entry.Path(), err)
+			return fmt.Errorf("'%v': could not remove file: %v", file.Path(), err)
 		}
 
-		log.Printf("'%v': removed.", entry.Path())
+		log.Printf("'%v': removed.", file.Path())
 	} else {
-		log.Printf("'%v': missing.", entry.Path())
+		log.Printf("'%v': missing.", file.Path())
 	}
 
 	return nil
@@ -355,7 +355,7 @@ func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]str
 				continue
 			}
 
-			return nil, err
+			return nil, fmt.Errorf("could not build filesystem map: %v", err)
 		}
 	}
 
@@ -365,40 +365,42 @@ func (command RepairCommand) buildFileSystemMap(paths []string) (map[int64][]str
 func (command RepairCommand) buildFileSystemMapRecursive(path string, pathsBySize map[int64][]string) error {
 	path, err := filepath.Abs(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
 	}
 
-	file, err := os.Open(path)
+	stat, err := os.Stat(path)
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not stat file: %v", path, err)
 	}
 
-	info, err := os.Stat(path)
-	if err != nil {
-		return err
-	}
-
-	if info.IsDir() {
-		dirEntries, err := file.Readdir(0)
+	if stat.IsDir() {
+		file, err := os.Open(path)
 		if err != nil {
-			return err
+			return fmt.Errorf("'%v': could not open file: %v", path, err)
 		}
+
+		dirFiles, err := file.Readdir(0)
+		if err != nil {
+			return fmt.Errorf("'%v': could not read directory listing: %v", path, err)
+		}
+
 		file.Close()
 
-		for _, dirEntry := range dirEntries {
-			dirEntryPath := filepath.Join(path, dirEntry.Name())
-			command.buildFileSystemMapRecursive(dirEntryPath, pathsBySize)
+		for _, dirfile := range dirFiles {
+			dirFilePath := filepath.Join(path, dirfile.Name())
+			err := command.buildFileSystemMapRecursive(dirFilePath, pathsBySize)
+			if err != nil {
+				return fmt.Errorf("'%v': could not build filesystem map: %v", dirFilePath, err)
+			}
 		}
 	} else {
-		file.Close()
-
-		if info.Size() > 0 {
-			paths, found := pathsBySize[info.Size()]
+		if stat.Size() > 0 {
+			paths, found := pathsBySize[stat.Size()]
 			if !found {
 				paths = make([]string, 0, 10)
 			}
 			paths = append(paths, path)
-			pathsBySize[info.Size()] = paths
+			pathsBySize[stat.Size()] = paths
 		}
 	}
 
@@ -423,13 +425,13 @@ func (command RepairCommand) addFile(store *storage.Storage, path string) (*data
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not create fingerprint: %v", path, err)
 	}
 
 	if !stat.IsDir() {
 		duplicateCount, err := store.FileCountByFingerprint(fingerprint)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not retrieve count of files for fingerprint '%v': %v", path, fingerprint, err)
 		}
 
 		if duplicateCount > 0 {
@@ -439,25 +441,25 @@ func (command RepairCommand) addFile(store *storage.Storage, path string) (*data
 
 	file, err := store.AddFile(path, fingerprint, modTime, size)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("'%v': could not add file: %v", path, err)
 	}
 
 	if stat.IsDir() {
 		fsFile, err := os.Open(file.Path())
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not open file: %v", path, err)
 		}
 		defer fsFile.Close()
 
 		dirFilenames, err := fsFile.Readdirnames(0)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("'%v': could not read dirctory listing: %v", path, err)
 		}
 
 		for _, dirFilename := range dirFilenames {
-			_, err = command.addFile(store, filepath.Join(path, dirFilename))
-			if err != nil {
-				return nil, err
+			dirFilePath := filepath.Join(path, dirFilename)
+			if _, err = command.addFile(store, dirFilePath); err != nil {
+				return nil, fmt.Errorf("'%v': could not add file: %v", dirFilePath, err)
 			}
 		}
 	}

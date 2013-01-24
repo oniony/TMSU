@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"syscall"
@@ -70,14 +70,14 @@ func (command MountCommand) Exec(options cli.Options, args []string) error {
 	case 0:
 		err := command.listMounts()
 		if err != nil {
-			return errors.New("Could not list mounts: " + err.Error())
+			return fmt.Errorf("could not list mounts: %v", err)
 		}
 	case 1:
 		mountPath := args[0]
 
 		err := command.mountSelected(mountPath)
 		if err != nil {
-			return errors.New("Could not mount database: " + err.Error())
+			return fmt.Errorf("could not mount database at '%v': %v", mountPath, err)
 		}
 	case 2:
 		databasePath := args[0]
@@ -85,10 +85,10 @@ func (command MountCommand) Exec(options cli.Options, args []string) error {
 
 		err := command.mountExplicit(databasePath, mountPath)
 		if err != nil {
-			return errors.New("Could not mount database: " + err.Error())
+			return fmt.Errorf("could not mount database '%v' at '%v': %v", databasePath, mountPath, err)
 		}
 	default:
-		return errors.New("Too many arguments.")
+		return fmt.Errorf("Too many arguments.")
 	}
 
 	return nil
@@ -101,7 +101,7 @@ func (command MountCommand) listMounts() error {
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not get mount table: %v", err)
 	}
 
 	if command.verbose && len(mt) == 0 {
@@ -116,22 +116,12 @@ func (command MountCommand) listMounts() error {
 }
 
 func (command MountCommand) mountSelected(mountPath string) error {
-	config, err := common.GetSelectedDatabaseConfig()
+	databasePath, err := common.GetDatabasePath()
 	if err != nil {
-		return err
-	}
-	if config == nil {
-		config, err = common.GetDefaultDatabaseConfig()
-		if err != nil {
-			return err
-		}
-		if config == nil {
-			return errors.New("Could not get default database configuration.")
-		}
+		return fmt.Errorf("could not get selected database configuration: %v", err)
 	}
 
-	err = command.mountExplicit(config.DatabasePath, mountPath)
-	if err != nil {
+	if err = command.mountExplicit(databasePath, mountPath); err != nil {
 		return err
 	}
 
@@ -139,23 +129,23 @@ func (command MountCommand) mountSelected(mountPath string) error {
 }
 
 func (command MountCommand) mountExplicit(databasePath string, mountPath string) error {
-	fileInfo, err := os.Stat(mountPath)
+	stat, err := os.Stat(mountPath)
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not stat: %v", mountPath, err)
 	}
-	if fileInfo == nil {
-		return errors.New("Mount point '" + mountPath + "' does not exist.")
+	if stat == nil {
+		return fmt.Errorf("'%v': mount point does not exist.", mountPath)
 	}
-	if !fileInfo.IsDir() {
-		return errors.New("Mount point '" + mountPath + "' is not a directory.")
+	if !stat.IsDir() {
+		return fmt.Errorf("'%v': mount point is not a directory.", mountPath)
 	}
 
-	fileInfo, err = os.Stat(databasePath)
+	stat, err = os.Stat(databasePath)
 	if err != nil {
-		return err
+		return fmt.Errorf("'%v': could not stat: %v", databasePath, err)
 	}
-	if fileInfo == nil {
-		return errors.New("Database '" + databasePath + "' does not exist.")
+	if stat == nil {
+		return fmt.Errorf("'%v': database does not exist.")
 	}
 
 	if command.verbose {
@@ -166,12 +156,12 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 
 	errorPipe, err := daemon.StderrPipe()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open standard error pipe: %v", err)
 	}
 
 	err = daemon.Start()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not start daemon: %v", err)
 	}
 
 	if command.verbose {
@@ -189,7 +179,7 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 	var rusage syscall.Rusage
 	_, err = syscall.Wait4(daemon.Process.Pid, &waitStatus, syscall.WNOHANG, &rusage)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not check daemon status: %v", err)
 	}
 
 	if waitStatus.Exited() {
@@ -197,10 +187,10 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 			buffer := make([]byte, 1024)
 			count, err := errorPipe.Read(buffer)
 			if err != nil {
-				return err
+				return fmt.Errorf("could not read from error pipe: %v", err)
 			}
 
-			return errors.New("Could not mount VFS: " + string(buffer[0:count]))
+			return fmt.Errorf("virtual filesystem mount failed: %v", buffer[0:count])
 		}
 	}
 

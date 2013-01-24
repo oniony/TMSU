@@ -31,22 +31,16 @@ type Database struct {
 }
 
 func Open() (*Database, error) {
-	config, err := common.GetSelectedDatabaseConfig()
+	databasePath, err := common.GetDatabasePath()
 	if err != nil {
 		return nil, err
 	}
-	if config == nil {
-		config, err = common.GetDefaultDatabaseConfig()
-		if err != nil {
-			return nil, errors.New("Could not retrieve default database configuration: " + err.Error())
-		}
 
-		// attempt to create default database directory
-		dir := filepath.Dir(config.DatabasePath)
-		os.MkdirAll(dir, os.ModeDir|0755)
-	}
+	// attempt to create database directory
+	dir := filepath.Dir(databasePath)
+	os.MkdirAll(dir, os.ModeDir|0755)
 
-	return OpenAt(config.DatabasePath)
+	return OpenAt(databasePath)
 }
 
 func OpenAt(path string) (*Database, error) {

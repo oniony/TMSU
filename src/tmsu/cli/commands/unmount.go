@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"os"
 	"os/exec"
 	"tmsu/cli"
@@ -57,7 +57,7 @@ func (command UnmountCommand) Exec(options cli.Options, args []string) error {
 	}
 
 	if len(args) < 1 {
-		return errors.New("Path to unmount not speciified.")
+		return fmt.Errorf("path to unmount not speciified.")
 	}
 
 	return command.unmount(args[0])
@@ -70,7 +70,7 @@ func (command UnmountCommand) unmount(path string) error {
 
 	fusermountPath, err := exec.LookPath("fusermount")
 	if err != nil {
-		return err
+		return fmt.Errorf("could not find 'fusermount': ensure fuse is installed: %v", err)
 	}
 
 	if command.verbose {
@@ -79,7 +79,7 @@ func (command UnmountCommand) unmount(path string) error {
 
 	process, err := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
 	if err != nil {
-		return err
+		return fmt.Errorf("could not start 'fusermount': %v", err)
 	}
 
 	if command.verbose {
@@ -88,10 +88,10 @@ func (command UnmountCommand) unmount(path string) error {
 
 	processState, err := process.Wait()
 	if err != nil {
-		return err
+		return fmt.Errorf("error waiting for process to exit: %v", err)
 	}
 	if !processState.Success() {
-		return errors.New("Could not unmount.")
+		return fmt.Errorf("could not unmount virtual filesystem.")
 	}
 
 	return nil
@@ -104,7 +104,7 @@ func (command UnmountCommand) unmountAll() error {
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
-		return errors.New("Could not get mount table: " + err.Error())
+		return fmt.Errorf("could not get mount table: %v", err)
 	}
 
 	if command.verbose && len(mt) == 0 {

@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
-	"errors"
 	"fmt"
 )
 
@@ -62,7 +61,7 @@ func (parser *Parser) Parse(args []string) (CommandName, Options, []string, erro
 		option := LookupOption(command, optionName)
 
 		if option == nil {
-			return "", nil, nil, errors.New(fmt.Sprintf("Invalid option '%v'.", optionName))
+			return "", nil, nil, fmt.Errorf("invalid option '%v'.", optionName)
 		}
 
 		options = append(options, *option)

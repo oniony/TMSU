@@ -1,6 +1,7 @@
 package commands
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -8,22 +9,22 @@ import (
 	"tmsu/log"
 )
 
-func ConfigureOutput() error {
-	outPath := filepath.Join(os.TempDir(), "tmsu-out")
+func ConfigureOutput() (string, string, error) {
+	outPath := filepath.Join(os.TempDir(), "tmsu_test.out")
 	outFile, err := os.Create(outPath)
 	if err != nil {
-		return err
+		return "", "", fmt.Errorf("could not create output file '%v': %v", outPath, err)
 	}
 	log.Outfile = outFile
 
-	errPath := filepath.Join(os.TempDir(), "tmsu-err")
+	errPath := filepath.Join(os.TempDir(), "tmsu_test.err")
 	errFile, err := os.Create(errPath)
 	if err != nil {
-		return err
+		return "", "", fmt.Errorf("could not create error file '%v': %v", outPath, err)
 	}
 	log.Errfile = errFile
 
-	return nil
+	return outPath, errPath, nil
 }
 
 func ConfigureDatabase() string {

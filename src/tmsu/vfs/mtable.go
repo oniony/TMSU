@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
+	"fmt"
 	"os"
 	"tmsu/common"
 	"tmsu/common/proc"
@@ -31,7 +32,7 @@ type Mount struct {
 func GetMountTable() ([]Mount, error) {
 	pids, err := proc.GetProcessIds()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not get process IDs: %v", err)
 	}
 
 	mountTable := make([]Mount, 0, 10)

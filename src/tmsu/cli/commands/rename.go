@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"errors"
+	"fmt"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -54,7 +54,7 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
@@ -63,23 +63,23 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 
 	sourceTag, err := store.TagByName(sourceTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
 	if sourceTag == nil {
-		return errors.New("No such tag '" + sourceTagName + "'.")
+		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
 	err = cli.ValidateTagName(destTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not validate tag name '%v': %v", destTagName, err)
 	}
 
 	destTag, err := store.TagByName(destTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
 	if destTag != nil {
-		return errors.New("A tag with name '" + destTagName + "' already exists.")
+		return fmt.Errorf("tag '%v' already exists.", destTagName)
 	}
 
 	if command.verbose {
@@ -88,7 +88,7 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 
 	_, err = store.RenameTag(sourceTag.Id, destTagName)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not rename tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 	}
 
 	return nil

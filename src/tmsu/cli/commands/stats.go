@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+	"fmt"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
@@ -46,28 +47,28 @@ func (StatsCommand) Options() cli.Options {
 func (StatsCommand) Exec(options cli.Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
 	tagCount, err := store.TagCount()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve tag count: %v", err)
 	}
 
 	fileCount, err := store.FileCount()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve file count: %v", err)
 	}
 
 	explicitFileTagCount, err := store.ExplicitFileTagCount()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve explicit taggings count: %v", err)
 	}
 
 	implicitFileTagCount, err := store.ImplicitFileTagCount()
 	if err != nil {
-		return err
+		return fmt.Errorf("could not retrieve implicit taggings count: %v", err)
 	}
 
 	fileTagCount := explicitFileTagCount + implicitFileTagCount

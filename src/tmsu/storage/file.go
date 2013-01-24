@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"fmt"
 	"time"
 	"tmsu/fingerprint"
 	"tmsu/storage/database"
@@ -62,7 +63,11 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
 	//TODO optimize
 	files, err := storage.Db.FilesWithTags(tagIds)
-	return uint(len(files)), err
+	if err != nil {
+		return 0, fmt.Errorf("could not retrieve file count for tags %v: %v", tagIds, err)
+	}
+
+	return uint(len(files)), nil
 }
 
 // Retrieves the set of files with the specified tag.
@@ -88,7 +93,7 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (data
 	if len(includeTagIds) > 0 {
 		files, err = storage.Db.FilesWithTags(includeTagIds)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve files with tags %v: %v", includeTagIds, err)
 		}
 	}
 
@@ -96,13 +101,13 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (data
 		if len(includeTagIds) == 0 {
 			files, err = storage.Db.Files()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("could not retrieve files: %v", err)
 			}
 		}
 
 		excludeFiles, err := storage.Db.FilesWithTags(excludeTagIds)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve files with tags %v: %v", excludeTagIds, err)
 		}
 
 		for index, file := range files {
@@ -130,7 +135,7 @@ func (storage *Storage) FilesWithExplicitTags(includeTagIds, excludeTagIds []uin
 	if len(includeTagIds) > 0 {
 		files, err = storage.Db.FilesWithExplicitTags(includeTagIds)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve files with explicit tags %v: %v", includeTagIds, err)
 		}
 	}
 
@@ -138,13 +143,13 @@ func (storage *Storage) FilesWithExplicitTags(includeTagIds, excludeTagIds []uin
 		if len(includeTagIds) == 0 {
 			files, err = storage.Db.Files()
 			if err != nil {
-				return nil, err
+				return nil, fmt.Errorf("could not retrieve files: %v", err)
 			}
 		}
 
 		excludeFiles, err := storage.Db.FilesWithExplicitTags(excludeTagIds)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not retrieve files with explicit tags %v: %v", excludeTagIds, err)
 		}
 
 		for index, file := range files {

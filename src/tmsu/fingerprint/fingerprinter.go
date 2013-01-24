@@ -20,29 +20,20 @@ package fingerprint
 import (
 	"crypto/sha256"
 	"encoding/hex"
+	"fmt"
 	"os"
-	"tmsu/common"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
 func Create(path string) (Fingerprint, error) {
-	isDir, err := common.IsDir(path)
-	if err != nil {
-		return EMPTY, err
-	}
-	if isDir {
-		return EMPTY, nil
-	}
-
 	stat, err := os.Stat(path)
 	if err != nil {
-		return EMPTY, err
+		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
 	}
-
 	if stat.IsDir() {
-		return Fingerprint(""), nil
+		return EMPTY, nil
 	}
 
 	fileSize := stat.Size()

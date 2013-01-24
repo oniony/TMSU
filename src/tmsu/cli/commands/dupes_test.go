@@ -35,10 +35,12 @@ func TestSingleDupe(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
 	if err != nil {
 		test.Fatal(err)
 	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -77,7 +79,12 @@ func TestMultipleDupes(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -128,7 +135,12 @@ func TestNoDupes(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	store, err := storage.Open()
 	if err != nil {
@@ -178,7 +190,12 @@ func TestSingleDupeOfFile(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)
@@ -235,7 +252,12 @@ func TestMultipleDupeOfFile(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)
@@ -292,7 +314,12 @@ func TestNoDupeOfFile(test *testing.T) {
 	databasePath := ConfigureDatabase()
 	defer os.Remove(databasePath)
 
-	err := ConfigureOutput()
+	outPath, errPath, err := ConfigureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)

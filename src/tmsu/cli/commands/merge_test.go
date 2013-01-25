@@ -261,7 +261,7 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	tagB, err := store.AddTag("b")
+	_, err = store.AddTag("b")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -287,7 +287,7 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	tagB, err := store.AddTag("a")
+	_, err = store.AddTag("a")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -313,7 +313,7 @@ func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 	}
 	defer store.Close()
 
-	tagB, err := store.AddTag("a")
+	_, err = store.AddTag("a")
 	if err != nil {
 		test.Fatal(err)
 	}

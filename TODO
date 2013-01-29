@@ -1,7 +1,9 @@
 HIGH
 
+E Get rid of the quotes around filenames.
 B 'repair' command is very slow at getting files by directory.
 E Add unit-tests for each command.
+
 B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
 E Issue #29: Option to allow just files or directories to be listed.
 E 'tmsu tag' should bulk add files and then bulk add taggings.

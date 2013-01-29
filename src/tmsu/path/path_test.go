@@ -28,18 +28,18 @@ func TestRoots(test *testing.T) {
 	}
 
 	if len(roots) != 4 {
-		test.Fatalf("Expected 4 top-level paths but were %v.", len(roots))
+		test.Fatalf("Expected 4 root paths but were %v.", len(roots))
 	}
 	if roots[0] != "/a/b" {
-		test.Fatalf("Expected first top-level path to be '/a/b' but was '%v'.", roots[0])
+		test.Fatalf("Expected root path 0 to be '/a/b' but was '%v'.", roots[0])
 	}
 	if roots[1] != "/a/f" {
-		test.Fatalf("Expected second top-level path to be '/a/f' but was '%v'.", roots[1])
+		test.Fatalf("Expected root path 1 to be '/a/f' but was '%v'.", roots[1])
 	}
 	if roots[2] != "/j/k/l" {
-		test.Fatalf("Expected second top-level path to be '/j/k/l' but was '%v'.", roots[1])
+		test.Fatalf("Expected root path 2 to be '/j/k/l' but was '%v'.", roots[1])
 	}
-	if roots[1] != "/j/k/m" {
-		test.Fatalf("Expected second top-level path to be '/j/k/m' but was '%v'.", roots[1])
+	if roots[3] != "/j/k/m" {
+		test.Fatalf("Expected root path 3 to be '/j/k/m' but was '%v'.", roots[1])
 	}
 }

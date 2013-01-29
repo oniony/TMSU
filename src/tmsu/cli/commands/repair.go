@@ -176,7 +176,7 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string, 
 	}
 
 	if command.verbose {
-		log.Infof("searching for missing files")
+		log.Infof("searching for missing and removed files")
 	}
 
 	for path, dbFile := range dbFileByPath {
@@ -189,19 +189,13 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string, 
 		}
 	}
 
-	if command.verbose {
-		log.Info("searching for files added to tagged directories")
-	}
-
-	//TODO iterate untagged: find additions to tagged directories
-
-	//TODO repair implicit file-tags
-
 	return nil
 }
 
 func (command RepairCommand) processTaggedFile(store *storage.Storage, dbFile *database.File) error {
-	//TODO check implicit file taggings
+	//TODO if directory
+	//TODO   any file within that is in untagged should be added
+	//TODO   apply parent's implicit taggings
 	//TODO remember to check 'pretend'
 	return nil
 }
@@ -221,10 +215,15 @@ func (command RepairCommand) processUntaggedFile(untaggedPathsBySize map[int64][
 func (command RepairCommand) processModifiedFile(store *storage.Storage, dbFile *database.File, stat os.FileInfo) error {
 	fmt.Printf("'%v': modified.\n", dbFile.Path())
 
-	//TODO fingerprint file
+	fingerprint, err := fingerprint.Create(dbFile.Path())
+	if err != nil {
+		return fmt.Errorf("'%v': could not create fingerprint: %v", dbFile.Path(), err)
+	}
 
 	if !command.pretend {
-		//TODO update database with new details
+		if _, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime().UTC(), stat.Size()); err != nil {
+			fmt.Errorf("'%v': could not update file in database: %v", err)
+		}
 	}
 
 	return nil
@@ -260,7 +259,10 @@ func (command RepairCommand) processMovedFile(store *storage.Storage, dbFile *da
 	fmt.Printf("'%v': moved to '%v'.\n", dbFile.Path(), path)
 
 	if !command.pretend {
-		//TODO update database with new path
+		if _, err := store.UpdateFile(dbFile.Id, path, dbFile.Fingerprint, dbFile.ModTimestamp, dbFile.Size); err != nil {
+			return fmt.Errorf("'%v': could not update file path in database: %v", dbFile.Path(), err)
+		}
+
 		//TODO reevalutae implicit file taggings
 	}
 

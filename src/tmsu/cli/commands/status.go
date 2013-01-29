@@ -22,8 +22,8 @@ import (
 	"os"
 	"path/filepath"
 	"tmsu/cli"
-	"tmsu/common"
 	"tmsu/log"
+	"tmsu/path"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -235,7 +235,7 @@ func (command *StatusCommand) checkFiles(files database.Files, report *StatusRep
 }
 
 func (command *StatusCommand) checkFile(file *database.File, report *StatusReport) error {
-	relPath := common.RelPath(file.Path())
+	relPath := path.Rel(file.Path())
 
 	if command.verbose {
 		log.Infof("'%v': checking file status.", file.Path())

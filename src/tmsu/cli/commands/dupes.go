@@ -21,9 +21,9 @@ import (
 	"fmt"
 	"path/filepath"
 	"tmsu/cli"
-	"tmsu/common"
 	"tmsu/fingerprint"
 	"tmsu/log"
+	_path "tmsu/path"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -92,7 +92,7 @@ func (command DupesCommand) findDuplicatesInDb() error {
 		log.Printf("Set of %v duplicates:", len(fileSet))
 
 		for _, file := range fileSet {
-			relPath := common.RelPath(file.Path())
+			relPath := _path.Rel(file.Path())
 			log.Printf("  %v", relPath)
 		}
 	}
@@ -141,12 +141,12 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 			log.Printf("%v duplicates of %v:", len(dupes), path)
 
 			for _, dupe := range dupes {
-				relPath := common.RelPath(dupe.Path())
+				relPath := _path.Rel(dupe.Path())
 				log.Printf("  %v", relPath)
 			}
 		} else {
 			for _, dupe := range dupes {
-				relPath := common.RelPath(dupe.Path())
+				relPath := _path.Rel(dupe.Path())
 				log.Print(relPath)
 			}
 		}

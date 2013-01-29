@@ -120,28 +120,16 @@ trunk
     the fly.
   * Improved command-line parsing: now supports global options, short options
     and mixed option ordering.
-  * Added upgrade script to convert old databases to new format (and to remove
-    any invalid timestamps which cause problems with the latest Sqlite3
-    bindings).
-  * 'repair' command updated to create missing implicit taggings.
-  * Fixed bug where 'repair' command was operating upon all files in the
-    database with the same name as the arguments rather than those with
-    matching path.
-  * 'repair' command now updates stored modification time if it has changed but
-    fingerprint has not.
-  * Size field was not being read from the database preventing 'files' command
-    from functioning.
+  * 'repair' rewritten to fix bugs and repair implicit taggings.
   * Fingerprints for directories no longer calculated. (Implicit tagging means
     that duplicate files are identified instead. I may revisit this decision.)
-  * Removed the 'export' command: Sqlite3 database is already in a readily
-    queryable format.
-  * Tags containing '/' confuse the VFS. Such tags are no longer legal.
+  * Removed the 'export' command: use Sqlite tooling instead.
+  * Tags containing '/' are no longer legal.
   * File lists are now shown sorted alphanumerically.
-  * 'repair' command now removes from the database files that are missing on
-    disk and have no explicit tags.
-  * As a performance enhancement 'tag' command no longer calculates fingerprints
-    for files that are already in the database. As a consequence the 'tag'
-    command no longer identifies modified files.
+  * 'repair' command now automatically removes missing files that have no
+    explicit tags.
+  * The 'tag' command no longer identifies modified files: use 'repair'
+    instead.
   * Updated Zsh completion.
   * The full context of errors is now reported when an error occurs.
   * Improved unit-test coverage.

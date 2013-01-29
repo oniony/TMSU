@@ -20,8 +20,8 @@ package commands
 import (
 	"fmt"
 	"tmsu/cli"
-	"tmsu/common"
 	"tmsu/log"
+	"tmsu/path"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -78,7 +78,7 @@ func (command FilesCommand) listAllFiles() error {
 	}
 
 	for _, file := range files {
-		relPath := common.RelPath(file.Path())
+		relPath := path.Rel(file.Path())
 		log.Print(relPath)
 	}
 
@@ -143,7 +143,7 @@ func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 	}
 
 	for _, file := range files {
-		relPath := common.RelPath(file.Path())
+		relPath := path.Rel(file.Path())
 		log.Print(relPath)
 	}
 

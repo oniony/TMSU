@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"strings"
 	"tmsu/cli"
-	"tmsu/common"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
@@ -233,11 +232,12 @@ func (command TagCommand) tagFile(store *storage.Storage, file *database.File, t
 		}
 	}
 
-	dir, err := common.IsDir(file.Path())
+	stat, err := os.Stat(file.Path())
 	if err != nil {
-		return fmt.Errorf("'%v': could not determine if path is directory: %v", file.Path(), err)
+		return fmt.Errorf("'%v': could not stat file: %v", file.Path(), err)
 	}
-	if !dir {
+
+	if !stat.IsDir() {
 		return nil
 	}
 

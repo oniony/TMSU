@@ -93,7 +93,8 @@ _tmsu_cmd_rename() {
 }
 
 _tmsu_cmd_repair() {
-	_arguments -s -w '*:file:_files' && ret=0
+	_arguments -s -w ''{--pretend,-p}'[do not make any changes]' \
+	                 '*:file:_files' && ret=0
 }
 
 _tmsu_cmd_stats() {

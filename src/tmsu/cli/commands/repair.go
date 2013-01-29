@@ -22,14 +22,12 @@ import (
 	"os"
 	"path/filepath"
 	"tmsu/cli"
-	"tmsu/common"
 	"tmsu/fingerprint"
 	"tmsu/log"
+	_path "tmsu/path"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
-
-//TODO repairAll is a bit dumb: it retrieves all of the files to get the paths and then queries again
 
 type RepairCommand struct {
 	verbose bool
@@ -71,20 +69,20 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 	command.pretend = options.HasOption("--pretend")
 
-	if len(args) == 0 {
-		return command.repairDatabase()
-	}
-
-	return command.repairPaths(args)
-}
-
-func (command RepairCommand) repairDatabase() error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
+	if len(args) == 0 {
+		return command.repairDatabase(store)
+	}
+
+	return command.repairPaths(store, args)
+}
+
+func (command RepairCommand) repairDatabase(store *storage.Storage) error {
 	if command.verbose {
 		log.Info("retrieving all files from the database.")
 	}
@@ -99,7 +97,7 @@ func (command RepairCommand) repairDatabase() error {
 		absPaths[index] = file.Path()
 	}
 
-	absPaths, err = common.TopLevelPaths(absPaths)
+	absPaths, err = _path.Roots(absPaths)
 	if err != nil {
 		return fmt.Errorf("could not identify top-level paths: %v", err)
 	}
@@ -112,13 +110,7 @@ func (command RepairCommand) repairDatabase() error {
 	return nil
 }
 
-func (command RepairCommand) repairPaths(paths []string) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func (command RepairCommand) repairPaths(store *storage.Storage, paths []string) error {
 	absPaths := make([]string, len(paths))
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -129,7 +121,7 @@ func (command RepairCommand) repairPaths(paths []string) error {
 		absPaths[index] = absPath
 	}
 
-	absPaths, err = common.TopLevelPaths(absPaths)
+	absPaths, err := _path.Roots(absPaths)
 	if err != nil {
 		return fmt.Errorf("could not identify top-level paths: %v", err)
 	}
@@ -356,7 +348,7 @@ func (command RepairCommand) addFile(store *storage.Storage, path string) (*data
 		}
 
 		if duplicateCount > 0 {
-			log.Info("'" + common.RelPath(path) + "' is a duplicate file.")
+			log.Info("'" + _path.Rel(path) + "' is a duplicate file.")
 		}
 	}
 

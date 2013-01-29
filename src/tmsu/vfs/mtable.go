@@ -20,7 +20,7 @@ package vfs
 import (
 	"fmt"
 	"os"
-	"tmsu/common"
+	"path/filepath"
 	"tmsu/common/proc"
 )
 
@@ -45,8 +45,8 @@ func GetMountTable() ([]Mount, error) {
 			}
 		} else {
 			if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
-				databasePath := common.Join(process.WorkingDirectory, process.CommandLine[2])
-				mountPath := common.Join(process.WorkingDirectory, process.CommandLine[3])
+				databasePath := filepath.Join(process.WorkingDirectory, process.CommandLine[2])
+				mountPath := filepath.Join(process.WorkingDirectory, process.CommandLine[3])
 				mountTable = append(mountTable, Mount{databasePath, mountPath})
 			}
 		}

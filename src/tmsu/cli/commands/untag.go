@@ -274,7 +274,7 @@ func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.Fil
 		return fmt.Errorf("'%v': could not determine whether file is tagged '%v': %v", file.Path(), tag.Name, err)
 	}
 	if !exists {
-		return fmt.Errorf("'%v': file is not tagged '%v'.", file.Path(), tag.Name)
+		return nil
 	}
 
 	if err = store.RemoveExplicitFileTag(file.Id, tag.Id); err != nil {

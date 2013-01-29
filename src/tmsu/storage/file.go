@@ -49,6 +49,22 @@ func (storage *Storage) FilesByDirectory(path string) (database.Files, error) {
 	return storage.Db.FilesByDirectory(path)
 }
 
+// Retrieves all file that are under the specified directories.
+func (storage *Storage) FilesByDirectories(paths []string) (database.Files, error) {
+	files := make(database.Files, 0, 100)
+
+	for _, path := range paths {
+		pathFiles, err := storage.Db.FilesByDirectory(path)
+		if err != nil {
+			return nil, fmt.Errorf("'%v': could not retrieve files for directory: %v", path, err)
+		}
+
+		files = append(files, pathFiles...)
+	}
+
+	return files, nil
+}
+
 // Retrieves the number of files with the specified fingerprint.
 func (storage *Storage) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (uint, error) {
 	return storage.Db.FileCountByFingerprint(fingerprint)

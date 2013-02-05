@@ -1,17 +1,14 @@
 HIGH
 
-E Get rid of the quotes around filenames.
-B 'repair' command is very slow at getting files by directory.
 E Add unit-tests for each command.
+E Issue #29: Option to allow just files or directories to be listed.
 B virtual file-system slow when lots of files
 
 B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
-E Issue #29: Option to allow just files or directories to be listed.
 E 'tmsu tag' should bulk add files and then bulk add taggings.
 B Untagging via the VFS does not remove implicit taggings.
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
 B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
-B 'tmsu untag --all file' command does not remove file if only has implicit tags.
 B 'tmsu untag file x' command reports file is not tagged 'x' if file is implicitly tagged 'x'.
 
 MEDIUM

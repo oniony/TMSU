@@ -125,24 +125,24 @@ func (command UntagCommand) untagPaths(store *storage.Storage, paths []string, t
 func (command UntagCommand) untagPathAll(store *storage.Storage, path string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
+		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
 	file, err := store.FileByPath(absPath)
 	if err != nil {
-		return fmt.Errorf("'%v': could not retrieve file: %v", path, err)
+		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		return fmt.Errorf("'%v': file is not tagged.")
+		return fmt.Errorf("%v: file is not tagged.")
 	}
 
 	if command.verbose {
-		log.Infof("'%v': identifying tags applied.", absPath)
+		log.Infof("%v: identifying tags applied.", absPath)
 	}
 
 	explicitTags, err := store.ExplicitTagsByFileId(file.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get explicit taggings: %v", path, err)
+		return fmt.Errorf("%v: could not get explicit taggings: %v", path, err)
 	}
 
 	err = command.removeImplicitFileTags(store, absPath, explicitTags)
@@ -151,12 +151,12 @@ func (command UntagCommand) untagPathAll(store *storage.Storage, path string) er
 	}
 
 	if command.verbose {
-		log.Infof("'%v': removing all tags.", absPath)
+		log.Infof("%v: removing all tags.", absPath)
 	}
 
 	err = store.RemoveExplicitFileTagsByFileId(file.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not remove explicit taggings: %v", path, err)
+		return fmt.Errorf("%v: could not remove explicit taggings: %v", path, err)
 	}
 
 	err = command.removeUntaggedFile(store, file)
@@ -170,7 +170,7 @@ func (command UntagCommand) untagPathAll(store *storage.Storage, path string) er
 func (command UntagCommand) untagPath(store *storage.Storage, path string, tagNames []string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
+		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
 	tags, err := command.lookupTags(store, tagNames)
@@ -180,10 +180,10 @@ func (command UntagCommand) untagPath(store *storage.Storage, path string, tagNa
 
 	file, err := store.FileByPath(absPath)
 	if err != nil {
-		return fmt.Errorf("'%v': could not retrieve file: %v", path, err)
+		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		return fmt.Errorf("'%v': file is not tagged.")
+		return fmt.Errorf("%v: file is not tagged.")
 	}
 
 	if err := command.removeImplicitFileTags(store, absPath, tags); err != nil {
@@ -200,7 +200,7 @@ func (command UntagCommand) untagPath(store *storage.Storage, path string, tagNa
 func (command UntagCommand) untagFile(store *storage.Storage, file *database.File, tags database.Tags) error {
 	for _, tag := range tags {
 		if command.verbose {
-			log.Infof("'%v': unapplying tag '%v'.", file.Path(), tag.Name)
+			log.Infof("%v: unapplying tag '%v'.", file.Path(), tag.Name)
 		}
 
 		if err := command.removeExplicitTag(store, file, tag); err != nil {
@@ -218,17 +218,17 @@ func (command UntagCommand) untagFile(store *storage.Storage, file *database.Fil
 func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *database.File) error {
 	filetagCount, err := store.FileTagCountByFileId(file.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get tag count: %v", file.Path(), err)
+		return fmt.Errorf("%v: could not get tag count: %v", file.Path(), err)
 	}
 
 	if filetagCount == 0 {
 		if command.verbose {
-			log.Infof("'%v': removing untagged file.", file.Path())
+			log.Infof("%v: removing untagged file.", file.Path())
 		}
 
 		err = store.RemoveFile(file.Id)
 		if err != nil {
-			return fmt.Errorf("'%v': could not remove file: %v", file.Path(), err)
+			return fmt.Errorf("%v: could not remove file: %v", file.Path(), err)
 		}
 	}
 
@@ -238,11 +238,11 @@ func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *dat
 func (command UntagCommand) removeImplicitFileTags(store *storage.Storage, path string, tags database.Tags) error {
 	descendents, err := store.FilesByDirectory(path)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get files for directory: %v", path, err)
+		return fmt.Errorf("%v: could not get files for directory: %v", path, err)
 	}
 
 	if command.verbose && len(descendents) > 0 {
-		log.Infof("'%v': removing implicit taggings.", path)
+		log.Infof("%v: removing implicit taggings.", path)
 	}
 
 	for _, descendent := range descendents {
@@ -257,7 +257,7 @@ func (command UntagCommand) removeImplicitFileTags(store *storage.Storage, path 
 func (command UntagCommand) removeImplicitFileTag(store *storage.Storage, file *database.File, tags database.Tags) error {
 	for _, tag := range tags {
 		if command.verbose {
-			log.Infof("'%v': removing implicit tag '%v'.", file.Path(), tag.Name)
+			log.Infof("%v: removing implicit tag '%v'.", file.Path(), tag.Name)
 		}
 
 		if err := command.removeImplicitTag(store, file, tag); err != nil {
@@ -271,14 +271,14 @@ func (command UntagCommand) removeImplicitFileTag(store *storage.Storage, file *
 func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.File, tag *database.Tag) error {
 	exists, err := store.ExplicitFileTagExists(file.Id, tag.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not determine whether file is tagged '%v': %v", file.Path(), tag.Name, err)
+		return fmt.Errorf("%v: could not determine whether file is tagged '%v': %v", file.Path(), tag.Name, err)
 	}
 	if !exists {
 		return nil
 	}
 
 	if err = store.RemoveExplicitFileTag(file.Id, tag.Id); err != nil {
-		return fmt.Errorf("'%v': could not remove explicit file tagging '%v': %v", file.Path(), tag.Name)
+		return fmt.Errorf("%v: could not remove explicit file tagging '%v': %v", file.Path(), tag.Name)
 	}
 
 	return nil
@@ -287,14 +287,14 @@ func (UntagCommand) removeExplicitTag(store *storage.Storage, file *database.Fil
 func (UntagCommand) removeImplicitTag(store *storage.Storage, file *database.File, tag *database.Tag) error {
 	exists, err := store.ImplicitFileTagExists(file.Id, tag.Id)
 	if err != nil {
-		return fmt.Errorf("'%v': could not determine whether file is tagged '%v': %v", file.Path(), tag.Name, err)
+		return fmt.Errorf("%v: could not determine whether file is tagged '%v': %v", file.Path(), tag.Name, err)
 	}
 	if !exists {
-		return fmt.Errorf("'%v': file is not tagged '%v'.", tag.Name)
+		return fmt.Errorf("%v: file is not tagged '%v'.", tag.Name)
 	}
 
 	if err = store.RemoveImplicitFileTag(file.Id, tag.Id); err != nil {
-		return fmt.Errorf("'%v': could not remove implicit tagging '%v': %v", file.Path(), tag.Name)
+		return fmt.Errorf("%v: could not remove implicit tagging '%v': %v", file.Path(), tag.Name)
 	}
 
 	return nil

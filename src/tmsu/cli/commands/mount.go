@@ -131,21 +131,21 @@ func (command MountCommand) mountSelected(mountPath string) error {
 func (command MountCommand) mountExplicit(databasePath string, mountPath string) error {
 	stat, err := os.Stat(mountPath)
 	if err != nil {
-		return fmt.Errorf("'%v': could not stat: %v", mountPath, err)
+		return fmt.Errorf("%v: could not stat: %v", mountPath, err)
 	}
 	if stat == nil {
-		return fmt.Errorf("'%v': mount point does not exist.", mountPath)
+		return fmt.Errorf("%v: mount point does not exist.", mountPath)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("'%v': mount point is not a directory.", mountPath)
+		return fmt.Errorf("%v: mount point is not a directory.", mountPath)
 	}
 
 	stat, err = os.Stat(databasePath)
 	if err != nil {
-		return fmt.Errorf("'%v': could not stat: %v", databasePath, err)
+		return fmt.Errorf("%v: could not stat: %v", databasePath, err)
 	}
 	if stat == nil {
-		return fmt.Errorf("'%v': database does not exist.")
+		return fmt.Errorf("%v: database does not exist.")
 	}
 
 	if command.verbose {

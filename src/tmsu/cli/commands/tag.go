@@ -140,7 +140,7 @@ func (command TagCommand) addFiles(store *storage.Storage, paths []string) (data
 	for index, path := range paths {
 		file, err := command.addFile(store, path)
 		if err != nil {
-			return nil, fmt.Errorf("'%v': could not add file: %v", path, err)
+			return nil, fmt.Errorf("%v: could not add file: %v", path, err)
 		}
 
 		files[index] = file
@@ -152,7 +152,7 @@ func (command TagCommand) addFiles(store *storage.Storage, paths []string) (data
 func (command TagCommand) addFile(store *storage.Storage, path string) (*database.File, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
+		return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
 	file, err := store.FileByPath(absPath)

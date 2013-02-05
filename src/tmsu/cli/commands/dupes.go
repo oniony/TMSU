@@ -110,22 +110,22 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 	first := true
 	for _, path := range paths {
 		if command.verbose {
-			log.Infof("'%v': identifying duplicate files.\n", path)
+			log.Infof("%v: identifying duplicate files.\n", path)
 		}
 
 		fingerprint, err := fingerprint.Create(path)
 		if err != nil {
-			return fmt.Errorf("%v': could not create fingerprint: %v", path, err)
+			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}
 
 		files, err := store.FilesByFingerprint(fingerprint)
 		if err != nil {
-			return fmt.Errorf("'%v': could not retrieve files matching fingerprint '%v': %v", path, fingerprint, err)
+			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fingerprint, err)
 		}
 
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("'%v': could not determine absolute path: %v", path, err)
+			return fmt.Errorf("%v: could not determine absolute path: %v", path, err)
 		}
 
 		// filter out the file we're searching on

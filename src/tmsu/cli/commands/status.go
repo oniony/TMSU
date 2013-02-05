@@ -184,13 +184,13 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
+			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
 		if path != "." {
 			file, err := store.FileByPath(absPath)
 			if err != nil {
-				return nil, fmt.Errorf("'%v': could not retrieve file: %v", path, err)
+				return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
 			}
 			if file != nil {
 				err = command.checkFile(file, report)
@@ -201,12 +201,12 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 		}
 
 		if command.verbose {
-			log.Infof("'%v': retrieving files from database.", path)
+			log.Infof("%v: retrieving files from database.", path)
 		}
 
 		files, err := store.FilesByDirectory(absPath)
 		if err != nil {
-			return nil, fmt.Errorf("'%v': could not retrieve files for directory: %v", path, err)
+			return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
 		}
 
 		err = command.checkFiles(files, report)
@@ -238,7 +238,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 	relPath := path.Rel(file.Path())
 
 	if command.verbose {
-		log.Infof("'%v': checking file status.", file.Path())
+		log.Infof("%v: checking file status.", file.Path())
 	}
 
 	stat, err := os.Stat(file.Path())
@@ -248,7 +248,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 		switch {
 		case os.IsNotExist(pathError.Err):
 			if command.verbose {
-				log.Infof("'%v': file is missing.", file.Path())
+				log.Infof("%v: file is missing.", file.Path())
 			}
 
 			report.AddRow(Row{relPath, MISSING})
@@ -256,18 +256,18 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 		case os.IsPermission(pathError.Err):
 			log.Warnf("%v: Permission denied.", file.Path())
 		default:
-			return fmt.Errorf("'%v': could not stat: %v", file.Path(), err)
+			return fmt.Errorf("%v: could not stat: %v", file.Path(), err)
 		}
 	} else {
 		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
 			if command.verbose {
-				log.Infof("'%v': file is modified.", file.Path())
+				log.Infof("%v: file is modified.", file.Path())
 			}
 
 			report.AddRow(Row{relPath, MODIFIED})
 		} else {
 			if command.verbose {
-				log.Infof("'%v': file is unchanged.", file.Path())
+				log.Infof("%v: file is unchanged.", file.Path())
 			}
 
 			report.AddRow(Row{relPath, TAGGED})
@@ -279,12 +279,12 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 
 func (command *StatusCommand) findNewFiles(path string, report *StatusReport) error {
 	if command.verbose {
-		log.Infof("'%v': finding new files.", path)
+		log.Infof("%v: finding new files.", path)
 	}
 
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return fmt.Errorf("'%v': could not get absolute path: %v", path, err)
+		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
 	if !report.ContainsRow(path) {
@@ -302,19 +302,19 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 			log.Warnf("%v: Permission denied.", path)
 			return nil
 		default:
-			return fmt.Errorf("'%v': could not stat: %v", path, err)
+			return fmt.Errorf("%v: could not stat: %v", path, err)
 		}
 	}
 
 	if stat.IsDir() {
 		dir, err := os.Open(absPath)
 		if err != nil {
-			return fmt.Errorf("'%v': could not open file: %v", path, err)
+			return fmt.Errorf("%v: could not open file: %v", path, err)
 		}
 
 		dirNames, err := dir.Readdirnames(0)
 		if err != nil {
-			return fmt.Errorf("'%v': could not read directory listing: %v", path, err)
+			return fmt.Errorf("%v: could not read directory listing: %v", path, err)
 		}
 
 		for _, dirName := range dirNames {

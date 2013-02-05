@@ -77,13 +77,7 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 
 // The number of files with the specified set of tags.
 func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
-	//TODO optimize
-	files, err := storage.Db.FilesWithTags(tagIds)
-	if err != nil {
-		return 0, fmt.Errorf("could not retrieve file count for tags %v: %v", tagIds, err)
-	}
-
-	return uint(len(files)), nil
+	return storage.Db.FileCountWithTags(tagIds)
 }
 
 // Retrieves the set of files with the specified tag.

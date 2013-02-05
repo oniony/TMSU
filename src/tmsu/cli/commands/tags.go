@@ -113,18 +113,18 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 	var err error
 
 	if command.verbose {
-		log.Infof("'%v': retrieving tags.", path)
+		log.Infof("%v: retrieving tags.", path)
 	}
 
 	if explicitOnly {
 		tags, err = store.ExplicitTagsForPath(path)
 		if err != nil {
-			return fmt.Errorf("'%v': could not retrieve explicit tags: %v", path, err)
+			return fmt.Errorf("%v: could not retrieve explicit tags: %v", path, err)
 		}
 	} else {
 		tags, err = store.TagsForPath(path)
 		if err != nil {
-			return fmt.Errorf("'%v': could not retrieve tags: %v", path, err)
+			return fmt.Errorf("%v: could not retrieve tags: %v", path, err)
 		}
 	}
 
@@ -141,7 +141,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 		var err error
 
 		if command.verbose {
-			log.Infof("'%v': retrieving tags.", path)
+			log.Infof("%v: retrieving tags.", path)
 		}
 
 		if explicitOnly {
@@ -177,7 +177,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 
 	for _, dirName := range dirNames {
 		if command.verbose {
-			log.Infof("'%v': retrieving tags.", dirName)
+			log.Infof("%v: retrieving tags.", dirName)
 		}
 
 		var tags database.Tags

@@ -227,6 +227,52 @@ func (db *Database) FilesWithImplicitTag(tagId uint) (Files, error) {
 	return readFiles(rows, make(Files, 0, 10))
 }
 
+// Retrieves the count of files with the specified tags.
+func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
+	tagCount := len(tagIds)
+
+	sql := `SELECT count(1)
+            FROM (
+                SELECT file_id, count(tag_id)
+                FROM (
+                    SELECT file_id, tag_id
+                    FROM explicit_file_tag
+                    WHERE tag_id IN (?1`
+
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
+	}
+
+	sql += `)
+                    UNION SELECT file_id, tag_id
+                          FROM implicit_file_tag
+                          WHERE tag_id IN (?1`
+
+	for idx := 2; idx <= tagCount; idx += 1 {
+		sql += ", ?" + strconv.Itoa(idx)
+	}
+
+	sql += `)
+                )
+                GROUP BY file_id
+                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
+            )`
+
+	params := make([]interface{}, tagCount+1)
+	for index, tagId := range tagIds {
+		params[index] = interface{}(tagId)
+	}
+	params[tagCount] = tagCount
+
+	rows, err := db.connection.Query(sql, params...)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return readCount(rows)
+}
+
 // Retrieves the set of files with the specified tags.
 func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
 	tagCount := len(tagIds)
@@ -248,8 +294,8 @@ func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
 
 	sql += `)
                         UNION SELECT file_id, tag_id
-                            FROM implicit_file_tag
-                            WHERE tag_id IN (?1`
+                              FROM implicit_file_tag
+                              WHERE tag_id IN (?1`
 
 	for idx := 2; idx <= tagCount; idx += 1 {
 		sql += ", ?" + strconv.Itoa(idx)

@@ -28,12 +28,12 @@ import (
 
 // A tracked file.
 type File struct {
-	Id           uint
-	Directory    string
-	Name         string
-	Fingerprint  fingerprint.Fingerprint
-	ModTimestamp time.Time
-	Size         int64
+	Id          uint
+	Directory   string
+	Name        string
+	Fingerprint fingerprint.Fingerprint
+	ModTime     time.Time
+	Size        int64
 }
 
 type Files []*File
@@ -121,10 +121,10 @@ func (db *Database) FileByPath(path string) (*File, error) {
 func (db *Database) FilesByDirectory(path string) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
-            WHERE name = ? OR directory = ? OR directory LIKE ?
+            WHERE directory = ? OR directory LIKE ?
             ORDER BY directory || '/' || name`
 
-	rows, err := db.connection.Query(sql, path, path, filepath.Clean(path+"/%"))
+	rows, err := db.connection.Query(sql, path, filepath.Clean(path+"/%"))
 	if err != nil {
 		return nil, err
 	}

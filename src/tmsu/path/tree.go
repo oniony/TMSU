@@ -23,26 +23,51 @@ import (
 	"strings"
 )
 
-type Node struct {
-	Name  string
-	Nodes map[string]*Node
-	Root  bool
+// Finds the root paths added to the tree
+func Roots(paths []string) ([]string, error) {
+	tree := buildTree(paths)
+
+	roots := tree.roots()
+	sort.Strings(roots)
+
+	return roots, nil
 }
 
-// Create a new tree
-func NewTree() *Node {
-	return NewNode("", false)
+// -
+
+type tree struct {
+	root *node
 }
 
-// Create a new tree node
-func NewNode(name string, root bool) *Node {
-	return &Node{name, make(map[string]*Node, 0), root}
+func (tree tree) roots() []string {
+	roots := make([]string, 0, 100)
+	return tree.root.findRoots(roots, "")
 }
 
-func (node *Node) Add(path string) {
+type node struct {
+	name   string
+	nodes  map[string]*node
+	isRoot bool
+}
+
+func buildTree(paths []string) *tree {
+	tree := tree{newNode("/", false)}
+
+	for _, path := range paths {
+		tree.add(path)
+	}
+
+	return &tree
+}
+
+func newNode(name string, root bool) *node {
+	return &node{name, make(map[string]*node, 0), root}
+}
+
+func (tree *tree) add(path string) {
 	pathParts := strings.Split(path, string(filepath.Separator))
 
-	currentNode := node
+	currentNode := tree.root
 	partCount := len(pathParts)
 	for index, pathPart := range pathParts {
 		if pathPart == "" {
@@ -50,17 +75,14 @@ func (node *Node) Add(path string) {
 		}
 
 		root := index == (partCount - 1)
-		node, found := currentNode.Nodes[pathPart]
+		node, found := currentNode.nodes[pathPart]
 		if !found {
-			node = NewNode(pathPart, root)
-			currentNode.Nodes[pathPart] = node
+			node = newNode(pathPart, root)
+			currentNode.nodes[pathPart] = node
 		} else {
-			if node.Root {
-				break
-			} else {
+			if !node.isRoot {
 				if root {
-					node.Root = true
-					node.Nodes = nil
+					node.isRoot = true
 				}
 			}
 		}
@@ -69,22 +91,14 @@ func (node *Node) Add(path string) {
 	}
 }
 
-func (node *Node) Roots() []string {
-	roots := node.findRoots(make([]string, 0, 10), "")
+func (node *node) findRoots(paths []string, path string) []string {
+	path = filepath.Join(path, node.name)
 
-	sort.Strings(roots)
-
-	return roots
-}
-
-func (node *Node) findRoots(paths []string, path string) []string {
-	path = filepath.Join(path, node.Name)
-
-	if node.Root {
+	if node.isRoot {
 		return append(paths, path)
 	}
 
-	for _, childNode := range node.Nodes {
+	for _, childNode := range node.nodes {
 		paths = childNode.findRoots(paths, path)
 	}
 

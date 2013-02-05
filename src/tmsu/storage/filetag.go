@@ -123,11 +123,19 @@ func (storage *Storage) AddImplicitFileTag(fileId, tagId uint) (*database.FileTa
 
 // Adds a set of explicit file tags.
 func (storage *Storage) AddExplicitFileTags(fileId uint, tagIds []uint) error {
+	if len(tagIds) == 0 {
+		return nil
+	}
+
 	return storage.Db.AddExplicitFileTags(fileId, tagIds)
 }
 
 // Adds a set of implicit file tags.
 func (storage *Storage) AddImplicitFileTags(fileId uint, tagIds []uint) error {
+	if len(tagIds) == 0 {
+		return nil
+	}
+
 	return storage.Db.AddImplicitFileTags(fileId, tagIds)
 }
 

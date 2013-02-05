@@ -241,7 +241,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 		log.Infof("'%v': checking file status.", file.Path())
 	}
 
-	info, err := os.Stat(file.Path())
+	stat, err := os.Stat(file.Path())
 	if err != nil {
 		pathError := err.(*os.PathError)
 
@@ -259,7 +259,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 			return fmt.Errorf("'%v': could not stat: %v", file.Path(), err)
 		}
 	} else {
-		if info.Size() != file.Size || info.ModTime().Unix() != file.ModTimestamp.Unix() {
+		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
 			if command.verbose {
 				log.Infof("'%v': file is modified.", file.Path())
 			}

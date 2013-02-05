@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package path
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
@@ -39,19 +38,4 @@ func Rel(path string) string {
 	}
 
 	return path
-}
-
-func Roots(paths []string) ([]string, error) {
-	tree := NewTree()
-
-	for _, path := range paths {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
-		}
-
-		tree.Add(absPath)
-	}
-
-	return tree.Roots(), nil
 }

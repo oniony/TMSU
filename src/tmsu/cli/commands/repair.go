@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
@@ -28,13 +29,6 @@ import (
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
-
-type fileInfoMap map[string]os.FileInfo
-type fileIdAndInfoMap map[string]struct {
-	fileId uint
-	stat   os.FileInfo
-}
-type databaseFileMap map[string]database.File
 
 type RepairCommand struct {
 	verbose bool
@@ -104,6 +98,8 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	return command.repairPaths(store, args)
 }
 
+//-
+
 func (command RepairCommand) repairDatabase(store *storage.Storage) error {
 	if command.verbose {
 		log.Info("retrieving all files from the database.")
@@ -167,51 +163,46 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) 
 		return err
 	}
 
-	if command.verbose {
-		log.Info("determining file statuses")
-	}
-
-	_, untagged, modified, missing := command.determineStatuses(fsPaths, dbPaths)
-
-	if command.verbose {
-		log.Info("repairing modified files")
-	}
+	tagged, untagged, modified, missing := command.determineStatuses(fsPaths, dbPaths)
 
 	if err = command.repairModified(store, modified); err != nil {
 		return err
-	}
-
-	if command.verbose {
-		log.Info("repairing moved files")
 	}
 
 	if err = command.repairMoved(store, missing, untagged); err != nil {
 		return err
 	}
 
-	if command.verbose {
-		log.Info("repairing added files")
+	if err = command.repairAdded(store, untagged); err != nil {
+		return err
 	}
 
-	//TODO untagged files in an implicitly tagged directory
-
-	if command.verbose {
-		log.Info("repairing removed files")
+	if err = command.repairRemoved(store, missing); err != nil {
+		return err
 	}
 
-	//TODO tagged files with no explicit tags
-
-	if command.verbose {
-		log.Info("repairing missing implicit tags")
+	if err = command.repairTagged(store, tagged); err != nil {
+		return err
 	}
 
-	//TODO any files that have no tags: remove
-	//TODO any tags that do not correspond to a file: remove
+	//TODO cleanup: any files that have no tags: remove
+	//TODO cleanup: any tags that do not correspond to a file: remove
 
 	return nil
 }
 
+type fileInfoMap map[string]os.FileInfo
+type fileIdAndInfoMap map[string]struct {
+	fileId uint
+	stat   os.FileInfo
+}
+type databaseFileMap map[string]database.File
+
 func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
+	if command.verbose {
+		log.Info("determining file statuses")
+	}
+
 	tagged = make(databaseFileMap, 100)
 	untagged = make(fileInfoMap, 100)
 	modified = make(fileIdAndInfoMap, 100)
@@ -242,6 +233,10 @@ func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths data
 }
 
 func (command RepairCommand) repairModified(store *storage.Storage, modified fileIdAndInfoMap) error {
+	if command.verbose {
+		log.Info("repairing modified files")
+	}
+
 	for path, fileIdAndStat := range modified {
 		fileId := fileIdAndStat.fileId
 		stat := fileIdAndStat.stat
@@ -254,16 +249,28 @@ func (command RepairCommand) repairModified(store *storage.Storage, modified fil
 		}
 
 		if !command.pretend {
-			if _, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size()); err != nil {
+			file, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size())
+			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", path, err)
 			}
+
+			if err = command.repairImplicitTags(store, *file); err != nil {
+				return err
+			}
 		}
+
 	}
 
 	return nil
 }
 
 func (command RepairCommand) repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap) error {
+	if command.verbose {
+		log.Info("repairing moved files")
+	}
+
+	moved := make([]string, 0, 10)
+
 	for path, dbFile := range missing {
 		if command.verbose {
 			log.Infof("%v: searching for new location", path)
@@ -279,15 +286,123 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 				if fingerprint == dbFile.Fingerprint {
 					fmt.Printf("%v: moved to %v\n", path, candidatePath)
 
+					moved = append(moved, path)
+
 					if !command.pretend {
-						if _, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size); err != nil {
+						dbFile, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size)
+						if err != nil {
 							return fmt.Errorf("%v: could not update file in database: %v", path, err)
+						}
+
+						if err := store.RemoveImplicitFileTagsByFileId(dbFile.Id); err != nil {
+							return fmt.Errorf("%v: could not remove implicit tags: %v", path, err)
+						}
+
+						if err = command.repairImplicitTags(store, *dbFile); err != nil {
+							return err
 						}
 					}
 
-					//TODO replace implicit tags with those appropriate for new location
+					delete(untagged, candidatePath)
 
 					break
+				}
+			}
+		}
+	}
+
+	for _, path := range moved {
+		delete(missing, path)
+	}
+
+	return nil
+}
+
+func (command RepairCommand) repairAdded(store *storage.Storage, untagged map[string]os.FileInfo) error {
+	if command.verbose {
+		log.Info("repairing added files")
+	}
+
+	sortedPaths := make([]string, len(untagged))
+	index := 0
+	for path := range untagged {
+		sortedPaths[index] = path
+		index++
+	}
+	sort.Strings(sortedPaths)
+
+	for _, path := range sortedPaths {
+		if command.verbose {
+			log.Infof("%v: checking if contained within a tagged directory", path)
+		}
+
+		stat := untagged[path]
+
+		for directory := filepath.Dir(path); ; directory = filepath.Dir(directory) {
+			if command.verbose {
+				log.Infof("    %v: checking if tagged", directory)
+			}
+
+			file, err := store.FileByPath(directory)
+			if err != nil {
+				return fmt.Errorf("%v: could not retrieve file from database: %v", directory, err)
+			}
+			if file != nil {
+				fmt.Printf("%v: added\n", path)
+
+				if !command.pretend {
+					modTime := stat.ModTime().UTC()
+					size := stat.Size()
+
+					fingerprint, err := fingerprint.Create(path)
+					if err != nil {
+						return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+					}
+
+					file, err := store.AddFile(path, fingerprint, modTime, size)
+					if err != nil {
+						return fmt.Errorf("%v: could not add file: %v", path, err)
+					}
+
+					if err = command.repairImplicitTags(store, *file); err != nil {
+						return err
+					}
+				}
+
+				break
+			}
+		}
+	}
+
+	return nil
+}
+
+func (command RepairCommand) repairRemoved(store *storage.Storage, missing databaseFileMap) error {
+	if command.verbose {
+		log.Info("repairing removed files")
+	}
+
+	for path, dbFile := range missing {
+		if command.verbose {
+			log.Infof("%v: checking for removal", path)
+		}
+
+		explicitTagCount, err := store.ExplicitFileTagCountByFileId(dbFile.Id)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve explicit tag count: %v", dbFile.Path(), err)
+		}
+
+		if explicitTagCount == 0 {
+			fmt.Printf("%v: removed\n", path)
+
+			if !command.pretend {
+				if err = store.RemoveImplicitFileTagsByFileId(dbFile.Id); err != nil {
+
+					return fmt.Errorf("%v: could not remove implicit tags: %v", dbFile.Path(), err)
+				}
+
+				if err = store.RemoveFile(dbFile.Id); err != nil {
+					return fmt.Errorf("%v: could not removed file: %v", dbFile.Path(), err)
 				}
 			}
 		}
@@ -296,55 +411,47 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 	return nil
 }
 
-func (command RepairCommand) addNewFiles(store *storage.Storage, path string) error {
+func (command RepairCommand) repairTagged(store *storage.Storage, tagged map[string]database.File) error {
 	if command.verbose {
-		log.Infof("%v: searching for new files", path)
+		log.Info("repairing tagged files")
 	}
 
-	dir, err := os.Open(path)
+	for _, dbFile := range tagged {
+		if err := command.repairImplicitTags(store, dbFile); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (command RepairCommand) repairImplicitTags(store *storage.Storage, file database.File) error {
+	if command.verbose {
+		log.Infof("%v: checking implicit tags", file.Path())
+	}
+
+	directoryPath := filepath.Dir(file.Path())
+	directory, err := store.FileByPath(directoryPath)
 	if err != nil {
-		return fmt.Errorf("%v: could not open directory: %v", path, err)
+		return fmt.Errorf("%v: could not retrieve file from database: %v", directoryPath, err)
+	}
+	if directory == nil {
+		return nil
 	}
 
-	entryNames, err := dir.Readdirnames(0)
-	dir.Close()
+	fileTags, err := store.FileTagsByFileId(directory.Id)
 	if err != nil {
-		return fmt.Errorf("%v: could not enumerate directory: %v", path, err)
+		return fmt.Errorf("%v: could not retrieve tags for file from database: %v", directoryPath, err)
 	}
 
-	for _, entryName := range entryNames {
-		entryPath := filepath.Join(path, entryName)
-
-		dbFile, err := store.FileByPath(entryPath)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file from database: %v", entryPath, err)
+	if !command.pretend {
+		tagIds := make([]uint, len(fileTags))
+		for index, fileTag := range fileTags {
+			tagIds[index] = fileTag.TagId
 		}
 
-		stat, err := os.Stat(entryPath)
-		if err != nil {
-			switch {
-			case os.IsPermission(err):
-				log.Warnf("%v: permisison denied", entryPath)
-				continue
-			case os.IsNotExist(err):
-				return fmt.Errorf("%v: no such file", entryPath)
-			default:
-				return fmt.Errorf("%v: could not stat file: %v", entryPath, err)
-			}
-		}
-
-		if dbFile == nil {
-			if err := command.addFile(store, entryPath, stat); err != nil {
-				return fmt.Errorf("%v: could not add file: %v", entryPath, err)
-			}
-
-			fmt.Printf("%v: added.\n", entryPath)
-		}
-
-		if stat.IsDir() {
-			if err := command.addNewFiles(store, entryPath); err != nil {
-				return err
-			}
+		if err := store.AddImplicitFileTags(file.Id, tagIds); err != nil {
+			return err
 		}
 	}
 
@@ -352,124 +459,6 @@ func (command RepairCommand) addNewFiles(store *storage.Storage, path string) er
 }
 
 func (command RepairCommand) addFile(store *storage.Storage, path string, stat os.FileInfo) error {
-	modTime := stat.ModTime().UTC()
-	size := stat.Size()
-
-	fingerprint, err := fingerprint.Create(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-	}
-
-	if !command.pretend {
-		_, err := store.AddFile(path, fingerprint, modTime, size)
-		if err != nil {
-			return fmt.Errorf("%v: could not add file: %v", path, err)
-		}
-	}
-
-	return nil
-}
-
-func (command RepairCommand) propagateTaggings(store *storage.Storage, dbFile *database.File) error {
-	if command.verbose {
-		log.Infof("%v: checking implicit taggings.", dbFile.Path())
-	}
-
-	explicitFileTags, err := store.ExplicitFileTagsByFileId(dbFile.Id)
-	if err != nil {
-		fmt.Errorf("%v: could not retrieve explicit file tags: %v", dbFile.Path(), err)
-	}
-
-	explicitFileTagIds := make([]uint, len(explicitFileTags))
-	for index, explicitFileTag := range explicitFileTags {
-		explicitFileTagIds[index] = explicitFileTag.TagId
-	}
-
-	descendents, err := store.FilesByDirectory(dbFile.Path())
-	if err != nil {
-		fmt.Errorf("%v: could not retrieve files from database for directory: %v", dbFile.Path(), err)
-	}
-
-	for _, descendent := range descendents {
-		if command.verbose {
-			log.Infof("%v: repairing implicit taggings.", descendent.Path())
-		}
-
-		if !command.pretend {
-			if err := store.AddImplicitFileTags(descendent.Id, explicitFileTagIds); err != nil {
-				return fmt.Errorf("%v: could not apply implicit taggings: %v", descendent.Path(), err)
-			}
-		}
-	}
-
-	return nil
-}
-
-func (command RepairCommand) processUntaggedFile(untaggedPathsBySize map[int64][]string, path string, size int64) error {
-	paths, found := untaggedPathsBySize[size]
-	if !found {
-		paths = make([]string, 0, 2)
-	}
-
-	paths = append(paths, path)
-	untaggedPathsBySize[size] = paths
-
-	return nil
-}
-
-func (command RepairCommand) processModifiedFile(store *storage.Storage, dbFile *database.File, stat os.FileInfo) error {
-	fmt.Printf("%v: modified.\n", dbFile.Path())
-
-	fingerprint, err := fingerprint.Create(dbFile.Path())
-	if err != nil {
-		return fmt.Errorf("%v: could not create fingerprint: %v", dbFile.Path(), err)
-	}
-
-	if !command.pretend {
-		if _, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime().UTC(), stat.Size()); err != nil {
-			fmt.Errorf("%v: could not update file in database: %v", err)
-		}
-	}
-
-	return nil
-}
-
-func (command RepairCommand) processMissingFile(store *storage.Storage, untaggedPathsBySize map[int64][]string, dbFile *database.File) error {
-	if command.verbose {
-		log.Infof("%v: attempting to relocate missing file.", dbFile.Path())
-	}
-
-	candidatePaths := untaggedPathsBySize[dbFile.Size]
-	for _, candidatePath := range candidatePaths {
-		fingerprint, err := fingerprint.Create(candidatePath)
-		if err != nil {
-			return fmt.Errorf("%v: could not create fingerprint: %v", candidatePath, err)
-		}
-
-		if fingerprint == dbFile.Fingerprint {
-			return command.processMovedFile(store, dbFile, candidatePath)
-		}
-	}
-
-	fmt.Printf("%v: missing.\n", dbFile.Path())
-
-	if !command.pretend {
-		//TODO remove if has no explicit tags
-	}
-
-	return nil
-}
-
-func (command RepairCommand) processMovedFile(store *storage.Storage, dbFile *database.File, path string) error {
-	fmt.Printf("%v: moved to %v.\n", dbFile.Path(), path)
-
-	if !command.pretend {
-		if _, err := store.UpdateFile(dbFile.Id, path, dbFile.Fingerprint, dbFile.ModTime, dbFile.Size); err != nil {
-			return fmt.Errorf("%v: could not update file path in database: %v", dbFile.Path(), err)
-		}
-
-		//TODO remove implict taggings
-	}
 
 	return nil
 }

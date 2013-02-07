@@ -1,9 +1,5 @@
-___       .
- |  |\/| (  | |
- |  |  |  ) |_|
-         `
 Overview
---------
+========
 
 TMSU is an application that allows you to organise your files by associating
 them with tags. It provides a tool for managing these tags and a virtual file-
@@ -15,7 +11,7 @@ system. That way you have the freedom to choose the most suitable file system
 for storage whilst still benefiting from tag based access.
 
 Usage
------
+=====
 
 A command overview and details on how to use each command are available via the
 integrated help:
@@ -24,21 +20,21 @@ integrated help:
 
 Full documentation is maintained online in the TMSU wiki:
 
-    http://bitbucket.org/oniony/tmsu/wiki
+  * http://bitbucket.org/oniony/tmsu/wiki
 
 Downloading
------------
+===========
 
 Binary builds for a limited number of architectures and operating system
 combinations are available on the project's download page:
 
-    http://bitbucket.org/oniony/tmsu/downloads
+  * http://bitbucket.org/oniony/tmsu/downloads
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function.
 
 Compiling
----------
+=========
 
 The following steps are for compiling from source.
 
@@ -48,7 +44,7 @@ TMSU is written in the Go programming language. To compile from source you must
 first install Go and the packages that TMSU depends upon. You can get that from
 the Go website:
 
-    http://www.golang.org/
+  * http://www.golang.org/
 
 Go can be installed per the instructions on the Go website or it may be
 available in the package management system that comes with your operating
@@ -77,27 +73,27 @@ This will compile to 'bin/tmsu' within the working directory.
 
     $ sudo make install
 
-This will install TMSU to /usr/bin/tmsu.
-It will also install the Zsh completion to /usr/share/zsh/site-functions.
+This will install TMSU to '/usr/bin/tmsu'.
+It will also install the Zsh completion to '/usr/share/zsh/site-functions'.
 
 To change the paths used override the environment variables in the Makefile.
 
 About
------
+=====
 
 The project website is at:
 
-    http://www.tmsu.org/
+  * http://www.tmsu.org/
 
 There is a TMSU mailing list which can be used for asking questions, making
 suggestions, reporting bugs, &c. Release announcements are also made on this
 list.
 
-    http://groups.google.com/group/tmsu
+  * http://groups.google.com/group/tmsu
 
 TMSU is written in Go. For more information visit:
 
-    http://www.golang.org/.
+  * http://www.golang.org/.
 
 TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
 much of the functionality it provides is made possible by the Fuse and Sqlite3
@@ -109,9 +105,9 @@ Release Notes
 trunk
 -----
 
-  IMPORTANT: This release changes the database format so that implicit taggings
-  are stored rather than calculated on the fly. If you wish to use an existing
-  database it must be first upgraded:
+IMPORTANT: This release changes the database format so that implicit taggings
+are stored rather than calculated on the fly. If you wish to use an existing
+database it must be first upgraded:
   
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db~  # back up
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db

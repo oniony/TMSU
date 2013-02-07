@@ -18,9 +18,9 @@ integrated help:
 
     $ tmsu help
 
-Full documentation is maintained online:
+Full documentation is maintained online on the wiki:
 
-  * [TMSU Wiki](http://bitbucket.org/oniony/tmsu/wiki)
+  * <http://bitbucket.org/oniony/tmsu/wiki>
 
 Downloading
 ===========
@@ -28,7 +28,7 @@ Downloading
 Binary builds for a limited number of architectures and operating system
 combinations are available:
 
-  * [Downloads](http://bitbucket.org/oniony/tmsu/downloads)
+  * <http://bitbucket.org/oniony/tmsu/downloads>
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function.
@@ -81,17 +81,14 @@ To change the paths used override the environment variables in the Makefile.
 About
 =====
 
-  * [TMSU Website](http://www.tmsu.org/)
-
-There is a TMSU mailing list which can be used for asking questions, making
-suggestions, reporting bugs, &c. Release announcements are also made on this
-list.
-
-  * [Mailing List](http://groups.google.com/group/tmsu)
+  * Website: <http://www.tmsu.org/>
+  * Project: <http://bitbucket.org/oniony/tmsu>
+  * Wiki: <http://bitbucket.org/oniony/tmsu/wiki>
+  * Mailing list: <http://groups.google.com/group/tmsu>
 
 TMSU is written in Go.
 
-  * [Go Language Website](http://www.golang.org/)
+  * <http://www.golang.org/>
 
 TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
 much of the functionality it provides is made possible by the Fuse and Sqlite3

@@ -2,8 +2,8 @@ Overview
 ========
 
 TMSU is an application that allows you to organise your files by associating
-them with tags. It provides a tool for managing these tags and a virtual file-
-system to allow tag based access to your files.
+them with tags. It provides a tool for managing these tags and a virtual
+file-system to allow tag based access to your files.
 
 TMSU's virtual file system does not store your files: it merely provides an
 alternative, tagged based view of your files stored elsewhere in the file-
@@ -18,17 +18,17 @@ integrated help:
 
     $ tmsu help
 
-Full documentation is maintained online in the TMSU wiki:
+Full documentation is maintained online:
 
-  * http://bitbucket.org/oniony/tmsu/wiki
+  * [TMSU Wiki](http://bitbucket.org/oniony/tmsu/wiki)
 
 Downloading
 ===========
 
 Binary builds for a limited number of architectures and operating system
-combinations are available on the project's download page:
+combinations are available:
 
-  * http://bitbucket.org/oniony/tmsu/downloads
+  * [Downloads](http://bitbucket.org/oniony/tmsu/downloads)
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function.
@@ -81,19 +81,17 @@ To change the paths used override the environment variables in the Makefile.
 About
 =====
 
-The project website is at:
-
-  * http://www.tmsu.org/
+  * [TMSU Website](http://www.tmsu.org/)
 
 There is a TMSU mailing list which can be used for asking questions, making
 suggestions, reporting bugs, &c. Release announcements are also made on this
 list.
 
-  * http://groups.google.com/group/tmsu
+  * [Mailing List](http://groups.google.com/group/tmsu)
 
-TMSU is written in Go. For more information visit:
+TMSU is written in Go.
 
-  * http://www.golang.org/.
+  * [Go Language Website](http://www.golang.org/)
 
 TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
 much of the functionality it provides is made possible by the Fuse and Sqlite3

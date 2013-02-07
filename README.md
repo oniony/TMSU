@@ -44,7 +44,7 @@ TMSU is written in the Go programming language. To compile from source you must
 first install Go and the packages that TMSU depends upon. You can get that from
 the Go website:
 
-  * http://www.golang.org/
+  * <http://www.golang.org/>
 
 Go can be installed per the instructions on the Go website or it may be
 available in the package management system that comes with your operating
@@ -55,28 +55,29 @@ latest version that is known to work with the dependent packages.
 
 2. Install the dependent packages.
 
-    $ go get github.com/mattn/go-sqlite3
-    $ go get github.com/hanwen/go-fuse/fuse
+        $ go get github.com/mattn/go-sqlite3
+        $ go get github.com/hanwen/go-fuse/fuse
 
 3. Clone the TMSU respository:
 
-    $ hg clone https://bitbucket.org/oniony/tmsu
+        $ hg clone https://bitbucket.org/oniony/tmsu
 
 4. Make the project
 
-    $ cd tmsu
-    $ make
+        $ cd tmsu
+        $ make
 
-This will compile to 'bin/tmsu' within the working directory.
+    This will compile to 'bin/tmsu' within the working directory.
 
 5. Install the project
 
-    $ sudo make install
+        $ sudo make install
 
-This will install TMSU to '/usr/bin/tmsu'.
-It will also install the Zsh completion to '/usr/share/zsh/site-functions'.
+    This will install TMSU to '/usr/bin/tmsu'.
 
-To change the paths used override the environment variables in the Makefile.
+    It will also install the Zsh completion to '/usr/share/zsh/site-functions'.
+
+    To change the paths used override the environment variables in the Makefile.
 
 About
 =====

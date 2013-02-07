@@ -2,22 +2,22 @@ HIGH
 
 E Add unit-tests for each command.
 E Issue #29: Option to allow just files or directories to be listed.
-B virtual file-system slow when lots of files
-
-B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
-E 'tmsu tag' should bulk add files and then bulk add taggings.
-B Untagging via the VFS does not remove implicit taggings.
-E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
-B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
+B virtual file-system slow when lots of files: appears to be related to the file counts.
 B 'tmsu untag file x' command reports file is not tagged 'x' if file is implicitly tagged 'x'.
+B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
+B 'status' command is not reporting untagged files in tagged directories when run without arguments.
+B Untagging via the VFS does not remove implicit taggings.
+B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
+E Issue #33: provide binary for 64 bit Linux.
 
 MEDIUM
 
+E 'tmsu tag' should bulk add files and then bulk add taggings.
+E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
 E Consolidate 'status' and 'repair' commands.
 E Make implict tags an option.
 E Add benchmarks.
 C Rename 'filetag' to 'tagging'.
 E Issue #35: print0 support.
-E Issue #33: cross compile binary for 64 bit Linux.
 
 Key: [B]ug [E]nhancement [C]lean-up [R]efactoring

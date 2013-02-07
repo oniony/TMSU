@@ -351,20 +351,8 @@ func (command RepairCommand) repairAdded(store *storage.Storage, untagged map[st
 				fmt.Printf("%v: added\n", path)
 
 				if !command.pretend {
-					modTime := stat.ModTime().UTC()
-					size := stat.Size()
-
-					fingerprint, err := fingerprint.Create(path)
+					err = command.addFile(store, path, stat)
 					if err != nil {
-						return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-					}
-
-					file, err := store.AddFile(path, fingerprint, modTime, size)
-					if err != nil {
-						return fmt.Errorf("%v: could not add file: %v", path, err)
-					}
-
-					if err = command.repairImplicitTags(store, *file); err != nil {
 						return err
 					}
 				}
@@ -459,6 +447,22 @@ func (command RepairCommand) repairImplicitTags(store *storage.Storage, file dat
 }
 
 func (command RepairCommand) addFile(store *storage.Storage, path string, stat os.FileInfo) error {
+	modTime := stat.ModTime().UTC()
+	size := stat.Size()
+
+	fingerprint, err := fingerprint.Create(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+	}
+
+	file, err := store.AddFile(path, fingerprint, modTime, size)
+	if err != nil {
+		return fmt.Errorf("%v: could not add file: %v", path, err)
+	}
+
+	if err = command.repairImplicitTags(store, *file); err != nil {
+		return err
+	}
 
 	return nil
 }

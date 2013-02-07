@@ -1,7 +1,7 @@
- .
--+- |\/| (  | |
+___       .
+ |  |\/| (  | |
  |  |  |  ) |_|
- 
+         `
 Overview
 --------
 
@@ -20,11 +20,11 @@ Usage
 A command overview and details on how to use each command are available via the
 integrated help:
 
-  $ tmsu help
+    $ tmsu help
 
 Full documentation is maintained online in the TMSU wiki:
 
-  http://bitbucket.org/oniony/tmsu/wiki
+    http://bitbucket.org/oniony/tmsu/wiki
 
 Downloading
 -----------
@@ -32,7 +32,7 @@ Downloading
 Binary builds for a limited number of architectures and operating system
 combinations are available on the project's download page:
 
-  http://bitbucket.org/oniony/tmsu/downloads
+    http://bitbucket.org/oniony/tmsu/downloads
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function.
@@ -48,7 +48,7 @@ TMSU is written in the Go programming language. To compile from source you must
 first install Go and the packages that TMSU depends upon. You can get that from
 the Go website:
 
-  http://www.golang.org/
+    http://www.golang.org/
 
 Go can be installed per the instructions on the Go website or it may be
 available in the package management system that comes with your operating
@@ -59,23 +59,23 @@ latest version that is known to work with the dependent packages.
 
 2. Install the dependent packages.
 
-  $ go get github.com/mattn/go-sqlite3
-  $ go get github.com/hanwen/go-fuse/fuse
+    $ go get github.com/mattn/go-sqlite3
+    $ go get github.com/hanwen/go-fuse/fuse
 
 3. Clone the TMSU respository:
 
-  $ hg clone https://bitbucket.org/oniony/tmsu
+    $ hg clone https://bitbucket.org/oniony/tmsu
 
 4. Make the project
 
-  $ cd tmsu
-  $ make
+    $ cd tmsu
+    $ make
 
 This will compile to 'bin/tmsu' within the working directory.
 
 5. Install the project
 
-  $ sudo make install
+    $ sudo make install
 
 This will install TMSU to /usr/bin/tmsu.
 It will also install the Zsh completion to /usr/share/zsh/site-functions.
@@ -87,26 +87,27 @@ About
 
 The project website is at:
 
-  http://www.tmsu.org/
+    http://www.tmsu.org/
 
 There is a TMSU mailing list which can be used for asking questions, making
 suggestions, reporting bugs, &c. Release announcements are also made on this
 list.
 
-  http://groups.google.com/group/tmsu
+    http://groups.google.com/group/tmsu
 
 TMSU is written in Go. For more information visit:
 
-  http://www.golang.org/.
+    http://www.golang.org/.
 
 TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
 much of the functionality it provides is made possible by the Fuse and Sqlite3
 libraries, their Go bindings and, of course, the Go language standard library.
 
 Release Notes
--------------
+=============
 
 trunk
+-----
 
   IMPORTANT: This release changes the database format so that implicit taggings
   are stored rather than calculated on the fly. If you wish to use an existing
@@ -136,15 +137,17 @@ trunk
   * Minor bug fixes.
 
 v0.0.9
+------
 
   * Fixed bug which caused process hosting the virtual file-system to crash if
     a non-existant tag directory is 'stat'ed.
   * Untagged files now inherit parent directory tags.
 
 v0.0.8
+------
 
-  Files can now be tagged within tagged directories. Files within tagged
-  directories will inherit the directory's tags.
+Files can now be tagged within tagged directories. Files within tagged
+directories will inherit the directory's tags.
 
   * Fixed bug with 'untag' command when non-existant tag is specified.
   * Updated with respect to go-fuse API change. 
@@ -162,6 +165,7 @@ v0.0.8
   * Other minor bug fixes.
 
 v0.0.7
+------
 
   Files larger than 5MB now use a different fingerprinting algorithm where the
   fingerprint is produced by taking a 500KB of the start, middle and end of the
@@ -172,17 +176,18 @@ v0.0.7
         large files with fingerprints produced using the new algorithm.
 
 v0.0.6
+------
 
-  IMPORTANT: This version adds a column to one of the database tables to record
-  the file's modification timestamep. The new code will not work with an
-  existing TMSU database until it has been upgraded.
+IMPORTANT: This version adds a column to one of the database tables to record
+the file's modification timestamep. The new code will not work with an
+existing TMSU database until it has been upgraded.
 
-  To upgrade the database, run the upgrade script using the Sqlite3 tooling:
+To upgrade the database, run the upgrade script using the Sqlite3 tooling:
 
-      $ sqlite3 -init misc/db-upgrade/0.0.5_to_0.0.6.sql
+    $ sqlite3 -init misc/db-upgrade/0.0.5_to_0.0.6.sql
 
-  It is also advisable to run 'repair' after upgrading which will populate the
-  new column and also fix the directory fingerprints which have a new algorithm.
+It is also advisable to run 'repair' after upgrading which will populate the
+new column and also fix the directory fingerprints which have a new algorithm.
 
   * Upgraded to Go 1.
   * Added 'repair' command to fix up database when files are moved or modified.

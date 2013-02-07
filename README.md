@@ -40,18 +40,18 @@ The following steps are for compiling from source.
 
 1. Installing Go
 
-TMSU is written in the Go programming language. To compile from source you must
-first install Go and the packages that TMSU depends upon. You can get that from
-the Go website:
+    TMSU is written in the Go programming language. To compile from source you must
+    first install Go and the packages that TMSU depends upon. You can get that from
+    the Go website:
 
-  * <http://www.golang.org/>
+    * <http://www.golang.org/>
 
-Go can be installed per the instructions on the Go website or it may be
-available in the package management system that comes with your operating
-system.
+    Go can be installed per the instructions on the Go website or it may be
+    available in the package management system that comes with your operating
+    system.
 
-TMSU is currently built against the Go weekly builds. See VERSIONS for the
-latest version that is known to work with the dependent packages.
+    TMSU is currently built against the Go weekly builds. See VERSIONS for the
+    latest version that is known to work with the dependent packages.
 
 2. Install the dependent packages.
 

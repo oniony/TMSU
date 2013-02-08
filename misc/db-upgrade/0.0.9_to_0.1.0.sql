@@ -1,3 +1,6 @@
+-- idx_file_path is redundant and an overhead as the unique constraint creates an identical index
+DROP INDEX IF EXISTS idx_file_path;
+
 -- file_tag table is replaced by separate tables for explicit and implicit taggings
 
 CREATE TABLE IF NOT EXISTS explicit_file_tag (

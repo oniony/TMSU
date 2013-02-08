@@ -108,14 +108,6 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_path
-           ON file(directory, name)`
-
-	_, err = db.connection.Exec(sql)
-	if err != nil {
-		return err
-	}
-
 	sql = `CREATE TABLE IF NOT EXISTS explicit_file_tag (
                file_id INTEGER NOT NULL,
                tag_id INTEGER NOT NULL,

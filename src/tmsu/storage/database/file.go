@@ -233,7 +233,7 @@ func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
 
 	sql := `SELECT count(1)
             FROM (
-                SELECT file_id, count(tag_id)
+                SELECT file_id
                 FROM (
                     SELECT file_id, tag_id
                     FROM explicit_file_tag

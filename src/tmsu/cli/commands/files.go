@@ -23,11 +23,12 @@ import (
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/database"
 )
 
 type FilesCommand struct {
-	verbose bool
+	verbose   bool
+	directory bool
+	file      bool
 }
 
 func (FilesCommand) Name() cli.CommandName {
@@ -41,24 +42,27 @@ func (FilesCommand) Synopsis() string {
 func (FilesCommand) Description() string {
 	return `tmsu files OPTIONS [-]TAG...
 
-Lists the files, if any, that have all of the TAGs specified. Tags can be excluded by prefixing them with a minus (-).`
+Lists the files, if any, that have all of the TAGs specified. Tags can be
+excluded by prefixing their names with a minus character (option processing
+must first be disabled with '--').`
 }
 
 func (FilesCommand) Options() cli.Options {
 	return cli.Options{{"--all", "-a", "show the complete set of tagged files"},
-		{"--explicit", "-e", "show only the explicitly tagged files"}}
+		{"--directory", "-d", "omit files of matching directories"},
+		{"--file", "-f", "omit parent directories of matching files"}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
+	command.directory = options.HasOption("--directory")
+	command.file = options.HasOption("--file")
 
 	if options.HasOption("--all") {
 		return command.listAllFiles()
 	}
 
-	explicitOnly := options.HasOption("--explicit")
-
-	return command.listFiles(args, explicitOnly)
+	return command.listFiles(args)
 }
 
 func (command FilesCommand) listAllFiles() error {
@@ -77,15 +81,34 @@ func (command FilesCommand) listAllFiles() error {
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	for _, file := range files {
-		relPath := path.Rel(file.Path())
+	absPaths := make([]string, len(files))
+	for index := 0; index < len(files); index++ {
+		absPaths[index] = files[index].Path()
+	}
+
+	if command.directory {
+		absPaths, err = path.NonNested(absPaths)
+		if err != nil {
+			return fmt.Errorf("could not find non-nested entries: %v", err)
+		}
+	}
+
+	if command.file {
+		absPaths, err = path.Leaves(absPaths)
+		if err != nil {
+			return fmt.Errorf("could not find leaves: %v", err)
+		}
+	}
+
+	for _, absPath := range absPaths {
+		relPath := path.Rel(absPath)
 		log.Print(relPath)
 	}
 
 	return nil
 }
 
-func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
+func (command FilesCommand) listFiles(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("at least one tag must be specified. Use --all to show all files.")
 	}
@@ -129,21 +152,32 @@ func (command FilesCommand) listFiles(args []string, explicitOnly bool) error {
 		log.Info("retrieving set of tagged files from the database.")
 	}
 
-	var files database.Files
-	if explicitOnly {
-		files, err = store.FilesWithExplicitTags(includeTagIds, excludeTagIds)
+	files, err := store.FilesWithTags(includeTagIds, excludeTagIds)
+	if err != nil {
+		return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
+	}
+
+	absPaths := make([]string, len(files))
+	for index := 0; index < len(files); index++ {
+		absPaths[index] = files[index].Path()
+	}
+
+	if command.directory {
+		absPaths, err = path.NonNested(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not retrieve files with explicit tags %v and without explicit tags %v: %v", includeTagIds, excludeTagIds, err)
-		}
-	} else {
-		files, err = store.FilesWithTags(includeTagIds, excludeTagIds)
-		if err != nil {
-			return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
+			return fmt.Errorf("could not find non-nested entries: %v", err)
 		}
 	}
 
-	for _, file := range files {
-		relPath := path.Rel(file.Path())
+	if command.file {
+		absPaths, err = path.Leaves(absPaths)
+		if err != nil {
+			return fmt.Errorf("could not find leaves: %v", err)
+		}
+	}
+
+	for _, absPath := range absPaths {
+		relPath := path.Rel(absPath)
 		log.Print(relPath)
 	}
 

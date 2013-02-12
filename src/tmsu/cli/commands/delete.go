@@ -79,7 +79,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 	}
 
 	if command.verbose {
-		log.Infof("finding files explicitly tagged '%v'.", tagName)
+		log.Infof("finding files tagged '%v'.", tagName)
 	}
 
 	fileTags, err := store.FileTagsByTagId(tag.Id)

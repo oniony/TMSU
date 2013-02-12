@@ -63,18 +63,18 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagDeathrow.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagDeathrow.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileF.Id, tagFreeman.Id); err != nil {
+	if _, err := store.AddFileTag(fileF.Id, tagFreeman.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagDeathrow.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagDeathrow.Id); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagFreeman.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagFreeman.Id); err != nil {
 		test.Fatal(err)
 	}
 
@@ -96,33 +96,33 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal("Deleted tag still exists.")
 	}
 
-	explicitFileTagsD, err := store.ExplicitFileTagsByFileId(fileD.Id)
+	fileTagsD, err := store.FileTagsByFileId(fileD.Id)
 	if err != nil {
 		test.Fatal(err)
 	}
-	if len(explicitFileTagsD) != 0 {
+	if len(fileTagsD) != 0 {
 		test.Fatal("Expected no file-tags for file 'd'.")
 	}
 
-	explicitFileTagsF, err := store.ExplicitFileTagsByFileId(fileF.Id)
+	fileTagsF, err := store.FileTagsByFileId(fileF.Id)
 	if err != nil {
 		test.Fatal(err)
 	}
-	if len(explicitFileTagsF) != 1 {
+	if len(fileTagsF) != 1 {
 		test.Fatal("Expected one file-tag for file 'f'.")
 	}
-	if explicitFileTagsF[0].TagId != tagFreeman.Id {
+	if fileTagsF[0].TagId != tagFreeman.Id {
 		test.Fatal("Expected file-tag for tag 'freeman'.")
 	}
 
-	explicitFileTagsB, err := store.ExplicitFileTagsByFileId(fileB.Id)
+	fileTagsB, err := store.FileTagsByFileId(fileB.Id)
 	if err != nil {
 		test.Fatal(err)
 	}
-	if len(explicitFileTagsB) != 1 {
+	if len(fileTagsB) != 1 {
 		test.Fatal("Expected one file-tag for file 'b'.")
 	}
-	if explicitFileTagsB[0].TagId != tagFreeman.Id {
+	if fileTagsB[0].TagId != tagFreeman.Id {
 		test.Fatal("Expected file-tag for tag 'freeman'.")
 	}
 }

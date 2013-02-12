@@ -46,14 +46,14 @@ func Open() (*Database, error) {
 func OpenAt(path string) (*Database, error) {
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil {
-		return nil, errors.New("Could not open database: " + err.Error())
+		return nil, errors.New("could not open database: " + err.Error())
 	}
 
 	database := Database{connection}
 
 	err = database.CreateSchema()
 	if err != nil {
-		return nil, errors.New("Could not create database schema: " + err.Error())
+		return nil, errors.New("could not create database schema: " + err.Error())
 	}
 
 	return &database, nil
@@ -108,7 +108,7 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS explicit_file_tag (
+	sql = `CREATE TABLE IF NOT EXISTS file_tag (
                file_id INTEGER NOT NULL,
                tag_id INTEGER NOT NULL,
                PRIMARY KEY (file_id, tag_id),
@@ -121,45 +121,16 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_explicit_file_tag_file_id
-           ON explicit_file_tag(file_id)`
+	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
+           ON file_tag(file_id)`
 
 	_, err = db.connection.Exec(sql)
 	if err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_explicit_file_tag_tag_id
-           ON explicit_file_tag(tag_id)`
-
-	_, err = db.connection.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	sql = `CREATE TABLE IF NOT EXISTS implicit_file_tag (
-               file_id INTEGER NOT NULL,
-               tag_id INTEGER NOT NULL,
-               PRIMARY KEY (file_id, tag_id),
-               FOREIGN KEY (file_id) REFERENCES file(id),
-               FOREIGN KEY (tag_id) REFERENCES tag(id)
-           )`
-
-	_, err = db.connection.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	sql = `CREATE INDEX IF NOT EXISTS idx_implicit_file_tag_file_id
-           ON implicit_file_tag(file_id)`
-
-	_, err = db.connection.Exec(sql)
-	if err != nil {
-		return err
-	}
-
-	sql = `CREATE INDEX IF NOT EXISTS idx_implicit_file_tag_tag_id
-           ON implicit_file_tag(tag_id)`
+	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
+           ON file_tag(tag_id)`
 
 	_, err = db.connection.Exec(sql)
 	if err != nil {

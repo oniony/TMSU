@@ -101,30 +101,43 @@ Release Notes
 trunk
 -----
 
-IMPORTANT: This release changes the database format so that implicit taggings
-are stored rather than calculated on the fly. If you wish to use an existing
-database it must be first upgraded:
+This version changes the behaviour of the 'files' command: it will no longer
+'discover' files that inherit tags on-the-fly by examining the file-system.
+Instead tags can be applied recursively using the '--recursive' option on the
+'tag' and 'untag' commands.
+
+This change means the cost of recursively examining the file-system
+is paid only when the files are tagged and not on every query thereafter. It
+also allows you to apply a tag to a directory and then remove it from specific
+files within.
+
+IMPORTANT: Please back up your database then upgrade it using the upgrade
+script. (Note there is separate upgrade script, `trunk_to_0.1.0.sql` if you have been
+following trunk.)
   
-    $ cp ~/.tmsu/default.db ~/.tmsu/default.db~  # back up
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak  # back up
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
     $ tmsu repair
 
-  * Implicit taggings are now stored in the database rather than calculated on
-    the fly.
+  * 'files' command no longer finds files that inherit a tag from the file-
+    system on-the-fly.
+  * '--recursive' (-r) option on 'tag' and 'untag' for tagging/untagging
+    directory contents recursively.
+  * 'files' command now has --directory' (-d) and '--file' (-f) options.
+    '-d' excludes files of matching directories and '-f' excludes
+    parent directories of matching files.
   * Improved command-line parsing: now supports global options, short options
     and mixed option ordering.
-  * 'repair' rewritten to fix bugs and repair implicit taggings.
-  * Fingerprints for directories no longer calculated. (Implicit tagging means
-    that duplicate files are identified instead. I may revisit this decision.)
-  * Removed the 'export' command: use Sqlite tooling instead.
+  * 'repair' command rewritten to fix bugs.
+  * Fingerprints for directories no longer calculated. (Recursively tag
+    files instead to detect file duplicates.)
+  * Removed the 'export' command. (Sqlite tooling has better facilities.)
   * Tags containing '/' are no longer legal.
   * File lists are now shown sorted alphanumerically.
-  * 'repair' command now automatically removes missing files that have no
-    explicit tags.
-  * The 'tag' command no longer identifies modified files: use 'repair'
-    instead.
+  * The 'tag' command no longer identifies modified files. (Use 'repair'
+    instead.)
   * Updated Zsh completion.
-  * The full context of errors is now reported when an error occurs.
+  * Improved error messages.
   * Improved unit-test coverage.
   * Minor bug fixes.
 

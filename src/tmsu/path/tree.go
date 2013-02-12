@@ -23,14 +23,26 @@ import (
 	"strings"
 )
 
-// Finds the root paths added to the tree
-func Roots(paths []string) ([]string, error) {
+// Finds the non-nested nodes added to the tree
+func NonNested(paths []string) ([]string, error) {
 	tree := buildTree(paths)
 
-	roots := tree.roots()
-	sort.Strings(roots)
+	nonNested := make([]string, 0, 100)
+	nonNested = tree.root.findNonNested(nonNested, "")
+	sort.Strings(nonNested)
 
-	return roots, nil
+	return nonNested, nil
+}
+
+// Finds the leaf nodes added to the tree
+func Leaves(paths []string) ([]string, error) {
+	tree := buildTree(paths)
+
+	leaves := make([]string, 0, 100)
+	leaves = tree.root.findLeaves(leaves, "")
+	sort.Strings(leaves)
+
+	return leaves, nil
 }
 
 // -
@@ -39,15 +51,10 @@ type tree struct {
 	root *node
 }
 
-func (tree tree) roots() []string {
-	roots := make([]string, 0, 100)
-	return tree.root.findRoots(roots, "")
-}
-
 type node struct {
 	name   string
 	nodes  map[string]*node
-	isRoot bool
+	isReal bool
 }
 
 func buildTree(paths []string) *tree {
@@ -60,8 +67,8 @@ func buildTree(paths []string) *tree {
 	return &tree
 }
 
-func newNode(name string, root bool) *node {
-	return &node{name, make(map[string]*node, 0), root}
+func newNode(name string, isReal bool) *node {
+	return &node{name, make(map[string]*node, 0), isReal}
 }
 
 func (tree *tree) add(path string) {
@@ -70,20 +77,19 @@ func (tree *tree) add(path string) {
 	currentNode := tree.root
 	partCount := len(pathParts)
 	for index, pathPart := range pathParts {
+		isReal := index == partCount-1
+
 		if pathPart == "" {
 			pathPart = "/"
 		}
 
-		root := index == (partCount - 1)
 		node, found := currentNode.nodes[pathPart]
 		if !found {
-			node = newNode(pathPart, root)
+			node = newNode(pathPart, isReal)
 			currentNode.nodes[pathPart] = node
 		} else {
-			if !node.isRoot {
-				if root {
-					node.isRoot = true
-				}
+			if isReal && !node.isReal {
+				node.isReal = true
 			}
 		}
 
@@ -91,15 +97,29 @@ func (tree *tree) add(path string) {
 	}
 }
 
-func (node *node) findRoots(paths []string, path string) []string {
+func (node *node) findNonNested(paths []string, path string) []string {
 	path = filepath.Join(path, node.name)
 
-	if node.isRoot {
+	if node.isReal {
 		return append(paths, path)
 	}
 
 	for _, childNode := range node.nodes {
-		paths = childNode.findRoots(paths, path)
+		paths = childNode.findNonNested(paths, path)
+	}
+
+	return paths
+}
+
+func (node *node) findLeaves(paths []string, path string) []string {
+	path = filepath.Join(path, node.name)
+
+	if len(node.nodes) == 0 {
+		return append(paths, path)
+	}
+
+	for _, childNode := range node.nodes {
+		paths = childNode.findLeaves(paths, path)
 	}
 
 	return paths

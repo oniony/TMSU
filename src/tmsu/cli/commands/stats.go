@@ -61,27 +61,17 @@ func (StatsCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("could not retrieve file count: %v", err)
 	}
 
-	explicitFileTagCount, err := store.ExplicitFileTagCount()
+	fileTagCount, err := store.FileTagCount()
 	if err != nil {
-		return fmt.Errorf("could not retrieve explicit taggings count: %v", err)
+		return fmt.Errorf("could not retrieve taggings count: %v", err)
 	}
-
-	implicitFileTagCount, err := store.ImplicitFileTagCount()
-	if err != nil {
-		return fmt.Errorf("could not retrieve implicit taggings count: %v", err)
-	}
-
-	fileTagCount := explicitFileTagCount + implicitFileTagCount
 
 	log.Printf("Database Contents")
 
 	log.Printf(" Tags:        %v", tagCount)
 	log.Printf(" Files:       %v", fileCount)
 	log.Print()
-	log.Printf(" Taggings     total")
-	log.Printf("   all:       %v", fileTagCount)
-	log.Printf("   explicit:  %v", explicitFileTagCount)
-	log.Printf("   implicit:  %v", implicitFileTagCount)
+	log.Printf(" Taggings     %v", fileTagCount)
 
 	return nil
 }

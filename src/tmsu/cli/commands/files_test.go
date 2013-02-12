@@ -62,7 +62,7 @@ func TestFilesAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false}
+	command := FilesCommand{false, false, false}
 
 	// test
 
@@ -122,19 +122,19 @@ func TestFilesSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false}
+	command := FilesCommand{false, false, false}
 
 	// test
 
@@ -194,19 +194,19 @@ func TestFilesNotSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false}
+	command := FilesCommand{false, false, false}
 
 	// test
 
@@ -271,23 +271,23 @@ func TestFilesAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false}
+	command := FilesCommand{false, false, false}
 
 	// test
 
@@ -352,23 +352,23 @@ func TestFilesAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false}
+	command := FilesCommand{false, false, false}
 
 	// test
 
@@ -384,150 +384,4 @@ func TestFilesAndNot(test *testing.T) {
 	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
-func TestFilesSingleTagExplicit(test *testing.T) {
-	// set-up
-
-	databasePath := configureDatabase()
-	defer os.Remove(databasePath)
-
-	outPath, errPath, err := configureOutput()
-	if err != nil {
-		test.Fatal(err)
-	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
-
-	store, err := storage.Open()
-	if err != nil {
-		test.Fatal(err)
-	}
-	defer store.Close()
-
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	tagD, err := store.AddTag("d")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	tagB, err := store.AddTag("b")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	command := FilesCommand{false}
-
-	// test
-
-	if err := command.Exec(cli.Options{cli.Option{"--explicit", "-e", ""}}, []string{"b"}); err != nil {
-		test.Fatal(err)
-	}
-
-	// validate
-
-	log.Outfile.Seek(0, 0)
-
-	bytes, err := ioutil.ReadAll(log.Outfile)
-	compareOutput(test, "/tmp/b\n", string(bytes))
-}
-
-func TestFilesNotSingleTagExplicit(test *testing.T) {
-	// set-up
-
-	databasePath := configureDatabase()
-	defer os.Remove(databasePath)
-
-	outPath, errPath, err := configureOutput()
-	if err != nil {
-		test.Fatal(err)
-	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
-
-	store, err := storage.Open()
-	if err != nil {
-		test.Fatal(err)
-	}
-	defer store.Close()
-
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	tagD, err := store.AddTag("d")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	tagB, err := store.AddTag("b")
-	if err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddExplicitFileTag(fileD.Id, tagD.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddImplicitFileTag(fileBA.Id, tagB.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if _, err := store.AddExplicitFileTag(fileBA.Id, tagD.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	command := FilesCommand{false}
-
-	// test
-
-	if err := command.Exec(cli.Options{cli.Option{"--explicit", "-e", ""}}, []string{"-d"}); err != nil {
-		test.Fatal(err)
-	}
-
-	// validate
-
-	log.Outfile.Seek(0, 0)
-
-	bytes, err := ioutil.ReadAll(log.Outfile)
-	compareOutput(test, "/tmp/b\n", string(bytes))
-}
+//TODO tests for 'file' and 'directory' options.

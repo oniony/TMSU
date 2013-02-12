@@ -85,31 +85,19 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			log.Infof("finding files tagged '%v'.", sourceTagName)
 		}
 
-		explicitFileTags, err := store.ExplicitFileTagsByTagId(sourceTag.Id)
+		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return fmt.Errorf("could not retrieve explicit taggings for tag '%v': %v", sourceTagName, err)
-		}
-
-		implicitFileTags, err := store.ImplicitFileTagsByTagId(sourceTag.Id)
-		if err != nil {
-			return fmt.Errorf("could not retrieve implicit taggings for tag '%v': %v", sourceTagName, err)
+			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
 		}
 
 		if command.verbose {
 			log.Infof("applying tag '%v' to these files.", destTagName)
 		}
 
-		for _, explicitFileTag := range explicitFileTags {
-			_, err = store.AddExplicitFileTag(explicitFileTag.FileId, destTag.Id)
+		for _, fileTag := range fileTags {
+			_, err = store.AddFileTag(fileTag.FileId, destTag.Id)
 			if err != nil {
-				return fmt.Errorf("could not add explicit tag '%v' to file #%v: %v", destTagName, explicitFileTag.FileId, err)
-			}
-		}
-
-		for _, implicitFileTag := range implicitFileTags {
-			_, err = store.AddImplicitFileTag(implicitFileTag.FileId, destTag.Id)
-			if err != nil {
-				return fmt.Errorf("could not add implicit tag '%v' to file #%v: %v", destTagName, implicitFileTag.FileId, err)
+				return fmt.Errorf("could not apply tag '%v' to file #%v: %v", destTagName, fileTag.FileId, err)
 			}
 		}
 
@@ -117,14 +105,9 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			log.Infof("untagging files '%v'.", sourceTagName)
 		}
 
-		err = store.RemoveExplicitFileTagsByTagId(sourceTag.Id)
+		err = store.RemoveFileTagsByTagId(sourceTag.Id)
 		if err != nil {
-			return fmt.Errorf("could not remove all explicit taggings of tag '%v': %v", sourceTagName, err)
-		}
-
-		err = store.RemoveImplicitFileTagsByTagId(sourceTag.Id)
-		if err != nil {
-			return fmt.Errorf("could not remove all implicit taggings of tag '%v': %v", sourceTagName, err)
+			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
 		}
 
 		if command.verbose {

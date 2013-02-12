@@ -113,7 +113,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("Could not retrieve tag '%v'.", tagName)
 		}
 
-		err = vfs.store.RemoveExplicitFileTag(fileId, tag.Id)
+		err = vfs.store.RemoveFileTag(fileId, tag.Id)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -242,10 +242,11 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		}
 
 		//TODO slow
-		fileCount, err := vfs.store.FileCountWithTags(tagIds)
-		if err != nil {
-			log.Fatalf("Could not retrieve count of files with tags: %v. (%v)", path, err)
-		}
+		//		fileCount, err := vfs.store.FileCountWithTags(tagIds)
+		//		if err != nil {
+		//			log.Fatalf("Could not retrieve count of files with tags: %v. (%v)", path, err)
+		//		}   
+		fileCount := 0
 
 		now := time.Now()
 		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK

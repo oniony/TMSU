@@ -67,7 +67,8 @@ _tmsu_cmd_dupes() {
 
 _tmsu_cmd_files() {
 	_arguments -s -w ''{--all,-a}'[show all files]' \
-                     ''{--explicit,-e}'[show only explicitly tagged files]' \
+	                 ''{--directory,-d}'[omit files of matching directories]' \
+                     ''{--file,-f}'[omit parent directories of matching files]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }
@@ -107,6 +108,7 @@ _tmsu_cmd_status() {
 
 _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags,-t}'[apply set of tags to multiple files]' \
+	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 '*:: :->items' \
 	&& ret=0
 
@@ -138,7 +140,6 @@ _tmsu_cmd_tag() {
 
 _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
-                     ''{--explicit,-e}'[show only explicitly applied tags]' \
 	                 '*:file:_files' \
 	&& ret=0
 }
@@ -152,6 +153,7 @@ _tmsu_cmd_unmount() {
 _tmsu_cmd_untag() {
 	_arguments -s -w ''{--all,-a}'[remove all tags]' \
 	                 ''{--tags,-t}'[remove set of tags from multiple files]' \
+	                 ''{--recursive,-r}'[remove tags recursively from contents of directories]' \
 	                 '*:: :->items' \
 	&& ret=0
 

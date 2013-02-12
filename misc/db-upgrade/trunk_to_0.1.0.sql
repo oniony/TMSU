@@ -1,6 +1,21 @@
 -- idx_file_path is redundant and an overhead as the unique constraint creates an identical index
 DROP INDEX IF EXISTS idx_file_path;
 
+-- the implicit_file_tag and explicit_file_tag tables have been merged back into file_tag
+CREATE TABLE IF NOT EXISTS file_tag (
+    file_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    PRIMARY KEY (file_id, tag_id),
+    FOREIGN KEY (file_id) REFERENCES file(id),
+    FOREIGN KEY (tag_id) REFERENCES tag(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_file_tag_file_id ON file_tag(file_id);
+CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id ON file_tag(file_id);
+
+INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM explicit_file_tag;
+INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM implicit_file_tag;
+
 -- new size column on the file table
 ALTER TABLE file ADD COLUMN size INTEGER NOT NULL DEFAULT 0;
 

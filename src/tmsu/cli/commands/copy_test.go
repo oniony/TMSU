@@ -53,11 +53,11 @@ func TestCopySuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileA.Id, sourceTag.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, sourceTag.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileAB.Id, sourceTag.Id); err != nil {
+	if _, err := store.AddFileTag(fileAB.Id, sourceTag.Id); err != nil {
 		test.Fatal(err)
 	}
 
@@ -79,8 +79,8 @@ func TestCopySuccessful(test *testing.T) {
 		test.Fatal("Destination tag does not exist.")
 	}
 
-	expectExplicitTags(test, store, fileA, sourceTag, destTag)
-	expectImplicitTags(test, store, fileAB, sourceTag, destTag)
+	expectTags(test, store, fileA, sourceTag, destTag)
+	expectTags(test, store, fileAB, sourceTag, destTag)
 }
 
 func TestCopyNonExistentSourceTag(test *testing.T) {

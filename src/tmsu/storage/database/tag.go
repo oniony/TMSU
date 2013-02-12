@@ -142,48 +142,7 @@ func (db *Database) TagsByFileId(fileId uint) (Tags, error) {
             FROM tag
             WHERE id IN (
                 SELECT tag_id
-                FROM explicit_file_tag
-                WHERE file_id = ?1
-		        UNION SELECT tag_id
-		              FROM implicit_file_tag
-		              WHERE file_id = ?1)
-            ORDER BY name`
-
-	rows, err := db.connection.Query(sql, fileId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readTags(rows, make(Tags, 0, 10))
-}
-
-// Retrieves the set of explicit tags for the specified file.
-func (db *Database) ExplicitTagsByFileId(fileId uint) (Tags, error) {
-	sql := `SELECT id, name
-            FROM tag
-            WHERE id IN (
-                SELECT tag_id
-                FROM explicit_file_tag
-                WHERE file_id = ?1)
-            ORDER BY name`
-
-	rows, err := db.connection.Query(sql, fileId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readTags(rows, make(Tags, 0, 10))
-}
-
-// Retrieves the set of implicit tags for the specified file.
-func (db *Database) ImplicitTagsByFileId(fileId uint) (Tags, error) {
-	sql := `SELECT id, name
-            FROM tag
-            WHERE id IN (
-                SELECT tag_id
-                FROM implicit_file_tag
+                FROM file_tag
                 WHERE file_id = ?1)
             ORDER BY name`
 
@@ -216,7 +175,7 @@ func (db Database) InsertTag(name string) (*Tag, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
 	return &Tag{uint(id), name}, nil
@@ -238,7 +197,7 @@ func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
 	return &Tag{tagId, name}, nil
@@ -258,8 +217,8 @@ func (db Database) DeleteTag(tagId uint) error {
 	if err != nil {
 		return err
 	}
-	if rowsAffected != 1 {
-		return errors.New("Expected exactly one row to be affected.")
+	if rowsAffected > 1 {
+		return errors.New("expected only one row to be affected.")
 	}
 
 	return nil

@@ -21,25 +21,54 @@ import (
 	"testing"
 )
 
-func TestRoots(test *testing.T) {
-	roots, err := Roots([]string{"/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m"})
+func TestNonNested(test *testing.T) {
+	nonNested, err := NonNested([]string{"/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m"})
 	if err != nil {
 		test.Fatalf("Unexpected error: %v", err)
 	}
 
-	if len(roots) != 4 {
-		test.Fatalf("Expected 4 root paths but were %v.", len(roots))
+	if len(nonNested) != 4 {
+		test.Fatalf("Expected 4 non-nested paths but were %v.", len(nonNested))
 	}
-	if roots[0] != "/a/b" {
-		test.Fatalf("Expected root path 0 to be '/a/b' but was '%v'.", roots[0])
+	if nonNested[0] != "/a/b" {
+		test.Fatalf("Expected non-nested path 0 to be '/a/b' but was '%v'.", nonNested[0])
 	}
-	if roots[1] != "/a/f" {
-		test.Fatalf("Expected root path 1 to be '/a/f' but was '%v'.", roots[1])
+	if nonNested[1] != "/a/f" {
+		test.Fatalf("Expected non-nested path 1 to be '/a/f' but was '%v'.", nonNested[1])
 	}
-	if roots[2] != "/j/k/l" {
-		test.Fatalf("Expected root path 2 to be '/j/k/l' but was '%v'.", roots[1])
+	if nonNested[2] != "/j/k/l" {
+		test.Fatalf("Expected non-nested path 2 to be '/j/k/l' but was '%v'.", nonNested[1])
 	}
-	if roots[3] != "/j/k/m" {
-		test.Fatalf("Expected root path 3 to be '/j/k/m' but was '%v'.", roots[1])
+	if nonNested[3] != "/j/k/m" {
+		test.Fatalf("Expected non-nested path 3 to be '/j/k/m' but was '%v'.", nonNested[1])
+	}
+}
+
+func TestLeaves(test *testing.T) {
+	leaves, err := Leaves([]string{"/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m"})
+	if err != nil {
+		test.Fatalf("Unexpected error: %v", err)
+	}
+
+	if len(leaves) != 6 {
+		test.Fatalf("Expected 4 non-nested paths but were %v.", len(leaves))
+	}
+	if leaves[0] != "/a/b/c" {
+		test.Fatalf("Expected leaf path 0 to be '/a/b/c' but was '%v'.", leaves[0])
+	}
+	if leaves[1] != "/a/b/d" {
+		test.Fatalf("Expected leaf path 1 to be '/a/b/d' but was '%v'.", leaves[1])
+	}
+	if leaves[2] != "/a/b/e" {
+		test.Fatalf("Expected leaf path 2 to be '/a/b/e' but was '%v'.", leaves[1])
+	}
+	if leaves[3] != "/a/f" {
+		test.Fatalf("Expected leaf path 3 to be '/a/f' but was '%v'.", leaves[1])
+	}
+	if leaves[4] != "/j/k/l" {
+		test.Fatalf("Expected leaf path 3 to be '/j/k/l' but was '%v'.", leaves[1])
+	}
+	if leaves[5] != "/j/k/m" {
+		test.Fatalf("Expected leaf path 3 to be '/j/k/m' but was '%v'.", leaves[1])
 	}
 }

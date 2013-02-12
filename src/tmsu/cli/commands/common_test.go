@@ -42,25 +42,8 @@ func compareOutput(test *testing.T, expected, actual string) {
 	}
 }
 
-func expectExplicitTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
-	fileTags, err := store.ExplicitFileTagsByFileId(file.Id)
-	if err != nil {
-		test.Fatal(err)
-	}
-	if len(fileTags) != len(tags) {
-		test.Fatalf("File '%v' has %v tags but expected %v.", file.Path(), len(fileTags), len(tags))
-	}
-	for index, filetag := range fileTags {
-		tag := tags[index]
-
-		if filetag.TagId != tag.Id {
-			test.Fatal("File '%v' is tagged %v but expected %v.", file.Path(), filetag.TagId, tag.Id)
-		}
-	}
-}
-
-func expectImplicitTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
-	fileTags, err := store.ImplicitFileTagsByFileId(file.Id)
+func expectTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
+	fileTags, err := store.FileTagsByFileId(file.Id)
 	if err != nil {
 		test.Fatal(err)
 	}

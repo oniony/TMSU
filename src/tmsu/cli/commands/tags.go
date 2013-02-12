@@ -50,8 +50,7 @@ When run with no arguments, tags for the current working directory are listed.`
 }
 
 func (TagsCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "lists all of the tags defined"},
-		{"--explicit", "-e", "show only explicitly applied tags"}}
+	return cli.Options{{"--all", "-a", "lists all of the tags defined"}}
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {
@@ -61,9 +60,7 @@ func (command TagsCommand) Exec(options cli.Options, args []string) error {
 		return command.listAllTags()
 	}
 
-	explicitOnly := options.HasOption("--explicit")
-
-	return command.listTags(args, explicitOnly)
+	return command.listTags(args)
 }
 
 func (command TagsCommand) listAllTags() error {
@@ -89,7 +86,7 @@ func (command TagsCommand) listAllTags() error {
 	return nil
 }
 
-func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
+func (command TagsCommand) listTags(paths []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -98,34 +95,24 @@ func (command TagsCommand) listTags(paths []string, explicitOnly bool) error {
 
 	switch len(paths) {
 	case 0:
-		return command.listTagsForWorkingDirectory(store, explicitOnly)
+		return command.listTagsForWorkingDirectory(store)
 	case 1:
-		return command.listTagsForPath(store, paths[0], explicitOnly)
+		return command.listTagsForPath(store, paths[0])
 	default:
-		return command.listTagsForPaths(store, paths, explicitOnly)
+		return command.listTagsForPaths(store, paths)
 	}
 
 	return nil
 }
 
-func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, explicitOnly bool) error {
-	var tags database.Tags
-	var err error
-
+func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) error {
 	if command.verbose {
 		log.Infof("%v: retrieving tags.", path)
 	}
 
-	if explicitOnly {
-		tags, err = store.ExplicitTagsForPath(path)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve explicit tags: %v", path, err)
-		}
-	} else {
-		tags, err = store.TagsForPath(path)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve tags: %v", path, err)
-		}
+	var tags, err = store.TagsForPath(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not retrieve tags: %v", path, err)
 	}
 
 	for _, tag := range tags {
@@ -135,20 +122,13 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string, 
 	return nil
 }
 
-func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string, explicitOnly bool) error {
+func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string) error {
 	for _, path := range paths {
-		var tags database.Tags
-		var err error
-
 		if command.verbose {
 			log.Infof("%v: retrieving tags.", path)
 		}
 
-		if explicitOnly {
-			tags, err = store.ExplicitTagsForPath(path)
-		} else {
-			tags, err = store.TagsForPath(path)
-		}
+		var tags, err = store.TagsForPath(path)
 
 		if err != nil {
 			log.Warn(err.Error())
@@ -161,7 +141,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 	return nil
 }
 
-func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, explicitOnly bool) error {
+func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return fmt.Errorf("could not open working directory: %v", err)
@@ -180,12 +160,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage, e
 			log.Infof("%v: retrieving tags.", dirName)
 		}
 
-		var tags database.Tags
-		if explicitOnly {
-			tags, err = store.ExplicitTagsForPath(dirName)
-		} else {
-			tags, err = store.TagsForPath(dirName)
-		}
+		var tags, err = store.TagsForPath(dirName)
 
 		if err != nil {
 			log.Warn(err.Error())

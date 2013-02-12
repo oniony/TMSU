@@ -68,19 +68,19 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileA.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, tagA.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileA1.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA1.Id, tagA.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileB1.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB1.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
@@ -110,14 +110,10 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal("Tag 'b' does not exist.")
 	}
 
-	expectExplicitTags(test, store, fileA, tagB)
-	expectImplicitTags(test, store, fileA)
-	expectExplicitTags(test, store, fileA1)
-	expectImplicitTags(test, store, fileA1, tagB)
-	expectExplicitTags(test, store, fileB, tagB)
-	expectImplicitTags(test, store, fileB)
-	expectExplicitTags(test, store, fileB1)
-	expectImplicitTags(test, store, fileB1, tagB)
+	expectTags(test, store, fileA, tagB)
+	expectTags(test, store, fileA1, tagB)
+	expectTags(test, store, fileB, tagB)
+	expectTags(test, store, fileB1, tagB)
 }
 
 func TestMergeMultipleTags(test *testing.T) {
@@ -177,27 +173,27 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileA.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, tagA.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileA1.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA1.Id, tagA.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileB1.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB1.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddExplicitFileTag(fileC.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileC.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddImplicitFileTag(fileC1.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileC1.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
 
@@ -235,18 +231,12 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal("Tag 'c' does not exist.")
 	}
 
-	expectExplicitTags(test, store, fileA, tagC)
-	expectImplicitTags(test, store, fileA)
-	expectExplicitTags(test, store, fileA1)
-	expectImplicitTags(test, store, fileA1, tagC)
-	expectExplicitTags(test, store, fileB, tagC)
-	expectImplicitTags(test, store, fileB)
-	expectExplicitTags(test, store, fileB1)
-	expectImplicitTags(test, store, fileB1, tagC)
-	expectExplicitTags(test, store, fileC, tagC)
-	expectImplicitTags(test, store, fileC)
-	expectExplicitTags(test, store, fileC1)
-	expectImplicitTags(test, store, fileC1, tagC)
+	expectTags(test, store, fileA, tagC)
+	expectTags(test, store, fileA1, tagC)
+	expectTags(test, store, fileB, tagC)
+	expectTags(test, store, fileB1, tagC)
+	expectTags(test, store, fileC, tagC)
+	expectTags(test, store, fileC1, tagC)
 }
 
 func TestMergeNonExistentSourceTag(test *testing.T) {

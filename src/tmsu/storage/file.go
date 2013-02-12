@@ -75,9 +75,9 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 	return storage.Db.FilesByFingerprint(fingerprint)
 }
 
-// The number of files with the specified set of tags.
-func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
-	return storage.Db.FileCountWithTags(tagIds)
+// The number of files with the specified tag.
+func (storage *Storage) FileCountWithTag(tagId uint) (uint, error) {
+	return storage.Db.FileCountWithTag(tagId)
 }
 
 // Retrieves the set of files with the specified tag.
@@ -85,14 +85,14 @@ func (storage *Storage) FilesWithTag(tagId uint) (database.Files, error) {
 	return storage.Db.FilesWithTag(tagId)
 }
 
-// Retrieves the set of files with the specified explicit tag.
-func (storage *Storage) FilesWithExplicitTag(tagId uint) (database.Files, error) {
-	return storage.Db.FilesWithExplicitTag(tagId)
-}
+// The number of files with the specified set of tags.
+func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
+	if len(tagIds) == 1 {
+		fmt.Println("Shortcut as single tag")
+		return storage.Db.FileCountWithTag(tagIds[0])
+	}
 
-// Retrieves the set of files with the specified implicit tag.
-func (storage *Storage) FilesWithImplicitTag(tagId uint) (database.Files, error) {
-	return storage.Db.FilesWithImplicitTag(tagId)
+	return storage.Db.FileCountWithTags(tagIds)
 }
 
 // Retrieves the set of files with the specified set of tags.
@@ -118,48 +118,6 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (data
 		excludeFiles, err := storage.Db.FilesWithTags(excludeTagIds)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve files with tags %v: %v", excludeTagIds, err)
-		}
-
-		for index, file := range files {
-			if contains(excludeFiles, file) {
-				files[index] = nil
-			}
-		}
-	}
-
-	resultFiles := make(database.Files, 0, len(files))
-	for _, file := range files {
-		if file != nil {
-			resultFiles = append(resultFiles, file)
-		}
-	}
-
-	return resultFiles, nil
-}
-
-// Retrieves the set of files with the specified set of explicit tags.
-func (storage *Storage) FilesWithExplicitTags(includeTagIds, excludeTagIds []uint) (database.Files, error) {
-	var files database.Files
-	var err error
-
-	if len(includeTagIds) > 0 {
-		files, err = storage.Db.FilesWithExplicitTags(includeTagIds)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve files with explicit tags %v: %v", includeTagIds, err)
-		}
-	}
-
-	if len(excludeTagIds) > 0 {
-		if len(includeTagIds) == 0 {
-			files, err = storage.Db.Files()
-			if err != nil {
-				return nil, fmt.Errorf("could not retrieve files: %v", err)
-			}
-		}
-
-		excludeFiles, err := storage.Db.FilesWithExplicitTags(excludeTagIds)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve files with explicit tags %v: %v", excludeTagIds, err)
 		}
 
 		for index, file := range files {

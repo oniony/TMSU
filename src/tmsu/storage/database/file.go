@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 	"tmsu/fingerprint"
+	"tmsu/log"
 )
 
 // A tracked file.
@@ -164,56 +165,30 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 	return readFiles(rows, make(Files, 0, 1))
 }
 
+// Retrieves the count of files with the specified tag.
+func (db *Database) FileCountWithTag(tagId uint) (uint, error) {
+	log.Info("START FileCountWithTag")
+	defer log.Info("END FileCountWithTag")
+	sql := `SELECT count(1)
+            FROM file_tag
+            WHERE tag_id == ?`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return readCount(rows)
+}
+
 // Retrieves the set of files with the specified tag.
 func (db *Database) FilesWithTag(tagId uint) (Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time
             FROM file
             WHERE id IN (
                 SELECT file_id
-                FROM explicit_file_tag
-                WHERE tag_id = ?1
-                UNION SELECT file_id
-		              FROM implicit_file_tag
-		              WHERE tag_id = ?1
-		    )
-            ORDER BY directory || '/' || name`
-
-	rows, err := db.connection.Query(sql, tagId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(Files, 0, 10))
-}
-
-// Retrieves the set of files with the specified explicit tag.
-func (db *Database) FilesWithExplicitTag(tagId uint) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM explicit_file_tag
-                WHERE tag_id = ?1
-		    )
-            ORDER BY directory || '/' || name`
-
-	rows, err := db.connection.Query(sql, tagId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(Files, 0, 10))
-}
-
-// Retrieves the set of files with the specified implicit tag.
-func (db *Database) FilesWithImplicitTag(tagId uint) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM implicit_file_tag
+                FROM file_tag
                 WHERE tag_id = ?1
 		    )
             ORDER BY directory || '/' || name`
@@ -232,28 +207,16 @@ func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
 	tagCount := len(tagIds)
 
 	sql := `SELECT count(1)
-            FROM (
+	        FROM (
                 SELECT file_id
-                FROM (
-                    SELECT file_id, tag_id
-                    FROM explicit_file_tag
-                    WHERE tag_id IN (?1`
+                FROM file_tag
+                WHERE tag_id IN (?1`
 
 	for idx := 2; idx <= tagCount; idx += 1 {
 		sql += ", ?" + strconv.Itoa(idx)
 	}
 
-	sql += `)
-                    UNION SELECT file_id, tag_id
-                          FROM implicit_file_tag
-                          WHERE tag_id IN (?1`
-
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
-
-	sql += `)
-                )
+	sql += `    )
                 GROUP BY file_id
                 HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
             )`
@@ -281,103 +244,14 @@ func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
             FROM file
             WHERE id IN (
                 SELECT file_id
-                FROM (
-                    SELECT file_id, count(tag_id)
-                    FROM (
-                        SELECT file_id, tag_id
-                        FROM explicit_file_tag
-                        WHERE tag_id IN (?1`
-
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
-
-	sql += `)
-                        UNION SELECT file_id, tag_id
-                              FROM implicit_file_tag
-                              WHERE tag_id IN (?1`
-
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
-
-	sql += `)
-                     )
-                     GROUP BY file_id
-                     HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
-                )
-            )
-            ORDER BY directory || '/' || name`
-
-	params := make([]interface{}, tagCount+1)
-	for index, tagId := range tagIds {
-		params[index] = interface{}(tagId)
-	}
-	params[tagCount] = tagCount
-
-	rows, err := db.connection.Query(sql, params...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(Files, 0, 10))
-}
-
-// Retrieves the set of files with the specified implicit tags.
-func (db *Database) FilesWithExplicitTags(tagIds []uint) (Files, error) {
-	tagCount := len(tagIds)
-
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM explicit_file_tag
+                FROM file_tag
                 WHERE tag_id IN (?1`
 
 	for idx := 2; idx <= tagCount; idx += 1 {
 		sql += ", ?" + strconv.Itoa(idx)
 	}
-	sql += ")"
 
-	sql += `
-                GROUP BY file_id
-                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
-            )
-            ORDER BY directory || '/' || name`
-
-	params := make([]interface{}, tagCount+1)
-	for index, tagId := range tagIds {
-		params[index] = interface{}(tagId)
-	}
-	params[tagCount] = tagCount
-
-	rows, err := db.connection.Query(sql, params...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(Files, 0, 10))
-}
-
-// Retrieves the set of files with the specified implicit tags.
-func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
-	tagCount := len(tagIds)
-
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM implicit_file_tag
-                WHERE tag_id IN (?1`
-
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
-	sql += ")"
-
-	sql += `
+	sql += `    )
                 GROUP BY file_id
                 HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
             )
@@ -402,11 +276,13 @@ func (db *Database) FilesWithImplicitTags(tagIds []uint) (Files, error) {
 func (db *Database) DuplicateFiles() ([]Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size
             FROM file
-            WHERE fingerprint IN (SELECT fingerprint
-                                  FROM file
-                                  WHERE fingerprint != ''
-                                  GROUP BY fingerprint
-                                  HAVING count(1) > 1)
+            WHERE fingerprint IN (
+                SELECT fingerprint
+                FROM file
+                WHERE fingerprint != ''
+                GROUP BY fingerprint
+                HAVING count(1) > 1
+            )
             ORDER BY fingerprint, directory || '/' || name`
 
 	rows, err := db.connection.Query(sql)
@@ -477,7 +353,7 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
 	return &File{uint(id), directory, name, fingerprint, modTime, size}, nil
@@ -502,7 +378,7 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("Expected exactly one row to be affected.")
+		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
 	return &File{uint(fileId), directory, name, fingerprint, modTime, size}, nil
@@ -515,7 +391,7 @@ func (db *Database) DeleteFile(fileId uint) error {
 		return err
 	}
 	if file == nil {
-		return errors.New("No such file '" + strconv.Itoa(int(fileId)) + "'.")
+		return errors.New("no such file '" + strconv.Itoa(int(fileId)) + "'.")
 	}
 
 	sql := `DELETE FROM file
@@ -530,8 +406,8 @@ func (db *Database) DeleteFile(fileId uint) error {
 	if err != nil {
 		return err
 	}
-	if rowsAffected != 1 {
-		return errors.New("Expected exactly one row to be affected.")
+	if rowsAffected > 1 {
+		return errors.New("expected only one row to be affected.")
 	}
 
 	return nil

@@ -53,16 +53,6 @@ func (storage *Storage) TagsByFileId(fileId uint) (database.Tags, error) {
 	return storage.Db.TagsByFileId(fileId)
 }
 
-// Retrieves the set of tags for the specified file.
-func (storage *Storage) ExplicitTagsByFileId(fileId uint) (database.Tags, error) {
-	return storage.Db.ExplicitTagsByFileId(fileId)
-}
-
-// Retrieves the set of implicit tags for the specified file.
-func (storage *Storage) ImplicitTagsByFileId(fileId uint) (database.Tags, error) {
-	return storage.Db.ImplicitTagsByFileId(fileId)
-}
-
 // Retrieves the set of tags for the specified path.
 func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	absPath, err := filepath.Abs(path)
@@ -80,44 +70,6 @@ func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	}
 
 	return storage.Db.TagsByFileId(file.Id)
-}
-
-// Retrieves the set of explicit tags for the specified path.
-func (storage *Storage) ExplicitTagsForPath(path string) (database.Tags, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
-	}
-
-	file, err := storage.Db.FileByPath(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
-	}
-
-	if file == nil {
-		return database.Tags{}, nil
-	}
-
-	return storage.Db.ExplicitTagsByFileId(file.Id)
-}
-
-// Retrieves the set of implicit tags for the specified path.
-func (storage *Storage) ImplicitTagsForPath(path string) (database.Tags, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
-	}
-
-	file, err := storage.Db.FileByPath(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
-	}
-
-	if file == nil {
-		return database.Tags{}, nil
-	}
-
-	return storage.Db.ImplicitTagsByFileId(file.Id)
 }
 
 // The set of further tags for which there are tagged files given
@@ -162,14 +114,9 @@ func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, er
 		return nil, fmt.Errorf("could not create tag '%v': %v", name, err)
 	}
 
-	err = storage.Db.CopyExplicitFileTags(sourceTagId, tag.Id)
+	err = storage.Db.CopyFileTags(sourceTagId, tag.Id)
 	if err != nil {
-		return nil, fmt.Errorf("could not copy explicit file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
-	}
-
-	err = storage.Db.CopyImplicitFileTags(sourceTagId, tag.Id)
-	if err != nil {
-		return nil, fmt.Errorf("could not copy implicit file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
+		return nil, fmt.Errorf("could not copy file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
 	}
 
 	return tag, nil

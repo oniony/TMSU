@@ -1,5 +1,6 @@
 HIGH
 
+E Don't detect modification of directory entries themselves.
 E Make '--recursive' a global option to allow it to be used in aliases.
 E Put file for tag counts into database as calculating on fly is too expensive.
 E Add unit-tests for each command.

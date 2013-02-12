@@ -166,6 +166,14 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) 
 		return err
 	}
 
+	for path, _ := range untagged {
+		fmt.Printf("%v: untagged\n", path)
+	}
+
+	for path, _ := range missing {
+		fmt.Printf("%v: missing\n", path)
+	}
+
 	//TODO cleanup: any files that have no tags: remove
 	//TODO cleanup: any tags that do not correspond to a file: remove
 
@@ -194,10 +202,12 @@ func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths data
 			if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
 				tagged[path] = dbFile
 			} else {
-				modified[path] = struct {
-					fileId uint
-					stat   os.FileInfo
-				}{dbFile.Id, stat}
+				if !stat.IsDir() {
+					modified[path] = struct {
+						fileId uint
+						stat   os.FileInfo
+					}{dbFile.Id, stat}
+				}
 			}
 		} else {
 			untagged[path] = stat

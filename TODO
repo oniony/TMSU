@@ -1,15 +1,13 @@
 HIGH
 
-E Don't detect modification of directory entries themselves.
-E Make '--recursive' a global option to allow it to be used in aliases.
-E Put file for tag counts into database as calculating on fly is too expensive.
+E Rename the 'files' options --directory and --file.
 E Add unit-tests for each command.
 E Issue #29: Option to allow just files or directories to be listed.
-B virtual file-system slow when lots of files: appears to be related to the file counts.
 B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
 B 'status' command is not reporting untagged files in tagged directories when run without arguments.
 B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
 E Issue #33: provide binary for 64 bit Linux.
+E Make '--recursive' a global option to allow it to be used in aliases.
 
 MEDIUM
 
@@ -19,5 +17,6 @@ E Consolidate 'status' and 'repair' commands.
 E Add benchmarks.
 C Rename 'filetag' to 'tagging'.
 E Issue #35: print0 support.
+E Enrich 'stats' with averages, most popular tag, &c.
 
 Key: [B]ug [E]nhancement [C]lean-up [R]efactoring

@@ -66,12 +66,9 @@ func (StatsCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("could not retrieve taggings count: %v", err)
 	}
 
-	log.Printf("Database Contents")
-
-	log.Printf(" Tags:        %v", tagCount)
-	log.Printf(" Files:       %v", fileCount)
-	log.Print()
-	log.Printf(" Taggings     %v", fileTagCount)
+	log.Printf("     Tags: %v", tagCount)
+	log.Printf("    Files: %v", fileCount)
+	log.Printf(" Taggings: %v", fileTagCount)
 
 	return nil
 }

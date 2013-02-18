@@ -11,10 +11,13 @@ CREATE TABLE IF NOT EXISTS file_tag (
 );
 
 CREATE INDEX IF NOT EXISTS idx_file_tag_file_id ON file_tag(file_id);
-CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id ON file_tag(file_id);
+CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id ON file_tag(tag_id);
 
 INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM explicit_file_tag;
 INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM implicit_file_tag;
+
+DROP TABLE explicit_file_tag;
+DROP TABLE implicit_file_tag;
 
 -- new size column on the file table
 ALTER TABLE file ADD COLUMN size INTEGER NOT NULL DEFAULT 0;

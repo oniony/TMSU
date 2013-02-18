@@ -38,10 +38,14 @@ type FuseVfs struct {
 	state     *fuse.MountState
 }
 
-func MountVfs(databasePath string, mountPath string) (*FuseVfs, error) {
+func MountVfs(databasePath string, mountPath string, allowOther bool) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
 	pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
-	state, _, err := fuse.MountNodeFileSystem(mountPath, pathNodeFs, nil)
+	conn := fuse.NewFileSystemConnector(pathNodeFs, nil)
+	state := fuse.NewMountState(conn)
+
+	mountOptions := fuse.MountOptions{AllowOther: allowOther}
+	err := state.Mount(mountPath, &mountOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
 	}
@@ -66,6 +70,13 @@ func (vfs FuseVfs) Loop() {
 	vfs.state.Loop()
 }
 
+func (vfs FuseVfs) Access(name string, mode uint32, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Access(%v, %v)", name, mode)
+	defer log.Infof("END Access(%v, %v)", name, mode)
+
+	return fuse.ENOSYS
+}
+
 func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	log.Infof("BEGIN GetAttr(%v)", name)
 	defer log.Infof("END GetAttr(%v)", name)
@@ -85,6 +96,13 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	}
 
 	return nil, fuse.ENOENT
+}
+
+func (vfs FuseVfs) GetXAttr(name string, attr string, context *fuse.Context) ([]byte, fuse.Status) {
+	log.Infof("BEGIN GetXAttr(%v, %v)", name, attr)
+	defer log.Infof("END GetAttr(%v, %v)", name, attr)
+
+	return nil, fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {

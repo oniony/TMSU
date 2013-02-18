@@ -38,7 +38,7 @@ func (VfsCommand) Description() string {
 }
 
 func (VfsCommand) Options() cli.Options {
-	return cli.Options{}
+	return cli.Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option"}}
 }
 
 func (VfsCommand) Exec(options cli.Options, args []string) error {
@@ -46,10 +46,11 @@ func (VfsCommand) Exec(options cli.Options, args []string) error {
 		fmt.Errorf("Mountpoint not specified.")
 	}
 
+	allowOther := options.HasOption("--allow-other")
 	databasePath := args[0]
 	mountPath := args[1]
 
-	vfs, err := vfs.MountVfs(databasePath, mountPath)
+	vfs, err := vfs.MountVfs(databasePath, mountPath, allowOther)
 	if err != nil {
 		return fmt.Errorf("could not mount virtual filesystem for database '%v' at '%v': %v", databasePath, mountPath, err)
 	}

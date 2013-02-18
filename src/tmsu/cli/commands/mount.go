@@ -30,7 +30,8 @@ import (
 )
 
 type MountCommand struct {
-	verbose bool
+	verbose    bool
+	allowOther bool
 }
 
 func (MountCommand) Name() cli.CommandName {
@@ -58,11 +59,12 @@ is mounted.`
 }
 
 func (MountCommand) Options() cli.Options {
-	return cli.Options{}
+	return cli.Options{{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in /etc/fuse.conf)"}}
 }
 
 func (command MountCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
+	command.allowOther = options.HasOption("--allow-other")
 
 	argCount := len(args)
 
@@ -152,7 +154,12 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 		log.Infof("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
 	}
 
-	daemon := exec.Command(os.Args[0], "vfs", databasePath, mountPath)
+	args := []string{"vfs", databasePath, mountPath}
+	if command.allowOther {
+		args = append(args, "--allow-other")
+	}
+
+	daemon := exec.Command(os.Args[0], args...)
 
 	errorPipe, err := daemon.StderrPipe()
 	if err != nil {
@@ -190,7 +197,7 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 				return fmt.Errorf("could not read from error pipe: %v", err)
 			}
 
-			return fmt.Errorf("virtual filesystem mount failed: %v", buffer[0:count])
+			return fmt.Errorf("virtual filesystem mount failed: %v", string(buffer[0:count]))
 		}
 	}
 

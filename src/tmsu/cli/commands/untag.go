@@ -118,7 +118,7 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 func (command UntagCommand) lookupTagIds(store *storage.Storage, names []string) ([]uint, error) {
 	tags, err := store.TagsByNames(names)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve tags %v: %v", names, err)
+		return nil, fmt.Errorf("could not retrieve tags: %v", err)
 	}
 
 	tagIds := make([]uint, len(tags))

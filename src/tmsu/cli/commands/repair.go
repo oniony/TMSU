@@ -202,12 +202,10 @@ func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths data
 			if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
 				tagged[path] = dbFile
 			} else {
-				if !stat.IsDir() {
-					modified[path] = struct {
-						fileId uint
-						stat   os.FileInfo
-					}{dbFile.Id, stat}
-				}
+				modified[path] = struct {
+					fileId uint
+					stat   os.FileInfo
+				}{dbFile.Id, stat}
 			}
 		} else {
 			untagged[path] = stat
@@ -240,7 +238,7 @@ func (command RepairCommand) repairModified(store *storage.Storage, modified fil
 		}
 
 		if !command.pretend {
-			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size())
+			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", path, err)
 			}
@@ -276,7 +274,7 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 					moved = append(moved, path)
 
 					if !command.pretend {
-						_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size)
+						_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
 						if err != nil {
 							return fmt.Errorf("%v: could not update file in database: %v", path, err)
 						}
@@ -300,13 +298,14 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 func (command RepairCommand) addFile(store *storage.Storage, path string, stat os.FileInfo) error {
 	modTime := stat.ModTime().UTC()
 	size := stat.Size()
+	isDir := stat.IsDir()
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 	}
 
-	_, err = store.AddFile(path, fingerprint, modTime, size)
+	_, err = store.AddFile(path, fingerprint, modTime, size, isDir)
 	if err != nil {
 		return fmt.Errorf("%v: could not add file: %v", path, err)
 	}

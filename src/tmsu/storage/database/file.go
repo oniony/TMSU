@@ -24,7 +24,6 @@ import (
 	"strconv"
 	"time"
 	"tmsu/fingerprint"
-	"tmsu/log"
 )
 
 // A tracked file.
@@ -35,6 +34,7 @@ type File struct {
 	Fingerprint fingerprint.Fingerprint
 	ModTime     time.Time
 	Size        int64
+	IsDir       bool
 }
 
 type Files []*File
@@ -72,7 +72,7 @@ func (db *Database) FileCount() (uint, error) {
 
 // The complete set of tracked files.
 func (db *Database) Files() (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        ORDER BY directory || '/' || name`
 
@@ -87,7 +87,7 @@ func (db *Database) Files() (Files, error) {
 
 // Retrieves a specific file.
 func (db *Database) File(id uint) (*File, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE id = ?`
 
@@ -105,7 +105,7 @@ func (db *Database) FileByPath(path string) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
@@ -120,7 +120,7 @@ func (db *Database) FileByPath(path string) (*File, error) {
 
 // Retrieves all files that are under the specified directory.
 func (db *Database) FilesByDirectory(path string) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE directory = ? OR directory LIKE ?
             ORDER BY directory || '/' || name`
@@ -151,7 +151,7 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
 
 // Retrieves the set of files with the specified fingerprint.
 func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE fingerprint = ?
 	        ORDER BY directory || '/' || name`
@@ -167,8 +167,6 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (Fil
 
 // Retrieves the count of files with the specified tag.
 func (db *Database) FileCountWithTag(tagId uint) (uint, error) {
-	log.Info("START FileCountWithTag")
-	defer log.Info("END FileCountWithTag")
 	sql := `SELECT count(1)
             FROM file_tag
             WHERE tag_id == ?`
@@ -184,7 +182,7 @@ func (db *Database) FileCountWithTag(tagId uint) (uint, error) {
 
 // Retrieves the set of files with the specified tag.
 func (db *Database) FilesWithTag(tagId uint) (Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE id IN (
                 SELECT file_id
@@ -240,7 +238,7 @@ func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
 func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
 	tagCount := len(tagIds)
 
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE id IN (
                 SELECT file_id
@@ -274,7 +272,7 @@ func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
 
 // Retrieves the sets of duplicate files within the database.
 func (db *Database) DuplicateFiles() ([]Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE fingerprint IN (
                 SELECT fingerprint
@@ -304,7 +302,8 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 		var directory, name, fp string
 		var modTime time.Time
 		var size int64
-		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
+		var isDir bool
+		err = rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size, &isDir)
 		if err != nil {
 			return nil, err
 		}
@@ -319,7 +318,7 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 			previousFingerprint = fingerprint
 		}
 
-		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, modTime, size})
+		fileSet = append(fileSet, &File{fileId, directory, name, fingerprint, modTime, size, isDir})
 	}
 
 	// ensure last file set is added
@@ -331,14 +330,14 @@ func (db *Database) DuplicateFiles() ([]Files, error) {
 }
 
 // Adds a file to the database.
-func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*File, error) {
+func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size)
-	        VALUES (?, ?, ?, ?, ?)`
+	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
+	        VALUES (?, ?, ?, ?, ?, ?)`
 
-	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size)
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
 	if err != nil {
 		return nil, err
 	}
@@ -356,19 +355,19 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
-	return &File{uint(id), directory, name, fingerprint, modTime, size}, nil
+	return &File{uint(id), directory, name, fingerprint, modTime, size, isDir}, nil
 }
 
 // Updates a file in the database.
-func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*File, error) {
+func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
 	sql := `UPDATE file
-	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?
+	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?, is_dir = ?
 	        WHERE id = ?`
 
-	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size, int(fileId))
+	result, err := db.connection.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
 	if err != nil {
 		return nil, err
 	}
@@ -381,7 +380,7 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
-	return &File{uint(fileId), directory, name, fingerprint, modTime, size}, nil
+	return &File{uint(fileId), directory, name, fingerprint, modTime, size, isDir}, nil
 }
 
 // Removes a file from the database.
@@ -427,12 +426,13 @@ func readFile(rows *sql.Rows) (*File, error) {
 	var directory, name, fp string
 	var modTime time.Time
 	var size int64
-	err := rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size)
+	var isDir bool
+	err := rows.Scan(&fileId, &directory, &name, &fp, &modTime, &size, &isDir)
 	if err != nil {
 		return nil, err
 	}
 
-	return &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime, size}, nil
+	return &File{fileId, directory, name, fingerprint.Fingerprint(fp), modTime, size, isDir}, nil
 }
 
 func readFiles(rows *sql.Rows, files Files) (Files, error) {

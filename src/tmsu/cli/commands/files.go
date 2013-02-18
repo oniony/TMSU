@@ -29,6 +29,8 @@ type FilesCommand struct {
 	verbose   bool
 	directory bool
 	file      bool
+	branch    bool
+	leaf      bool
 }
 
 func (FilesCommand) Name() cli.CommandName {
@@ -49,14 +51,18 @@ must first be disabled with '--').`
 
 func (FilesCommand) Options() cli.Options {
 	return cli.Options{{"--all", "-a", "show the complete set of tagged files"},
-		{"--directory", "-d", "omit files of matching directories"},
-		{"--file", "-f", "omit parent directories of matching files"}}
+		{"--directory", "-d", "list only items that are directories"},
+		{"--file", "-f", "list only items that are files"},
+		{"--branch", "-b", "list only matching branches (omit directory contents)"},
+		{"--leaf", "-l", "list only leaf items (omit parent directories)"}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 	command.directory = options.HasOption("--directory")
 	command.file = options.HasOption("--file")
+	command.branch = options.HasOption("--branch")
+	command.leaf = options.HasOption("--leaf")
 
 	if options.HasOption("--all") {
 		return command.listAllFiles()
@@ -81,22 +87,29 @@ func (command FilesCommand) listAllFiles() error {
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	absPaths := make([]string, len(files))
-	for index := 0; index < len(files); index++ {
-		absPaths[index] = files[index].Path()
+	absPaths := make([]string, 0, len(files))
+	for _, file := range files {
+		if command.directory && !file.IsDir {
+			continue
+		}
+		if command.file && file.IsDir {
+			continue
+		}
+
+		absPaths = append(absPaths, file.Path())
 	}
 
-	if command.directory {
+	if command.branch {
 		absPaths, err = path.NonNested(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not find non-nested entries: %v", err)
+			return fmt.Errorf("could not find branch entries: %v", err)
 		}
 	}
 
-	if command.file {
+	if command.leaf {
 		absPaths, err = path.Leaves(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not find leaves: %v", err)
+			return fmt.Errorf("could not find leaf entries: %v", err)
 		}
 	}
 
@@ -157,22 +170,29 @@ func (command FilesCommand) listFiles(args []string) error {
 		return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
 	}
 
-	absPaths := make([]string, len(files))
-	for index := 0; index < len(files); index++ {
-		absPaths[index] = files[index].Path()
+	absPaths := make([]string, 0, len(files))
+	for _, file := range files {
+		if command.directory && !file.IsDir {
+			continue
+		}
+		if command.file && file.IsDir {
+			continue
+		}
+
+		absPaths = append(absPaths, file.Path())
 	}
 
-	if command.directory {
+	if command.branch {
 		absPaths, err = path.NonNested(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not find non-nested entries: %v", err)
+			return fmt.Errorf("could not find branch items: %v", err)
 		}
 	}
 
-	if command.file {
+	if command.leaf {
 		absPaths, err = path.Leaves(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not find leaves: %v", err)
+			return fmt.Errorf("could not find leaf items: %v", err)
 		}
 	}
 

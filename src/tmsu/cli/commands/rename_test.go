@@ -38,12 +38,12 @@ func TestRenameSuccessful(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileAB, err := store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileAB, err := store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}

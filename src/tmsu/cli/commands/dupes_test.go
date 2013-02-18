@@ -48,12 +48,12 @@ func TestDupesSingle(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -92,24 +92,24 @@ func TestDupesMultiple(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("def"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("def"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("def"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("def"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("def"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("def"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -148,23 +148,23 @@ func TestDupesNone(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("def"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("def"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("ghi"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("ghi"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("jkl"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("jkl"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("mno"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("mno"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -210,23 +210,23 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("xxx"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("xxx"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("xxx"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("xxx"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -272,23 +272,23 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("xxx"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("xxx"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("xxx"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("xxx"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -334,23 +334,23 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("def"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/b", fingerprint.Fingerprint("def"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("ghi"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("ghi"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("klm"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/e/f", fingerprint.Fingerprint("klm"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("nop"), time.Now(), 123)
+	_, err = store.AddFile("/tmp/a/d", fingerprint.Fingerprint("nop"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}

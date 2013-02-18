@@ -67,8 +67,10 @@ _tmsu_cmd_dupes() {
 
 _tmsu_cmd_files() {
 	_arguments -s -w ''{--all,-a}'[show all files]' \
-	                 ''{--directory,-d}'[omit files of matching directories]' \
-                     ''{--file,-f}'[omit parent directories of matching files]' \
+	                 ''{--directory,-d}'[list only items that are directories]' \
+                     ''{--file,-f}'[list only items that are files]' \
+                     ''{--branch,-b}'[list only matching branches (omit directory contents)]' \
+                     ''{--leaf,-l}'[list only leaf items (omit parent directories)]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }

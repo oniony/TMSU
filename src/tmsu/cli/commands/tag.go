@@ -166,7 +166,7 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tagIds []
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		file, err = command.addFile(store, absPath, stat.ModTime(), uint(stat.Size()))
+		file, err = command.addFile(store, absPath, stat.ModTime(), uint(stat.Size()), stat.IsDir())
 		if err != nil {
 			return fmt.Errorf("%v: could not add file: %v", path, err)
 		}
@@ -212,7 +212,7 @@ func (command TagCommand) tagRecursively(store *storage.Storage, path string, ta
 	return nil
 }
 
-func (command *TagCommand) addFile(store *storage.Storage, path string, modTime time.Time, size uint) (*database.File, error) {
+func (command *TagCommand) addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*database.File, error) {
 	if command.verbose {
 		log.Infof("%v: adding file.", path)
 	}
@@ -222,7 +222,7 @@ func (command *TagCommand) addFile(store *storage.Storage, path string, modTime 
 		return nil, fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 	}
 
-	file, err := store.AddFile(path, fingerprint, modTime, int64(size))
+	file, err := store.AddFile(path, fingerprint, modTime, int64(size), isDir)
 	if err != nil {
 		return nil, fmt.Errorf("%v: could not add file to database: %v", path, err)
 	}

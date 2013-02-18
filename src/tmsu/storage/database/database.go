@@ -92,6 +92,7 @@ func (db Database) CreateSchema() error {
                fingerprint TEXT NOT NULL,
                mod_time DATETIME NOT NULL,
                size INTEGER NOT NULL,
+               is_dir BOOLEAN NOT NULL,
                CONSTRAINT con_file_path UNIQUE (directory, name)
            )`
 

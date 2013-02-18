@@ -102,18 +102,15 @@ trunk
 -----
 
 This version changes the behaviour of the 'files' command: it will no longer
-'discover' files that inherit tags on-the-fly by examining the file-system.
-Instead tags can be applied recursively using the '--recursive' option on the
-'tag' and 'untag' commands.
-
-This change means the cost of recursively examining the file-system
-is paid only when the files are tagged and not on every query thereafter. It
-also allows you to apply a tag to a directory and then remove it from specific
-files within.
+'discover' files that inherit tags on-the-fly by examining the file-system
+which has proven to be very slow on larger databases. Instead tags can be
+applied recursively using the --recursive option on the 'tag' and 'untag'
+commands.
 
 IMPORTANT: Please back up your database then upgrade it using the upgrade
-script. (Note there is separate upgrade script, `trunk_to_0.1.0.sql` if you have been
-following trunk.)
+script. (Note there is separate upgrade script, `trunk_to_0.1.0.sql` if you have
+been following tip.) The upgrade may take a long time to run as every file will
+be updated.
   
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak  # back up
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
@@ -121,11 +118,13 @@ following trunk.)
 
   * 'files' command no longer finds files that inherit a tag from the file-
     system on-the-fly.
-  * '--recursive' (-r) option on 'tag' and 'untag' for tagging/untagging
+  * --recursive (-r) option on 'tag' and 'untag' for tagging/untagging
     directory contents recursively.
-  * 'files' command now has --directory' (-d) and '--file' (-f) options.
-    '-d' excludes files of matching directories and '-f' excludes
-    parent directories of matching files.
+  * 'files' command now has --directory (-d) and --file (-f) options to limit
+    output to just files or directories.
+  * 'files' command now has --branch (-b) and --leaf (-l) options to omit items
+    within matching directories and to omit parent directories of matching items
+    respectively.
   * Improved command-line parsing: now supports global options, short options
     and mixed option ordering.
   * 'repair' command rewritten to fix bugs.

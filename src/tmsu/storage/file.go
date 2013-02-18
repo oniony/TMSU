@@ -29,7 +29,7 @@ func (storage *Storage) FileCount() (uint, error) {
 	return storage.Db.FileCount()
 }
 
-// The complete set of tracke files.
+// The complete set of tracked files.
 func (storage *Storage) Files() (database.Files, error) {
 	return storage.Db.Files()
 }
@@ -143,13 +143,13 @@ func (storage *Storage) DuplicateFiles() ([]database.Files, error) {
 }
 
 // Adds a file to the database.
-func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*database.File, error) {
-	return storage.Db.InsertFile(path, fingerprint, modTime, size)
+func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*database.File, error) {
+	return storage.Db.InsertFile(path, fingerprint, modTime, size, isDir)
 }
 
 // Updates a file in the database.
-func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64) (*database.File, error) {
-	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size)
+func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*database.File, error) {
+	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size, isDir)
 }
 
 // Removes a file from the database.

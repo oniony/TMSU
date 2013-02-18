@@ -1,8 +1,7 @@
 HIGH
 
-E Rename the 'files' options --directory and --file.
+E Allow permissions to be set on VFS mount directory.
 E Add unit-tests for each command.
-E Issue #29: Option to allow just files or directories to be listed.
 B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
 B 'status' command is not reporting untagged files in tagged directories when run without arguments.
 B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).

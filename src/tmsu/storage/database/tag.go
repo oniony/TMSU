@@ -20,6 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"strings"
 )
 
@@ -133,7 +134,20 @@ func (db Database) TagsByNames(names []string) (Tags, error) {
 		return nil, err
 	}
 
-	return readTags(result, make(Tags, 0, len(names)))
+	tags, err := readTags(result, make(Tags, 0, len(names)))
+	if err != nil {
+		return nil, err
+	}
+
+	if len(tags) != len(names) {
+		for _, name := range names {
+			if !containsName(tags, name) {
+				return nil, fmt.Errorf("invalid tag '%v'", name)
+			}
+		}
+	}
+
+	return tags, nil
 }
 
 // Retrieves the set of tags for the specified file.
@@ -225,6 +239,16 @@ func (db Database) DeleteTag(tagId uint) error {
 }
 
 // 
+
+func containsName(tags Tags, name string) bool {
+	for _, tag := range tags {
+		if tag.Name == name {
+			return true
+		}
+	}
+
+	return false
+}
 
 func readTag(rows *sql.Rows) (*Tag, error) {
 	if !rows.Next() {

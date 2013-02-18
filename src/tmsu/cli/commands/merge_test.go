@@ -38,22 +38,22 @@ func TestMergeSingleTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -128,32 +128,32 @@ func TestMergeMultipleTags(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileC, err := store.AddFile("/tmp/c", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileC, err := store.AddFile("/tmp/c", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileC1, err := store.AddFile("/tmp/c/1", fingerprint.Fingerprint("abc"), time.Now(), 123)
+	fileC1, err := store.AddFile("/tmp/c/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}

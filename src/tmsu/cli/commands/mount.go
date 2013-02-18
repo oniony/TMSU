@@ -59,7 +59,7 @@ is mounted.`
 }
 
 func (MountCommand) Options() cli.Options {
-	return cli.Options{{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in /etc/fuse.conf)"}}
+	return cli.Options{{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in fuse.conf)"}}
 }
 
 func (command MountCommand) Exec(options cli.Options, args []string) error {

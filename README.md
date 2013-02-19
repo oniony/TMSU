@@ -135,6 +135,8 @@ be updated.
   * File lists are now shown sorted alphanumerically.
   * The 'tag' command no longer identifies modified files. (Use 'repair'
     instead.)
+  * The 'mount' command now has a '--allow-other' option which allows other
+    users to access the mounted file-system.
   * Updated Zsh completion.
   * Improved error messages.
   * Improved unit-test coverage.

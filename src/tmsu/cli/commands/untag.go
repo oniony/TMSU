@@ -121,6 +121,12 @@ func (command UntagCommand) lookupTagIds(store *storage.Storage, names []string)
 		return nil, fmt.Errorf("could not retrieve tags: %v", err)
 	}
 
+	for _, name := range names {
+		if !tags.Any(func(tag *database.Tag) bool { return tag.Name == name }) {
+			return nil, fmt.Errorf("no such tag '%v'", name)
+		}
+	}
+
 	tagIds := make([]uint, len(tags))
 	for index, tag := range tags {
 		tagIds[index] = tag.Id
@@ -128,6 +134,7 @@ func (command UntagCommand) lookupTagIds(store *storage.Storage, names []string)
 
 	return tagIds, nil
 }
+
 func (command UntagCommand) untagPathsAll(store *storage.Storage, paths []string) error {
 	for _, path := range paths {
 		if err := command.untagPathAll(store, path); err != nil {

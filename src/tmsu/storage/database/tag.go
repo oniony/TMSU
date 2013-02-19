@@ -20,7 +20,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"strings"
 )
 
@@ -137,14 +136,6 @@ func (db Database) TagsByNames(names []string) (Tags, error) {
 	tags, err := readTags(result, make(Tags, 0, len(names)))
 	if err != nil {
 		return nil, err
-	}
-
-	if len(tags) != len(names) {
-		for _, name := range names {
-			if !containsName(tags, name) {
-				return nil, fmt.Errorf("invalid tag '%v'", name)
-			}
-		}
 	}
 
 	return tags, nil

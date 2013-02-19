@@ -53,9 +53,9 @@ Where PATHs are not specified the status of the database is shown.
   U - Untagged
 
 Status codes of T, M and ! mean that the file has been tagged (and thus is in
-the TMSU database). Modified files are those with a different fingerprint to
-that in the database. Missing files are those in the database but no longer on
-in the file system.
+the TMSU database). Modified files are those with a different modification time
+or size to that in the database. Missing files are those in the database but
+no longer on in the file-system.
 
 Note: The 'repair' command can be used to fix problems caused by files that have
 been modified or moved on disk.`
@@ -167,6 +167,22 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 	err = command.checkFiles(files, report)
 	if err != nil {
 		return nil, err
+	}
+
+	paths := make([]string, len(files))
+	for index, file := range files {
+		paths[index] = file.Path()
+	}
+
+	nonNestedPaths, err := path.NonNested(paths)
+	if err != nil {
+		return nil, err
+	}
+
+	for _, path := range nonNestedPaths {
+		if err = command.findNewFiles(path, report); err != nil {
+			return nil, err
+		}
 	}
 
 	return report, nil
@@ -293,12 +309,10 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 
 	stat, err := os.Stat(absPath)
 	if err != nil {
-		pathError := err.(*os.PathError)
-
 		switch {
-		case os.IsNotExist(pathError.Err):
+		case os.IsNotExist(err):
 			return nil
-		case os.IsPermission(pathError.Err):
+		case os.IsPermission(err):
 			log.Warnf("%v: Permission denied.", path)
 			return nil
 		default:

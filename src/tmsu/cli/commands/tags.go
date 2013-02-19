@@ -115,6 +115,18 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) 
 		return fmt.Errorf("%v: could not retrieve tags: %v", path, err)
 	}
 
+	if len(tags) == 0 {
+		_, err := os.Stat(path)
+		switch {
+		case os.IsPermission(err):
+			log.Warnf("%v: permission denied", path)
+		case os.IsNotExist(err):
+			return fmt.Errorf("%v: file not found", path)
+		default:
+			return fmt.Errorf("%v: could not stat file: %v", path, err)
+		}
+	}
+
 	for _, tag := range tags {
 		log.Print(tag.Name)
 	}

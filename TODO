@@ -1,6 +1,5 @@
 HIGH
 
-E Allow permissions to be set on VFS mount directory.
 E Add unit-tests for each command.
 B 'tmsu tags' should report error for arguments that exist neither on disk nor database.
 B 'status' command is not reporting untagged files in tagged directories when run without arguments.

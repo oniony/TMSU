@@ -167,11 +167,11 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) 
 	}
 
 	for path, _ := range untagged {
-		fmt.Printf("%v: untagged\n", path)
+		log.Infof("%v: untagged", path)
 	}
 
 	for path, _ := range missing {
-		fmt.Printf("%v: missing\n", path)
+		log.Infof("%v: missing", path)
 	}
 
 	//TODO cleanup: any files that have no tags: remove
@@ -230,7 +230,7 @@ func (command RepairCommand) repairModified(store *storage.Storage, modified fil
 		fileId := fileIdAndStat.fileId
 		stat := fileIdAndStat.stat
 
-		fmt.Printf("%v: modified\n", path)
+		log.Infof("%v: modified", path)
 
 		fingerprint, err := fingerprint.Create(path)
 		if err != nil {
@@ -269,7 +269,7 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 				}
 
 				if fingerprint == dbFile.Fingerprint {
-					fmt.Printf("%v: moved to %v\n", path, candidatePath)
+					log.Infof("%v: moved to %v", path, candidatePath)
 
 					moved = append(moved, path)
 

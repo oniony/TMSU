@@ -47,7 +47,7 @@ func Warnf(format string, values ...interface{}) {
 
 func Info(values ...interface{}) {
 	fmt.Fprintf(Outfile, "tmsu: ")
-	fmt.Fprintln(Errfile, values...)
+	fmt.Fprintln(Outfile, values...)
 }
 
 func Infof(format string, values ...interface{}) {

@@ -18,10 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"testing"
 	"tmsu/cli"
+	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -123,6 +125,54 @@ func TestRepairModifiedFile(test *testing.T) {
 	if files[0].Size != 6 {
 		test.Fatalf("File modification was not repaired.")
 	}
+}
+
+func TestReportsMissingFiles(test *testing.T) {
+	// set-up
+
+	databasePath := configureDatabase()
+	defer os.Remove(databasePath)
+
+	outPath, errPath, err := configureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	if err := createFile("/tmp/tmsu/a", "hello"); err != nil {
+		test.Fatal(err)
+	}
+
+	tagCommand := TagCommand{false, false}
+	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := os.Remove("/tmp/tmsu/a"); err != nil {
+		test.Fatal(err)
+	}
+
+	command := RepairCommand{false, false}
+
+	// test
+
+	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	log.Outfile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(log.Outfile)
+	compareOutput(test, "tmsu: New tag 'a'.\ntmsu: /tmp/tmsu/a: missing\n", string(bytes))
 }
 
 func createFile(path string, contents string) error {

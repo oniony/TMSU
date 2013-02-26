@@ -87,15 +87,42 @@ func TestRepairModifiedFile(test *testing.T) {
 	}
 	defer store.Close()
 
+	if err := createFile("/tmp/tmsu/a", "hello"); err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove("/tmp/tmsu/a")
+
+	tagCommand := TagCommand{false, false}
+	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := createFile("/tmp/tmsu/a", "banana"); err != nil {
+		test.Fatal(err)
+	}
+
 	command := RepairCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+	if err := command.Exec(cli.Options{}, []string{"/tmp/tmsu"}); err != nil {
 		test.Fatal(err)
 	}
 
 	// validate
+
+	files, err := store.Files()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if len(files) != 1 {
+		test.Fatalf("Expected one file but are %v", len(files))
+	}
+
+	if files[0].Size != 6 {
+		test.Fatalf("File modification was not repaired.")
+	}
 }
 
 func createFile(path string, contents string) error {

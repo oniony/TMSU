@@ -30,7 +30,6 @@ type FilesCommand struct {
 	directory bool
 	file      bool
 	branch    bool
-	leaf      bool
 }
 
 func (FilesCommand) Name() cli.CommandName {
@@ -53,8 +52,7 @@ func (FilesCommand) Options() cli.Options {
 	return cli.Options{{"--all", "-a", "show the complete set of tagged files"},
 		{"--directory", "-d", "list only items that are directories"},
 		{"--file", "-f", "list only items that are files"},
-		{"--branch", "-b", "list only matching branches (omit directory contents)"},
-		{"--leaf", "-l", "list only leaf items (omit parent directories)"}}
+		{"--top", "-t", "list only the top-most items"}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
@@ -62,7 +60,6 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	command.directory = options.HasOption("--directory")
 	command.file = options.HasOption("--file")
 	command.branch = options.HasOption("--branch")
-	command.leaf = options.HasOption("--leaf")
 
 	if options.HasOption("--all") {
 		return command.listAllFiles()
@@ -100,16 +97,9 @@ func (command FilesCommand) listAllFiles() error {
 	}
 
 	if command.branch {
-		absPaths, err = path.NonNested(absPaths)
+		absPaths, err = path.TopLevel(absPaths)
 		if err != nil {
 			return fmt.Errorf("could not find branch entries: %v", err)
-		}
-	}
-
-	if command.leaf {
-		absPaths, err = path.Leaves(absPaths)
-		if err != nil {
-			return fmt.Errorf("could not find leaf entries: %v", err)
 		}
 	}
 
@@ -183,16 +173,9 @@ func (command FilesCommand) listFiles(args []string) error {
 	}
 
 	if command.branch {
-		absPaths, err = path.NonNested(absPaths)
+		absPaths, err = path.TopLevel(absPaths)
 		if err != nil {
-			return fmt.Errorf("could not find branch items: %v", err)
-		}
-	}
-
-	if command.leaf {
-		absPaths, err = path.Leaves(absPaths)
-		if err != nil {
-			return fmt.Errorf("could not find leaf items: %v", err)
+			return fmt.Errorf("could not find top-level items: %v", err)
 		}
 	}
 

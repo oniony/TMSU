@@ -21,26 +21,26 @@ import (
 	"testing"
 )
 
-func TestNonNested(test *testing.T) {
-	nonNested, err := NonNested([]string{"/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m"})
+func TestTopLevel(test *testing.T) {
+	topLevel, err := TopLevel([]string{"/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m"})
 	if err != nil {
 		test.Fatalf("Unexpected error: %v", err)
 	}
 
-	if len(nonNested) != 4 {
-		test.Fatalf("Expected 4 non-nested paths but were %v.", len(nonNested))
+	if len(topLevel) != 4 {
+		test.Fatalf("Expected 4 top-level paths but were %v.", len(topLevel))
 	}
-	if nonNested[0] != "/a/b" {
-		test.Fatalf("Expected non-nested path 0 to be '/a/b' but was '%v'.", nonNested[0])
+	if topLevel[0] != "/a/b" {
+		test.Fatalf("Expected top-level path 0 to be '/a/b' but was '%v'.", topLevel[0])
 	}
-	if nonNested[1] != "/a/f" {
-		test.Fatalf("Expected non-nested path 1 to be '/a/f' but was '%v'.", nonNested[1])
+	if topLevel[1] != "/a/f" {
+		test.Fatalf("Expected top-level path 1 to be '/a/f' but was '%v'.", topLevel[1])
 	}
-	if nonNested[2] != "/j/k/l" {
-		test.Fatalf("Expected non-nested path 2 to be '/j/k/l' but was '%v'.", nonNested[1])
+	if topLevel[2] != "/j/k/l" {
+		test.Fatalf("Expected top-level path 2 to be '/j/k/l' but was '%v'.", topLevel[1])
 	}
-	if nonNested[3] != "/j/k/m" {
-		test.Fatalf("Expected non-nested path 3 to be '/j/k/m' but was '%v'.", nonNested[1])
+	if topLevel[3] != "/j/k/m" {
+		test.Fatalf("Expected top-level path 3 to be '/j/k/m' but was '%v'.", topLevel[1])
 	}
 }
 
@@ -51,7 +51,7 @@ func TestLeaves(test *testing.T) {
 	}
 
 	if len(leaves) != 6 {
-		test.Fatalf("Expected 4 non-nested paths but were %v.", len(leaves))
+		test.Fatalf("Expected 4 top-level paths but were %v.", len(leaves))
 	}
 	if leaves[0] != "/a/b/c" {
 		test.Fatalf("Expected leaf path 0 to be '/a/b/c' but was '%v'.", leaves[0])

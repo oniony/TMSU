@@ -174,12 +174,12 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 		paths[index] = file.Path()
 	}
 
-	nonNestedPaths, err := path.NonNested(paths)
+	topLevelPaths, err := path.TopLevel(paths)
 	if err != nil {
 		return nil, err
 	}
 
-	for _, path := range nonNestedPaths {
+	for _, path := range topLevelPaths {
 		if err = command.findNewFiles(path, report); err != nil {
 			return nil, err
 		}

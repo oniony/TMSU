@@ -23,15 +23,15 @@ import (
 	"strings"
 )
 
-// Finds the non-nested nodes added to the tree
-func NonNested(paths []string) ([]string, error) {
+// Finds the top-level nodes added to the tree
+func TopLevel(paths []string) ([]string, error) {
 	tree := buildTree(paths)
 
-	nonNested := make([]string, 0, 100)
-	nonNested = tree.root.findNonNested(nonNested, "")
-	sort.Strings(nonNested)
+	topLevel := make([]string, 0, 100)
+	topLevel = tree.root.findTopLevel(topLevel, "")
+	sort.Strings(topLevel)
 
-	return nonNested, nil
+	return topLevel, nil
 }
 
 // Finds the leaf nodes added to the tree
@@ -97,7 +97,7 @@ func (tree *tree) add(path string) {
 	}
 }
 
-func (node *node) findNonNested(paths []string, path string) []string {
+func (node *node) findTopLevel(paths []string, path string) []string {
 	path = filepath.Join(path, node.name)
 
 	if node.isReal {
@@ -105,7 +105,7 @@ func (node *node) findNonNested(paths []string, path string) []string {
 	}
 
 	for _, childNode := range node.nodes {
-		paths = childNode.findNonNested(paths, path)
+		paths = childNode.findTopLevel(paths, path)
 	}
 
 	return paths

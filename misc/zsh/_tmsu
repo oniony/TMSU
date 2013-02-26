@@ -69,8 +69,7 @@ _tmsu_cmd_files() {
 	_arguments -s -w ''{--all,-a}'[show all files]' \
 	                 ''{--directory,-d}'[list only items that are directories]' \
                      ''{--file,-f}'[list only items that are files]' \
-                     ''{--branch,-b}'[list only matching branches (omit directory contents)]' \
-                     ''{--leaf,-l}'[list only leaf items (omit parent directories)]' \
+                     ''{--top,-t}'[list only top-most items]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }

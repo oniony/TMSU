@@ -19,13 +19,63 @@ package commands
 
 import (
 	"os"
+	"path/filepath"
 	"testing"
 	"tmsu/cli"
 	"tmsu/storage"
 )
 
-//TODO
-func TestRepairDatabase(test *testing.T) {
+func TestRepairMovedFile(test *testing.T) {
+	// set-up
+
+	databasePath := configureDatabase()
+	defer os.Remove(databasePath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	if err := createFile("/tmp/tmsu/a", "hello"); err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove("/tmp/tmsu/a")
+
+	tagCommand := TagCommand{false, false}
+	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := os.Rename("/tmp/tmsu/a", "/tmp/tmsu/b"); err != nil {
+		test.Fatal(err)
+	}
+
+	command := RepairCommand{false, false}
+
+	// test
+
+	if err := command.Exec(cli.Options{}, []string{"/tmp/tmsu"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	files, err := store.Files()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if len(files) != 1 {
+		test.Fatalf("Expected one file but are %v", len(files))
+	}
+
+	if files[0].Path() != "/tmp/tmsu/b" {
+		test.Fatalf("File rename was not repaired.")
+	}
+}
+
+func TestRepairModifiedFile(test *testing.T) {
 	// set-up
 
 	databasePath := configureDatabase()
@@ -48,25 +98,21 @@ func TestRepairDatabase(test *testing.T) {
 	// validate
 }
 
-func TestRepairPaths(test *testing.T) {
-	// set-up
+func createFile(path string, contents string) error {
+	dir := filepath.Dir(path)
 
-	databasePath := configureDatabase()
-	defer os.Remove(databasePath)
-
-	store, err := storage.Open()
+	err := os.MkdirAll(dir, 0777)
 	if err != nil {
-		test.Fatal(err)
-	}
-	defer store.Close()
-
-	command := RepairCommand{false, false}
-
-	// test
-
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
-		test.Fatal(err)
+		return err
 	}
 
-	// validate
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	file.WriteString(contents)
+
+	return nil
 }

@@ -8,17 +8,16 @@ B Issue #??: mounting under Samba.
 MEDIUM
 
 E Add benchmarks.
-E 'tmsu tag' should bulk add files and then bulk add taggings.
+E Tag implication (tag A implies tag B)
+E Issue #35: print0 support.
 E Enrich 'stats' with averages, most popular tag, &c.
 
 LOW
 
 E Way to restate existing set of tags so that they can be applied recursively.
-E Tag implication (tag A implies tag B)
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
 C Rename 'filetag' to 'tagging'.
 E Consolidate 'status' and 'repair' commands.
-E Issue #35: print0 support.
 E Auto-tags (from Exif data or configured rules)
 
 Key: [B]ug [E]nhancement [C]lean-up [R]efactoring

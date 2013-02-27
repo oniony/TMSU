@@ -66,10 +66,12 @@ _tmsu_cmd_dupes() {
 }
 
 _tmsu_cmd_files() {
-	_arguments -s -w ''{--all,-a}'[show all files]' \
+	_arguments -s -w ''{--all,-a}'[list the complete set of tagged files]' \
 	                 ''{--directory,-d}'[list only items that are directories]' \
                      ''{--file,-f}'[list only items that are files]' \
-                     ''{--top,-t}'[list only top-most items]' \
+                     ''{--top,-t}'[list only top-most matching items (excludes the contents of matching direcotries)]' \
+                     ''{--leaf,-l}'[list only the bottom-most (leaf) items]' \
+                     ''{--recursive,-r}'[read all files on the file-system under each matching directory, recursively]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }

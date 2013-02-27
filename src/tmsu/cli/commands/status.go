@@ -169,12 +169,12 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 		return nil, err
 	}
 
-	paths := make([]string, len(files))
-	for index, file := range files {
-		paths[index] = file.Path()
+	tree := path.NewTree()
+	for _, file := range files {
+		tree.Add(file.Path())
 	}
 
-	topLevelPaths, err := path.TopLevel(paths)
+	topLevelPaths := tree.TopLevel().Paths()
 	if err != nil {
 		return nil, err
 	}
@@ -270,7 +270,7 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 			report.AddRow(Row{relPath, MISSING})
 			return nil
 		case os.IsPermission(pathError.Err):
-			log.Warnf("%v: Permission denied.", file.Path())
+			log.Warnf("%v: permission denied.", file.Path())
 		default:
 			return fmt.Errorf("%v: could not stat: %v", file.Path(), err)
 		}
@@ -313,7 +313,7 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 		case os.IsNotExist(err):
 			return nil
 		case os.IsPermission(err):
-			log.Warnf("%v: Permission denied.", path)
+			log.Warnf("%v: permission denied.", path)
 			return nil
 		default:
 			return fmt.Errorf("%v: could not stat: %v", path, err)

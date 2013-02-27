@@ -141,10 +141,7 @@ func (command RepairCommand) repairPaths(store *storage.Storage, paths []string)
 }
 
 func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) error {
-	paths, err := _path.TopLevel(paths)
-	if err != nil {
-		return fmt.Errorf("could not identify top-level paths: %v", err)
-	}
+	paths = _path.BuildTree(paths...).TopLevel().Paths()
 
 	fsPaths, err := command.enumerateFileSystemPaths(paths)
 	if err != nil {

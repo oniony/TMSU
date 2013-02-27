@@ -98,26 +98,36 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
-trunk
------
+tip
+---
 
-This version changes the behaviour of the 'files' command: it will no longer
-'discover' files that inherit tags on-the-fly by examining the file-system
-which has proven to be very slow on larger databases. Instead tags can be
-applied recursively using the --recursive option on the 'tag' and 'untag'
-commands.
+This version changes the behaviour of the 'files' command to not automatic-
+ally discover untagged files in the file-system that inherit tags. Instead the
+--recursive option can be used when this behaviour is desirable:
+
+For additional flexibility, the 'tag' and 'untag' command now also have a
+--recursive option allowing a directory's contents to be likewise tagged or
+untagged.
+
+These two changes allow TMSU to be used in two different ways: dynamically
+discovering directory contents using 'files --recursive' or statically
+adding directory contents to the database for faster retrieval.
 
 IMPORTANT: Please back up your database then upgrade it using the upgrade
-script. (Note there is separate upgrade script, `trunk_to_0.1.0.sql` if you have
-been following tip.) The upgrade may take a long time to run as every file will
-be updated.
-  
+script. The 'repair' step may take a while to run as every file is reexamined
+to populate the new columns.
+
+IMPORTANT: If you have been following 'tip' there is a separate upgrade
+script called `tip_to_0.1.0.sql`. Due to a bug in the previous version
+please re-run this even if you have previously upgraded otherwise you may end
+up with duplicate entries in the `file_tag` table.
+
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak  # back up
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
     $ tmsu repair
 
   * 'files' command no longer finds files that inherit a tag from the file-
-    system on-the-fly.
+    system on-the-fly unless run with the --recursive option.
   * --recursive (-r) option on 'tag' and 'untag' for tagging/untagging
     directory contents recursively.
   * 'files' command now has --directory (-d) and --file (-f) options to limit

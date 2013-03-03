@@ -46,7 +46,10 @@ func GetMountTable() ([]Mount, error) {
 		} else {
 			if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
 				databasePath := filepath.Join(process.WorkingDirectory, process.CommandLine[2])
-				mountPath := filepath.Join(process.WorkingDirectory, process.CommandLine[3])
+				mountPath := process.CommandLine[3]
+				if mountPath[0] != '/' {
+					mountPath = filepath.Join(process.WorkingDirectory, mountPath)
+				}
 				mountTable = append(mountTable, Mount{databasePath, mountPath})
 			}
 		}

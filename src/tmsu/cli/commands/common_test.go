@@ -58,3 +58,22 @@ func expectTags(test *testing.T, store *storage.Storage, file *database.File, ta
 		}
 	}
 }
+
+func createFile(path string, contents string) error {
+	dir := filepath.Dir(path)
+
+	err := os.MkdirAll(dir, 0777)
+	if err != nil {
+		return err
+	}
+
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer file.Close()
+
+	file.WriteString(contents)
+
+	return nil
+}

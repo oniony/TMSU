@@ -91,7 +91,7 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	return command.repairPaths(store, args)
 }
 
-//-
+//- unexported
 
 func (command RepairCommand) repairDatabase(store *storage.Storage) error {
 	if command.verbose {
@@ -143,12 +143,12 @@ func (command RepairCommand) repairPaths(store *storage.Storage, paths []string)
 func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) error {
 	paths = _path.BuildTree(paths...).TopLevel().Paths()
 
-	fsPaths, err := command.enumerateFileSystemPaths(paths)
+	fsPaths, err := enumerateFileSystemPaths(paths)
 	if err != nil {
 		return err
 	}
 
-	dbPaths, err := command.enumerateDatabasePaths(store, paths)
+	dbPaths, err := enumerateDatabasePaths(store, paths)
 	if err != nil {
 		return err
 	}
@@ -292,29 +292,11 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 	return nil
 }
 
-func (command RepairCommand) addFile(store *storage.Storage, path string, stat os.FileInfo) error {
-	modTime := stat.ModTime().UTC()
-	size := stat.Size()
-	isDir := stat.IsDir()
-
-	fingerprint, err := fingerprint.Create(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-	}
-
-	_, err = store.AddFile(path, fingerprint, modTime, size, isDir)
-	if err != nil {
-		return fmt.Errorf("%v: could not add file: %v", path, err)
-	}
-
-	return nil
-}
-
-func (command RepairCommand) enumerateFileSystemPaths(paths []string) (fileInfoMap, error) {
+func enumerateFileSystemPaths(paths []string) (fileInfoMap, error) {
 	files := make(fileInfoMap, 100)
 
 	for _, path := range paths {
-		if err := command.enumerateFileSystemPath(files, path); err != nil {
+		if err := enumerateFileSystemPath(files, path); err != nil {
 			return nil, err
 		}
 	}
@@ -322,7 +304,7 @@ func (command RepairCommand) enumerateFileSystemPaths(paths []string) (fileInfoM
 	return files, nil
 }
 
-func (command RepairCommand) enumerateFileSystemPath(files fileInfoMap, path string) error {
+func enumerateFileSystemPath(files fileInfoMap, path string) error {
 	stat, err := os.Stat(path)
 	if err != nil {
 		switch {
@@ -352,14 +334,14 @@ func (command RepairCommand) enumerateFileSystemPath(files fileInfoMap, path str
 
 		for _, childFilename := range childFilenames {
 			childPath := filepath.Join(path, childFilename)
-			command.enumerateFileSystemPath(files, childPath)
+			enumerateFileSystemPath(files, childPath)
 		}
 	}
 
 	return nil
 }
 
-func (command RepairCommand) enumerateDatabasePaths(store *storage.Storage, paths []string) (databaseFileMap, error) {
+func enumerateDatabasePaths(store *storage.Storage, paths []string) (databaseFileMap, error) {
 	dbFiles := make(databaseFileMap, 100)
 
 	for _, path := range paths {

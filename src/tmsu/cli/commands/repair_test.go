@@ -20,7 +20,6 @@ package commands
 import (
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"testing"
 	"tmsu/cli"
 	"tmsu/log"
@@ -173,23 +172,4 @@ func TestReportsMissingFiles(test *testing.T) {
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
 	compareOutput(test, "tmsu: New tag 'a'.\ntmsu: /tmp/tmsu/a: missing\n", string(bytes))
-}
-
-func createFile(path string, contents string) error {
-	dir := filepath.Dir(path)
-
-	err := os.MkdirAll(dir, 0777)
-	if err != nil {
-		return err
-	}
-
-	file, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer file.Close()
-
-	file.WriteString(contents)
-
-	return nil
 }

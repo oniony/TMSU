@@ -77,6 +77,27 @@ func (vfs FuseVfs) Access(name string, mode uint32, context *fuse.Context) fuse.
 	return fuse.ENOSYS
 }
 
+func (vfs FuseVfs) Chmod(name string, mode uint32, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Chmod(%v, %v)", name, mode)
+	defer log.Infof("BEGIN Chmod(%v, %v)", name, mode)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Chown(name string, uid uint32, gid uint32, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Chown(%v, %v, %v)", name, uid, gid)
+	defer log.Infof("BEGIN Chown(%v, %v)", name, uid, gid)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Create(name string, flags uint32, mode uint32, context *fuse.Context) (fuse.File, fuse.Status) {
+	log.Infof("BEGIN Create(%v, %v, %v)", name, flags, mode)
+	defer log.Infof("BEGIN Create(%v, %v)", name, flags, mode)
+
+	return nil, fuse.ENOSYS
+}
+
 func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
 	log.Infof("BEGIN GetAttr(%v)", name)
 	defer log.Infof("END GetAttr(%v)", name)
@@ -103,6 +124,123 @@ func (vfs FuseVfs) GetXAttr(name string, attr string, context *fuse.Context) ([]
 	defer log.Infof("END GetAttr(%v, %v)", name, attr)
 
 	return nil, fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Link(oldName string, newName string, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Link(%v, %v)", oldName, newName)
+	defer log.Infof("END Link(%v, %v)", oldName, newName)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) ListXAttr(name string, context *fuse.Context) ([]string, fuse.Status) {
+	log.Infof("BEGIN ListXAttr(%v)", name)
+	defer log.Infof("END ListXAttr(%v)", name)
+
+	return nil, fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Mkdir(%v)", name)
+	defer log.Infof("END Mkdir(%v)", name)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Mknod(name string, mode uint32, dev uint32, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Mknod(%v)", name)
+	defer log.Infof("END Mknod(%v)", name)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
+	log.Infof("BEGIN Open(%v)", name)
+	defer log.Infof("END Open(%v)", name)
+
+	return nil, fuse.ENOSYS
+}
+
+func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
+	log.Infof("BEGIN OpenDir(%v)", name)
+	defer log.Infof("END OpenDir(%v)", name)
+
+	switch name {
+	case "":
+		return vfs.topDirectories()
+	case "tags":
+		return vfs.tagDirectories()
+	}
+
+	path := vfs.splitPath(name)
+	switch path[0] {
+	case "tags":
+		return vfs.openTaggedEntryDir(path[1:])
+	}
+
+	return nil, fuse.ENOENT
+}
+
+func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
+	log.Infof("BEGIN Readlink(%v)", name)
+	defer log.Infof("END Readlink(%v)", name)
+
+	path := vfs.splitPath(name)
+	switch path[0] {
+	case "tags":
+		return vfs.readTaggedEntryLink(path[1:])
+	}
+
+	return "", fuse.ENOENT
+}
+
+func (vfs FuseVfs) RemoveXAttr(name string, attr string, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN RemoveXAttr(%v, %v)", name, attr)
+	defer log.Infof("END RemoveXAttr(%v, %v)", name, attr)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Rename(%v, %v)", oldName, newName)
+	defer log.Infof("END Rename(%v, %v)", oldName, newName)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Rmdir(%v)", name)
+	defer log.Infof("END Rmdir(%v)", name)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) SetXAttr(name string, attr string, data []byte, flags int, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN SetXAttr(%v, %v)", name, attr)
+	defer log.Infof("END SetXAttr(%v, %v)", name, attr)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) StatFs(name string) *fuse.StatfsOut {
+	log.Infof("BEGIN StatFs(%v)", name)
+	defer log.Infof("END StatFs(%v)", name)
+
+	return &fuse.StatfsOut{}
+}
+
+func (vfs FuseVfs) Symlink(value string, linkName string, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Symlink(%v, %v)", value, linkName)
+	defer log.Infof("END Symlink(%v, %v)", value, linkName)
+
+	return fuse.ENOSYS
+}
+
+func (vfs FuseVfs) Truncate(name string, offset uint64, context *fuse.Context) fuse.Status {
+	log.Infof("BEGIN Truncate(%v)", name)
+	defer log.Infof("END Truncate(%v)", name)
+
+	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
@@ -140,40 +278,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	return fuse.OK
 }
 
-func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN OpenDir(%v)", name)
-	defer log.Infof("END OpenDir(%v)", name)
-
-	switch name {
-	case "":
-		return vfs.topDirectories()
-	case "tags":
-		return vfs.tagDirectories()
-	}
-
-	path := vfs.splitPath(name)
-	switch path[0] {
-	case "tags":
-		return vfs.openTaggedEntryDir(path[1:])
-	}
-
-	return nil, fuse.ENOENT
-}
-
-func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
-	log.Infof("BEGIN Readlink(%v)", name)
-	defer log.Infof("END Readlink(%v)", name)
-
-	path := vfs.splitPath(name)
-	switch path[0] {
-	case "tags":
-		return vfs.readTaggedEntryLink(path[1:])
-	}
-
-	return "", fuse.ENOENT
-}
-
-// implementation
+// non-exported
 
 func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
@@ -234,7 +339,7 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	}
 
 	now := time.Now()
-	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(tagCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(tagCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
@@ -267,7 +372,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		fileCount := 0
 
 		now := time.Now()
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 	}
 
 	file, err := vfs.store.File(fileId)
@@ -316,7 +421,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagIds))
 	for _, tag := range furtherTagIds {
-		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755})
+		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755, Nlink: 2})
 	}
 	for _, file := range files {
 		linkName := vfs.getLinkName(file)

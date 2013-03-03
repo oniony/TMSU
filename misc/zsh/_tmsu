@@ -87,7 +87,7 @@ _tmsu_cmd_merge() {
 }
 
 _tmsu_cmd_mount() {
-    _arguments -s -w ''{--allow-other, -o}'[allow other users access to the VFS (requires root or setting in fuse.conf)' \
+    _arguments -s -w ''{--allow-other,-o}'[allow other users access to the VFS (requires root or setting in fuse.conf)]' \
                      '1:file:_files' \
 	                 '2:mountpoint:_dirs' \
 	&& ret=0

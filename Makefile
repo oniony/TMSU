@@ -12,7 +12,8 @@ ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 BIN_FILE=tmsu
 VER_FILE=version.gen.go
-DIST_FILE=tmsu-$(VER).tgz
+ARCH=$(shell uname -m)
+DIST_FILE=tmsu-$(ARCH)-$(VER).tgz
 
 export GOPATH=$(PWD)
 

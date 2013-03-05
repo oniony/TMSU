@@ -2,12 +2,12 @@ Overview
 ========
 
 TMSU is an application that allows you to organise your files by associating
-them with tags. It provides a tool for managing these tags and a virtual
-file-system to allow tag based access to your files.
+them with tags. It provides a tool for managing these tags and a virtual file-
+system to allow tag based access to your files.
 
 TMSU's virtual file system does not store your files: it merely provides an
 alternative, tagged based view of your files stored elsewhere in the file-
-system. That way you have the freedom to choose the most suitable file system
+system. That way you have the freedom to choose the most suitable file-system
 for storage whilst still benefiting from tag based access.
 
 Usage
@@ -87,31 +87,38 @@ About
   * Wiki: <http://bitbucket.org/oniony/tmsu/wiki>
   * Mailing list: <http://groups.google.com/group/tmsu>
 
-TMSU is written in Go.
-
-  * <http://www.golang.org/>
+TMSU is written in Go: <http://www.golang.org/>
 
 TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>, however
-much of the functionality it provides is made possible by the Fuse and Sqlite3
+much of the functionality it provides is made possible by the FUSE and Sqlite3
 libraries, their Go bindings and, of course, the Go language standard library.
 
 Release Notes
 =============
 
-tip
----
+0.1.0
+-----
 
-This version changes the behaviour of the 'files' command to not automatic-
-ally discover untagged files in the file-system that inherit tags. Instead the
---recursive option can be used when this behaviour is desirable:
+This version aims to improve the performance of the program by removing auto-
+matic tag inheritence which has proven slow on larger databases and slow file-
+systems (e.g. network file-systems). Instead there is now a choice of how to
+handle directory contents:
 
-For additional flexibility, the 'tag' and 'untag' command now also have a
---recursive option allowing a directory's contents to be likewise tagged or
-untagged.
+  * Add the nested files to the database using the --recursive option on the
+    'tag' and 'untag' commands.
+  * Dynamically discover directory contents using the --recursive option on
+    'files' command.
 
-These two changes allow TMSU to be used in two different ways: dynamically
-discovering directory contents using 'files --recursive' or statically
-adding directory contents to the database for faster retrieval.
+Adding directory contents using the --recursive option on the 'tag' command
+will be slower and will result in a larger database. However querying of the
+database will be faster as TMSU will not need to examine the file-system. This
+option also means that duplicate files will be identified.
+
+Dynamically discovering directory conents using the --recursive option on the
+'files' command will be slower as TMSU will need to scan the file-system and
+duplicate files will not be identified as these files are not added to the
+database. However tagging files will be faster and the resultant database will
+be smaller.
 
 IMPORTANT: Please back up your database then upgrade it using the upgrade
 script. The 'repair' step may take a while to run as every file is reexamined
@@ -127,22 +134,22 @@ up with duplicate entries in the `file_tag` table.
     $ tmsu repair
 
   * 'files' command no longer finds files that inherit a tag from the file-
-    system on-the-fly unless run with the --recursive option.
-  * --recursive (-r) option on 'tag' and 'untag' for tagging/untagging
-    directory contents recursively.
-  * 'files' command now has --directory (-d) and --file (-f) options to limit
-    output to just files or directories.
-  * 'files' command now has --branch (-b) and --leaf (-l) options to omit items
-    within matching directories and to omit parent directories of matching items
-    respectively.
+    system on-the-fly unless run with the new --recursive (-r) option. New
+    --directory (-d) and --file (-f) options to limit output to just files or
+    directories. In addition the new --top (-t) and --leaf (-l) options show the
+    top-most matching entries (excluding items from matching directories) or
+    bottom-most matching entries (excluding parent directories) respectevly.
+  * 'tag' and 'untag' now sport a --recursive (-r) option for tagging or
+    untagging directory contents.
   * Improved command-line parsing: now supports global options, short options
-    and mixed option ordering.
+    and mixed option ordering. Options with arguments can now be specified any-
+    where on the command line.
   * 'repair' command rewritten to fix bugs.
   * Fingerprints for directories no longer calculated. (Recursively tag
     files instead to detect file duplicates.)
   * Removed the 'export' command. (Sqlite tooling has better facilities.)
   * Tags containing '/' are no longer legal.
-  * File lists are now shown sorted alphanumerically.
+  * Fixed bug that prevented file lists from being shown sorted alphanumerically.
   * The 'tag' command no longer identifies modified files. (Use 'repair'
     instead.)
   * The 'mount' command now has a '--allow-other' option which allows other

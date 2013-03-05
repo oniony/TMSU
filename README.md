@@ -127,7 +127,8 @@ to populate the new columns.
 IMPORTANT: If you have been following 'tip' there is a separate upgrade
 script called `tip_to_0.1.0.sql`. Due to a bug in the previous version
 please re-run this even if you have previously upgraded otherwise you may end
-up with duplicate entries in the `file_tag` table.
+up with duplicate entries in the `file_tag` table. Please read through the
+script before running it.
 
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak  # back up
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db

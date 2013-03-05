@@ -21,6 +21,7 @@ CREATE INDEX idx_file_tag_tag_id ON file_tag(tag_id);
 INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM explicit_file_tag;
 DROP TABLE explicit_file_tag;
 
+-- comment out the following two lines if you don't want to add the implicit file tags as explicit file tags
 INSERT OR IGNORE INTO file_tag SELECT file_id, tag_id FROM implicit_file_tag;
 DROP TABLE implicit_file_tag;
 

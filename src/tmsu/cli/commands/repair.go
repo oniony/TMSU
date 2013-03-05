@@ -43,7 +43,7 @@ func (RepairCommand) Synopsis() string {
 }
 
 func (RepairCommand) Description() string {
-	return `tmsu repair [PATH]...
+	return `tmsu [OPTION]... repair [PATH]...
 
 Fixes broken paths and stale fingerprints in the database caused by file
 modifications and moves.

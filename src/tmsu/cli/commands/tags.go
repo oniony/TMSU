@@ -41,7 +41,7 @@ func (TagsCommand) Synopsis() string {
 }
 
 func (TagsCommand) Description() string {
-	return `tmsu tags [OPTION] [FILE]...
+	return `tmsu tags [OPTION]... [FILE]...
 tmsu tags --all
 
 Lists the tags applied to FILEs.

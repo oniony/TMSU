@@ -44,7 +44,7 @@ func (MountCommand) Synopsis() string {
 
 func (MountCommand) Description() string {
 	return `tmsu mount
-tmsu mount [FILE] MOUNTPOINT
+tmsu mount [OPTION]... [FILE] MOUNTPOINT
 
 Without arguments, lists the currently mounted file-systems, otherwise mounts a
 virtual file-system at the path MOUNTPOINT.

@@ -45,7 +45,7 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files OPTIONS [-]TAG...
+	return `tmsu files [OPTION]... TAG...
 
 Lists the files, if any, that have all of the TAGs specified. Tags can be
 excluded by prefixing their names with a minus character (option processing

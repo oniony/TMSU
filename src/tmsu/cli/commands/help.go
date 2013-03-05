@@ -38,7 +38,7 @@ func (HelpCommand) Synopsis() string {
 }
 
 func (HelpCommand) Description() string {
-	return `tmsu help [OPTION] [COMMAND]
+	return `tmsu help [OPTION]... [COMMAND]
 
 Shows help summary or, where COMMAND is specified, help for COMMAND.`
 }

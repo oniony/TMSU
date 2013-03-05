@@ -25,24 +25,6 @@ type Command interface {
 	Exec(options Options, args []string) error
 }
 
-func LookupOption(command Command, name string) *Option {
-	for _, option := range globalOptions {
-		if option.LongName == name || option.ShortName == name {
-			return &option
-		}
-	}
-
-	if command != nil {
-		for _, option := range command.Options() {
-			if option.LongName == name || option.ShortName == name {
-				return &option
-			}
-		}
-	}
-
-	return nil
-}
-
-var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages"},
-	Option{"--help", "-h", "show help and exit"},
-	Option{"--version", "-V", "show version information and exit"}}
+var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", false, ""},
+	Option{"--help", "-h", "show help and exit", false, ""},
+	Option{"--version", "-V", "show version information and exit", false, ""}}

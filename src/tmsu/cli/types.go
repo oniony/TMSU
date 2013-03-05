@@ -37,6 +37,8 @@ type Option struct {
 	LongName    string
 	ShortName   string
 	Description string
+	HasArgument bool
+	Argument    string
 }
 
 type Options []Option
@@ -49,4 +51,14 @@ func (options Options) HasOption(name string) bool {
 	}
 
 	return false
+}
+
+func (options Options) Get(name string) *Option {
+	for _, option := range options {
+		if option.LongName == name || option.ShortName == name {
+			return &option
+		}
+	}
+
+	return nil
 }

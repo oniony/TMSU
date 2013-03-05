@@ -22,49 +22,56 @@ import (
 )
 
 type Parser struct {
+	globalOptions Options
 	commandByName map[CommandName]Command
 }
 
-func NewParser(commandByName map[CommandName]Command) *Parser {
-	parser := Parser{commandByName}
+func NewParser(globalOptions Options, commandByName map[CommandName]Command) *Parser {
+	parser := Parser{globalOptions, commandByName}
 	return &parser
 }
 
-func (parser *Parser) Parse(args []string) (CommandName, Options, []string, error) {
-	optionNames := make([]string, 0)
-	arguments := make([]string, 0)
+func (parser *Parser) Parse(args []string) (commandName CommandName, options Options, arguments []string, err error) {
+	commandName = ""
+	options = make(Options, 0)
+	arguments = make([]string, 0)
+
+	possibleOptions := make(Options, len(globalOptions))
+	copy(possibleOptions, globalOptions)
 
 	parseOptions := true
-	for _, arg := range args {
+	for index := 0; index < len(args); index++ {
+		arg := args[index]
+
 		if arg == "--" {
 			parseOptions = false
 		} else {
 			if parseOptions && arg[0] == '-' {
-				optionNames = append(optionNames, arg)
+				option := lookupOption(possibleOptions, arg)
+				if option == nil {
+					err = fmt.Errorf("invalid option '%v'.", arg)
+					return
+				}
+
+				if option.HasArgument {
+					option.Argument = args[index+1]
+					index++
+				}
+
+				options = append(options, *option)
 			} else {
-				arguments = append(arguments, arg)
+				if commandName == "" {
+					commandName = CommandName(arg)
+
+					command := parser.commandByName[commandName]
+					if command != nil {
+						possibleOptions = append(possibleOptions, command.Options()...)
+					}
+				} else {
+					arguments = append(arguments, arg)
+				}
 			}
 		}
-	}
-
-	commandName := CommandName("")
-
-	if len(arguments) > 0 {
-		commandName = CommandName(arguments[0])
-		arguments = arguments[1:]
-	}
-
-	command := parser.commandByName[commandName]
-
-	options := make(Options, 0)
-	for _, optionName := range optionNames {
-		option := LookupOption(command, optionName)
-
-		if option == nil {
-			return "", nil, nil, fmt.Errorf("invalid option '%v'.", optionName)
-		}
-
-		options = append(options, *option)
 	}
 
 	if options.HasOption("--version") {
@@ -74,5 +81,17 @@ func (parser *Parser) Parse(args []string) (CommandName, Options, []string, erro
 		commandName = "help"
 	}
 
-	return commandName, options, arguments, nil
+	return
+}
+
+// unexported
+
+func lookupOption(options Options, name string) *Option {
+	for _, option := range options {
+		if option.ShortName == name || option.LongName == name {
+			return &Option{option.LongName, option.ShortName, option.Description, option.HasArgument, ""}
+		}
+	}
+
+	return nil
 }

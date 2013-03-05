@@ -66,7 +66,7 @@ func TestFilesAll(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{cli.Option{"-a", "--all", ""}}, []string{}); err != nil {
+	if err := command.Exec(cli.Options{cli.Option{"-a", "--all", "", false, ""}}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

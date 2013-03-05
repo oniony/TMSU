@@ -38,7 +38,7 @@ func (VfsCommand) Description() string {
 }
 
 func (VfsCommand) Options() cli.Options {
-	return cli.Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option"}}
+	return cli.Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option", false, ""}}
 }
 
 func (VfsCommand) Exec(options cli.Options, args []string) error {

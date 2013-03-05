@@ -51,8 +51,8 @@ Tags the file FILE with the tag(s) specified.`
 }
 
 func (TagCommand) Options() cli.Options {
-	return cli.Options{{"--tags", "-t", "the set of tags to apply"},
-		{"--recursive", "-r", "recursively apply tags to directory contents"}}
+	return cli.Options{{"--tags", "-t", "the set of tags to apply", true, ""},
+		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""}}
 }
 
 func (command TagCommand) Exec(options cli.Options, args []string) error {
@@ -70,12 +70,15 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 	defer store.Close()
 
 	if options.HasOption("--tags") {
-		if len(args) < 2 {
-			return fmt.Errorf("quoted set of tags and at least one file to tag must be specified.")
+		tagNames := strings.Fields(options.Get("--tags").Argument)
+		if len(tagNames) == 0 {
+			return fmt.Errorf("set of tags to apply must be specified")
 		}
 
-		tagNames := strings.Fields(args[0])
-		paths := args[1:]
+		paths := args
+		if len(paths) < 1 {
+			return fmt.Errorf("at least one file to tag must be specified")
+		}
 
 		tagIds, err := command.lookupTagIds(store, tagNames)
 		if err != nil {

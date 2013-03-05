@@ -71,7 +71,7 @@ Untagged files are reported but not added to the database.`
 }
 
 func (RepairCommand) Options() cli.Options {
-	return cli.Options{{"--pretend", "-p", "do not make any changes"}}
+	return cli.Options{{"--pretend", "-p", "do not make any changes", false, ""}}
 }
 
 func (command RepairCommand) Exec(options cli.Options, args []string) error {

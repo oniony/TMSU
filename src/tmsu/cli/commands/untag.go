@@ -49,9 +49,9 @@ Disassociates FILE with the TAGs specified.`
 }
 
 func (UntagCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "strip each file of all tags"},
-		{"--tags", "-t", "the set of tags to remove"},
-		{"--recursive", "-r", "recursively remove tags from directory contents"}}
+	return cli.Options{{"--all", "-a", "strip each file of all tags", false, ""},
+		{"--tags", "-t", "the set of tags to remove", true, ""},
+		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""}}
 }
 
 func (command UntagCommand) Exec(options cli.Options, args []string) error {
@@ -79,12 +79,15 @@ func (command UntagCommand) Exec(options cli.Options, args []string) error {
 			return err
 		}
 	} else if options.HasOption("--tags") {
-		if len(args) < 2 {
-			return fmt.Errorf("quoted set of tags and at least one file to untag must be specified.")
+		tagNames := strings.Fields(options.Get("--tags").Argument)
+		if len(tagNames) == 0 {
+			return fmt.Errorf("set of tags to apply must be specified")
 		}
 
-		tagNames := strings.Fields(args[0])
-		paths := args[1:]
+		paths := args
+		if len(paths) < 1 {
+			return fmt.Errorf("at least one file to untag must be specified")
+		}
 
 		tagIds, err := command.lookupTagIds(store, tagNames)
 		if err != nil {

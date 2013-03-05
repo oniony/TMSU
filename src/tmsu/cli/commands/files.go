@@ -53,12 +53,12 @@ must first be disabled with '--').`
 }
 
 func (FilesCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "list the complete set of tagged files"},
-		{"--directory", "-d", "list only items that are directories"},
-		{"--file", "-f", "list only items that are files"},
-		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)"},
-		{"--leaf", "-l", "list only the bottom-most (leaf) items"},
-		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively"}}
+	return cli.Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
+		{"--directory", "-d", "list only items that are directories", false, ""},
+		{"--file", "-f", "list only items that are files", false, ""},
+		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)", false, ""},
+		{"--leaf", "-l", "list only the bottom-most (leaf) items", false, ""},
+		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {

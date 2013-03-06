@@ -1,4 +1,4 @@
-VER=0.1.0
+VER=0.1.1
 SHELL=/bin/sh
 HGREV=$(shell hg id)
 

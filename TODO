@@ -17,7 +17,6 @@ LOW
 E Way to apply a file's tags to another file.
 E Way to pull tags to parent directory up or push them down to child files.
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
-C Rename 'filetag' to 'tagging'.
 E Consolidate 'status' and 'repair' commands.
 E Auto-tags (from Exif data or configured rules)
 

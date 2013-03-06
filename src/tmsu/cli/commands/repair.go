@@ -61,7 +61,7 @@ file size. These files are repaired by updating the modification time, size and
 fingerprint in the database.
 
 Moved files will only be repaired if a file with the same fingerprint can be
-found under PATHs: this means files that are simultaneousl moved and modified
+found under PATHs: this means files that are simultaneously moved and modified
 will not be identified. Where no PATHs are specified, moved files will only be
 identified if moved to a tagged directory.
 

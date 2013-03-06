@@ -55,7 +55,7 @@ Where PATHs are not specified the status of the database is shown.
 Status codes of T, M and ! mean that the file has been tagged (and thus is in
 the TMSU database). Modified files are those with a different modification time
 or size to that in the database. Missing files are those in the database but
-no longer on in the file-system.
+that no longer exist in the file-system.
 
 Note: The 'repair' command can be used to fix problems caused by files that have
 been modified or moved on disk.`

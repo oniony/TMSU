@@ -2,18 +2,18 @@ HIGH
 
 E Add unit-tests for each command.
 E Issue #33: provide binary for 64 bit Linux.
+E Way to apply a file's tags to another file.
+E Tag implication (tag A implies tag B)
 
 MEDIUM
 
-E Add recursive option to 'tags' command.
 E Add benchmarks.
-E Tag implication (tag A implies tag B)
+E Add recursive option to 'tags' command.
 E Issue #35: print0 support.
 E Enrich 'stats' with averages, most popular tag, &c.
 
 LOW
 
-E Way to apply a file's tags to another file.
 E Way to pull tags to parent directory up or push them down to child files.
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
 E Consolidate 'status' and 'repair' commands.

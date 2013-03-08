@@ -5,7 +5,6 @@ E Issue #33: provide binary for 64 bit Linux.
 
 MEDIUM
 
-B 'repair' command does not handle the case where a previously tagged file is replaced with a directory (and vice versa).
 E Add recursive option to 'tags' command.
 E Add benchmarks.
 E Tag implication (tag A implies tag B)

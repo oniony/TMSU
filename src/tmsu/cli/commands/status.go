@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/path"
@@ -259,18 +260,19 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 
 	stat, err := os.Stat(file.Path())
 	if err != nil {
-		pathError := err.(*os.PathError)
-
 		switch {
-		case os.IsNotExist(pathError.Err):
+		case os.IsNotExist(err):
 			if command.verbose {
 				log.Infof("%v: file is missing.", file.Path())
 			}
 
 			report.AddRow(Row{relPath, MISSING})
 			return nil
-		case os.IsPermission(pathError.Err):
+		case os.IsPermission(err):
 			log.Warnf("%v: permission denied.", file.Path())
+		case strings.Contains(err.Error(), "not a directory"):
+			report.AddRow(Row{relPath, MISSING})
+			return nil
 		default:
 			return fmt.Errorf("%v: could not stat: %v", file.Path(), err)
 		}
@@ -293,18 +295,20 @@ func (command *StatusCommand) checkFile(file *database.File, report *StatusRepor
 	return nil
 }
 
-func (command *StatusCommand) findNewFiles(path string, report *StatusReport) error {
+func (command *StatusCommand) findNewFiles(searchPath string, report *StatusReport) error {
 	if command.verbose {
-		log.Infof("%v: finding new files.", path)
+		log.Infof("%v: finding new files.", searchPath)
 	}
 
-	absPath, err := filepath.Abs(path)
+	relPath := path.Rel(searchPath)
+
+	if !report.ContainsRow(relPath) {
+		report.AddRow(Row{relPath, UNTAGGED})
+	}
+
+	absPath, err := filepath.Abs(searchPath)
 	if err != nil {
-		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
-	}
-
-	if !report.ContainsRow(path) {
-		report.AddRow(Row{path, UNTAGGED})
+		return fmt.Errorf("%v: could not get absolute path: %v", searchPath, err)
 	}
 
 	stat, err := os.Stat(absPath)
@@ -313,26 +317,26 @@ func (command *StatusCommand) findNewFiles(path string, report *StatusReport) er
 		case os.IsNotExist(err):
 			return nil
 		case os.IsPermission(err):
-			log.Warnf("%v: permission denied.", path)
+			log.Warnf("%v: permission denied.", searchPath)
 			return nil
 		default:
-			return fmt.Errorf("%v: could not stat: %v", path, err)
+			return fmt.Errorf("%v: could not stat: %v", searchPath, err)
 		}
 	}
 
 	if stat.IsDir() {
 		dir, err := os.Open(absPath)
 		if err != nil {
-			return fmt.Errorf("%v: could not open file: %v", path, err)
+			return fmt.Errorf("%v: could not open file: %v", searchPath, err)
 		}
 
 		dirNames, err := dir.Readdirnames(0)
 		if err != nil {
-			return fmt.Errorf("%v: could not read directory listing: %v", path, err)
+			return fmt.Errorf("%v: could not read directory listing: %v", searchPath, err)
 		}
 
 		for _, dirName := range dirNames {
-			dirPath := filepath.Join(path, dirName)
+			dirPath := filepath.Join(searchPath, dirName)
 			err = command.findNewFiles(dirPath, report)
 			if err != nil {
 				return err

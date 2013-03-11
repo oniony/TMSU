@@ -138,6 +138,17 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
+	sql = `CREATE TABLE IF NOT EXISTS tag_implication (
+                tag_id INTEGER NOT NULL,
+                implied_tag_id INTEGER_NOT_NULL,
+                PRIMARY KEY (tag_id, implied_tag_id)
+           )`
+
+	_, err = db.connection.Exec(sql)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 

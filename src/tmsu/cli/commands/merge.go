@@ -105,9 +105,16 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			log.Infof("untagging files '%v'.", sourceTagName)
 		}
 
-		err = store.RemoveFileTagsByTagId(sourceTag.Id)
-		if err != nil {
+		if err := store.RemoveFileTagsByTagId(sourceTag.Id); err != nil {
 			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
+		}
+
+		if command.verbose {
+			log.Infof("updating tag implications involving tag '%v'.", sourceTagName)
+		}
+
+		if err := store.UpdateTagImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
+			return fmt.Errorf("could not update tag implications involving tag '%v': %v", sourceTagName, err)
 		}
 
 		if command.verbose {

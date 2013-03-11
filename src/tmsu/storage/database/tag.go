@@ -229,7 +229,7 @@ func (db Database) DeleteTag(tagId uint) error {
 	return nil
 }
 
-// 
+// unexported
 
 func containsName(tags Tags, name string) bool {
 	for _, tag := range tags {

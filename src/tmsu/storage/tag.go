@@ -127,7 +127,7 @@ func (storage Storage) DeleteTag(tagId uint) error {
 	return storage.Db.DeleteTag(tagId)
 }
 
-// 
+// unexported
 
 func containsTagId(items []uint, searchItem uint) bool {
 	for _, item := range items {

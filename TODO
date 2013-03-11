@@ -4,6 +4,9 @@ E Add unit-tests for each command.
 E Issue #33: provide binary for 64 bit Linux.
 E Way to apply a file's tags to another file.
 E Tag implication (tag A implies tag B)
+    * Implied tags should be reported when file tagged.
+    * Merging can lead to a tag implying itself.
+    * Avoid circular implications.
 
 MEDIUM
 
@@ -18,6 +21,7 @@ E Way to pull tags to parent directory up or push them down to child files.
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
 E Consolidate 'status' and 'repair' commands.
 E Auto-tags (from Exif data or configured rules)
+E Tag-aliases, e.g. 'movie' -> 'film'
 
 Key: [B]ug [E]nhancement [C]lean-up [R]efactoring
 

@@ -113,7 +113,7 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			log.Infof("updating tag implications involving tag '%v'.", sourceTagName)
 		}
 
-		if err := store.UpdateTagImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
+		if err := store.UpdateImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
 			return fmt.Errorf("could not update tag implications involving tag '%v': %v", sourceTagName, err)
 		}
 

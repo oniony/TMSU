@@ -100,7 +100,7 @@ func (command DeleteCommand) deleteTag(store *storage.Storage, tagName string) e
 		log.Infof("removing tags implications involving tag '%v'.", tagName)
 	}
 
-	err = store.RemoveTagImplicationsForTagId(tag.Id)
+	err = store.RemoveImplicationsForTagId(tag.Id)
 	if err != nil {
 		return fmt.Errorf("could not remove tag implications involving tag '%v': %v", tagName, err)
 	}

@@ -58,6 +58,14 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 	}
 	defer store.Close()
 
+	if len(args) < 2 {
+		return fmt.Errorf("tag to rename and new name must both be specified.")
+	}
+
+	if len(args) > 2 {
+		return fmt.Errorf("too many arguments")
+	}
+
 	sourceTagName := args[0]
 	destTagName := args[1]
 

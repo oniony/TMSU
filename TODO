@@ -4,9 +4,7 @@ E Add unit-tests for each command.
 E Issue #33: provide binary for 64 bit Linux.
 E Way to apply a file's tags to another file.
 E Tag implication (tag A implies tag B)
-    * Implied tags should be reported when file tagged.
-    * Merging can lead to a tag implying itself.
-    * Avoid circular implications.
+    * Detect and reject circular implications.
 
 MEDIUM
 

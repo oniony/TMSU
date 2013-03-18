@@ -18,10 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package commands
 
 import (
-	"os"
 	"testing"
-	"tmsu/cli"
-	"tmsu/storage"
 )
 
 func TestTagsForSingleFile(test *testing.T) {

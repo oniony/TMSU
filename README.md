@@ -96,6 +96,16 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
+0.1.1
+-----
+
+  * Fixed panic when using the 'rename' command with the incorrect number of
+    arguments.
+  * 'status' command now handles case where file is replaced with directory
+    or vice-versa.
+  * Fixed bug in 'status' command where mixing of relative and absolute files
+    was missing some moved files.
+
 0.1.0
 -----
 

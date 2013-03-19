@@ -24,31 +24,31 @@ import (
 	"tmsu/storage"
 )
 
-type ImpliesCommand struct {
+type ImplyCommand struct {
 	verbose bool
 }
 
-func (ImpliesCommand) Name() cli.CommandName {
+func (ImplyCommand) Name() cli.CommandName {
 	return "imply"
 }
 
-func (ImpliesCommand) Synopsis() string {
+func (ImplyCommand) Synopsis() string {
 	return "Creates a tag implication"
 }
 
-func (ImpliesCommand) Description() string {
-	return `tmsu [OPTION] implies TAG1 TAG2
-tmsu implies --all
+func (ImplyCommand) Description() string {
+	return `tmsu [OPTION] imply TAG1 TAG2
+tmsu imply --all
 
 Creates a tag implication such that whenever TAG1 is applied, TAG2 is automatically applied.`
 }
 
-func (ImpliesCommand) Options() cli.Options {
+func (ImplyCommand) Options() cli.Options {
 	return cli.Options{cli.Option{"--delete", "-d", "deletes the tag implication", false, ""},
 		cli.Option{"--all", "-a", "lists the tag implications", false, ""}}
 }
 
-func (command ImpliesCommand) Exec(options cli.Options, args []string) error {
+func (command ImplyCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 
 	store, err := storage.Open()
@@ -77,7 +77,7 @@ func (command ImpliesCommand) Exec(options cli.Options, args []string) error {
 
 // unexported
 
-func (command ImpliesCommand) listImplications(store *storage.Storage) error {
+func (command ImplyCommand) listImplications(store *storage.Storage) error {
 	if command.verbose {
 		log.Infof("retrieving tag implications.")
 	}
@@ -94,7 +94,7 @@ func (command ImpliesCommand) listImplications(store *storage.Storage) error {
 	return nil
 }
 
-func (command ImpliesCommand) addImplication(store *storage.Storage, tagName, impliedTagName string) error {
+func (command ImplyCommand) addImplication(store *storage.Storage, tagName, impliedTagName string) error {
 	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -122,7 +122,7 @@ func (command ImpliesCommand) addImplication(store *storage.Storage, tagName, im
 	return nil
 }
 
-func (command ImpliesCommand) deleteImplication(store *storage.Storage, tagName, impliedTagName string) error {
+func (command ImplyCommand) deleteImplication(store *storage.Storage, tagName, impliedTagName string) error {
 	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)

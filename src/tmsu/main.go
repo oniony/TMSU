@@ -32,7 +32,7 @@ func main() {
 		"dupes":   commands.DupesCommand{},
 		"files":   commands.FilesCommand{},
 		"help":    helpCommand,
-		"implies": commands.ImpliesCommand{},
+		"imply":   commands.ImplyCommand{},
 		"merge":   commands.MergeCommand{},
 		"mount":   commands.MountCommand{},
 		"rename":  commands.RenameCommand{},

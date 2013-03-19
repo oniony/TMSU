@@ -35,7 +35,7 @@ func (db *Database) Implications() (Implications, error) {
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id = t1.id
             AND implication.implied_tag_id = t2.id
-            ORDER BY t1.name`
+            ORDER BY t1.name, t2.name`
 
 	result, err := db.connection.Query(sql)
 	if err != nil {

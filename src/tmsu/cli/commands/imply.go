@@ -87,9 +87,29 @@ func (command ImplyCommand) listImplications(store *storage.Storage) error {
 		return fmt.Errorf("could not retrieve implications: %v", err)
 	}
 
+	width := 0
 	for _, implication := range implications {
-		fmt.Printf("'%v' => '%v'\n", implication.ImplyingTag.Name, implication.ImpliedTag.Name)
+		length := len(implication.ImplyingTag.Name)
+		if length > width {
+			width = length
+		}
 	}
+
+	previousImplyingTagName := ""
+	for _, implication := range implications {
+		if implication.ImplyingTag.Name != previousImplyingTagName {
+			if previousImplyingTagName != "" {
+				fmt.Println()
+			}
+
+			previousImplyingTagName = implication.ImplyingTag.Name
+
+			fmt.Printf("%*v -> %v", width, implication.ImplyingTag.Name, implication.ImpliedTag.Name)
+		} else {
+			fmt.Printf(", %v", implication.ImpliedTag.Name)
+		}
+	}
+	fmt.Println()
 
 	return nil
 }

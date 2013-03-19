@@ -96,8 +96,8 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
-0.1.1
------
+v0.1.1
+------
 
   * Fixed panic when using the 'rename' command with the incorrect number of
     arguments.
@@ -106,8 +106,8 @@ Release Notes
   * Fixed bug in 'status' command where mixing of relative and absolute files
     was missing some moved files.
 
-0.1.0
------
+v0.1.0
+------
 
 This version aims to improve the performance of the program by removing auto-
 matic tag inheritence which has proven slow on larger databases and slow file-

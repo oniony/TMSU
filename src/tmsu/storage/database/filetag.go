@@ -20,8 +20,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
-	"strconv"
 )
 
 type FileTag struct {
@@ -136,27 +134,35 @@ func (db *Database) AddFileTag(fileId, tagId uint) (*FileTag, error) {
 
 // Adds a set of file tags.
 func (db *Database) AddFileTags(fileId uint, tagIds []uint) error {
-	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
-            VALUES `
-
-	params := make([]interface{}, len(tagIds)+1)
-	params[0] = fileId
-
-	for index, tagId := range tagIds {
-		params[index+1] = tagId
-
-		if index > 0 {
-			sql += ", "
+	for _, tagId := range tagIds {
+		_, err := db.AddFileTag(fileId, tagId)
+		if err != nil {
+			return err
 		}
-
-		sql += fmt.Sprintf("(?1, ?%v)", strconv.Itoa(index+2))
 	}
 
-	_, err := db.connection.Exec(sql, params...)
-	if err != nil {
-		return err
-	}
+	// TODO reinstate once Ubuntu ships with Sqlite 3.7.15
+	//	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
+	//            VALUES `
 
+	//	params := make([]interface{}, len(tagIds)+1)
+	//	params[0] = fileId
+	//
+	//	for index, tagId := range tagIds {
+	//		params[index+1] = tagId
+	//
+	//		if index > 0 {
+	//			sql += ", "
+	//		}
+	//
+	//		sql += fmt.Sprintf("(?1, ?%v)", strconv.Itoa(index+2))
+	//	}
+	//
+	//	_, err := db.connection.Exec(sql, params...)
+	//	if err != nil {
+	//		return err
+	//	}
+	//
 	return nil
 }
 

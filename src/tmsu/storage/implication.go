@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"fmt"
 	"tmsu/storage/database"
 )
 
@@ -27,19 +28,19 @@ func (storage *Storage) Implications() (database.Implications, error) {
 }
 
 // Retrieves the set of implications for the specified tags.
-func (storage *Storage) ImplicationsForTags(tags database.Tags) (database.Implications, error) {
-	implications, err := storage.Db.ImplicationsForTags(tags)
+func (storage *Storage) ImplicationsForTags(tagIds ...uint) (database.Implications, error) {
+	implications, err := storage.Db.ImplicationsForTags(tagIds)
 	if err != nil {
 		return nil, err
 	}
 
 	if len(implications) > 0 {
-		tags = make(database.Tags, len(implications))
+		impliedTagIds := make([]uint, len(implications))
 		for index, implication := range implications {
-			tags[index] = &implication.ImpliedTag
+			impliedTagIds[index] = implication.ImpliedTag.Id
 		}
 
-		recursiveImplications, err := storage.ImplicationsForTags(tags)
+		recursiveImplications, err := storage.ImplicationsForTags(impliedTagIds...)
 		if err != nil {
 			return nil, err
 		}
@@ -52,6 +53,17 @@ func (storage *Storage) ImplicationsForTags(tags database.Tags) (database.Implic
 
 // Adds the specified implication.
 func (storage Storage) AddImplication(tagId, impliedTagId uint) error {
+	implications, err := storage.ImplicationsForTags(impliedTagId)
+	if err != nil {
+		return fmt.Errorf("could not retrieve implications for tag: %v", err)
+	}
+
+	for _, implication := range implications {
+		if implication.ImpliedTag.Id == tagId {
+			return fmt.Errorf("implication cannot be added as it creates a circular path.")
+		}
+	}
+
 	return storage.Db.AddImplication(tagId, impliedTagId)
 }
 

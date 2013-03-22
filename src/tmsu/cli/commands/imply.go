@@ -62,14 +62,14 @@ func (command ImplyCommand) Exec(options cli.Options, args []string) error {
 		return command.listImplications(store)
 	case options.HasOption("--delete"):
 		if len(args) < 2 {
-			fmt.Errorf("Implying and implied tag must be specified.")
+			return fmt.Errorf("Implying and implied tag must be specified.")
 		}
 
 		return command.deleteImplication(store, args[0], args[1])
 	}
 
 	if len(args) < 2 {
-		fmt.Errorf("Implying and implied tag must be specified.")
+		return fmt.Errorf("Implying and implied tag must be specified.")
 	}
 
 	return command.addImplication(store, args[0], args[1])
@@ -136,7 +136,7 @@ func (command ImplyCommand) addImplication(store *storage.Storage, tagName, impl
 	}
 
 	if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
-		return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
+		return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
 	}
 
 	return nil

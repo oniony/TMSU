@@ -1,8 +1,5 @@
 HIGH
 
-E Implications list should be aligned.
-E Tag implication (tag A implies tag B)
-    * Detect and reject circular implications.
 E Issue #41: Option on 'repair' to remove missing files.
 E Way to apply a file's tags to another file.
 E Add unit-tests for each command.

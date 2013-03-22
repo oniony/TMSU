@@ -51,18 +51,18 @@ func (db *Database) Implications() (Implications, error) {
 }
 
 // Retrieves the set of tags implied by the specified tags.
-func (db *Database) ImplicationsForTags(tags Tags) (Implications, error) {
+func (db *Database) ImplicationsForTags(tagIds []uint) (Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id IN (?`
-	sql += strings.Repeat(",?", len(tags)-1)
+	sql += strings.Repeat(",?", len(tagIds)-1)
 	sql += `)
 	        AND implication.tag_id = t1.id
 	        AND implication.implied_tag_id = t2.id`
 
-	params := make([]interface{}, len(tags))
-	for index, tag := range tags {
-		params[index] = tag.Id
+	params := make([]interface{}, len(tagIds))
+	for index, tagId := range tagIds {
+		params[index] = tagId
 	}
 
 	result, err := db.connection.Query(sql, params...)

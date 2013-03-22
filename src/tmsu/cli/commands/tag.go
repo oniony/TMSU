@@ -142,10 +142,10 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 		return nil, fmt.Errorf("could not retrieve implied tags: %v", err)
 	}
 
-	for index, implication := range implications {
+	for _, implication := range implications {
 		log.Infof("Tag '%v' implies '%v'.", implication.ImplyingTag.Name, implication.ImpliedTag.Name)
 
-		tagIds[index+len(tags)] = implication.ImpliedTag.Id
+		tagIds = append(tagIds, implication.ImpliedTag.Id)
 	}
 
 	return tagIds, nil

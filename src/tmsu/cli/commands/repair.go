@@ -32,6 +32,7 @@ import (
 type RepairCommand struct {
 	verbose bool
 	pretend bool
+	force   bool
 }
 
 func (RepairCommand) Name() cli.CommandName {
@@ -51,10 +52,13 @@ modifications and moves.
 Where no PATHS are specified all files in the database are checked.
 
                                           Reported Repaired
-    Modified files                           X        X
-    Moved files                              X        X
-    Missing files                            X
-    Untagged files                           X
+    Modified files                           Y        Y
+    Moved files                              Y        Y
+    Missing files                            Y        1
+    Untagged files                           Y
+
+    1. missing files are only removed from the database when --force is
+       specified.
 
 Modified files are identified by a change to the file's modification time or
 file size. These files are repaired by updating the modification time, size and
@@ -65,18 +69,23 @@ found under PATHs: this means files that are simultaneously moved and modified
 will not be identified. Where no PATHs are specified, moved files will only be
 identified if moved to a tagged directory.
 
-Missing files are reported but not repaired (unless identified as 'moved').
+Missing files are reported but are not, by default, removed from the database
+as this would destroy the tagging information associated with it. If you do
+wish to clear missing files from the database and destroying the associated
+tagging information then use the --force option.
 
 Untagged files are reported but not added to the database.`
 }
 
 func (RepairCommand) Options() cli.Options {
-	return cli.Options{{"--pretend", "-p", "do not make any changes", false, ""}}
+	return cli.Options{{"--pretend", "-p", "do not make any changes", false, ""},
+		{"--force", "-f", "remove missing files from the database", false, ""}}
 }
 
 func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
 	command.pretend = options.HasOption("--pretend")
+	command.force = options.HasOption("--force")
 
 	store, err := storage.Open()
 	if err != nil {
@@ -163,12 +172,12 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) 
 		return err
 	}
 
-	for path, _ := range untagged {
-		log.Infof("%v: untagged", path)
+	if err = command.repairMissing(store, missing); err != nil {
+		return err
 	}
 
-	for path, _ := range missing {
-		log.Infof("%v: missing", path)
+	for path, _ := range untagged {
+		log.Infof("%v: untagged", path)
 	}
 
 	//TODO cleanup: any files that have no tags: remove
@@ -287,6 +296,26 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 
 	for _, path := range moved {
 		delete(missing, path)
+	}
+
+	return nil
+}
+
+func (command RepairCommand) repairMissing(store *storage.Storage, missing databaseFileMap) error {
+	for path, dbFile := range missing {
+		if command.force && !command.pretend {
+			if err := store.RemoveFileTagsByFileId(dbFile.Id); err != nil {
+				return fmt.Errorf("%v: could not delete file-tags: %v", path, err)
+			}
+
+			if err := store.RemoveFile(dbFile.Id); err != nil {
+				return fmt.Errorf("%v: could not delete file: %v", path, err)
+			}
+
+			log.Infof("%v: removed", path)
+		} else {
+			log.Infof("%v: missing", path)
+		}
 	}
 
 	return nil

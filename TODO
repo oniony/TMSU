@@ -1,6 +1,5 @@
 HIGH
 
-E Issue #41: Option on 'repair' to remove missing files.
 E Way to apply a file's tags to another file.
 E Add unit-tests for each command.
 E Issue #33: provide binary for 64 bit Linux.

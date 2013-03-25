@@ -29,26 +29,27 @@ func (storage *Storage) Implications() (database.Implications, error) {
 
 // Retrieves the set of implications for the specified tags.
 func (storage *Storage) ImplicationsForTags(tagIds ...uint) (database.Implications, error) {
-	implications, err := storage.Db.ImplicationsForTags(tagIds)
-	if err != nil {
-		return nil, err
-	}
+	resultantImplications := make(database.Implications, 0)
 
-	if len(implications) > 0 {
-		impliedTagIds := make([]uint, len(implications))
-		for index, implication := range implications {
-			impliedTagIds[index] = implication.ImpliedTag.Id
-		}
+	impliedTagIds := make([]uint, len(tagIds))
+	copy(impliedTagIds, tagIds)
 
-		recursiveImplications, err := storage.ImplicationsForTags(impliedTagIds...)
+	for len(impliedTagIds) > 0 {
+		implications, err := storage.Db.ImplicationsForTags(impliedTagIds)
 		if err != nil {
 			return nil, err
 		}
 
-		implications = append(implications, recursiveImplications...)
+		impliedTagIds = make([]uint, 0)
+		for _, implication := range implications {
+			if !containsImplication(resultantImplications, implication) {
+				resultantImplications = append(resultantImplications, implication)
+				impliedTagIds = append(impliedTagIds, implication.ImpliedTag.Id)
+			}
+		}
 	}
 
-	return implications, nil
+	return resultantImplications, nil
 }
 
 // Adds the specified implication.
@@ -80,4 +81,16 @@ func (storage Storage) RemoveImplication(tagId, impliedTagId uint) error {
 // Removes implications featuring the specified tag.
 func (storage Storage) RemoveImplicationsForTagId(tagId uint) error {
 	return storage.Db.DeleteImplicationsForTagId(tagId)
+}
+
+// unexported
+
+func containsImplication(implications database.Implications, implication *database.Implication) bool {
+	for _, imp := range implications {
+		if imp.ImplyingTag.Id == implication.ImplyingTag.Id && imp.ImpliedTag.Id == implication.ImpliedTag.Id {
+			return true
+		}
+	}
+
+	return false
 }

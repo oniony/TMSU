@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"fmt"
 	"tmsu/storage/database"
 )
 
@@ -54,17 +53,6 @@ func (storage *Storage) ImplicationsForTags(tagIds ...uint) (database.Implicatio
 
 // Adds the specified implication.
 func (storage Storage) AddImplication(tagId, impliedTagId uint) error {
-	implications, err := storage.ImplicationsForTags(impliedTagId)
-	if err != nil {
-		return fmt.Errorf("could not retrieve implications for tag: %v", err)
-	}
-
-	for _, implication := range implications {
-		if implication.ImpliedTag.Id == tagId {
-			return fmt.Errorf("implication cannot be added as it creates a circular path.")
-		}
-	}
-
 	return storage.Db.AddImplication(tagId, impliedTagId)
 }
 

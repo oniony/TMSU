@@ -1,5 +1,7 @@
 HIGH
 
+E Allow circular implications: change algorithm to handle them.
+E Option on 'status' command to show status for directory entries not contents (non-recursive).
 E Way to apply a file's tags to another file.
 E Add unit-tests for each command.
 E Issue #33: provide binary for 64 bit Linux.

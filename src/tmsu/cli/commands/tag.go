@@ -143,9 +143,10 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 	}
 
 	for _, implication := range implications {
-		log.Infof("Tag '%v' implies '%v'.", implication.ImplyingTag.Name, implication.ImpliedTag.Name)
-
-		tagIds = append(tagIds, implication.ImpliedTag.Id)
+		if !contains(tagIds, implication.ImpliedTag.Id) {
+			log.Infof("Tag '%v' implies '%v'.", implication.ImplyingTag.Name, implication.ImpliedTag.Name)
+			tagIds = append(tagIds, implication.ImpliedTag.Id)
+		}
 	}
 
 	return tagIds, nil
@@ -246,4 +247,14 @@ func (command *TagCommand) addFile(store *storage.Storage, path string, modTime 
 	}
 
 	return file, nil
+}
+
+func contains(tagIds []uint, tagId uint) bool {
+	for _, id := range tagIds {
+		if id == tagId {
+			return true
+		}
+	}
+
+	return false
 }

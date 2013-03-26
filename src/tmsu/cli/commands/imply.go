@@ -38,14 +38,14 @@ func (ImplyCommand) Synopsis() string {
 
 func (ImplyCommand) Description() string {
 	return `tmsu [OPTION] imply TAG1 TAG2
-tmsu imply --all
+tmsu imply --list
 
 Creates a tag implication such that whenever TAG1 is applied, TAG2 is automatically applied.`
 }
 
 func (ImplyCommand) Options() cli.Options {
 	return cli.Options{cli.Option{"--delete", "-d", "deletes the tag implication", false, ""},
-		cli.Option{"--all", "-a", "lists the tag implications", false, ""}}
+		cli.Option{"--list", "-l", "lists the tag implications", false, ""}}
 }
 
 func (command ImplyCommand) Exec(options cli.Options, args []string) error {
@@ -58,7 +58,7 @@ func (command ImplyCommand) Exec(options cli.Options, args []string) error {
 	defer store.Close()
 
 	switch {
-	case options.HasOption("--all"):
+	case options.HasOption("--list"):
 		return command.listImplications(store)
 	case options.HasOption("--delete"):
 		if len(args) < 2 {

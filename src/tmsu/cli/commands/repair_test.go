@@ -52,7 +52,7 @@ func TestRepairMovedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false}
+	command := RepairCommand{false, false, false}
 
 	// test
 
@@ -102,7 +102,7 @@ func TestRepairModifiedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false}
+	command := RepairCommand{false, false, false}
 
 	// test
 
@@ -158,7 +158,7 @@ func TestReportsMissingFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false}
+	command := RepairCommand{false, false, false}
 
 	// test
 

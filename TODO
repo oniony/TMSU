@@ -1,5 +1,6 @@
 HIGH
 
+E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
 E Allow circular implications: change algorithm to handle them.
 E Option on 'status' command to show status for directory entries not contents (non-recursive).
 E Way to apply a file's tags to another file.

@@ -30,7 +30,8 @@ import (
 )
 
 type StatusCommand struct {
-	verbose bool
+	verbose   bool
+	directory bool
 }
 
 func (StatusCommand) Name() cli.CommandName {
@@ -99,11 +100,12 @@ func NewReport() *StatusReport {
 }
 
 func (StatusCommand) Options() cli.Options {
-	return cli.Options{}
+	return cli.Options{cli.Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""}}
 }
 
 func (command StatusCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
+	command.directory = options.HasOption("--directory")
 
 	var report *StatusReport
 	var err error
@@ -217,18 +219,20 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 			}
 		}
 
-		if command.verbose {
-			log.Infof("%v: retrieving files from database.", path)
-		}
+		if !command.directory {
+			if command.verbose {
+				log.Infof("%v: retrieving files from database.", path)
+			}
 
-		files, err := store.FilesByDirectory(absPath)
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
-		}
+			files, err := store.FilesByDirectory(absPath)
+			if err != nil {
+				return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
+			}
 
-		err = command.checkFiles(files, report)
-		if err != nil {
-			return nil, err
+			err = command.checkFiles(files, report)
+			if err != nil {
+				return nil, err
+			}
 		}
 
 		err = command.findNewFiles(path, report)
@@ -324,7 +328,7 @@ func (command *StatusCommand) findNewFiles(searchPath string, report *StatusRepo
 		}
 	}
 
-	if stat.IsDir() {
+	if !command.directory && stat.IsDir() {
 		dir, err := os.Open(absPath)
 		if err != nil {
 			return fmt.Errorf("%v: could not open file: %v", searchPath, err)

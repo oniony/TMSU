@@ -85,7 +85,7 @@ func TestStatusReport(test *testing.T) {
 
 	// test
 
-	statusCommand := StatusCommand{false}
+	statusCommand := StatusCommand{false, false}
 	if err := statusCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
 		test.Fatal(err)
 	}

@@ -1,7 +1,6 @@
 HIGH
 
 E Add unit-tests for each command.
-E Way to apply a file's tags to another file.
 E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
 E Option on 'status' command to show status for directory entries not contents (non-recursive).
 E Issue #33: provide binary for 64 bit Linux.

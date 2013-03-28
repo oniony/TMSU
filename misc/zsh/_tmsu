@@ -124,6 +124,7 @@ _tmsu_cmd_status() {
 _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags,-t}'[apply set of tags to multiple files]' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
+	                 ''{--from,-f}'[copy tags from the specified file]' \
 	                 '*:: :->items' \
 	&& ret=0
 

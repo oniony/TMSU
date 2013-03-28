@@ -46,13 +46,15 @@ func (TagCommand) Synopsis() string {
 func (TagCommand) Description() string {
 	return `tmsu tag [OPTION]... FILE TAG...
 tmsu tag [OPTION]... --tags "TAG..." FILE...
+tmsu tag [OPTION]... --from FILE FILE...
 
 Tags the file FILE with the tag(s) specified.`
 }
 
 func (TagCommand) Options() cli.Options {
 	return cli.Options{{"--tags", "-t", "the set of tags to apply", true, ""},
-		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""}}
+		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
+		{"--from", "-f", "copy tags from the specified file", true, ""}}
 }
 
 func (command TagCommand) Exec(options cli.Options, args []string) error {
@@ -69,7 +71,8 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 	}
 	defer store.Close()
 
-	if options.HasOption("--tags") {
+	switch {
+	case options.HasOption("--tags"):
 		tagNames := strings.Fields(options.Get("--tags").Argument)
 		if len(tagNames) == 0 {
 			return fmt.Errorf("set of tags to apply must be specified")
@@ -88,7 +91,28 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		if err := command.tagPaths(store, paths, tagIds); err != nil {
 			return err
 		}
-	} else {
+	case options.HasOption("--from"):
+		fromPath, err := filepath.Abs(options.Get("--from").Argument)
+		if err != nil {
+			return fmt.Errorf("%v: could not get absolute path: %v", fromPath, err)
+		}
+
+		tags, err := store.TagsForPath(fromPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve tags: %v", fromPath)
+		}
+
+		tagIds := make([]uint, len(tags))
+		for index, tag := range tags {
+			tagIds[index] = tag.Id
+		}
+
+		for _, path := range args {
+			if err = command.tagPath(store, path, tagIds); err != nil {
+				return err
+			}
+		}
+	default:
 		if len(args) < 2 {
 			return fmt.Errorf("File to tag and tags to apply must be specified.")
 		}

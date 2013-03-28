@@ -118,7 +118,9 @@ _tmsu_cmd_stats() {
 }
 
 _tmsu_cmd_status() {
-	_arguments -s -w '*:file:_files' && ret=0
+	_arguments -s -w ''{--directory,-d}'[list directory entries only: do not list contents]' \
+	                 '*:file:_files' \
+	&& ret=0
 }
 
 _tmsu_cmd_tag() {

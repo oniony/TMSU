@@ -96,6 +96,26 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
+v0.2.0
+------
+
+  * Added support for tag implications, e.g. tag 'a' implies 'b'. New 'imply'
+    command for managing these.
+  * Added --force option to 'repair' command to remove missing files (and
+    associated taggings) from the database.
+  * Added --from option to 'tag' command to allow tags to copied from one file
+    to another. ('tag -r -f a a' will recursively apply a directory's tag to
+    its contents.)
+  * Added --directory option to 'status' command to stop it recursively
+    processing directory contents.
+  * Bug fixes and unit-test improvements.
+
+v0.1.2
+------
+
+  * Removed use of Sqlite bulk insert functionality as the version of Sqlite
+    in mainstream Linux distributions does not have this functionality.
+
 v0.1.1
 ------
 

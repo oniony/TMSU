@@ -170,7 +170,7 @@ func TestMultipleTags(test *testing.T) {
 	}
 }
 
-func TestMultipleFiles(test *testing.T) {
+func TestTagMultipleFiles(test *testing.T) {
 	// set-up
 
 	databasePath := configureDatabase()

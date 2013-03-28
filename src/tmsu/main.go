@@ -59,7 +59,7 @@ func main() {
 	}
 
 	if commandName == "" {
-		log.Fatal("Command must be specified.")
+		commandName = "help"
 	}
 
 	command := commands[commandName]

@@ -1,23 +1,23 @@
 HIGH
 
-E Add unit-tests for each command.
 E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
 E Issue #33: provide binary for 64 bit Linux.
 E Issue #39: Hide tag folders in VFS where tag makes no difference because set of files is identical.
 E Issue #35: add support for print0.
+E Add support for meta-data or tag values.
+    * If separate meta-data then need a way to convert meta-data to tag and vice-versa.
 
 MEDIUM
 
 E Add benchmarks.
+E Ensure unit-tests cover all command options.
 E Add recursive option to 'tags' command.
-E Issue #35: print0 support.
 E Enrich 'stats' with averages, most popular tag, &c.
 
 LOW
 
 E Way to pull tags to parent directory up or push them down to child files.
 E Storage level operations should ensure database consistency. E.g. deleting a tag should result in corresponding taggings being deleted.
-E Consolidate 'status' and 'repair' commands.
 E Auto-tags (from Exif data or configured rules)
 E Tag-aliases, e.g. 'movie' -> 'film'
 

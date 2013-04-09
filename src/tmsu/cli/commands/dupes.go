@@ -113,14 +113,18 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 			log.Infof("%v: identifying duplicate files.\n", path)
 		}
 
-		fingerprint, err := fingerprint.Create(path)
+		fp, err := fingerprint.Create(path)
 		if err != nil {
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}
 
-		files, err := store.FilesByFingerprint(fingerprint)
+		if fp == fingerprint.Fingerprint("") {
+			return nil
+		}
+
+		files, err := store.FilesByFingerprint(fp)
 		if err != nil {
-			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fingerprint, err)
+			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fp, err)
 		}
 
 		absPath, err := filepath.Abs(path)

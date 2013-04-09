@@ -158,6 +158,7 @@ _tmsu_cmd_tag() {
 
 _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
+	                 ''{--count,-c}'[lists the tag count]' \
 	                 '*:file:_files' \
 	&& ret=0
 }

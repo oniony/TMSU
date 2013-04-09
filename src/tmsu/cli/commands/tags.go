@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"sort"
+	"strconv"
 	"strings"
 	"tmsu/cli"
 	"tmsu/log"
@@ -30,6 +31,7 @@ import (
 
 type TagsCommand struct {
 	verbose bool
+	count   bool
 }
 
 func (TagsCommand) Name() cli.CommandName {
@@ -50,11 +52,13 @@ When run with no arguments, tags for the current working directory are listed.`
 }
 
 func (TagsCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "lists all of the tags defined", false, ""}}
+	return cli.Options{{"--all", "-a", "lists all of the tags defined", false, ""},
+		{"--count", "-c", "lists the tag count", false, ""}}
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
+	command.count = options.HasOption("--count")
 
 	if options.HasOption("--all") {
 		return command.listAllTags()
@@ -129,8 +133,12 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) 
 		}
 	}
 
-	for _, tag := range tags {
-		log.Print(tag.Name)
+	if command.count {
+		log.Print(len(tags))
+	} else {
+		for _, tag := range tags {
+			log.Print(tag.Name)
+		}
 	}
 
 	return nil
@@ -143,13 +151,16 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 		}
 
 		var tags, err = store.TagsForPath(path)
-
 		if err != nil {
 			log.Warn(err.Error())
 			continue
 		}
 
-		log.Print(path + ": " + tagLine(tags))
+		if command.count {
+			log.Print(path + ": " + strconv.Itoa(len(tags)))
+		} else {
+			log.Print(path + ": " + tagLine(tags))
+		}
 	}
 
 	return nil
@@ -185,7 +196,11 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) e
 			continue
 		}
 
-		log.Print(dirName + ": " + tagLine(tags))
+		if command.count {
+			log.Print(dirName + ": " + strconv.Itoa(len(tags)))
+		} else {
+			log.Print(dirName + ": " + tagLine(tags))
+		}
 	}
 
 	return nil

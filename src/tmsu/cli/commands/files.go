@@ -34,6 +34,7 @@ type FilesCommand struct {
 	top       bool
 	leaf      bool
 	recursive bool
+	print0    bool
 }
 
 func (FilesCommand) Name() cli.CommandName {
@@ -59,7 +60,8 @@ func (FilesCommand) Options() cli.Options {
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)", false, ""},
 		{"--leaf", "-l", "list only the bottom-most (leaf) items", false, ""},
-		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""}}
+		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
+		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
@@ -69,6 +71,7 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	command.top = options.HasOption("--top")
 	command.leaf = options.HasOption("--leaf")
 	command.recursive = options.HasOption("--recursive")
+	command.print0 = options.HasOption("--print0")
 
 	if options.HasOption("--all") {
 		return command.listAllFiles()
@@ -126,7 +129,12 @@ func (command FilesCommand) listAllFiles() error {
 
 	for _, absPath := range tree.Paths() {
 		relPath := path.Rel(absPath)
-		log.Print(relPath)
+
+		if command.print0 {
+			log.Print0(relPath)
+		} else {
+			log.Print(relPath)
+		}
 	}
 
 	return nil
@@ -217,7 +225,12 @@ func (command FilesCommand) listFiles(args []string) error {
 
 	for _, absPath := range tree.Paths() {
 		relPath := path.Rel(absPath)
-		log.Print(relPath)
+
+		if command.print0 {
+			log.Print0(relPath)
+		} else {
+			log.Print(relPath)
+		}
 	}
 
 	return nil

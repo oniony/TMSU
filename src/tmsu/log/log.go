@@ -63,3 +63,13 @@ func Printf(format string, values ...interface{}) {
 	format = format + "\n"
 	fmt.Fprintf(Outfile, format, values...)
 }
+
+func Print0(values ...interface{}) {
+	fmt.Fprint(Outfile, values...)
+	fmt.Fprint(Outfile, "\000")
+}
+
+func Print0f(format string, values ...interface{}) {
+	format = format + "\000"
+	fmt.Fprintf(Outfile, format, values...)
+}

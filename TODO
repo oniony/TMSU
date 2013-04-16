@@ -6,6 +6,7 @@ E Issue #35: add support for print0.
 E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
 E Add support for meta-data or tag values.
     * If separate meta-data then need a way to convert meta-data to tag and vice-versa.
+E Formatting of non-graphic characters when terminal detected.
 
 MEDIUM
 

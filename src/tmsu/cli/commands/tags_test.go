@@ -72,7 +72,7 @@ func TestTagsForSingleFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false}
+	tagsCommand := TagsCommand{false, false}
 
 	// test
 
@@ -142,7 +142,7 @@ func TestTagsForMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false}
+	tagsCommand := TagsCommand{false, false}
 
 	// test
 
@@ -187,7 +187,7 @@ func TestAllTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false}
+	tagsCommand := TagsCommand{false, false}
 
 	// test
 

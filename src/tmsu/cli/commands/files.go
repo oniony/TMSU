@@ -35,6 +35,7 @@ type FilesCommand struct {
 	leaf      bool
 	recursive bool
 	print0    bool
+	count     bool
 }
 
 func (FilesCommand) Name() cli.CommandName {
@@ -47,7 +48,6 @@ func (FilesCommand) Synopsis() string {
 
 func (FilesCommand) Description() string {
 	return `tmsu files [OPTION]... TAG...
-tmsu files --all
 
 Lists the files, if any, that have all of the TAGs specified. Tags can be
 excluded by prefixing their names with a minus character (option processing
@@ -61,7 +61,8 @@ func (FilesCommand) Options() cli.Options {
 		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)", false, ""},
 		{"--leaf", "-l", "list only the bottom-most (leaf) items", false, ""},
 		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
-		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""}}
+		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
+		{"--count", "-c", "lists the number of files rather than their names", false, ""}}
 }
 
 func (command FilesCommand) Exec(options cli.Options, args []string) error {
@@ -72,6 +73,7 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 	command.leaf = options.HasOption("--leaf")
 	command.recursive = options.HasOption("--recursive")
 	command.print0 = options.HasOption("--print0")
+	command.count = options.HasOption("--count")
 
 	if options.HasOption("--all") {
 		return command.listAllFiles()
@@ -127,13 +129,17 @@ func (command FilesCommand) listAllFiles() error {
 		tree = tree.Leaves()
 	}
 
-	for _, absPath := range tree.Paths() {
-		relPath := path.Rel(absPath)
+	if command.count {
+		log.Print(len(tree.Paths()))
+	} else {
+		for _, absPath := range tree.Paths() {
+			relPath := path.Rel(absPath)
 
-		if command.print0 {
-			log.Print0(relPath)
-		} else {
-			log.Print(relPath)
+			if command.print0 {
+				log.Print0(relPath)
+			} else {
+				log.Print(relPath)
+			}
 		}
 	}
 
@@ -223,13 +229,17 @@ func (command FilesCommand) listFiles(args []string) error {
 		tree = tree.Leaves()
 	}
 
-	for _, absPath := range tree.Paths() {
-		relPath := path.Rel(absPath)
+	if command.count {
+		log.Print(len(tree.Paths()))
+	} else {
+		for _, absPath := range tree.Paths() {
+			relPath := path.Rel(absPath)
 
-		if command.print0 {
-			log.Print0(relPath)
-		} else {
-			log.Print(relPath)
+			if command.print0 {
+				log.Print0(relPath)
+			} else {
+				log.Print(relPath)
+			}
 		}
 	}
 

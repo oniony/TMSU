@@ -74,6 +74,7 @@ _tmsu_cmd_files() {
                      ''{--top,-t}'[list only top-most matching items (excludes the contents of matching direcotries)]' \
                      ''{--leaf,-l}'[list only the bottom-most (leaf) items]' \
                      ''{--recursive,-r}'[read all files on the file-system under each matching directory, recursively]' \
+                     ''{--count,-c{'[lists the number of files rather than their names]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }
@@ -159,6 +160,7 @@ _tmsu_cmd_tag() {
 _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
 	                 ''{--count,-c}'[lists the tag count]' \
+	                 ''{--count,-c{'[lists the number of tags rather than their names]' \
 	                 '*:file:_files' \
 	&& ret=0
 }

@@ -44,7 +44,6 @@ func (TagsCommand) Synopsis() string {
 
 func (TagsCommand) Description() string {
 	return `tmsu tags [OPTION]... [FILE]...
-tmsu tags --all
 
 Lists the tags applied to FILEs.
 
@@ -53,7 +52,7 @@ When run with no arguments, tags for the current working directory are listed.`
 
 func (TagsCommand) Options() cli.Options {
 	return cli.Options{{"--all", "-a", "lists all of the tags defined", false, ""},
-		{"--count", "-c", "lists the tag count", false, ""}}
+		{"--count", "-c", "lists the number of tags rather than their names", false, ""}}
 }
 
 func (command TagsCommand) Exec(options cli.Options, args []string) error {
@@ -78,13 +77,22 @@ func (command TagsCommand) listAllTags() error {
 		log.Info("retrieving all tags.")
 	}
 
-	tags, err := store.Tags()
-	if err != nil {
-		return fmt.Errorf("could not retrieve tags: %v", err)
-	}
+	if command.count {
+		count, err := store.TagCount()
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag count: %v", err)
+		}
 
-	for _, tag := range tags {
-		log.Print(tag.Name)
+		log.Print(count)
+	} else {
+		tags, err := store.Tags()
+		if err != nil {
+			return fmt.Errorf("could not retrieve tags: %v", err)
+		}
+
+		for _, tag := range tags {
+			log.Print(tag.Name)
+		}
 	}
 
 	return nil

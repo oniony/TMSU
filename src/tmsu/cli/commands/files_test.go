@@ -62,7 +62,7 @@ func TestFilesAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false, false, false, false, false, false, false}
+	command := FilesCommand{}
 
 	// test
 
@@ -134,7 +134,7 @@ func TestFilesSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false, false, false, false, false, false, false}
+	command := FilesCommand{}
 
 	// test
 
@@ -206,7 +206,7 @@ func TestFilesNotSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false, false, false, false, false, false, false}
+	command := FilesCommand{}
 
 	// test
 
@@ -287,7 +287,7 @@ func TestFilesAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false, false, false, false, false, false, false}
+	command := FilesCommand{}
 
 	// test
 
@@ -368,7 +368,7 @@ func TestFilesAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := FilesCommand{false, false, false, false, false, false, false}
+	command := FilesCommand{}
 
 	// test
 

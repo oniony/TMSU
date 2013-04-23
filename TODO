@@ -1,12 +1,9 @@
 HIGH
 
-B 'status .' shows working directory as untagged when actually tagged.
-E Issue #35: add support for print0.
-    * Alternatively --escape support (like ls).
 E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
 E Add support for meta-data or tag values.
     * If separate meta-data then need a way to convert meta-data to tag and vice-versa.
-E Formatting of non-graphic characters when terminal detected.
+E Improve formatting when terminal detected.
 
 MEDIUM
 

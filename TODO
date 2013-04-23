@@ -1,12 +1,12 @@
 HIGH
 
 E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
-E Add support for meta-data or tag values.
-    * If separate meta-data then need a way to convert meta-data to tag and vice-versa.
-E Improve formatting when terminal detected.
 
 MEDIUM
 
+E Add support for meta-data or tag values.
+    * If separate meta-data then need a way to convert meta-data to tag and vice-versa.
+E Improve formatting when terminal detected.
 E Issue #39: Hide tag folders in VFS where tag makes no difference because set of files is identical.
     * Hard to do in a performant way.
 E Issue #33: provide binary for 64 bit Linux.

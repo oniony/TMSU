@@ -59,7 +59,7 @@ func (TagCommand) Options() cli.Options {
 
 func (command TagCommand) Exec(options cli.Options, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("Too few arguments.")
+		return fmt.Errorf("too few arguments.")
 	}
 
 	command.verbose = options.HasOption("--verbose")
@@ -114,7 +114,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		}
 	default:
 		if len(args) < 2 {
-			return fmt.Errorf("File to tag and tags to apply must be specified.")
+			return fmt.Errorf("file to tag and tags to apply must be specified.")
 		}
 
 		path := args[0]
@@ -168,7 +168,7 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 
 	for _, implication := range implications {
 		if !contains(tagIds, implication.ImpliedTag.Id) {
-			log.Infof("Tag '%v' implies '%v'.", implication.ImplyingTag.Name, implication.ImpliedTag.Name)
+			log.Infof("tag '%v' is implied.", implication.ImpliedTag.Name)
 			tagIds = append(tagIds, implication.ImpliedTag.Id)
 		}
 	}

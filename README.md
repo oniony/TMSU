@@ -108,6 +108,9 @@ v0.2.0
     its contents.)
   * Added --directory option to 'status' command to stop it recursively
     processing directory contents.
+  * Added --print0 option to 'files' command to allow use with xargs.
+  * Added --count option to 'tags' and 'files' command to list tag/file count
+    rather than names.
   * Bug fixes and unit-test improvements.
 
 v0.1.2

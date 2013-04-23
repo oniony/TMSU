@@ -104,8 +104,8 @@ v0.2.0
   * Added --force option to 'repair' command to remove missing files (and
     associated taggings) from the database.
   * Added --from option to 'tag' command to allow tags to copied from one file
-    to another. ('tag -r -f a a' will recursively apply a directory's tag to
-    its contents.)
+    to another. e.g. 'tmsu tag -f a b' will apply file b's tags to file a.
+    ('tag -r -f a a' will recursively retag a directory's contents.)
   * Added --directory option to 'status' command to stop it recursively
     processing directory contents.
   * Added --print0 option to 'files' command to allow use with xargs.

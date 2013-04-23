@@ -206,16 +206,14 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		if path != "." {
-			file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(absPath)
+		if err != nil {
+			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file != nil {
+			err = command.checkFile(file, report)
 			if err != nil {
-				return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
-			}
-			if file != nil {
-				err = command.checkFile(file, report)
-				if err != nil {
-					return nil, err
-				}
+				return nil, err
 			}
 		}
 

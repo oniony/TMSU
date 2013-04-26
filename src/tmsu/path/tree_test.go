@@ -22,7 +22,15 @@ import (
 )
 
 func TestPaths(test *testing.T) {
-	tree := BuildTree("/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m")
+	tree := NewTree()
+	tree.Add("/a/b/c", false)
+	tree.Add("/a/b/d", false)
+	tree.Add("/a/b", true)
+	tree.Add("/a/b/e", false)
+	tree.Add("/a/f", false)
+	tree.Add("/a/b", true)
+	tree.Add("/j/k/l", false)
+	tree.Add("/j/k/m", false)
 	paths := tree.Paths()
 
 	if len(paths) != 7 {
@@ -59,7 +67,15 @@ func TestPaths(test *testing.T) {
 }
 
 func TestTopLevel(test *testing.T) {
-	tree := BuildTree("/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m")
+	tree := NewTree()
+	tree.Add("/a/b/c", false)
+	tree.Add("/a/b/d", false)
+	tree.Add("/a/b", true)
+	tree.Add("/a/b/e", false)
+	tree.Add("/a/f", true)
+	tree.Add("/a/b", true)
+	tree.Add("/j/k/l", false)
+	tree.Add("/j/k/m", false)
 	paths := tree.TopLevel().Paths()
 
 	if len(paths) != 4 {
@@ -72,15 +88,23 @@ func TestTopLevel(test *testing.T) {
 		test.Fatalf("Expected top-level path 1 to be '/a/f' but was '%v'.", paths[1])
 	}
 	if paths[2] != "/j/k/l" {
-		test.Fatalf("Expected top-level path 2 to be '/j/k/l' but was '%v'.", paths[1])
+		test.Fatalf("Expected top-level path 2 to be '/j/k/l' but was '%v'.", paths[2])
 	}
 	if paths[3] != "/j/k/m" {
-		test.Fatalf("Expected top-level path 3 to be '/j/k/m' but was '%v'.", paths[1])
+		test.Fatalf("Expected top-level path 3 to be '/j/k/m' but was '%v'.", paths[3])
 	}
 }
 
 func TestLeaves(test *testing.T) {
-	tree := BuildTree("/a/b/c", "/a/b/d", "/a/b", "/a/b/e", "/a/f", "/a/b", "/j/k/l", "/j/k/m")
+	tree := NewTree()
+	tree.Add("/a/b/c", false)
+	tree.Add("/a/b/d", false)
+	tree.Add("/a/b", true)
+	tree.Add("/a/b/e", false)
+	tree.Add("/a/f", true)
+	tree.Add("/a/b", true)
+	tree.Add("/j/k/l", false)
+	tree.Add("/j/k/m", false)
 	paths := tree.Leaves().Paths()
 
 	if len(paths) != 6 {
@@ -93,15 +117,70 @@ func TestLeaves(test *testing.T) {
 		test.Fatalf("Expected leaf path 1 to be '/a/b/d' but was '%v'.", paths[1])
 	}
 	if paths[2] != "/a/b/e" {
-		test.Fatalf("Expected leaf path 2 to be '/a/b/e' but was '%v'.", paths[1])
+		test.Fatalf("Expected leaf path 2 to be '/a/b/e' but was '%v'.", paths[2])
 	}
 	if paths[3] != "/a/f" {
-		test.Fatalf("Expected leaf path 3 to be '/a/f' but was '%v'.", paths[1])
+		test.Fatalf("Expected leaf path 3 to be '/a/f' but was '%v'.", paths[3])
 	}
 	if paths[4] != "/j/k/l" {
-		test.Fatalf("Expected leaf path 3 to be '/j/k/l' but was '%v'.", paths[1])
+		test.Fatalf("Expected leaf path 4 to be '/j/k/l' but was '%v'.", paths[4])
 	}
 	if paths[5] != "/j/k/m" {
-		test.Fatalf("Expected leaf path 3 to be '/j/k/m' but was '%v'.", paths[1])
+		test.Fatalf("Expected leaf path 5 to be '/j/k/m' but was '%v'.", paths[5])
+	}
+}
+
+func TestFiles(test *testing.T) {
+	tree := NewTree()
+	tree.Add("/a/b/c", false)
+	tree.Add("/a/b/d", false)
+	tree.Add("/a/b", true)
+	tree.Add("/a/b/e", false)
+	tree.Add("/a/f", true)
+	tree.Add("/a/b", true)
+	tree.Add("/j/k/l", false)
+	tree.Add("/j/k/m", false)
+	paths := tree.Files().Paths()
+
+	if len(paths) != 5 {
+		test.Fatalf("Expected 5 file paths but were %v.", len(paths))
+	}
+	if paths[0] != "/a/b/c" {
+		test.Fatalf("Expected file path 0 to be '/a/b/c' but was '%v'.", paths[0])
+	}
+	if paths[1] != "/a/b/d" {
+		test.Fatalf("Expected file path 1 to be '/a/b/d' but was '%v'.", paths[1])
+	}
+	if paths[2] != "/a/b/e" {
+		test.Fatalf("Expected file path 2 to be '/a/b/e' but was '%v'.", paths[2])
+	}
+	if paths[3] != "/j/k/l" {
+		test.Fatalf("Expected file path 3 to be '/j/k/l' but was '%v'.", paths[3])
+	}
+	if paths[4] != "/j/k/m" {
+		test.Fatalf("Expected file path 4 to be '/j/k/m' but was '%v'.", paths[4])
+	}
+}
+
+func TestDirectories(test *testing.T) {
+	tree := NewTree()
+	tree.Add("/a/b/c", false)
+	tree.Add("/a/b/d", false)
+	tree.Add("/a/b", true)
+	tree.Add("/a/b/e", false)
+	tree.Add("/a/f", true)
+	tree.Add("/a/b", true)
+	tree.Add("/j/k/l", false)
+	tree.Add("/j/k/m", false)
+	paths := tree.Directories().Paths()
+
+	if len(paths) != 2 {
+		test.Fatalf("Expected 2 directory paths but were %v.", len(paths))
+	}
+	if paths[0] != "/a/b" {
+		test.Fatalf("Expected directory path 0 to be '/a/b' but was '%v'.", paths[0])
+	}
+	if paths[1] != "/a/f" {
+		test.Fatalf("Expected directory path 1 to be '/a/f' but was '%v'.", paths[1])
 	}
 }

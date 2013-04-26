@@ -1,7 +1,5 @@
 HIGH
 
-E 'tmsu files -r -f' doesn't work properly: the directories are excluded before the contained files are identified.
-
 MEDIUM
 
 E Add support for meta-data or tag values.

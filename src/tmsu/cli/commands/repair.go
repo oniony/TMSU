@@ -150,7 +150,11 @@ func (command RepairCommand) repairPaths(store *storage.Storage, paths []string)
 }
 
 func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) error {
-	paths = _path.BuildTree(paths...).TopLevel().Paths()
+	tree := _path.NewTree()
+	for _, path := range paths {
+		tree.Add(path, false)
+	}
+	paths = tree.TopLevel().Paths()
 
 	fsPaths, err := enumerateFileSystemPaths(paths)
 	if err != nil {

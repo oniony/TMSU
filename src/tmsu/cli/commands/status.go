@@ -174,7 +174,7 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 
 	tree := path.NewTree()
 	for _, file := range files {
-		tree.Add(file.Path())
+		tree.Add(file.Path(), file.IsDir)
 	}
 
 	topLevelPaths := tree.TopLevel().Paths()

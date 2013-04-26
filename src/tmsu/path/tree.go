@@ -28,22 +28,11 @@ type Tree struct {
 }
 
 func NewTree() *Tree {
-	return &Tree{newNode("/", false)}
-}
-
-// Builds a tree from the specified set of paths
-func BuildTree(paths ...string) *Tree {
-	tree := NewTree()
-
-	for _, path := range paths {
-		tree.Add(path)
-	}
-
-	return tree
+	return &Tree{newNode("/", false, true)}
 }
 
 // Adds a path to the tree
-func (tree *Tree) Add(path string) {
+func (tree *Tree) Add(path string, isDir bool) {
 	pathParts := strings.Split(path, string(filepath.Separator))
 
 	currentNode := tree.root
@@ -57,7 +46,7 @@ func (tree *Tree) Add(path string) {
 
 		node, found := currentNode.nodes[pathPart]
 		if !found {
-			node = newNode(pathPart, isReal)
+			node = newNode(pathPart, isReal, true)
 			currentNode.nodes[pathPart] = node
 		} else {
 			if isReal && !node.isReal {
@@ -65,8 +54,11 @@ func (tree *Tree) Add(path string) {
 			}
 		}
 
+		currentNode.isDir = true
 		currentNode = node
 	}
+
+	currentNode.isDir = isDir
 }
 
 // The set of paths in the tree
@@ -94,14 +86,31 @@ func (tree *Tree) Leaves() *Tree {
 	return resultTree
 }
 
+// Finds the nodes that are files
+func (tree *Tree) Files() *Tree {
+	resultTree := NewTree()
+	tree.root.findFiles(resultTree.root)
+
+	return resultTree
+}
+
+// Finds the nodes that are directories
+func (tree *Tree) Directories() *Tree {
+	resultTree := NewTree()
+	tree.root.findDirectories(resultTree.root)
+
+	return resultTree
+}
+
 type node struct {
 	name   string
 	nodes  map[string]*node
 	isReal bool
+	isDir  bool
 }
 
-func newNode(name string, isReal bool) *node {
-	return &node{name, make(map[string]*node, 0), isReal}
+func newNode(name string, isReal bool, isDir bool) *node {
+	return &node{name, make(map[string]*node, 0), isReal, isDir}
 }
 
 func (node *node) paths(paths []string, prefix string) []string {
@@ -123,7 +132,7 @@ func (node *node) findTopLevel(resultNode *node) {
 	}
 
 	for _, childNode := range node.nodes {
-		resultChildNode := newNode(childNode.name, false)
+		resultChildNode := newNode(childNode.name, false, childNode.isDir)
 		resultNode.nodes[childNode.name] = resultChildNode
 
 		childNode.findTopLevel(resultChildNode)
@@ -134,9 +143,31 @@ func (node *node) findLeaves(resultNode *node) {
 	resultNode.isReal = node.isReal && len(node.nodes) == 0
 
 	for _, childNode := range node.nodes {
-		resultChildNode := newNode(childNode.name, false)
+		resultChildNode := newNode(childNode.name, false, childNode.isDir)
 		resultNode.nodes[childNode.name] = resultChildNode
 
 		childNode.findLeaves(resultChildNode)
+	}
+}
+
+func (node *node) findFiles(resultNode *node) {
+	resultNode.isReal = node.isReal && !node.isDir
+
+	for _, childNode := range node.nodes {
+		resultChildNode := newNode(childNode.name, false, childNode.isDir)
+		resultNode.nodes[childNode.name] = resultChildNode
+
+		childNode.findFiles(resultChildNode)
+	}
+}
+
+func (node *node) findDirectories(resultNode *node) {
+	resultNode.isReal = node.isReal && node.isDir
+
+	for _, childNode := range node.nodes {
+		resultChildNode := newNode(childNode.name, false, childNode.isDir)
+		resultNode.nodes[childNode.name] = resultChildNode
+
+		childNode.findDirectories(resultChildNode)
 	}
 }

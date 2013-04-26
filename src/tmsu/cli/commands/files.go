@@ -25,6 +25,7 @@ import (
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 type FilesCommand struct {
@@ -79,7 +80,14 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 		return command.listAllFiles()
 	}
 
-	return command.listFiles(args)
+	return command.listFilesForTags(args)
+}
+
+// unexported
+
+type fileSystemFile struct {
+	path  string
+	isDir bool
 }
 
 func (command FilesCommand) listAllFiles() error {
@@ -98,55 +106,10 @@ func (command FilesCommand) listAllFiles() error {
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	tree := path.NewTree()
-	for _, file := range files {
-		if command.directory && !file.IsDir {
-			continue
-		}
-		if command.file && file.IsDir {
-			continue
-		}
-
-		tree.Add(file.Path())
-	}
-
-	if command.top {
-		tree = tree.TopLevel()
-	} else {
-		if command.recursive {
-			paths, err := command.filesystemFiles(tree.TopLevel().Paths())
-			if err != nil {
-				return err
-			}
-
-			for _, path := range paths {
-				tree.Add(path)
-			}
-		}
-	}
-
-	if command.leaf {
-		tree = tree.Leaves()
-	}
-
-	if command.count {
-		log.Print(len(tree.Paths()))
-	} else {
-		for _, absPath := range tree.Paths() {
-			relPath := path.Rel(absPath)
-
-			if command.print0 {
-				log.Print0(relPath)
-			} else {
-				log.Print(relPath)
-			}
-		}
-	}
-
-	return nil
+	return command.listFiles(files)
 }
 
-func (command FilesCommand) listFiles(args []string) error {
+func (command FilesCommand) listFilesForTags(args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("at least one tag must be specified. Use --all to show all files.")
 	}
@@ -195,38 +158,40 @@ func (command FilesCommand) listFiles(args []string) error {
 		return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
 	}
 
+	return command.listFiles(files)
+}
+
+func (command *FilesCommand) listFiles(files database.Files) error {
 	tree := path.NewTree()
 	for _, file := range files {
-		if command.directory && !file.IsDir {
-			continue
-		}
-		if command.file && file.IsDir {
-			continue
-		}
-
-		tree.Add(file.Path())
+		tree.Add(file.Path(), file.IsDir)
 	}
 
 	if command.top {
 		tree = tree.TopLevel()
-		if err != nil {
-			return fmt.Errorf("could not find top-level items: %v", err)
-		}
 	} else {
 		if command.recursive {
-			paths, err := command.filesystemFiles(tree.TopLevel().Paths())
+			fsFiles, err := command.filesystemFiles(tree.TopLevel().Paths())
 			if err != nil {
 				return err
 			}
 
-			for _, path := range paths {
-				tree.Add(path)
+			for _, fsFile := range fsFiles {
+				tree.Add(fsFile.path, fsFile.isDir)
 			}
 		}
 	}
 
 	if command.leaf {
 		tree = tree.Leaves()
+	}
+
+	if command.file {
+		tree = tree.Files()
+	}
+
+	if command.directory {
+		tree = tree.Directories()
 	}
 
 	if command.count {
@@ -246,39 +211,35 @@ func (command FilesCommand) listFiles(args []string) error {
 	return nil
 }
 
-func (command *FilesCommand) filesystemFiles(paths []string) ([]string, error) {
-	resultPaths := make([]string, 0, 100)
+func (command *FilesCommand) filesystemFiles(paths []string) ([]fileSystemFile, error) {
+	resultFiles := make([]fileSystemFile, 0, len(paths)*5)
 
 	for _, path := range paths {
 		var err error
-		resultPaths, err = command.filesystemFilesRecursive(path, resultPaths)
+		resultFiles, err = command.filesystemFilesRecursive(path, resultFiles)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	return resultPaths, nil
+	return resultFiles, nil
 }
 
-func (command *FilesCommand) filesystemFilesRecursive(path string, paths []string) ([]string, error) {
+func (command *FilesCommand) filesystemFilesRecursive(path string, files []fileSystemFile) ([]fileSystemFile, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			return paths, nil
+			return files, nil
 		case os.IsPermission(err):
 			log.Warnf("%v: permission denied", path)
-			return paths, nil
+			return files, nil
 		default:
 			return nil, fmt.Errorf("%v: could not stat: %v", path, err)
 		}
 	}
 
-	if command.directory && !stat.IsDir() || command.file && stat.IsDir() {
-		return paths, nil
-	}
-
-	paths = append(paths, path)
+	files = append(files, fileSystemFile{path, stat.IsDir()})
 
 	if stat.IsDir() {
 		dir, err := os.Open(path)
@@ -294,12 +255,12 @@ func (command *FilesCommand) filesystemFilesRecursive(path string, paths []strin
 
 		for _, name := range names {
 			childPath := filepath.Join(path, name)
-			paths, err = command.filesystemFilesRecursive(childPath, paths)
+			files, err = command.filesystemFilesRecursive(childPath, files)
 			if err != nil {
 				return nil, err
 			}
 		}
 	}
 
-	return paths, nil
+	return files, nil
 }

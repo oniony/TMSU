@@ -78,6 +78,10 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 			return fmt.Errorf("set of tags to apply must be specified")
 		}
 
+		if err = cli.ValidateTagNames(tagNames); err != nil {
+			return err
+		}
+
 		paths := args
 		if len(paths) < 1 {
 			return fmt.Errorf("at least one file to tag must be specified")
@@ -119,6 +123,10 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 
 		path := args[0]
 		tagNames := args[1:]
+
+		if err = cli.ValidateTagNames(tagNames); err != nil {
+			return err
+		}
 
 		tagIds, err := command.lookupTagIds(store, tagNames)
 		if err != nil {

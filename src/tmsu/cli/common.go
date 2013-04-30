@@ -21,6 +21,16 @@ import (
 	"errors"
 )
 
+func ValidateTagNames(tagNames []string) error {
+	for _, tagName := range tagNames {
+		if err := ValidateTagName(tagName); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 func ValidateTagName(tagName string) error {
 	if tagName == "." || tagName == ".." {
 		return errors.New("Tag name cannot be '.' or '..'.")

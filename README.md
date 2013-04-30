@@ -96,6 +96,11 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
+v0.3.0
+------
+
+  * Feature: tag values.
+
 v0.2.0
 ------
 

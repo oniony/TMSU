@@ -77,9 +77,8 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
-	err = cli.ValidateTagName(destTagName)
-	if err != nil {
-		return fmt.Errorf("could not validate tag name '%v': %v", destTagName, err)
+	if err = cli.ValidateTagName(destTagName); err != nil {
+		return err
 	}
 
 	destTag, err := store.TagByName(destTagName)

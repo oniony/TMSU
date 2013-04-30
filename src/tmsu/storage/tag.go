@@ -144,11 +144,11 @@ func (storage Storage) DeleteTag(tagId uint) error {
 
 func validateTagName(tagName string) error {
 	if tagName == "." || tagName == ".." {
-		return errors.New("Tag name cannot be '.' or '..'.")
+		return errors.New("tag name cannot be '.' or '..'.")
 	}
 
 	if tagName[0] == '-' {
-		return errors.New("Tag names cannot start with '-'.")
+		return errors.New("tag names cannot start with '-'.")
 	}
 
 	for _, ch := range tagName {

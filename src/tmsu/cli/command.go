@@ -25,6 +25,22 @@ type Command interface {
 	Exec(options Options, args []string) error
 }
 
+type CommandName string
+
+type CommandNames []CommandName
+
+func (commandNames CommandNames) Len() int {
+	return len(commandNames)
+}
+
+func (commandNames CommandNames) Less(i, j int) bool {
+	return commandNames[i] < commandNames[j]
+}
+
+func (commandNames CommandNames) Swap(i, j int) {
+	commandNames[i], commandNames[j] = commandNames[j], commandNames[i]
+}
+
 var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", false, ""},
 	Option{"--help", "-h", "show help and exit", false, ""},
 	Option{"--version", "-V", "show version information and exit", false, ""}}

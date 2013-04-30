@@ -77,10 +77,6 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
-	if err = cli.ValidateTagName(destTagName); err != nil {
-		return err
-	}
-
 	destTag, err := store.TagByName(destTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)

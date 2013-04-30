@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
+	"errors"
 	"fmt"
 	"path/filepath"
 	"tmsu/storage/database"
@@ -99,16 +100,28 @@ func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
 
 // Adds a tag.
 func (storage *Storage) AddTag(name string) (*database.Tag, error) {
+	if err := validateTagName(name); err != nil {
+		return nil, err
+	}
+
 	return storage.Db.InsertTag(name)
 }
 
 // Renames a tag.
 func (storage Storage) RenameTag(tagId uint, name string) (*database.Tag, error) {
+	if err := validateTagName(name); err != nil {
+		return nil, err
+	}
+
 	return storage.Db.RenameTag(tagId, name)
 }
 
 // Copies a tag.
 func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, error) {
+	if err := validateTagName(name); err != nil {
+		return nil, err
+	}
+
 	tag, err := storage.Db.InsertTag(name)
 	if err != nil {
 		return nil, fmt.Errorf("could not create tag '%v': %v", name, err)
@@ -128,6 +141,31 @@ func (storage Storage) DeleteTag(tagId uint) error {
 }
 
 // unexported
+
+func validateTagName(tagName string) error {
+	if tagName == "." || tagName == ".." {
+		return errors.New("Tag name cannot be '.' or '..'.")
+	}
+
+	if tagName[0] == '-' {
+		return errors.New("Tag names cannot start with '-'.")
+	}
+
+	for _, ch := range tagName {
+		switch ch {
+		case ',':
+			return errors.New("tag names cannot contain ','.")
+		case '=':
+			return errors.New("tag names cannot contain '='.")
+		case ' ':
+			return errors.New("tag names cannot contain ' '.")
+		case '/':
+			return errors.New("tag names cannot contain '/'.")
+		}
+	}
+
+	return nil
+}
 
 func containsTagId(items []uint, searchItem uint) bool {
 	for _, item := range items {

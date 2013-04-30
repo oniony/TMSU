@@ -17,22 +17,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package cli
 
-type CommandName string
-
-type CommandNames []CommandName
-
-func (commandNames CommandNames) Len() int {
-	return len(commandNames)
-}
-
-func (commandNames CommandNames) Less(i, j int) bool {
-	return commandNames[i] < commandNames[j]
-}
-
-func (commandNames CommandNames) Swap(i, j int) {
-	commandNames[i], commandNames[j] = commandNames[j], commandNames[i]
-}
-
 type Option struct {
 	LongName    string
 	ShortName   string

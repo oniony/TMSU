@@ -50,10 +50,18 @@ The following steps are for compiling from source.
     available in the package management system that comes with your operating
     system.
 
-    TMSU is currently built against the Go weekly builds. See VERSIONS for the
-    latest version that is known to work with the dependent packages.
+2. Set Up the Go Path
+
+    Go (as of verison 1.1) requires the GOPATH environment variable be set for the
+    'go get' command to function. You will need to set up a path for Go packages to
+    live if you do not already have one:
+
+        $ mkdir $HOME/gopath
+        $ export GOPATH=$HOME/gopath
 
 2. Install the dependent packages.
+
+    These will be installed to your $GOPATH directory.
 
         $ go get github.com/mattn/go-sqlite3
         $ go get github.com/hanwen/go-fuse/fuse

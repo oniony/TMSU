@@ -368,7 +368,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		//		fileCount, err := vfs.store.FileCountWithTags(tagIds)
 		//		if err != nil {
 		//			log.Fatalf("Could not retrieve count of files with tags: %v. (%v)", path, err)
-		//		}   
+		//		}
 		fileCount := 0
 
 		now := time.Now()

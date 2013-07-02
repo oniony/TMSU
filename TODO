@@ -1,11 +1,11 @@
 HIGH
 
+B 'tmsu dupes somedir' doesn't check each file in the directory.
 E Add support for meta-data or tag values.
     file            id, path, ...
     tag             id, name
     value           id, value
-    file_tag        file_id, tag_id
-    file_tag_value  file_id, tag_id, value_id
+    file_tag        file_id, tag_id, value_id
 
 E Issue #33: provide binary for 64 bit Linux.
 E Ensure unit-tests cover all command options.

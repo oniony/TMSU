@@ -15,7 +15,7 @@ VER_FILE=version.gen.go
 ARCH=$(shell uname -m)
 DIST_FILE=tmsu-$(ARCH)-$(VER).tgz
 
-export GOPATH=$(PWD)
+export GOPATH:=$(GOPATH):$(PWD)
 
 all: clean generate compile dist test
 

@@ -56,7 +56,7 @@ func (VfsCommand) Exec(options cli.Options, args []string) error {
 	}
 	defer vfs.Unmount()
 
-	vfs.Loop()
+	vfs.Serve()
 
 	return nil
 }

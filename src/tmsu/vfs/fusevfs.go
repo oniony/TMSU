@@ -20,6 +20,8 @@ package vfs
 import (
 	"fmt"
 	"github.com/hanwen/go-fuse/fuse"
+	"github.com/hanwen/go-fuse/fuse/nodefs"
+	"github.com/hanwen/go-fuse/fuse/pathfs"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -31,21 +33,22 @@ import (
 )
 
 type FuseVfs struct {
-	fuse.DefaultFileSystem
+	pathfs.FileSystem
 
 	store     *storage.Storage
 	mountPath string
-	state     *fuse.MountState
+	server    *fuse.Server
 }
 
 func MountVfs(databasePath string, mountPath string, allowOther bool) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
-	pathNodeFs := fuse.NewPathNodeFs(&fuseVfs, nil)
-	conn := fuse.NewFileSystemConnector(pathNodeFs, nil)
-	state := fuse.NewMountState(conn)
 
-	mountOptions := fuse.MountOptions{AllowOther: allowOther}
-	err := state.Mount(mountPath, &mountOptions)
+	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
+	conn := nodefs.NewFileSystemConnector(pathFs, nil)
+
+	mountOptions := &fuse.MountOptions{AllowOther: allowOther}
+
+	server, err := fuse.NewServer(conn.RawFS(), mountPath, mountOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
 	}
@@ -57,17 +60,17 @@ func MountVfs(databasePath string, mountPath string, allowOther bool) (*FuseVfs,
 
 	fuseVfs.store = store
 	fuseVfs.mountPath = mountPath
-	fuseVfs.state = state
+	fuseVfs.server = server
 
 	return &fuseVfs, nil
 }
 
 func (vfs FuseVfs) Unmount() {
-	vfs.state.Unmount()
+	vfs.server.Unmount()
 }
 
-func (vfs FuseVfs) Loop() {
-	vfs.state.Loop()
+func (vfs FuseVfs) Serve() {
+	vfs.server.Serve()
 }
 
 func (vfs FuseVfs) Access(name string, mode uint32, context *fuse.Context) fuse.Status {
@@ -91,7 +94,7 @@ func (vfs FuseVfs) Chown(name string, uid uint32, gid uint32, context *fuse.Cont
 	return fuse.ENOSYS
 }
 
-func (vfs FuseVfs) Create(name string, flags uint32, mode uint32, context *fuse.Context) (fuse.File, fuse.Status) {
+func (vfs FuseVfs) Create(name string, flags uint32, mode uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	log.Infof("BEGIN Create(%v, %v, %v)", name, flags, mode)
 	defer log.Infof("BEGIN Create(%v, %v)", name, flags, mode)
 
@@ -154,7 +157,7 @@ func (vfs FuseVfs) Mknod(name string, mode uint32, dev uint32, context *fuse.Con
 	return fuse.ENOSYS
 }
 
-func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (fuse.File, fuse.Status) {
+func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	log.Infof("BEGIN Open(%v)", name)
 	defer log.Infof("END Open(%v)", name)
 
@@ -222,11 +225,11 @@ func (vfs FuseVfs) SetXAttr(name string, attr string, data []byte, flags int, co
 	return fuse.ENOSYS
 }
 
-func (vfs FuseVfs) StatFs(name string) *fuse.StatfsOut {
+func (vfs FuseVfs) StatFs(name string) *nodefs.StatfsOut {
 	log.Infof("BEGIN StatFs(%v)", name)
 	defer log.Infof("END StatFs(%v)", name)
 
-	return &fuse.StatfsOut{}
+	return &nodefs.StatfsOut{}
 }
 
 func (vfs FuseVfs) Symlink(value string, linkName string, context *fuse.Context) fuse.Status {

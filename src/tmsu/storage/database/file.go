@@ -235,31 +235,72 @@ func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
 }
 
 // Retrieves the set of files with the specified tags.
-func (db *Database) FilesWithTags(tagIds []uint) (Files, error) {
-	tagCount := len(tagIds)
+func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (Files, error) {
+	includeTagCount := len(includeTagIds)
+	excludeTagCount := len(excludeTagIds)
+
+	param := 1
 
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
-            WHERE id IN (
+            WHERE 1==1`
+
+	if includeTagCount > 0 {
+		sql += `
+            AND id IN (
                 SELECT file_id
                 FROM file_tag
-                WHERE tag_id IN (?1`
+                WHERE tag_id IN (`
 
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
+		for idx := 0; idx < includeTagCount; idx++ {
+			if idx != 0 {
+				sql += ","
+			}
 
-	sql += `    )
+			sql += "?" + strconv.Itoa(param)
+
+			param++
+		}
+
+		sql += `)
                 GROUP BY file_id
-                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
-            )
-            ORDER BY directory || '/' || name`
+                HAVING count(tag_id) == ?` + strconv.Itoa(param) + `
+            )`
 
-	params := make([]interface{}, tagCount+1)
-	for index, tagId := range tagIds {
-		params[index] = interface{}(tagId)
+		param++
 	}
-	params[tagCount] = tagCount
+
+	if excludeTagCount > 0 {
+		sql += `
+            AND id NOT IN (
+                SELECT file_id
+                FROM file_tag
+                WHERE tag_id IN (`
+
+		for idx := 0; idx < excludeTagCount; idx++ {
+			if idx != 0 {
+				sql += ","
+			}
+
+			sql += "?" + strconv.Itoa(param)
+
+			param++
+		}
+
+		sql += `)
+            )`
+	}
+
+	sql += `ORDER BY directory || '/' || name`
+
+	params := make([]interface{}, includeTagCount+excludeTagCount+1)
+	for index, includeTagId := range includeTagIds {
+		params[index] = interface{}(includeTagId)
+	}
+	params[includeTagCount] = includeTagCount
+	for index, excludeTagId := range excludeTagIds {
+		params[includeTagCount+index+1] = interface{}(excludeTagId)
+	}
 
 	rows, err := db.connection.Query(sql, params...)
 	if err != nil {

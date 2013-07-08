@@ -239,7 +239,7 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 	includeTagCount := len(includeTagIds)
 	excludeTagCount := len(excludeTagIds)
 
-	param := 1
+	paramIndex := 1
 
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
@@ -252,22 +252,21 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
                 FROM file_tag
                 WHERE tag_id IN (`
 
-		for idx := 0; idx <= includeTagCount; idx++ {
+		for idx := 0; idx < includeTagCount; idx++ {
 			if idx != 0 {
 				sql += ","
 			}
 
-			sql += "?" + strconv.Itoa(param)
-
-			param++
+			sql += "?" + strconv.Itoa(paramIndex)
+			paramIndex++
 		}
 
 		sql += `)
                 GROUP BY file_id
-                HAVING count(tag_id) == ?` + strconv.Itoa(param) + `
+                HAVING count(tag_id) == ?` + strconv.Itoa(paramIndex) + `
             )`
 
-		param++
+		paramIndex++
 	}
 
 	if excludeTagCount > 0 {
@@ -282,9 +281,8 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 				sql += ","
 			}
 
-			sql += "?" + strconv.Itoa(param)
-
-			param++
+			sql += "?" + strconv.Itoa(paramIndex)
+			paramIndex++
 		}
 
 		sql += `)
@@ -293,13 +291,21 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 
 	sql += `ORDER BY directory || '/' || name`
 
-	params := make([]interface{}, includeTagCount+excludeTagCount)
-	for index, includeTagId := range includeTagIds {
-		params[index] = interface{}(includeTagId)
+	params := make([]interface{}, paramIndex-1)
+	paramIndex = 0
+	for _, includeTagId := range includeTagIds {
+		params[paramIndex] = interface{}(includeTagId)
+		paramIndex++
 	}
-	params[includeTagCount] = includeTagCount
-	for index, excludeTagId := range excludeTagIds {
-		params[index] = interface{}(excludeTagId)
+
+	if includeTagCount > 0 {
+		params[paramIndex] = interface{}(includeTagCount)
+		paramIndex++
+	}
+
+	for _, excludeTagId := range excludeTagIds {
+		params[paramIndex] = interface{}(excludeTagId)
+		paramIndex++
 	}
 
 	rows, err := db.connection.Query(sql, params...)

@@ -50,26 +50,34 @@ The following steps are for compiling from source.
     available in the package management system that comes with your operating
     system.
 
-    TMSU is currently built against the Go weekly builds. See VERSIONS for the
-    latest version that is known to work with the dependent packages.
+2. Set Up the Go Path
 
-2. Install the dependent packages.
+    Go (as of version 1.1) requires the GOPATH environment variable to be set for the
+    'go get' command to functoin. You will need to set up a path for Go packages to
+    live if you do not already have one:
+
+        $ mkdir $HOME/gopath
+        $ export GOPATH=$HOME/gopath
+
+3. Install the dependent packages.
+
+    These will be installed to yoru $GOPATH directory.
 
         $ go get github.com/mattn/go-sqlite3
         $ go get github.com/hanwen/go-fuse/fuse
 
-3. Clone the TMSU respository:
+4. Clone the TMSU respository:
 
         $ hg clone https://bitbucket.org/oniony/tmsu
 
-4. Make the project
+5. Make the project
 
         $ cd tmsu
         $ make
 
     This will compile to 'bin/tmsu' within the working directory.
 
-5. Install the project
+6. Install the project
 
         $ sudo make install
 

@@ -97,12 +97,9 @@ func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
 
 // Retrieves the set of files with the specified set of tags.
 func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (database.Files, error) {
-	var files database.Files
-	var err error
-
-	files, err = storage.Db.FilesWithTags(includeTagIds, excludeTagIds)
+	files, err := storage.Db.FilesWithTags(includeTagIds, excludeTagIds)
 	if err != nil {
-		return nil, fmt.Errorf("could not retrieve files with tags %v: %v", includeTagIds, err)
+		return nil, fmt.Errorf("could not retrieve files: %v", err)
 	}
 
 	resultFiles := make(database.Files, 0, len(files))

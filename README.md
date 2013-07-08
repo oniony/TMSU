@@ -59,25 +59,27 @@ The following steps are for compiling from source.
         $ mkdir $HOME/gopath
         $ export GOPATH=$HOME/gopath
 
-2. Install the dependent packages.
+3. Install the dependent packages.
+
+    These will be installed to yoru $GOPATH directory.
 
     These will be installed to your $GOPATH directory.
 
         $ go get github.com/mattn/go-sqlite3
         $ go get github.com/hanwen/go-fuse/fuse
 
-3. Clone the TMSU respository:
+4. Clone the TMSU respository:
 
         $ hg clone https://bitbucket.org/oniony/tmsu
 
-4. Make the project
+5. Make the project
 
         $ cd tmsu
         $ make
 
     This will compile to 'bin/tmsu' within the working directory.
 
-5. Install the project
+6. Install the project
 
         $ sudo make install
 

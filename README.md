@@ -61,8 +61,6 @@ The following steps are for compiling from source.
 
 3. Install the dependent packages.
 
-    These will be installed to yoru $GOPATH directory.
-
     These will be installed to your $GOPATH directory.
 
         $ go get github.com/mattn/go-sqlite3

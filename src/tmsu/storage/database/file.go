@@ -20,6 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -239,76 +240,45 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 	includeTagCount := len(includeTagIds)
 	excludeTagCount := len(excludeTagIds)
 
-	paramIndex := 1
+	builder := NewBuilder()
 
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-            FROM file
-            WHERE 1==1`
+	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+                       FROM file
+                       WHERE 1==1`)
 
 	if includeTagCount > 0 {
-		sql += `
-            AND id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (`
+		builder.AppendSql(`AND id IN (SELECT file_id
+                                      FROM file_tag
+                                      WHERE tag_id IN (`)
 
-		for idx := 0; idx < includeTagCount; idx++ {
-			if idx != 0 {
-				sql += ","
-			}
-
-			sql += "?" + strconv.Itoa(paramIndex)
-			paramIndex++
+		for _, includeTagId := range includeTagIds {
+			builder.AppendParam(includeTagId)
 		}
 
-		sql += `)
-                GROUP BY file_id
-                HAVING count(tag_id) == ?` + strconv.Itoa(paramIndex) + `
-            )`
-
-		paramIndex++
+		builder.AppendSql(`) GROUP BY file_id
+                             HAVING count(tag_id) == `)
+		builder.AppendParam(includeTagCount)
+		builder.AppendSql(`)`)
 	}
 
 	if excludeTagCount > 0 {
-		sql += `
-            AND id NOT IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (`
+		builder.AppendSql(`AND id NOT IN (SELECT file_id
+                                          FROM file_tag
+                                          WHERE tag_id IN (`)
 
-		for idx := 0; idx < excludeTagCount; idx++ {
-			if idx != 0 {
-				sql += ","
-			}
-
-			sql += "?" + strconv.Itoa(paramIndex)
-			paramIndex++
+		for _, excludeTagId := range excludeTagIds {
+			builder.AppendParam(excludeTagId)
 		}
 
-		sql += `)
-            )`
+		builder.AppendSql(`))`)
 	}
 
-	sql += `ORDER BY directory || '/' || name`
+	builder.AppendSql(`ORDER BY directory || '/' || name`)
 
-	params := make([]interface{}, paramIndex-1)
-	paramIndex = 0
-	for _, includeTagId := range includeTagIds {
-		params[paramIndex] = interface{}(includeTagId)
-		paramIndex++
-	}
+	fmt.Println(builder.Sql)
+	fmt.Println(builder.Params)
 
-	if includeTagCount > 0 {
-		params[paramIndex] = interface{}(includeTagCount)
-		paramIndex++
-	}
-
-	for _, excludeTagId := range excludeTagIds {
-		params[paramIndex] = interface{}(excludeTagId)
-		paramIndex++
-	}
-
-	rows, err := db.connection.Query(sql, params...)
+	rows, err := db.connection.Query(builder.Sql, builder.Params...)
 	if err != nil {
 		return nil, err
 	}

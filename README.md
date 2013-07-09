@@ -104,6 +104,12 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
+v0.2.1
+------
+
+  * Fixed bug where excluding multiple tags would return incorrect results.
+  * Fixed Go 1.1 compilation problems.
+
 v0.2.0
 ------
 

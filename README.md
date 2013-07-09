@@ -111,6 +111,12 @@ v0.3.0
 
   * Feature: tag values.
 
+v0.2.1
+------
+
+  * Fixed bug where excluding multiple tags would return incorrect results.
+  * Fixed Go 1.1 compilation problems. 
+
 v0.2.0
 ------
 

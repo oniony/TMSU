@@ -223,11 +223,11 @@ func (vfs FuseVfs) SetXAttr(name string, attr string, data []byte, flags int, co
 	return fuse.ENOSYS
 }
 
-func (vfs FuseVfs) StatFs(name string) *nodefs.StatfsOut {
+func (vfs FuseVfs) StatFs(name string) *fuse.StatfsOut {
 	log.Infof("BEGIN StatFs(%v)", name)
 	defer log.Infof("END StatFs(%v)", name)
 
-	return &nodefs.StatfsOut{}
+	return &fuse.StatfsOut{}
 }
 
 func (vfs FuseVfs) Symlink(value string, linkName string, context *fuse.Context) fuse.Status {

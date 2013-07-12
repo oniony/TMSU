@@ -18,10 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package path
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
+	"tmsu/log"
 )
+
+type FileSystemFile struct {
+	Path  string
+	IsDir bool
+}
 
 func Rel(path string) string {
 	workingDirectory, err := os.Getwd()
@@ -38,4 +45,58 @@ func Rel(path string) string {
 	}
 
 	return path
+}
+
+func Enumerate(paths []string) ([]FileSystemFile, error) {
+	resultFiles := make([]FileSystemFile, 0, len(paths)*5)
+
+	for _, path := range paths {
+		var err error
+		resultFiles, err = enumerate(path, resultFiles)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return resultFiles, nil
+}
+
+func enumerate(path string, files []FileSystemFile) ([]FileSystemFile, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		switch {
+		case os.IsNotExist(err):
+			return files, nil
+		case os.IsPermission(err):
+			log.Warnf("%v: permission denied", path)
+			return files, nil
+		default:
+			return nil, fmt.Errorf("%v: could not stat: %v", path, err)
+		}
+	}
+
+	files = append(files, FileSystemFile{path, stat.IsDir()})
+
+	if stat.IsDir() {
+		dir, err := os.Open(path)
+		if err != nil {
+			return nil, fmt.Errorf("%v: could not open directory: %v", path, err)
+		}
+
+		names, err := dir.Readdirnames(0)
+		dir.Close()
+		if err != nil {
+			return nil, fmt.Errorf("%v: could not read directory entries: %v", path, err)
+		}
+
+		for _, name := range names {
+			childPath := filepath.Join(path, name)
+			files, err = enumerate(childPath, files)
+			if err != nil {
+				return nil, err
+			}
+		}
+	}
+
+	return files, nil
 }

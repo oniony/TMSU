@@ -1,6 +1,8 @@
 HIGH
 
-B 'tmsu dupes somedir' doesn't check each file in the directory.
+E Proper file queries, e.g. 'big and round or square and not green'.
+    * Implicit AND.
+    * Parenthesis support.
 E Add support for meta-data or tag values.
     file            id, path, ...
     tag             id, name
@@ -15,6 +17,7 @@ MEDIUM
 E Improve formatting when terminal detected.
 E Issue #39: Hide tag folders in VFS where tag makes no difference because set of files is identical.
     * Hard to do in a performant way.
+    * Possible issue with scripting.
 E Add benchmarks.
 E Add recursive option to 'tags' command.
 E Enrich 'stats' with averages, most popular tag, &c.

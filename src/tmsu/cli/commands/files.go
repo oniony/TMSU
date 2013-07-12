@@ -19,8 +19,6 @@ package commands
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/path"
@@ -84,11 +82,6 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 }
 
 // unexported
-
-type fileSystemFile struct {
-	path  string
-	isDir bool
-}
 
 func (command FilesCommand) listAllFiles() error {
 	store, err := storage.Open()
@@ -171,13 +164,13 @@ func (command *FilesCommand) listFiles(files database.Files) error {
 		tree = tree.TopLevel()
 	} else {
 		if command.recursive {
-			fsFiles, err := command.filesystemFiles(tree.TopLevel().Paths())
+			fsFiles, err := path.Enumerate(tree.TopLevel().Paths())
 			if err != nil {
 				return err
 			}
 
 			for _, fsFile := range fsFiles {
-				tree.Add(fsFile.path, fsFile.isDir)
+				tree.Add(fsFile.Path, fsFile.IsDir)
 			}
 		}
 	}
@@ -209,58 +202,4 @@ func (command *FilesCommand) listFiles(files database.Files) error {
 	}
 
 	return nil
-}
-
-func (command *FilesCommand) filesystemFiles(paths []string) ([]fileSystemFile, error) {
-	resultFiles := make([]fileSystemFile, 0, len(paths)*5)
-
-	for _, path := range paths {
-		var err error
-		resultFiles, err = command.filesystemFilesRecursive(path, resultFiles)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	return resultFiles, nil
-}
-
-func (command *FilesCommand) filesystemFilesRecursive(path string, files []fileSystemFile) ([]fileSystemFile, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		switch {
-		case os.IsNotExist(err):
-			return files, nil
-		case os.IsPermission(err):
-			log.Warnf("%v: permission denied", path)
-			return files, nil
-		default:
-			return nil, fmt.Errorf("%v: could not stat: %v", path, err)
-		}
-	}
-
-	files = append(files, fileSystemFile{path, stat.IsDir()})
-
-	if stat.IsDir() {
-		dir, err := os.Open(path)
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not open directory: %v", path, err)
-		}
-
-		names, err := dir.Readdirnames(0)
-		dir.Close()
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not read directory entries: %v", path, err)
-		}
-
-		for _, name := range names {
-			childPath := filepath.Join(path, name)
-			files, err = command.filesystemFilesRecursive(childPath, files)
-			if err != nil {
-				return nil, err
-			}
-		}
-	}
-
-	return files, nil
 }

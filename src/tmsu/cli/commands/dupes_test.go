@@ -58,7 +58,7 @@ func TestDupesSingle(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 
@@ -114,7 +114,7 @@ func TestDupesMultiple(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 
@@ -169,7 +169,7 @@ func TestDupesNone(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 
@@ -231,7 +231,7 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 
@@ -293,7 +293,7 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 
@@ -355,7 +355,7 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false}
+	command := DupesCommand{false, false}
 
 	// test
 

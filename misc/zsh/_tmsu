@@ -64,7 +64,9 @@ _tmsu_cmd_delete() {
 }
 
 _tmsu_cmd_dupes() {
-	_arguments -s -w '*:file:_files' && ret=0
+	_arguments -s -w ''{--recursive,-r}'[recursively check directory contents]' \
+	                 '*:file:_files' \
+	&& ret=0
 }
 
 _tmsu_cmd_files() {

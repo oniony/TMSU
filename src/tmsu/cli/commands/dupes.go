@@ -29,7 +29,8 @@ import (
 )
 
 type DupesCommand struct {
-	verbose bool
+	verbose   bool
+	recursive bool
 }
 
 func (DupesCommand) Name() cli.CommandName {
@@ -48,11 +49,12 @@ FILE is specified then identifies duplicates between files in the database.`
 }
 
 func (DupesCommand) Options() cli.Options {
-	return cli.Options{}
+	return cli.Options{cli.Option{"--recursive", "-r", "recursively check directory contents", false, ""}}
 }
 
 func (command DupesCommand) Exec(options cli.Options, args []string) error {
 	command.verbose = options.HasOption("--verbose")
+	command.recursive = options.HasOption("--recursive")
 
 	switch len(args) {
 	case 0:
@@ -107,10 +109,22 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 	}
 	defer store.Close()
 
+	if command.recursive {
+		p, err := _path.Enumerate(paths)
+		if err != nil {
+			return fmt.Errorf("could not enumerate paths: %v", err)
+		}
+
+		paths = make([]string, len(p))
+		for index, path := range p {
+			paths[index] = path.Path
+		}
+	}
+
 	first := true
 	for _, path := range paths {
 		if command.verbose {
-			log.Infof("%v: identifying duplicate files.\n", path)
+			log.Infof("%v: identifying duplicate files.", path)
 		}
 
 		fp, err := fingerprint.Create(path)
@@ -119,7 +133,7 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 		}
 
 		if fp == fingerprint.Fingerprint("") {
-			return nil
+			continue
 		}
 
 		files, err := store.FilesByFingerprint(fp)
@@ -142,7 +156,7 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 				log.Print()
 			}
 
-			log.Printf("%v duplicates of %v:", len(dupes), path)
+			log.Printf("%v:", path)
 
 			for _, dupe := range dupes {
 				relPath := _path.Rel(dupe.Path())

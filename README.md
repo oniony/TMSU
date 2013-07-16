@@ -63,8 +63,8 @@ The following steps are for compiling from source.
 
     These will be installed to your $GOPATH directory.
 
-        $ go get github.com/mattn/go-sqlite3
-        $ go get github.com/hanwen/go-fuse/fuse
+        $ go get -u github.com/mattn/go-sqlite3
+        $ go get -u github.com/hanwen/go-fuse/fuse
 
 4. Clone the TMSU respository:
 

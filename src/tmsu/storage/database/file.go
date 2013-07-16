@@ -20,7 +20,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -274,9 +273,6 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 	}
 
 	builder.AppendSql(`ORDER BY directory || '/' || name`)
-
-	fmt.Println(builder.Sql)
-	fmt.Println(builder.Params)
 
 	rows, err := db.connection.Query(builder.Sql, builder.Params...)
 	if err != nil {

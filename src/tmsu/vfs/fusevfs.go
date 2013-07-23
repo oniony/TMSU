@@ -33,8 +33,6 @@ import (
 )
 
 type FuseVfs struct {
-	pathfs.FileSystem
-
 	store     *storage.Storage
 	mountPath string
 	server    *fuse.Server
@@ -165,10 +163,6 @@ func (vfs FuseVfs) OnUnmount() {
 	defer log.Infof("END OnUnmount()")
 }
 
-func (vfs FuseVfs) String() string {
-	return "tmsu"
-}
-
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	log.Infof("BEGIN Open(%v)", name)
 	defer log.Infof("END Open(%v)", name)
@@ -244,6 +238,10 @@ func (vfs FuseVfs) StatFs(name string) *fuse.StatfsOut {
 	return &fuse.StatfsOut{}
 }
 
+func (vfs FuseVfs) String() string {
+	return "tmsu"
+}
+
 func (vfs FuseVfs) Symlink(value string, linkName string, context *fuse.Context) fuse.Status {
 	log.Infof("BEGIN Symlink(%v, %v)", value, linkName)
 	defer log.Infof("END Symlink(%v, %v)", value, linkName)
@@ -291,6 +289,10 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	}
 
 	return fuse.OK
+}
+
+func (vfs FuseVfs) Utimens(name string, Atime *time.Time, Mtime *time.Time, context *fuse.Context) (code fuse.Status) {
+	return fuse.ENOSYS
 }
 
 // non-exported

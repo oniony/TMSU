@@ -155,6 +155,20 @@ func (vfs FuseVfs) Mknod(name string, mode uint32, dev uint32, context *fuse.Con
 	return fuse.ENOSYS
 }
 
+func (vfs FuseVfs) OnMount(nodeFs *pathfs.PathNodeFs) {
+	log.Infof("BEGIN OnMount()")
+	defer log.Infof("END OnMount()")
+}
+
+func (vfs FuseVfs) OnUnmount() {
+	log.Infof("BEGIN OnUnmount()")
+	defer log.Infof("END OnUnmount()")
+}
+
+func (vfs FuseVfs) String() string {
+	return "tmsu"
+}
+
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	log.Infof("BEGIN Open(%v)", name)
 	defer log.Infof("END Open(%v)", name)

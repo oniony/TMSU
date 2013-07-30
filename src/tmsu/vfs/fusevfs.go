@@ -69,6 +69,10 @@ func (vfs FuseVfs) Serve() {
 	vfs.server.Serve()
 }
 
+func (vfs FuseVfs) SetDebug(debug bool) {
+	vfs.SetDebug(debug)
+}
+
 func (vfs FuseVfs) Access(name string, mode uint32, context *fuse.Context) fuse.Status {
 	log.Infof("BEGIN Access(%v, %v)", name, mode)
 	defer log.Infof("END Access(%v, %v)", name, mode)

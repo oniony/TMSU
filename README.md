@@ -104,8 +104,8 @@ libraries, their Go bindings and, of course, the Go language standard library.
 Release Notes
 =============
 
-v0.3.0
-------
+v0.3.0 (in development)
+-----------------------
 
   * Feature: file queries.
   * Feature: tag values.

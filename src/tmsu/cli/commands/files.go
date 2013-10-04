@@ -46,11 +46,25 @@ func (FilesCommand) Synopsis() string {
 }
 
 func (FilesCommand) Description() string {
-	return `tmsu files [OPTION]... TAG...
+	return `tmsu files [OPTION]... QUERY 
 
-Lists the files, if any, that have all of the TAGs specified. Tags can be
-excluded by prefixing their names with a minus character (option processing
-must first be disabled with '--').`
+Lists the files that match the QUERY specified. QUERY may contain tag names,
+logical operators ('not', 'and', 'or') and parentheses.
+
+If multiple tags are specified without a logical operator between them this
+will be interpretted as an implicit 'and', e.g. 'chalk cheese' is interpretted as
+'chalk and cheese'.
+
+Examples:
+
+    $ tmsu files music
+    $ tmsu files music mp3                # implict 'and'
+    $ tmsu files music and mp3            # same query but with explicit 'and'
+    $ tmsu files music not flac
+    $ tmsu files music and not flac       # same query with explicit 'and'
+    $ tmsu files mp3 or flac
+    $ tmsu files music mp3 or flac
+    $ tmsu files (music and mp3) or flac  # same query written in full`
 }
 
 func (FilesCommand) Options() cli.Options {

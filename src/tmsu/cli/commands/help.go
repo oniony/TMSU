@@ -119,6 +119,9 @@ func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
 	if len(command.Options()) > 0 {
 		log.Print()
 
+		log.Print("Options:")
+		log.Print()
+
 		for _, option := range command.Options() {
 			log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
 		}

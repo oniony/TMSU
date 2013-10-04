@@ -107,6 +107,7 @@ Release Notes
 v0.3.0
 ------
 
+  * Feature: file queries.
   * Feature: tag values.
 
 v0.2.1

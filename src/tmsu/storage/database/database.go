@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"tmsu/common"
+	"tmsu/log"
 )
 
 type Database struct {
@@ -44,6 +45,15 @@ func Open() (*Database, error) {
 }
 
 func OpenAt(path string) (*Database, error) {
+	_, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			log.Warnf("Creating database at '%v'.", path)
+		} else {
+			log.Warnf("Could not stat database: %v", err)
+		}
+	}
+
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, errors.New("could not open database: " + err.Error())

@@ -110,6 +110,11 @@ v0.3.0 (in development)
   * Feature: file queries.
   * Feature: tag values.
 
+v0.2.2
+------
+
+  * Fixed virtual file-system.
+
 v0.2.1
 ------
 

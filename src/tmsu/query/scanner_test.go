@@ -28,13 +28,13 @@ func TestSingleTag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(lookAhead, "cheese", test)
+	validateTagToken(lookAhead, "cheese", test)
 
 	token, err := scanner.Next()
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "cheese", test)
+	validateTagToken(token, "cheese", test)
 
 	lookAhead, err = scanner.LookAhead()
 	if err != nil {
@@ -62,7 +62,7 @@ func TestSingleTagInParenthesese(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "cheese", test)
+	validateTagToken(token, "cheese", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -90,7 +90,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "cheese", test)
+	validateTagToken(token, "cheese", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -108,7 +108,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "peas", test)
+	validateTagToken(token, "peas", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -120,7 +120,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "sweetcorn", test)
+	validateTagToken(token, "sweetcorn", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -144,7 +144,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTag(token, "beans", test)
+	validateTagToken(token, "beans", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -155,7 +155,7 @@ func TestComplexQuery(test *testing.T) {
 
 // unexported
 
-func validateTag(token Token, expectedName string, test *testing.T) {
+func validateTagToken(token Token, expectedName string, test *testing.T) {
 	tag := token.(TagToken)
 	if tag.name != expectedName {
 		test.Fatalf("Expected tag '%v' but was '%v'.", expectedName, tag.name)

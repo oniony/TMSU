@@ -132,7 +132,7 @@ func (parser Parser) not() (Expression, error) {
 	case NotOperatorToken:
 		parser.scanner.Next()
 
-		operand, err := parser.tag()
+		operand, err := parser.not()
 		if err != nil {
 			return nil, err
 		}

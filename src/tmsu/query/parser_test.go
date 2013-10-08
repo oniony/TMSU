@@ -33,7 +33,7 @@ func TestTagParsing(test *testing.T) {
 
 	dump(expression)
 
-	_ = expression.(TagExpression)
+	validateTag(expression, "cheese", test)
 }
 
 func TestNotParsing(test *testing.T) {
@@ -47,8 +47,8 @@ func TestNotParsing(test *testing.T) {
 
 	dump(expression)
 
-	not := expression.(NotExpression)
-	_ = not.Operand.(TagExpression)
+	not := validateNot(expression)
+	validateTag(not.Operand, "cheese", test)
 }
 
 func TestImplicitAndParsing(test *testing.T) {
@@ -62,9 +62,9 @@ func TestImplicitAndParsing(test *testing.T) {
 
 	dump(expression)
 
-	and := expression.(AndExpression)
-	_ = and.LeftOperand.(TagExpression)
-	_ = and.RightOperand.(TagExpression)
+	and := validateAnd(expression)
+	validateTag(and.LeftOperand, "cheese", test)
+	validateTag(and.RightOperand, "tomato", test)
 }
 
 func TestImplicitNotAndParsing(test *testing.T) {
@@ -78,10 +78,10 @@ func TestImplicitNotAndParsing(test *testing.T) {
 
 	dump(expression)
 
-	and := expression.(AndExpression)
-	not := and.LeftOperand.(NotExpression)
-	_ = not.Operand.(TagExpression)
-	_ = and.RightOperand.(TagExpression)
+	and := validateAnd(expression)
+	not := validateNot(and.LeftOperand)
+	validateTag(not.Operand, "cheese", test)
+	validateTag(and.RightOperand, "tomato", test)
 }
 
 func TestImplicitAndNotParsing(test *testing.T) {
@@ -95,10 +95,10 @@ func TestImplicitAndNotParsing(test *testing.T) {
 
 	dump(expression)
 
-	and := expression.(AndExpression)
-	_ = and.LeftOperand.(TagExpression)
-	not := and.RightOperand.(NotExpression)
-	_ = not.Operand.(TagExpression)
+	and := validateAnd(expression)
+	validateTag(and.LeftOperand, "cheese", test)
+	not := validateNot(and.RightOperand)
+	validateTag(not.Operand, "tomato", test)
 }
 
 func TestAndParsing(test *testing.T) {
@@ -112,9 +112,9 @@ func TestAndParsing(test *testing.T) {
 
 	dump(expression)
 
-	and := expression.(AndExpression)
-	_ = and.LeftOperand.(TagExpression)
-	_ = and.RightOperand.(TagExpression)
+	and := validateAnd(expression)
+	validateTag(and.LeftOperand, "cheese", test)
+	validateTag(and.RightOperand, "tomato", test)
 }
 
 func TestOrParsing(test *testing.T) {
@@ -128,9 +128,9 @@ func TestOrParsing(test *testing.T) {
 
 	dump(expression)
 
-	or := expression.(OrExpression)
-	_ = or.LeftOperand.(TagExpression)
-	_ = or.RightOperand.(TagExpression)
+	or := validateOr(expression)
+	validateTag(or.LeftOperand, "cheese", test)
+	validateTag(or.RightOperand, "tomato", test)
 }
 
 func TestOrOrParsing(test *testing.T) {
@@ -144,11 +144,88 @@ func TestOrOrParsing(test *testing.T) {
 
 	dump(expression)
 
-	or1 := expression.(OrExpression)
-	or2 := or1.LeftOperand.(OrExpression)
-	_ = or1.RightOperand.(TagExpression)
-	_ = or2.LeftOperand.(TagExpression)
-	_ = or2.RightOperand.(TagExpression)
+	or1 := validateOr(expression)
+	or2 := validateOr(or1.LeftOperand)
+	validateTag(or2.LeftOperand, "cheese", test)
+	validateTag(or2.RightOperand, "tomato", test)
+	validateTag(or1.RightOperand, "sweetcorn", test)
+}
+
+func TestAndAndParsing(test *testing.T) {
+	scanner := NewScanner("cheese and tomato and sweetcorn")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	and1 := validateAnd(expression)
+	and2 := validateAnd(and1.LeftOperand)
+	validateTag(and2.LeftOperand, "cheese", test)
+	validateTag(and2.RightOperand, "tomato", test)
+	validateTag(and1.RightOperand, "sweetcorn", test)
+}
+
+func TestAndOrParsing(test *testing.T) {
+	scanner := NewScanner("cheese and tomato or sweetcorn")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	or := validateOr(expression)
+	and := validateAnd(or.LeftOperand)
+	validateTag(and.LeftOperand, "cheese", test)
+	validateTag(and.RightOperand, "tomato", test)
+	validateTag(or.RightOperand, "sweetcorn", test)
+}
+
+func TestOrAndParsing(test *testing.T) {
+	scanner := NewScanner("cheese or tomato and sweetcorn")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	or := validateOr(expression)
+	validateTag(or.LeftOperand, "cheese", test)
+	and := validateAnd(or.RightOperand)
+	validateTag(and.LeftOperand, "tomato", test)
+	validateTag(and.RightOperand, "sweetcorn", test)
+}
+
+// unexported
+
+func validateNot(expression Expression) NotExpression {
+	return expression.(NotExpression)
+}
+
+func validateOr(expression Expression) OrExpression {
+	return expression.(OrExpression)
+}
+
+func validateAnd(expression Expression) AndExpression {
+	return expression.(AndExpression)
+}
+
+func validateTag(expression Expression, expectedName string, test *testing.T) TagExpression {
+	tag := expression.(TagExpression)
+	if tag.Name != expectedName {
+		test.Fatalf("Expected '%v' tag but was '%v'.", tag.Name)
+	}
+
+	return tag
 }
 
 func dump(expression Expression) {

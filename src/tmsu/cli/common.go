@@ -33,10 +33,16 @@ func ValidateTagNames(tagNames []string) error {
 
 func ValidateTagName(tagName string) error {
 	switch tagName {
+	case "":
+		return errors.New("tag name cannot be empty.")
 	case ".", "..":
 		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
 	case "and", "or", "not":
 		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
+	}
+
+	if tagName[0] == '-' {
+		return errors.New("tag name cannot start with a minus: '-'.") // used in query language
 	}
 
 	for _, ch := range tagName {

@@ -506,10 +506,12 @@ WHERE tag_id = (SELECT id
 		builder.AppendSql("\nAND\n")
 		buildQueryBranch(exp.RightOperand, builder)
 	case query.OrExpression:
+		builder.AppendSql("(\n")
 		buildQueryBranch(exp.LeftOperand, builder)
 		builder.AppendSql("\nOR\n")
 		buildQueryBranch(exp.RightOperand, builder)
+		builder.AppendSql(")\n")
 	default:
-		panic("Unsupported expression type")
+		panic("Unsupported expression type.")
 	}
 }

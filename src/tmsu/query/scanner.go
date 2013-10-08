@@ -29,6 +29,29 @@ var tagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Pun
 type Token interface {
 }
 
+func Type(token Token) string {
+	switch token.(type) {
+	case TagToken:
+		return "tag"
+	case OpenParenToken:
+		return "("
+	case CloseParenToken:
+		return ")"
+	case NotOperatorToken:
+		return "not"
+	case AndOperatorToken:
+		return "and"
+	case OrOperatorToken:
+		return "or"
+	case EndToken:
+		return "EOF"
+	case nil:
+		return "nil"
+	default:
+		return "unkown"
+	}
+}
+
 type EndToken struct {
 }
 

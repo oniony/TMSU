@@ -205,6 +205,24 @@ func TestOrAndParsing(test *testing.T) {
 	validateTag(and.RightOperand, "sweetcorn", test)
 }
 
+func TestAndParenOrParsing(test *testing.T) {
+	scanner := NewScanner("cheese and (tomato or sweetcorn)")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	and := validateAnd(expression)
+	validateTag(and.LeftOperand, "cheese", test)
+	or := validateOr(and.RightOperand)
+	validateTag(or.LeftOperand, "tomato", test)
+	validateTag(or.RightOperand, "sweetcorn", test)
+}
+
 // unexported
 
 func validateNot(expression Expression) NotExpression {

@@ -19,7 +19,6 @@ package query
 
 import (
 	"fmt"
-	"reflect"
 )
 
 type Parser struct {
@@ -31,7 +30,7 @@ func NewParser(scanner *Scanner) Parser {
 }
 
 func (parser Parser) Parse() (Expression, error) {
-	return parser.or()
+	return parser.expression()
 }
 
 type Expression interface {
@@ -57,6 +56,15 @@ type TagExpression struct {
 
 // unexported
 
+func (parser Parser) expression() (Expression, error) {
+	expression, err := parser.or()
+	if err != nil {
+		return nil, err
+	}
+
+	return expression, nil
+}
+
 func (parser Parser) or() (Expression, error) {
 	leftOperand, err := parser.and()
 	if err != nil {
@@ -78,10 +86,10 @@ func (parser Parser) or() (Expression, error) {
 			}
 
 			leftOperand = OrExpression{leftOperand, rightOperand}
-		case EndToken:
+		case EndToken, CloseParenToken:
 			return leftOperand, nil
 		default:
-			return nil, fmt.Errorf("unexpected token '%v': expecting 'or'.", token)
+			return nil, fmt.Errorf("unexpected token: expecting 'or' but found '%v'.", Type(token))
 		}
 	}
 }
@@ -107,7 +115,7 @@ func (parser Parser) and() (Expression, error) {
 			}
 
 			leftOperand = AndExpression{leftOperand, rightOperand}
-		case OrOperatorToken, EndToken:
+		case OrOperatorToken, CloseParenToken, EndToken:
 			return leftOperand, nil
 		case NotOperatorToken, TagToken:
 			rightOperand, err := parser.not()
@@ -117,7 +125,7 @@ func (parser Parser) and() (Expression, error) {
 
 			leftOperand = AndExpression{leftOperand, rightOperand}
 		default:
-			return nil, fmt.Errorf("unexpected token '%v': expecting 'and' or tag.", token)
+			return nil, fmt.Errorf("unexpected token: expecting 'and' but found '%v'.", Type(token))
 		}
 	}
 }
@@ -138,13 +146,30 @@ func (parser Parser) not() (Expression, error) {
 		}
 
 		return NotExpression{operand}, nil
-	default:
+	case OpenParenToken:
+		parser.scanner.Next()
+
+		operand, err := parser.expression()
+		if err != nil {
+			return nil, err
+		}
+
+		token2, err := parser.scanner.Next()
+		if err != nil {
+			return nil, err
+		}
+		_ = token2.(CloseParenToken)
+
+		return operand, nil
+	case TagToken:
 		operand, err := parser.tag()
 		if err != nil {
 			return nil, err
 		}
 
 		return operand, nil
+	default:
+		return nil, fmt.Errorf("unexpected token: expecting 'not' but found '%v'.", Type(token))
 	}
 }
 
@@ -158,6 +183,6 @@ func (parser Parser) tag() (Expression, error) {
 	case TagToken:
 		return TagExpression{typedToken.name}, nil
 	default:
-		return nil, fmt.Errorf("unexpected token '%v'. Expected tag.", reflect.TypeOf(token).String())
+		return nil, fmt.Errorf("unexpected token: expecting 'tag' but found '%v'.", Type(token))
 	}
 }

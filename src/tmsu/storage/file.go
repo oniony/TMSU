@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"time"
 	"tmsu/fingerprint"
+	"tmsu/query"
 	"tmsu/storage/database"
 )
 
@@ -110,6 +111,11 @@ func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (data
 	}
 
 	return resultFiles, nil
+}
+
+// Retrieves the set of files that match the specified query.
+func (storage *Storage) QueryFiles(expression query.Expression) (database.Files, error) {
+	return storage.Db.QueryFiles(expression)
 }
 
 // Retrieves the sets of duplicate files within the database.

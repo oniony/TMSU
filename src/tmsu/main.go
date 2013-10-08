@@ -52,7 +52,7 @@ func main() {
 		cli.Option{"--help", "-h", "show help and exit", false, ""},
 		cli.Option{"--version", "-V", "show version information and exit", false, ""}}
 
-	parser := cli.NewParser(globalOptions, commands)
+	parser := cli.NewOptionParser(globalOptions, commands)
 	commandName, options, arguments, err := parser.Parse(os.Args[1:])
 	if err != nil {
 		log.Fatal(err)

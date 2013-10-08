@@ -51,12 +51,10 @@ func TestFilesAll(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	_, err = store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
@@ -101,12 +99,10 @@ func TestFilesSingleTag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
@@ -116,7 +112,6 @@ func TestFilesSingleTag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagB, err := store.AddTag("b")
 	if err != nil {
 		test.Fatal(err)
@@ -125,11 +120,9 @@ func TestFilesSingleTag(test *testing.T) {
 	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
@@ -173,22 +166,18 @@ func TestFilesNotSingleTag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagD, err := store.AddTag("d")
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagB, err := store.AddTag("b")
 	if err != nil {
 		test.Fatal(err)
@@ -197,11 +186,9 @@ func TestFilesNotSingleTag(test *testing.T) {
 	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
@@ -210,7 +197,7 @@ func TestFilesNotSingleTag(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"-b"}); err != nil {
+	if err := command.Exec(cli.Options{}, []string{"not", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -220,6 +207,80 @@ func TestFilesNotSingleTag(test *testing.T) {
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
 	compareOutput(test, "/tmp/d\n", string(bytes))
+}
+
+func TestFilesImplicitAnd(test *testing.T) {
+	// set-up
+
+	databasePath := configureDatabase()
+	defer os.Remove(databasePath)
+
+	outPath, errPath, err := configureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagD, err := store.AddTag("d")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagB, err := store.AddTag("b")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagC, err := store.AddTag("c")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	command := FilesCommand{}
+
+	// test
+
+	if err := command.Exec(cli.Options{}, []string{"b", "c"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	log.Outfile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(log.Outfile)
+	compareOutput(test, "/tmp/b/a\n", string(bytes))
 }
 
 func TestFilesAnd(test *testing.T) {
@@ -245,12 +306,10 @@ func TestFilesAnd(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
@@ -260,12 +319,10 @@ func TestFilesAnd(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagB, err := store.AddTag("b")
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagC, err := store.AddTag("c")
 	if err != nil {
 		test.Fatal(err)
@@ -274,15 +331,12 @@ func TestFilesAnd(test *testing.T) {
 	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
@@ -291,7 +345,7 @@ func TestFilesAnd(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"b", "c"}); err != nil {
+	if err := command.Exec(cli.Options{}, []string{"b", "and", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -301,6 +355,80 @@ func TestFilesAnd(test *testing.T) {
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
 	compareOutput(test, "/tmp/b/a\n", string(bytes))
+}
+
+func TestFilesImplicitAndNot(test *testing.T) {
+	// set-up
+
+	databasePath := configureDatabase()
+	defer os.Remove(databasePath)
+
+	outPath, errPath, err := configureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagD, err := store.AddTag("d")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagB, err := store.AddTag("b")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagC, err := store.AddTag("c")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	command := FilesCommand{}
+
+	// test
+
+	if err := command.Exec(cli.Options{}, []string{"b", "not", "c"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	log.Outfile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(log.Outfile)
+	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
 func TestFilesAndNot(test *testing.T) {
@@ -326,12 +454,10 @@ func TestFilesAndNot(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
@@ -341,12 +467,10 @@ func TestFilesAndNot(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagB, err := store.AddTag("b")
 	if err != nil {
 		test.Fatal(err)
 	}
-
 	tagC, err := store.AddTag("c")
 	if err != nil {
 		test.Fatal(err)
@@ -355,15 +479,12 @@ func TestFilesAndNot(test *testing.T) {
 	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
 		test.Fatal(err)
 	}
-
 	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
 		test.Fatal(err)
 	}
@@ -372,7 +493,7 @@ func TestFilesAndNot(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"b", "-c"}); err != nil {
+	if err := command.Exec(cli.Options{}, []string{"b", "and", "not", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -382,6 +503,80 @@ func TestFilesAndNot(test *testing.T) {
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
 	compareOutput(test, "/tmp/b\n", string(bytes))
+}
+
+func TestFilesOr(test *testing.T) {
+	// set-up
+
+	databasePath := configureDatabase()
+	defer os.Remove(databasePath)
+
+	outPath, errPath, err := configureOutput()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer os.Remove(outPath)
+	defer os.Remove(errPath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagD, err := store.AddTag("d")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagB, err := store.AddTag("b")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagC, err := store.AddTag("c")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	command := FilesCommand{}
+
+	// test
+
+	if err := command.Exec(cli.Options{}, []string{"b", "or", "c"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	log.Outfile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(log.Outfile)
+	compareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
 }
 
 //TODO tests for 'file' and 'directory' options.

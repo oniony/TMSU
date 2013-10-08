@@ -22,7 +22,7 @@ import (
 )
 
 func TestParseVanillaArguments(test *testing.T) {
-	parser := NewParser(Options{}, make(map[CommandName]Command))
+	parser := NewOptionParser(Options{}, make(map[CommandName]Command))
 
 	commandName, options, arguments, err := parser.Parse([]string{"a", "b", "c"})
 	if err != nil {
@@ -43,7 +43,7 @@ func TestParseVanillaArguments(test *testing.T) {
 }
 
 func TestParseGlobalOptions(test *testing.T) {
-	parser := NewParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, make(map[CommandName]Command))
+	parser := NewOptionParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, make(map[CommandName]Command))
 
 	commandName, options, arguments, err := parser.Parse([]string{"--verbose", "a", "b"})
 	if err != nil {
@@ -70,7 +70,7 @@ func TestParseGlobalOptions(test *testing.T) {
 }
 
 func TestInvalidGlobalOption(test *testing.T) {
-	parser := NewParser(Options{}, make(map[CommandName]Command))
+	parser := NewOptionParser(Options{}, make(map[CommandName]Command))
 
 	_, _, _, err := parser.Parse([]string{"--invalid", "a", "b"})
 

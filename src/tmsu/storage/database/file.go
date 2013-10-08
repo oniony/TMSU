@@ -24,6 +24,7 @@ import (
 	"strconv"
 	"time"
 	"tmsu/fingerprint"
+	"tmsu/query"
 )
 
 // A tracked file.
@@ -283,6 +284,19 @@ func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (F
 	return readFiles(rows, make(Files, 0, 10))
 }
 
+// Retrieves the set of files matching the specified query.
+func (db *Database) QueryFiles(expression query.Expression) (Files, error) {
+	sql := buildQuery(expression)
+
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(Files, 0, 10))
+}
+
 // Retrieves the sets of duplicate files within the database.
 func (db *Database) DuplicateFiles() ([]Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
@@ -462,4 +476,40 @@ func readFiles(rows *sql.Rows, files Files) (Files, error) {
 	}
 
 	return files, nil
+}
+
+func buildQuery(expression query.Expression) string {
+	builder := NewBuilder()
+
+	builder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
+	buildQueryBranch(expression, builder)
+	builder.AppendSql("ORDER BY directory || '/' || name")
+
+	return builder.Sql
+}
+
+func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
+	switch exp := expression.(type) {
+	case query.TagExpression:
+		builder.AppendSql(`id IN (SELECT file_id
+FROM file_tag
+WHERE tag_id = (SELECT id
+                FROM tag
+                WHERE name = '` + exp.Name + `'))
+`)
+		expression = nil
+	case query.NotExpression:
+		builder.AppendSql("\nNOT\n")
+		buildQueryBranch(exp.Operand, builder)
+	case query.AndExpression:
+		buildQueryBranch(exp.LeftOperand, builder)
+		builder.AppendSql("\nAND\n")
+		buildQueryBranch(exp.RightOperand, builder)
+	case query.OrExpression:
+		buildQueryBranch(exp.LeftOperand, builder)
+		builder.AppendSql("\nOR\n")
+		buildQueryBranch(exp.RightOperand, builder)
+	default:
+		panic("Unsupported expression type")
+	}
 }

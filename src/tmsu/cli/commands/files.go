@@ -19,9 +19,11 @@ package commands
 
 import (
 	"fmt"
+	"strings"
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/path"
+	"tmsu/query"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -92,7 +94,7 @@ func (command FilesCommand) Exec(options cli.Options, args []string) error {
 		return command.listAllFiles()
 	}
 
-	return command.listFilesForTags(args)
+	return command.listFilesForQuery(args)
 }
 
 // unexported
@@ -116,9 +118,9 @@ func (command FilesCommand) listAllFiles() error {
 	return command.listFiles(files)
 }
 
-func (command FilesCommand) listFilesForTags(args []string) error {
+func (command FilesCommand) listFilesForQuery(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("at least one tag must be specified. Use --all to show all files.")
+		return fmt.Errorf("Query must be specified. Use --all to show all files.")
 	}
 
 	store, err := storage.Open()
@@ -127,42 +129,25 @@ func (command FilesCommand) listFilesForTags(args []string) error {
 	}
 	defer store.Close()
 
-	includeTagIds := make([]uint, 0)
-	excludeTagIds := make([]uint, 0)
-	for _, arg := range args {
-		var tagName string
-		var include bool
-
-		if arg[0] == '-' {
-			tagName = arg[1:]
-			include = false
-		} else {
-			tagName = arg
-			include = true
-		}
-
-		tag, err := store.TagByName(tagName)
-		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
-		}
-		if tag == nil {
-			log.Fatalf("no such tag '%v'.", tagName)
-		}
-
-		if include {
-			includeTagIds = append(includeTagIds, tag.Id)
-		} else {
-			excludeTagIds = append(excludeTagIds, tag.Id)
-		}
+	if command.verbose {
+		log.Info("parsing query")
 	}
+
+	queryText := strings.Join(args, " ")
+	expression, err := query.Parse(queryText)
+	if err != nil {
+		return err
+	}
+
+	//TODO validate tag names
 
 	if command.verbose {
-		log.Info("retrieving set of tagged files from the database.")
+		log.Info("querying database")
 	}
 
-	files, err := store.FilesWithTags(includeTagIds, excludeTagIds)
+	files, err := store.QueryFiles(expression)
 	if err != nil {
-		return fmt.Errorf("could not retrieve files with tags %v and without tags %v: %v", includeTagIds, excludeTagIds, err)
+		return fmt.Errorf("could not query files: %v", err)
 	}
 
 	return command.listFiles(files)

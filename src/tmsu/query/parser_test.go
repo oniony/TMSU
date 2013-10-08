@@ -205,6 +205,82 @@ func TestOrAndParsing(test *testing.T) {
 	validateTag(and.RightOperand, "sweetcorn", test)
 }
 
+func TestParen(test *testing.T) {
+	scanner := NewScanner("(cheese)")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	validateTag(expression, "cheese", test)
+}
+
+func TestDoubleParen(test *testing.T) {
+	scanner := NewScanner("((cheese))")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	validateTag(expression, "cheese", test)
+}
+
+func TestNotParen(test *testing.T) {
+	scanner := NewScanner("not (cheese)")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	not := validateNot(expression)
+	validateTag(not.Operand, "cheese", test)
+}
+
+func TestParenNot(test *testing.T) {
+	scanner := NewScanner("(not cheese)")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	not := validateNot(expression)
+	validateTag(not.Operand, "cheese", test)
+}
+
+func TestParenAndOrParsing(test *testing.T) {
+	scanner := NewScanner("(cheese and tomato) or sweetcorn")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	or := validateOr(expression)
+	and := validateAnd(or.LeftOperand)
+	validateTag(and.LeftOperand, "cheese", test)
+	validateTag(and.RightOperand, "tomato", test)
+	validateTag(or.RightOperand, "sweetcorn", test)
+}
+
 func TestAndParenOrParsing(test *testing.T) {
 	scanner := NewScanner("cheese and (tomato or sweetcorn)")
 	parser := NewParser(scanner)

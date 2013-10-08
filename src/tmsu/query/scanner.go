@@ -34,21 +34,21 @@ func Type(token Token) string {
 	case TagToken:
 		return "tag"
 	case OpenParenToken:
-		return "("
+		return "'('"
 	case CloseParenToken:
-		return ")"
+		return "')'"
 	case NotOperatorToken:
-		return "not"
+		return "'not'"
 	case AndOperatorToken:
-		return "and"
+		return "'and'"
 	case OrOperatorToken:
-		return "or"
+		return "'or'"
 	case EndToken:
 		return "EOF"
 	case nil:
 		return "nil"
 	default:
-		return "unkown"
+		return "unknown"
 	}
 }
 

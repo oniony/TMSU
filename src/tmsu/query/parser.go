@@ -62,7 +62,13 @@ func (parser Parser) expression() (Expression, error) {
 		return nil, err
 	}
 
-	return expression, nil
+	token, err := parser.scanner.LookAhead()
+	switch token.(type) {
+	case EndToken:
+		return expression, nil
+	default:
+		return nil, fmt.Errorf("unexpected token: %v.", Type(token))
+	}
 }
 
 func (parser Parser) or() (Expression, error) {
@@ -89,7 +95,7 @@ func (parser Parser) or() (Expression, error) {
 		case EndToken, CloseParenToken:
 			return leftOperand, nil
 		default:
-			return nil, fmt.Errorf("unexpected token: expecting 'or' but found '%v'.", Type(token))
+			return nil, fmt.Errorf("unexpected token: %v.", Type(token))
 		}
 	}
 }
@@ -117,7 +123,7 @@ func (parser Parser) and() (Expression, error) {
 			leftOperand = AndExpression{leftOperand, rightOperand}
 		case OrOperatorToken, CloseParenToken, EndToken:
 			return leftOperand, nil
-		case NotOperatorToken, TagToken:
+		case NotOperatorToken, TagToken, OpenParenToken:
 			rightOperand, err := parser.not()
 			if err != nil {
 				return nil, err
@@ -125,7 +131,7 @@ func (parser Parser) and() (Expression, error) {
 
 			leftOperand = AndExpression{leftOperand, rightOperand}
 		default:
-			return nil, fmt.Errorf("unexpected token: expecting 'and' but found '%v'.", Type(token))
+			return nil, fmt.Errorf("unexpected token: %v.", Type(token))
 		}
 	}
 }
@@ -149,7 +155,7 @@ func (parser Parser) not() (Expression, error) {
 	case OpenParenToken:
 		parser.scanner.Next()
 
-		operand, err := parser.expression()
+		operand, err := parser.or()
 		if err != nil {
 			return nil, err
 		}
@@ -169,7 +175,7 @@ func (parser Parser) not() (Expression, error) {
 
 		return operand, nil
 	default:
-		return nil, fmt.Errorf("unexpected token: expecting 'not' but found '%v'.", Type(token))
+		return nil, fmt.Errorf("unexpected token: %v.", Type(token))
 	}
 }
 
@@ -183,6 +189,6 @@ func (parser Parser) tag() (Expression, error) {
 	case TagToken:
 		return TagExpression{typedToken.name}, nil
 	default:
-		return nil, fmt.Errorf("unexpected token: expecting 'tag' but found '%v'.", Type(token))
+		return nil, fmt.Errorf("unexpected token: %v.", Type(token))
 	}
 }

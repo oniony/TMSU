@@ -32,24 +32,25 @@ func ValidateTagNames(tagNames []string) error {
 }
 
 func ValidateTagName(tagName string) error {
-	if tagName == "." || tagName == ".." {
-		return errors.New("Tag name cannot be '.' or '..'.")
-	}
-
-	if tagName[0] == '-' {
-		return errors.New("Tag names cannot start with '-'.")
+	switch tagName {
+	case ".", "..":
+		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
+	case "and", "or", "not":
+		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
 	}
 
 	for _, ch := range tagName {
 		switch ch {
+		case '(', ')':
+			return errors.New("tag names cannot contain parentheses: '(' or ')'.") // used in query language
 		case ',':
-			return errors.New("tag names cannot contain ','.")
+			return errors.New("tag names cannot contain comma: ','.") // reserved for tag delimiter
 		case '=':
-			return errors.New("tag names cannot contain '='.")
-		case ' ':
-			return errors.New("tag names cannot contain ' '.")
+			return errors.New("tag names cannot contain equals: '='.") // reserved for tag values
+		case ' ', '\t':
+			return errors.New("tag names cannot contain space or tab.") // used as tag delimiter
 		case '/':
-			return errors.New("tag names cannot contain '/'.")
+			return errors.New("tag names cannot contain slash: '/'.") // cannot be used in the VFS
 		}
 	}
 

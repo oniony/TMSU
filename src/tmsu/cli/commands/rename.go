@@ -69,6 +69,11 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 	sourceTagName := args[0]
 	destTagName := args[1]
 
+	err = cli.ValidateTagName(destTagName)
+	if err != nil {
+		return err
+	}
+
 	sourceTag, err := store.TagByName(sourceTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)

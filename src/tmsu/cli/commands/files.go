@@ -139,6 +139,14 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 		return err
 	}
 
+	tagNames := identifyTagNames(expression)
+	tags, err := store.TagsByNames(tagNames)
+	for _, tagName := range tagNames {
+		if !containsTag(tags, tagName) {
+			return fmt.Errorf("no such tag '%v'.", tagName)
+		}
+	}
+
 	if command.verbose {
 		log.Info("querying database")
 	}
@@ -202,24 +210,37 @@ func (command *FilesCommand) listFiles(files database.Files) error {
 }
 
 func identifyTagNames(expression query.Expression) []string {
-	names := make([]string, 10)
-	identifyTagNamesR(expression, names)
+	names := make([]string, 0, 10)
+	names = identifyTagNamesR(expression, names)
+
 	return names
 }
 
-func identifyTagNamesR(expression query.Expression, names []string) {
+func identifyTagNamesR(expression query.Expression, names []string) []string {
 	switch exp := expression.(type) {
 	case query.TagExpression:
 		names = append(names, exp.Name)
 	case query.NotExpression:
-		identifyTagNamesR(exp.Operand, names)
+		names = identifyTagNamesR(exp.Operand, names)
 	case query.AndExpression:
-		identifyTagNamesR(exp.LeftOperand, names)
-		identifyTagNamesR(exp.RightOperand, names)
+		names = identifyTagNamesR(exp.LeftOperand, names)
+		names = identifyTagNamesR(exp.RightOperand, names)
 	case query.OrExpression:
-		identifyTagNamesR(exp.LeftOperand, names)
-		identifyTagNamesR(exp.RightOperand, names)
+		names = identifyTagNamesR(exp.LeftOperand, names)
+		names = identifyTagNamesR(exp.RightOperand, names)
 	default:
 		panic("unsupported tokne type")
 	}
+
+	return names
+}
+
+func containsTag(tags database.Tags, tagName string) bool {
+	for _, tag := range tags {
+		if tag.Name == tagName {
+			return true
+		}
+	}
+
+	return false
 }

@@ -53,6 +53,21 @@ _tmsu_tags() {
 	_describe -t tags 'tags' tag_list
 }
 
+_tmsu_query() {
+	typeset -a tag_list
+	local tag
+
+	_call_program tmsu tmsu tags --all | while read -A tag
+	do
+		tag_list+=$tag[1]:gs/:/\\:/
+	done
+	tag_list+='and'
+	tag_list+='or'
+	tag_list+='not'
+
+	_describe -t tags 'tags' tag_list
+}
+
 # commands
 
 _tmsu_cmd_copy() {
@@ -77,7 +92,7 @@ _tmsu_cmd_files() {
                      ''{--leaf,-l}'[list only the bottom-most (leaf) items]' \
                      ''{--recursive,-r}'[read all files on the file-system under each matching directory, recursively]' \
                      ''{--count,-c}'[lists the number of files rather than their names]' \
-	                 '*:tag:_tmsu_tags' \
+	                 '*:tag:_tmsu_query' \
 	&& ret=0
 }
 

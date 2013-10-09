@@ -130,6 +130,8 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return OpenParenToken{}, nil
 	case r == rune(')'):
 		return CloseParenToken{}, nil
+	case r == rune('-'):
+		return NotOperatorToken{}, nil
 	case unicode.IsOneOf(tagChars, r):
 		return scanner.readTagTokenOrOperatorToken(r)
 	default:

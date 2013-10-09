@@ -42,6 +42,8 @@ dist: compile
 	cp -R $(BIN_DIR) $(DIST_DIR)
 	cp README.md $(DIST_DIR)
 	cp COPYING $(DIST_DIR)
+	@mkdir -p $(DIST_DIR)/misc/zsh
+	cp -R $(ZSH_COMP) $(DIST_DIR)/misc/zsh
 	tar czf $(DIST_FILE) $(DIST_DIR)
 	rm -Rf $(DIST_DIR)
 

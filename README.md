@@ -1,3 +1,4 @@
+
 Overview
 ========
 
@@ -22,8 +23,8 @@ Full documentation is maintained online on the wiki:
 
   * <http://bitbucket.org/oniony/tmsu/wiki>
 
-Downloading
-===========
+Installing
+==========
 
 Binary builds for a limited number of architectures and operating system
 combinations are available:
@@ -31,7 +32,21 @@ combinations are available:
   * <http://bitbucket.org/oniony/tmsu/downloads>
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
-program to function.
+program to function. These packages are typically available with your
+operating system's package management system.
+
+1. Install the binary
+
+Copy the program binary. The location may be different for your operating
+system:
+
+    $ sudo cp bin/tmsu /usr/bin
+
+2. Optional: Zsh completion
+
+Copy the Zsh completion file to the Zsh site-functions directory:
+
+    $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
 
 Compiling
 =========
@@ -107,7 +122,8 @@ Release Notes
 v0.3.0 (in development)
 -----------------------
 
-  * Feature: file queries.
+  * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
+    tartare-sauce)'
   * Feature: tag values.
 
 v0.2.2

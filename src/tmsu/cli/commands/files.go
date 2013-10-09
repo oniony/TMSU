@@ -139,8 +139,6 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 		return err
 	}
 
-	//TODO validate tag names
-
 	if command.verbose {
 		log.Info("querying database")
 	}
@@ -201,4 +199,27 @@ func (command *FilesCommand) listFiles(files database.Files) error {
 	}
 
 	return nil
+}
+
+func identifyTagNames(expression query.Expression) []string {
+	names := make([]string, 10)
+	identifyTagNamesR(expression, names)
+	return names
+}
+
+func identifyTagNamesR(expression query.Expression, names []string) {
+	switch exp := expression.(type) {
+	case query.TagExpression:
+		names = append(names, exp.Name)
+	case query.NotExpression:
+		identifyTagNamesR(exp.Operand, names)
+	case query.AndExpression:
+		identifyTagNamesR(exp.LeftOperand, names)
+		identifyTagNamesR(exp.RightOperand, names)
+	case query.OrExpression:
+		identifyTagNamesR(exp.LeftOperand, names)
+		identifyTagNamesR(exp.RightOperand, names)
+	default:
+		panic("unsupported tokne type")
+	}
 }

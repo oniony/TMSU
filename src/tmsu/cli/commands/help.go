@@ -87,6 +87,8 @@ func (helpCommand HelpCommand) summary() {
 
 		log.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v", command.Name(), commandSummary)
 	}
+
+	log.Print()
 }
 
 func (helpCommand HelpCommand) listCommands() {
@@ -126,6 +128,4 @@ func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
 			log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
 		}
 	}
-
-	log.Print()
 }

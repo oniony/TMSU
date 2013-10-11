@@ -123,8 +123,7 @@ v0.3.0 (in development)
 -----------------------
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
-    tartare-sauce)'
-  * Feature: tag values.
+    tartar-sauce)'
 
 v0.2.2
 ------

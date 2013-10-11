@@ -3,12 +3,12 @@ Overview
 ========
 
 TMSU is an application that allows you to organise your files by associating
-them with tags. It provides a tool for managing these tags and a virtual file-
+them with tags. It provides a tool for managing these tags and a virtual file
 system to allow tag based access to your files.
 
 TMSU's virtual file system does not store your files: it merely provides an
-alternative, tagged based view of your files stored elsewhere in the file-
-system. That way you have the freedom to choose the most suitable file-system
+alternative, tagged based view of your files stored elsewhere in the file
+system. That way you have the freedom to choose the most suitable file system
 for storage whilst still benefiting from tag based access.
 
 Usage
@@ -128,7 +128,7 @@ v0.3.0 (in development)
 v0.2.2
 ------
 
-  * Fixed virtual file-system.
+  * Fixed virtual file system.
 
 v0.2.1
 ------
@@ -173,8 +173,8 @@ v0.1.0
 ------
 
 This version aims to improve the performance of the program by removing auto-
-matic tag inheritence which has proven slow on larger databases and slow file-
-systems (e.g. network file-systems). Instead there is now a choice of how to
+matic tag inheritence which has proven slow on larger databases and slow file 
+systems (e.g. network file systems). Instead there is now a choice of how to
 handle directory contents:
 
   * Add the nested files to the database using the --recursive option on the
@@ -184,11 +184,11 @@ handle directory contents:
 
 Adding directory contents using the --recursive option on the 'tag' command
 will be slower and will result in a larger database. However querying of the
-database will be faster as TMSU will not need to examine the file-system. This
+database will be faster as TMSU will not need to examine the file system. This
 option also means that duplicate files will be identified.
 
 Dynamically discovering directory conents using the --recursive option on the
-'files' command will be slower as TMSU will need to scan the file-system and
+'files' command will be slower as TMSU will need to scan the file system and
 duplicate files will not be identified as these files are not added to the
 database. However tagging files will be faster and the resultant database will
 be smaller.
@@ -207,7 +207,7 @@ script before running it.
     $ sqlite3 -init misc/db-upgrades/0.0.9_to_0.1.0.sql ~/.tmsu/default.db
     $ tmsu repair
 
-  * 'files' command no longer finds files that inherit a tag from the file-
+  * 'files' command no longer finds files that inherit a tag from the file 
     system on-the-fly unless run with the new --recursive (-r) option. New
     --directory (-d) and --file (-f) options to limit output to just files or
     directories. In addition the new --top (-t) and --leaf (-l) options show the
@@ -227,7 +227,7 @@ script before running it.
   * The 'tag' command no longer identifies modified files. (Use 'repair'
     instead.)
   * The 'mount' command now has a '--allow-other' option which allows other
-    users to access the mounted file-system.
+    users to access the mounted file system.
   * Updated Zsh completion.
   * Improved error messages.
   * Improved unit-test coverage.
@@ -236,7 +236,7 @@ script before running it.
 v0.0.9
 ------
 
-  * Fixed bug which caused process hosting the virtual file-system to crash if
+  * Fixed bug which caused process hosting the virtual file system to crash if
     a non-existant tag directory is 'stat'ed.
   * Untagged files now inherit parent directory tags.
 
@@ -266,7 +266,7 @@ v0.0.7
 
   Files larger than 5MB now use a different fingerprinting algorithm where the
   fingerprint is produced by taking a 500KB of the start, middle and end of the
-  file. This should dramatically improve performance, especially on slow file-
+  file. This should dramatically improve performance, especially on slow file 
   systems.
 
   NOTE: it is advisable to run 'repair' after upgrading to this version to update

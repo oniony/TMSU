@@ -52,13 +52,10 @@ modifications and moves.
 Where no PATHS are specified all files in the database are checked.
 
                                           Reported Repaired
-    Modified files                           Y        Y
-    Moved files                              Y        Y
-    Missing files                            Y        1
-    Untagged files                           Y
-
-    1. missing files are only removed from the database when --force is
-       specified.
+    Modified files                          yes      yes
+    Moved files                             yes      yes
+    Missing files                           yes      no
+    Untagged files                          yes      no
 
 Modified files are identified by a change to the file's modification time or
 file size. These files are repaired by updating the modification time, size and
@@ -70,7 +67,7 @@ will not be identified. Where no PATHs are specified, moved files will only be
 identified if moved to a tagged directory.
 
 Missing files are reported but are not, by default, removed from the database
-as this would destroy the tagging information associated with it. If you do
+as this would destroy the tagging information associated with them. If you do
 wish to clear missing files from the database and destroying the associated
 tagging information then use the --force option.
 

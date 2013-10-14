@@ -164,9 +164,13 @@ func (parser Parser) not() (Expression, error) {
 		if err != nil {
 			return nil, err
 		}
-		_ = token2.(CloseParenToken)
 
-		return operand, nil
+		switch token2.(type) {
+		case CloseParenToken:
+			return operand, nil
+		default:
+			return nil, fmt.Errorf("unexpected token: %v", Type(token2))
+		}
 	case TagToken:
 		operand, err := parser.tag()
 		if err != nil {

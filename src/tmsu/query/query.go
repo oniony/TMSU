@@ -23,3 +23,31 @@ func Parse(query string) (Expression, error) {
 
 	return parser.Parse()
 }
+
+func TagNames(expression Expression) []string {
+	names := make([]string, 0, 10)
+	names = tagNames(expression, names)
+
+	return names
+}
+
+// unexported
+
+func tagNames(expression Expression, names []string) []string {
+	switch exp := expression.(type) {
+	case TagExpression:
+		names = append(names, exp.Name)
+	case NotExpression:
+		names = tagNames(exp.Operand, names)
+	case AndExpression:
+		names = tagNames(exp.LeftOperand, names)
+		names = tagNames(exp.RightOperand, names)
+	case OrExpression:
+		names = tagNames(exp.LeftOperand, names)
+		names = tagNames(exp.RightOperand, names)
+	default:
+		panic("unsupported token type")
+	}
+
+	return names
+}

@@ -28,9 +28,13 @@ import (
 	"strings"
 	"time"
 	"tmsu/log"
+	"tmsu/query"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
+
+const TAGS_DIR = "tags"
+const QUERY_DIR = "query"
 
 type FuseVfs struct {
 	store     *storage.Storage
@@ -108,15 +112,19 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	switch name {
 	case "":
 		fallthrough
-	case "tags":
+	case TAGS_DIR:
 		return vfs.getTagsAttr()
+	case QUERY_DIR:
+		return vfs.getQueryAttr()
 	}
 
 	path := vfs.splitPath(name)
 
 	switch path[0] {
-	case "tags":
+	case TAGS_DIR:
 		return vfs.getTaggedEntryAttr(path[1:])
+	case QUERY_DIR:
+		return vfs.getQueryEntryAttr(path[1:])
 	}
 
 	return nil, fuse.ENOENT
@@ -181,14 +189,18 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	switch name {
 	case "":
 		return vfs.topDirectories()
-	case "tags":
+	case TAGS_DIR:
 		return vfs.tagDirectories()
+	case QUERY_DIR:
+		return vfs.queryDirectories()
 	}
 
 	path := vfs.splitPath(name)
 	switch path[0] {
-	case "tags":
+	case TAGS_DIR:
 		return vfs.openTaggedEntryDir(path[1:])
+	case QUERY_DIR:
+		return vfs.openQueryEntryDir(path[1:])
 	}
 
 	return nil, fuse.ENOENT
@@ -200,7 +212,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 
 	path := vfs.splitPath(name)
 	switch path[0] {
-	case "tags":
+	case TAGS_DIR, QUERY_DIR:
 		return vfs.readTaggedEntryLink(path[1:])
 	}
 
@@ -264,11 +276,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	log.Infof("BEGIN Unlink(%v)", name)
 	defer log.Infof("END Unlink(%v)", name)
 
-	fileId, err := vfs.parseFileId(name)
-	if err != nil {
-		log.Fatal("Could not unlink: ", err)
-	}
-
+	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
 		// cannot unlink tag directories
 		return fuse.EPERM
@@ -305,31 +313,31 @@ func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
 }
 
-func (vfs FuseVfs) parseFileId(name string) (uint, error) {
+func (vfs FuseVfs) parseFileId(name string) uint {
 	parts := strings.Split(name, ".")
 	count := len(parts)
 
 	if count == 1 {
-		return 0, nil
+		return 0
 	}
 
-	id, err := Atoui(parts[count-2])
+	id, err := atoui(parts[count-2])
 	if err != nil {
-		id, err = Atoui(parts[count-1])
+		id, err = atoui(parts[count-1])
 		if err != nil {
-			return 0, nil
+			return 0
 		}
 	}
 
-	return id, nil
+	return id
 }
 
 func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
 	log.Infof("BEGIN topDirectories")
 	defer log.Infof("END topDirectories")
 
-	entries := make([]fuse.DirEntry, 0, 1)
-	entries = append(entries, fuse.DirEntry{Name: "tags", Mode: fuse.S_IFDIR})
+	entries := []fuse.DirEntry{fuse.DirEntry{Name: TAGS_DIR, Mode: fuse.S_IFDIR},
+		fuse.DirEntry{Name: QUERY_DIR, Mode: fuse.S_IFDIR}}
 	return entries, fuse.OK
 }
 
@@ -350,6 +358,10 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	return entries, fuse.OK
 }
 
+func (vfs FuseVfs) queryDirectories() ([]fuse.DirEntry, fuse.Status) {
+	return []fuse.DirEntry{}, fuse.OK
+}
+
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	log.Infof("BEGIN getTagsAttr")
 	defer log.Infof("END getTagsAttr")
@@ -363,6 +375,14 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(tagCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
+func (vfs FuseVfs) getQueryAttr() (*fuse.Attr, fuse.Status) {
+	log.Infof("BEGIN getQueryAttr")
+	defer log.Infof("END getQueryAttr")
+
+	now := time.Now()
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: 0, Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+}
+
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	log.Infof("BEGIN getTaggedEntryAttr(%v)", path)
 	defer log.Infof("END getTaggedEntryAttr(%v)", path)
@@ -370,32 +390,62 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	pathLength := len(path)
 	name := path[pathLength-1]
 
-	fileId, err := vfs.parseFileId(name)
+	fileId := vfs.parseFileId(name)
+	if fileId != 0 {
+		return vfs.getFileEntryAttr(fileId)
+	}
+
+	// tag directory
+	tagIds, err := vfs.tagNamesToIds(path)
+	if err != nil {
+		log.Fatalf("Could not lookup tag IDs: %v.", err)
+	}
+	if tagIds == nil {
+		return nil, fuse.ENOENT
+	}
+
+	now := time.Now()
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+
+}
+
+func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
+	log.Infof("BEGIN getQueryEntryAttr(%v)", path)
+	defer log.Infof("END getQueryEntryAttr(%v)", path)
+
+	pathLength := len(path)
+	name := path[pathLength-1]
+
+	fileId := vfs.parseFileId(name)
+	if fileId != 0 {
+		return vfs.getFileEntryAttr(fileId)
+	}
+
+	queryText := path[0]
+
+	// don't allow leading or trailing space as otherwise UI autcompletion in apps will think multiple entries are valid for the same query as the user types
+	if strings.TrimSpace(queryText) != queryText {
+		return nil, fuse.ENOENT
+	}
+
+	expression, err := query.Parse(queryText)
 	if err != nil {
 		return nil, fuse.ENOENT
 	}
 
-	if fileId == 0 {
-		// tag directory
-		tagIds, err := vfs.tagNamesToIds(path)
-		if err != nil {
-			log.Fatalf("Could not lookup tag IDs: %v.", err)
-		}
-		if tagIds == nil {
+	tagNames := query.TagNames(expression)
+	tags, err := vfs.store.TagsByNames(tagNames)
+	for _, tagName := range tagNames {
+		if !containsTag(tags, tagName) {
 			return nil, fuse.ENOENT
 		}
-
-		//TODO slow
-		//		fileCount, err := vfs.store.FileCountWithTags(tagIds)
-		//		if err != nil {
-		//			log.Fatalf("Could not retrieve count of files with tags: %v. (%v)", path, err)
-		//		}
-		fileCount := 0
-
-		now := time.Now()
-		return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(fileCount), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 	}
 
+	now := time.Now()
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+}
+
+func (vfs FuseVfs) getFileEntryAttr(fileId uint) (*fuse.Attr, fuse.Status) {
 	file, err := vfs.store.File(fileId)
 	if err != nil {
 		log.Fatalf("Could not retrieve file #%v: %v", fileId, err)
@@ -452,16 +502,37 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	return entries, fuse.OK
 }
 
+func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
+	log.Infof("BEGIN openQueryEntryDir(%v)", path)
+	defer log.Infof("END openQueryEntryDir(%v)", path)
+
+	queryText := path[0]
+	expression, err := query.Parse(queryText)
+	if err != nil {
+		return nil, fuse.ENOENT
+	}
+
+	files, err := vfs.store.QueryFiles(expression)
+	if err != nil {
+		log.Fatalf("Could not query files: %v", err)
+	}
+
+	entries := make([]fuse.DirEntry, 0, len(files))
+	for _, file := range files {
+		linkName := vfs.getLinkName(file)
+		entries = append(entries, fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK})
+	}
+
+	return entries, fuse.OK
+}
+
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	log.Infof("BEGIN readTaggedEntryLink(%v)", path)
 	defer log.Infof("END readTaggedEntryLink(%v)", path)
 
 	name := path[len(path)-1]
 
-	fileId, err := vfs.parseFileId(name)
-	if err != nil {
-		log.Fatalf("Could not parse file identifier: %v", err)
-	}
+	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
 		return "", fuse.ENOENT
 	}
@@ -478,7 +549,7 @@ func (vfs FuseVfs) getLinkName(file *database.File) string {
 	extension := filepath.Ext(file.Path())
 	fileName := filepath.Base(file.Path())
 	linkName := fileName[0 : len(fileName)-len(extension)]
-	suffix := "." + Uitoa(file.Id) + extension
+	suffix := "." + uitoa(file.Id) + extension
 
 	if len(linkName)+len(suffix) > 255 {
 		linkName = linkName[0 : 255-len(suffix)]
@@ -505,11 +576,21 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
 	return tagIds, nil
 }
 
-func Uitoa(ui uint) string {
+func uitoa(ui uint) string {
 	return strconv.FormatUint(uint64(ui), 10)
 }
 
-func Atoui(str string) (uint, error) {
+func atoui(str string) (uint, error) {
 	ui64, err := strconv.ParseUint(str, 10, 0)
 	return uint(ui64), err
+}
+
+func containsTag(tags database.Tags, tagName string) bool {
+	for _, tag := range tags {
+		if tag.Name == tagName {
+			return true
+		}
+	}
+
+	return false
 }

@@ -169,6 +169,8 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 		if err != nil {
 			log.Fatalf("Could not create tag '%v': %v", name, err)
 		}
+
+		return fuse.OK
 	case queriesDir:
 		queryText := path[1]
 
@@ -188,6 +190,8 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 		if _, err = vfs.store.AddQuery(queryText); err != nil {
 			log.Fatalf("Could not save query '%v': %v", queryText, err)
 		}
+
+		return fuse.OK
 	}
 
 	return fuse.ENOSYS

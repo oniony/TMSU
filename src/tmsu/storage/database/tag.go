@@ -21,36 +21,8 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
+	"tmsu/storage/entities"
 )
-
-type Tag struct {
-	Id   uint
-	Name string
-}
-
-type Tags []*Tag
-
-func (tags Tags) Len() int {
-	return len(tags)
-}
-
-func (tags Tags) Swap(i, j int) {
-	tags[i], tags[j] = tags[j], tags[i]
-}
-
-func (tags Tags) Less(i, j int) bool {
-	return tags[i].Name < tags[j].Name
-}
-
-func (tags Tags) Any(predicate func(*Tag) bool) bool {
-	for _, tag := range tags {
-		if predicate(tag) {
-			return true
-		}
-	}
-
-	return false
-}
 
 // The number of tags in the database.
 func (db *Database) TagCount() (uint, error) {
@@ -67,7 +39,7 @@ func (db *Database) TagCount() (uint, error) {
 }
 
 // The set of tags.
-func (db Database) Tags() (Tags, error) {
+func (db Database) Tags() (entities.Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -78,11 +50,11 @@ func (db Database) Tags() (Tags, error) {
 	}
 	defer rows.Close()
 
-	return readTags(rows, make(Tags, 0, 10))
+	return readTags(rows, make(entities.Tags, 0, 10))
 }
 
 // Retrieves a specific tag.
-func (db Database) Tag(id uint) (*Tag, error) {
+func (db Database) Tag(id uint) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
@@ -97,7 +69,7 @@ func (db Database) Tag(id uint) (*Tag, error) {
 }
 
 // Retrieves a specific tag.
-func (db Database) TagByName(name string) (*Tag, error) {
+func (db Database) TagByName(name string) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE name = ?`
@@ -112,9 +84,9 @@ func (db Database) TagByName(name string) (*Tag, error) {
 }
 
 // Retrieves the set of named tags.
-func (db Database) TagsByNames(names []string) (Tags, error) {
+func (db Database) TagsByNames(names []string) (entities.Tags, error) {
 	if len(names) == 0 {
-		return make(Tags, 0), nil
+		return make(entities.Tags, 0), nil
 	}
 
 	sql := `SELECT id, name
@@ -133,7 +105,7 @@ func (db Database) TagsByNames(names []string) (Tags, error) {
 		return nil, err
 	}
 
-	tags, err := readTags(result, make(Tags, 0, len(names)))
+	tags, err := readTags(result, make(entities.Tags, 0, len(names)))
 	if err != nil {
 		return nil, err
 	}
@@ -142,7 +114,7 @@ func (db Database) TagsByNames(names []string) (Tags, error) {
 }
 
 // Retrieves the set of tags for the specified file.
-func (db *Database) TagsByFileId(fileId uint) (Tags, error) {
+func (db *Database) TagsByFileId(fileId uint) (entities.Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             WHERE id IN (
@@ -157,11 +129,11 @@ func (db *Database) TagsByFileId(fileId uint) (Tags, error) {
 	}
 	defer rows.Close()
 
-	return readTags(rows, make(Tags, 0, 10))
+	return readTags(rows, make(entities.Tags, 0, 10))
 }
 
 // Adds a tag.
-func (db Database) InsertTag(name string) (*Tag, error) {
+func (db Database) InsertTag(name string) (*entities.Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
@@ -183,11 +155,11 @@ func (db Database) InsertTag(name string) (*Tag, error) {
 		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
-	return &Tag{uint(id), name}, nil
+	return &entities.Tag{uint(id), name}, nil
 }
 
 // Renames a tag.
-func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
+func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
@@ -205,7 +177,7 @@ func (db Database) RenameTag(tagId uint, name string) (*Tag, error) {
 		return nil, errors.New("expected exactly one row to be affected.")
 	}
 
-	return &Tag{tagId, name}, nil
+	return &entities.Tag{tagId, name}, nil
 }
 
 // Deletes a tag.
@@ -231,17 +203,7 @@ func (db Database) DeleteTag(tagId uint) error {
 
 // unexported
 
-func containsName(tags Tags, name string) bool {
-	for _, tag := range tags {
-		if tag.Name == name {
-			return true
-		}
-	}
-
-	return false
-}
-
-func readTag(rows *sql.Rows) (*Tag, error) {
+func readTag(rows *sql.Rows) (*entities.Tag, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
@@ -256,10 +218,10 @@ func readTag(rows *sql.Rows) (*Tag, error) {
 		return nil, err
 	}
 
-	return &Tag{id, name}, nil
+	return &entities.Tag{id, name}, nil
 }
 
-func readTags(rows *sql.Rows, tags Tags) (Tags, error) {
+func readTags(rows *sql.Rows, tags entities.Tags) (entities.Tags, error) {
 	for {
 		tag, err := readTag(rows)
 		if err != nil {

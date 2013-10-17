@@ -20,14 +20,8 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"tmsu/storage/entities"
 )
-
-type FileTag struct {
-	FileId uint
-	TagId  uint
-}
-
-type FileTags []*FileTag
 
 // Determines whether the specified file has the specified tag applied.
 func (db *Database) FileTagExists(fileId, tagId uint) (bool, error) {
@@ -61,7 +55,7 @@ func (db *Database) FileTagCount() (uint, error) {
 }
 
 // Retrieves the complete set of file tags.
-func (db *Database) FileTags() (FileTags, error) {
+func (db *Database) FileTags() (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id
 	        FROM file_tag`
 
@@ -71,7 +65,7 @@ func (db *Database) FileTags() (FileTags, error) {
 	}
 	defer rows.Close()
 
-	return readFileTags(rows, make(FileTags, 0, 10))
+	return readFileTags(rows, make(entities.FileTags, 0, 10))
 }
 
 // Retrieves the count of file tags for the specified file.
@@ -90,7 +84,7 @@ func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 }
 
 // Retrieves the set of file tags with the specified tag ID.
-func (db *Database) FileTagsByTagId(tagId uint) (FileTags, error) {
+func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id
 	        FROM file_tag
 	        WHERE tag_id = ?1`
@@ -101,11 +95,11 @@ func (db *Database) FileTagsByTagId(tagId uint) (FileTags, error) {
 	}
 	defer rows.Close()
 
-	return readFileTags(rows, make(FileTags, 0, 10))
+	return readFileTags(rows, make(entities.FileTags, 0, 10))
 }
 
 // Retrieves the set of file tags with the specified file ID.
-func (db *Database) FileTagsByFileId(fileId uint) (FileTags, error) {
+func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id
             FROM file_tag
             WHERE file_id = ?1`
@@ -116,11 +110,11 @@ func (db *Database) FileTagsByFileId(fileId uint) (FileTags, error) {
 	}
 	defer rows.Close()
 
-	return readFileTags(rows, make(FileTags, 0, 10))
+	return readFileTags(rows, make(entities.FileTags, 0, 10))
 }
 
 // Adds a file tag.
-func (db *Database) AddFileTag(fileId, tagId uint) (*FileTag, error) {
+func (db *Database) AddFileTag(fileId, tagId uint) (*entities.FileTag, error) {
 	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
             VALUES (?1, ?2)`
 
@@ -129,7 +123,7 @@ func (db *Database) AddFileTag(fileId, tagId uint) (*FileTag, error) {
 		return nil, err
 	}
 
-	return &FileTag{fileId, tagId}, nil
+	return &entities.FileTag{fileId, tagId}, nil
 }
 
 // Adds a set of file tags.
@@ -230,7 +224,7 @@ func (db *Database) CopyFileTags(sourceTagId uint, destTagId uint) error {
 
 // helpers
 
-func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
+func readFileTags(rows *sql.Rows, fileTags entities.FileTags) (entities.FileTags, error) {
 	for rows.Next() {
 		if rows.Err() != nil {
 			return nil, rows.Err()
@@ -242,7 +236,7 @@ func readFileTags(rows *sql.Rows, fileTags FileTags) (FileTags, error) {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, &FileTag{fileId, tagId})
+		fileTags = append(fileTags, &entities.FileTag{fileId, tagId})
 	}
 
 	return fileTags, nil

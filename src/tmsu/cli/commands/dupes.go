@@ -25,7 +25,7 @@ import (
 	"tmsu/log"
 	_path "tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type DupesCommand struct {
@@ -147,7 +147,7 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 		}
 
 		// filter out the file we're searching on
-		dupes := files.Where(func(file *database.File) bool { return file.Path() != absPath })
+		dupes := files.Where(func(file *entities.File) bool { return file.Path() != absPath })
 
 		if len(paths) > 1 && len(dupes) > 0 {
 			if first {

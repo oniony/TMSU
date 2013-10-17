@@ -27,7 +27,7 @@ import (
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type TagCommand struct {
@@ -145,7 +145,7 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 	}
 
 	for _, name := range names {
-		if !tags.Any(func(tag *database.Tag) bool { return tag.Name == name }) {
+		if !tags.Any(func(tag *entities.Tag) bool { return tag.Name == name }) {
 			log.Infof("New tag '%v'.", name)
 
 			tag, err := store.AddTag(name)
@@ -260,7 +260,7 @@ func (command TagCommand) tagRecursively(store *storage.Storage, path string, ta
 	return nil
 }
 
-func (command *TagCommand) addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*database.File, error) {
+func (command *TagCommand) addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {
 	if command.verbose {
 		log.Infof("%v: adding file.", path)
 	}

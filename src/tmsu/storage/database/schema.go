@@ -98,5 +98,13 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
+	sql = `CREATE TABLE IF NOT EXISTS query (
+               text TEXT PRIMARY KEY
+           )`
+
+	if _, err := db.connection.Exec(sql); err != nil {
+		return err
+	}
+
 	return nil
 }

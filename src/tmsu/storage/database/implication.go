@@ -20,17 +20,11 @@ package database
 import (
 	"database/sql"
 	"strings"
+	"tmsu/storage/entities"
 )
 
-type Implication struct {
-	ImplyingTag Tag
-	ImpliedTag  Tag
-}
-
-type Implications []*Implication
-
 // Retrieves the complete set of tag implications.
-func (db *Database) Implications() (Implications, error) {
+func (db *Database) Implications() (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id = t1.id
@@ -42,7 +36,7 @@ func (db *Database) Implications() (Implications, error) {
 		return nil, err
 	}
 
-	implications, err := readImplications(result, make(Implications, 0, 10))
+	implications, err := readImplications(result, make(entities.Implications, 0, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -51,7 +45,7 @@ func (db *Database) Implications() (Implications, error) {
 }
 
 // Retrieves the set of tags implied by the specified tags.
-func (db *Database) ImplicationsForTags(tagIds []uint) (Implications, error) {
+func (db *Database) ImplicationsForTags(tagIds []uint) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id IN (?`
@@ -70,7 +64,7 @@ func (db *Database) ImplicationsForTags(tagIds []uint) (Implications, error) {
 		return nil, err
 	}
 
-	implications, err := readImplications(result, make(Implications, 0, 10))
+	implications, err := readImplications(result, make(entities.Implications, 0, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +147,7 @@ func (db Database) DeleteImplicationsForTagId(tagId uint) error {
 
 // unexported
 
-func readImplication(rows *sql.Rows) (*Implication, error) {
+func readImplication(rows *sql.Rows) (*entities.Implication, error) {
 	if !rows.Next() {
 		return nil, nil
 	}
@@ -170,10 +164,10 @@ func readImplication(rows *sql.Rows) (*Implication, error) {
 		return nil, err
 	}
 
-	return &Implication{Tag{implyingTagId, implyingTagName}, Tag{impliedTagId, impliedTagName}}, nil
+	return &entities.Implication{entities.Tag{implyingTagId, implyingTagName}, entities.Tag{impliedTagId, impliedTagName}}, nil
 }
 
-func readImplications(rows *sql.Rows, implications Implications) (Implications, error) {
+func readImplications(rows *sql.Rows, implications entities.Implications) (entities.Implications, error) {
 	for {
 		implication, err := readImplication(rows)
 		if err != nil {

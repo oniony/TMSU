@@ -24,7 +24,7 @@ import (
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type UntagCommand struct {
@@ -125,7 +125,7 @@ func (command UntagCommand) lookupTagIds(store *storage.Storage, names []string)
 	}
 
 	for _, name := range names {
-		if !tags.Any(func(tag *database.Tag) bool { return tag.Name == name }) {
+		if !tags.Any(func(tag *entities.Tag) bool { return tag.Name == name }) {
 			return nil, fmt.Errorf("no such tag '%v'", name)
 		}
 	}
@@ -259,7 +259,7 @@ func (command UntagCommand) untagPath(store *storage.Storage, path string, tagId
 	return nil
 }
 
-func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *database.File) error {
+func (command UntagCommand) removeUntaggedFile(store *storage.Storage, file *entities.File) error {
 	if command.verbose {
 		log.Infof("%v: identifying whether file is tagged.", file.Path())
 	}

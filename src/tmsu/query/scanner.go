@@ -148,11 +148,11 @@ func (scanner *Scanner) readTagTokenOrOperatorToken(r rune) (Token, error) {
 	}
 
 	switch text {
-	case "not":
+	case "not", "NOT":
 		return NotOperatorToken{}, nil
-	case "and":
+	case "and", "AND":
 		return AndOperatorToken{}, nil
-	case "or":
+	case "or", "OR":
 		return OrOperatorToken{}, nil
 	default:
 		return TagToken{text}, nil

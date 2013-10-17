@@ -1,17 +1,12 @@
+# installation paths
+INSTALL_DIR=/usr/bin
+MOUNT_INSTALL_DIR=/sbin
+ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
+
+# other vars
 VER=0.3.0
 SHELL=/bin/sh
 HGREV=$(shell hg id)
-
-SRC_DIR=src/tmsu
-BIN_DIR=bin
-DIST_DIR=tmsu-$(VER)
-INSTALL_DIR=/usr/bin
-
-ZSH_COMP=misc/zsh/_tmsu
-ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
-
-BIN_FILE=tmsu
-VER_FILE=version.gen.go
 ARCH=$(shell uname -m)
 DIST_FILE=tmsu-$(ARCH)-$(VER).tgz
 
@@ -21,36 +16,50 @@ all: clean generate compile dist test
 
 clean:
 	go clean tmsu
-	rm -f $(SRC_DIR)/common/$(VER_FILE)
-	rm -Rf $(BIN_DIR)
-	rm -Rf $(DIST_DIR)
+	rm -f src/tmsu/common/version.gen.go
+	rm -Rf bin
+	rm -Rf dist
 	rm -f $(DIST_FILE)
 
 generate:
-	echo "package common; var Version = \"$(VER) ($(HGREV))\"" >$(SRC_DIR)/common/$(VER_FILE)
+	echo "package common; var Version = \"$(VER) ($(HGREV))\"" >src/tmsu/common/version.gen.go
 
 compile: generate
-	go build -o $(BIN_FILE) tmsu
-	@mkdir -p $(BIN_DIR)
-	mv $(BIN_FILE) $(BIN_DIR)
+	@mkdir -p bin
+	go build -o bin/tmsu tmsu
 
 test: compile
 	go test tmsu/...
 
 dist: compile
-	@mkdir -p $(DIST_DIR)
-	cp -R $(BIN_DIR) $(DIST_DIR)
-	cp README.md $(DIST_DIR)
-	cp COPYING $(DIST_DIR)
-	@mkdir -p $(DIST_DIR)/misc/zsh
-	cp -R $(ZSH_COMP) $(DIST_DIR)/misc/zsh
-	tar czf $(DIST_FILE) $(DIST_DIR)
-	rm -Rf $(DIST_DIR)
+	@mkdir -p dist
+	cp -R bin dist
+	cp README.md dist
+	cp COPYING dist
+	@mkdir -p dist/misc/zsh
+	cp misc/zsh/_tmsu dist/misc/zsh
+	tar czf $(DIST_FILE) dist
 
 install:
-	cp $(BIN_DIR)/$(BIN_FILE) $(INSTALL_DIR)
-	@mkdir -p $(ZSH_COMP_INSTALL_DIR)
-	cp $(ZSH_COMP) $(ZSH_COMP_INSTALL_DIR)
+	@echo "Installing TMSU"
+	@echo -n "    "
+	cp bin/tmsu $(INSTALL_DIR)
+	@echo "Installing 'mount' command support"
+	@echo -n "    "
+	cp sbin/mount.tmsu $(MOUNT_INSTALL_DIR)
+	@echo "Installing Zsh completion"
+	@echo -n "    "
+	mkdir -p $(ZSH_COMP_INSTALL_DIR)
+	@echo -n "    "
+	cp misc/zsh/_tmsu $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
-	rm $(INSTALL_DIR)/$(BIN_NAME)
+	@echo "Uninstalling TMSU"
+	@echo -n "    "
+	rm $(INSTALL_DIR)/tmsu
+	@echo "Uninstalling mount support"
+	@echo -n "    "
+	rm $(MOUNT_INSTALL_DIR)/mount.tmsu
+	@echo "Uninstalling Zsh completion"
+	@echo -n "    "
+	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu

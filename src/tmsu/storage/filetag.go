@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 // Determines whether the specified file has the specified tag applied.
@@ -32,7 +32,7 @@ func (storage *Storage) FileTagCount() (uint, error) {
 }
 
 // Retrieves the complete set of file tags.
-func (storage *Storage) FileTags() (database.FileTags, error) {
+func (storage *Storage) FileTags() (entities.FileTags, error) {
 	return storage.Db.FileTags()
 }
 
@@ -42,17 +42,17 @@ func (storage *Storage) FileTagCountByFileId(fileId uint) (uint, error) {
 }
 
 // Retrieves the file tags with the specified tag ID.
-func (storage *Storage) FileTagsByTagId(tagId uint) (database.FileTags, error) {
+func (storage *Storage) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	return storage.Db.FileTagsByTagId(tagId)
 }
 
 // Retrieves the file tags with the specified file ID.
-func (storage *Storage) FileTagsByFileId(fileId uint) (database.FileTags, error) {
+func (storage *Storage) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
 	return storage.Db.FileTagsByFileId(fileId)
 }
 
 // Adds an file tag.
-func (storage *Storage) AddFileTag(fileId, tagId uint) (*database.FileTag, error) {
+func (storage *Storage) AddFileTag(fileId, tagId uint) (*entities.FileTag, error) {
 	return storage.Db.AddFileTag(fileId, tagId)
 }
 
@@ -87,7 +87,7 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId uint) error {
 
 // helpers
 
-func contains(files database.Files, searchFile *database.File) bool {
+func contains(files entities.Files, searchFile *entities.File) bool {
 	for _, file := range files {
 		if file.Path() == searchFile.Path() {
 			return true

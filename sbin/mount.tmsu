@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+export PATH
+tmsu mount $1 $2

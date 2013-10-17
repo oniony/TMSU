@@ -26,7 +26,7 @@ import (
 	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type TagsCommand struct {
@@ -167,7 +167,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 		if command.count {
 			log.Print(path + ": " + strconv.Itoa(len(tags)))
 		} else {
-			log.Print(path + ": " + tagLine(tags))
+			log.Print(path + ": " + formatTags(tags))
 		}
 	}
 
@@ -207,14 +207,14 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) e
 		if command.count {
 			log.Print(dirName + ": " + strconv.Itoa(len(tags)))
 		} else {
-			log.Print(dirName + ": " + tagLine(tags))
+			log.Print(dirName + ": " + formatTags(tags))
 		}
 	}
 
 	return nil
 }
 
-func tagLine(tags database.Tags) string {
+func formatTags(tags entities.Tags) string {
 	tagNames := make([]string, len(tags))
 	for index, tag := range tags {
 		tagNames[index] = tag.Name

@@ -30,11 +30,11 @@ import (
 	"tmsu/log"
 	"tmsu/query"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
-const TAGS_DIR = "tags"
-const QUERY_DIR = "query"
+const tagsDir = "tags"
+const queriesDir = "queries"
 
 type FuseVfs struct {
 	store     *storage.Storage
@@ -112,18 +112,18 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	switch name {
 	case "":
 		fallthrough
-	case TAGS_DIR:
+	case tagsDir:
 		return vfs.getTagsAttr()
-	case QUERY_DIR:
+	case queriesDir:
 		return vfs.getQueryAttr()
 	}
 
 	path := vfs.splitPath(name)
 
 	switch path[0] {
-	case TAGS_DIR:
+	case tagsDir:
 		return vfs.getTaggedEntryAttr(path[1:])
-	case QUERY_DIR:
+	case queriesDir:
 		return vfs.getQueryEntryAttr(path[1:])
 	}
 
@@ -154,6 +154,41 @@ func (vfs FuseVfs) ListXAttr(name string, context *fuse.Context) ([]string, fuse
 func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.Status {
 	log.Infof("BEGIN Mkdir(%v)", name)
 	defer log.Infof("END Mkdir(%v)", name)
+
+	path := vfs.splitPath(name)
+
+	if len(path) != 2 {
+		return fuse.EPERM
+	}
+
+	switch path[0] {
+	case tagsDir:
+		name := path[1]
+
+		_, err := vfs.store.AddTag(name)
+		if err != nil {
+			log.Fatalf("Could not create tag '%v': %v", name, err)
+		}
+	case queriesDir:
+		queryText := path[1]
+
+		expression, err := query.Parse(queryText)
+		if err != nil {
+			return fuse.ENOENT
+		}
+
+		tagNames := query.TagNames(expression)
+		tags, err := vfs.store.TagsByNames(tagNames)
+		for _, tagName := range tagNames {
+			if !containsTag(tags, tagName) {
+				return fuse.EINVAL
+			}
+		}
+
+		if _, err = vfs.store.AddQuery(queryText); err != nil {
+			log.Fatalf("Could not save query '%v': %v", queryText, err)
+		}
+	}
 
 	return fuse.ENOSYS
 }
@@ -189,17 +224,17 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	switch name {
 	case "":
 		return vfs.topDirectories()
-	case TAGS_DIR:
+	case tagsDir:
 		return vfs.tagDirectories()
-	case QUERY_DIR:
-		return vfs.queryDirectories()
+	case queriesDir:
+		return vfs.queriesDirectories()
 	}
 
 	path := vfs.splitPath(name)
 	switch path[0] {
-	case TAGS_DIR:
+	case tagsDir:
 		return vfs.openTaggedEntryDir(path[1:])
-	case QUERY_DIR:
+	case queriesDir:
 		return vfs.openQueryEntryDir(path[1:])
 	}
 
@@ -212,7 +247,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 
 	path := vfs.splitPath(name)
 	switch path[0] {
-	case TAGS_DIR, QUERY_DIR:
+	case tagsDir, queriesDir:
 		return vfs.readTaggedEntryLink(path[1:])
 	}
 
@@ -236,6 +271,24 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 	log.Infof("BEGIN Rmdir(%v)", name)
 	defer log.Infof("END Rmdir(%v)", name)
+
+	path := vfs.splitPath(name)
+
+	if len(path) != 2 {
+		return fuse.EPERM
+	}
+
+	switch path[0] {
+	case queriesDir:
+		text := path[1]
+
+		err := vfs.store.DeleteQuery(text)
+		if err != nil {
+			log.Fatalf("Could not remove tag '%v': %v", name, err)
+		}
+
+		return fuse.OK
+	}
 
 	return fuse.ENOSYS
 }
@@ -283,24 +336,30 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	}
 
 	path := vfs.splitPath(name)
-	tagNames := path[1 : len(path)-1]
 
-	for _, tagName := range tagNames {
-		tag, err := vfs.store.Db.TagByName(tagName)
-		if err != nil {
-			log.Fatal(err)
-		}
-		if tag == nil {
-			log.Fatalf("Could not retrieve tag '%v'.", tagName)
+	switch path[0] {
+	case tagsDir:
+		tagNames := path[1 : len(path)-1]
+
+		for _, tagName := range tagNames {
+			tag, err := vfs.store.TagByName(tagName)
+			if err != nil {
+				log.Fatal(err)
+			}
+			if tag == nil {
+				log.Fatalf("Could not retrieve tag '%v'.", tagName)
+			}
+
+			err = vfs.store.RemoveFileTag(fileId, tag.Id)
+			if err != nil {
+				log.Fatal(err)
+			}
 		}
 
-		err = vfs.store.RemoveFileTag(fileId, tag.Id)
-		if err != nil {
-			log.Fatal(err)
-		}
+		return fuse.OK
 	}
 
-	return fuse.OK
+	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Utimens(name string, Atime *time.Time, Mtime *time.Time, context *fuse.Context) (code fuse.Status) {
@@ -336,8 +395,8 @@ func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
 	log.Infof("BEGIN topDirectories")
 	defer log.Infof("END topDirectories")
 
-	entries := []fuse.DirEntry{fuse.DirEntry{Name: TAGS_DIR, Mode: fuse.S_IFDIR},
-		fuse.DirEntry{Name: QUERY_DIR, Mode: fuse.S_IFDIR}}
+	entries := []fuse.DirEntry{fuse.DirEntry{Name: tagsDir, Mode: fuse.S_IFDIR},
+		fuse.DirEntry{Name: queriesDir, Mode: fuse.S_IFDIR}}
 	return entries, fuse.OK
 }
 
@@ -345,7 +404,7 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	log.Infof("BEGIN tagDirectories")
 	defer log.Infof("END tagDirectories")
 
-	tags, err := vfs.store.Db.Tags()
+	tags, err := vfs.store.Tags()
 	if err != nil {
 		log.Fatalf("Could not retrieve tags: %v", err)
 	}
@@ -358,15 +417,28 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	return entries, fuse.OK
 }
 
-func (vfs FuseVfs) queryDirectories() ([]fuse.DirEntry, fuse.Status) {
-	return []fuse.DirEntry{}, fuse.OK
+func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
+	log.Infof("BEGIN queriesDirectories")
+	defer log.Infof("END queriesDirectories")
+
+	queries, err := vfs.store.Queries()
+	if err != nil {
+		log.Fatalf("Could not retrieve queries: %v", err)
+	}
+
+	entries := make([]fuse.DirEntry, len(queries))
+	for index, query := range queries {
+		entries[index] = fuse.DirEntry{Name: query.Text, Mode: fuse.S_IFDIR}
+	}
+
+	return entries, fuse.OK
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	log.Infof("BEGIN getTagsAttr")
 	defer log.Infof("END getTagsAttr")
 
-	tagCount, err := vfs.store.Db.TagCount()
+	tagCount, err := vfs.store.TagCount()
 	if err != nil {
 		log.Fatalf("Could not get tag count: %v", err)
 	}
@@ -423,22 +495,12 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 	queryText := path[0]
 
-	// don't allow leading or trailing space as otherwise UI autcompletion in apps will think multiple entries are valid for the same query as the user types
-	if strings.TrimSpace(queryText) != queryText {
-		return nil, fuse.ENOENT
-	}
-
-	expression, err := query.Parse(queryText)
+	query, err := vfs.store.Query(queryText)
 	if err != nil {
-		return nil, fuse.ENOENT
+		log.Fatalf("Could not lookup query '%v': %v", queryText, err)
 	}
-
-	tagNames := query.TagNames(expression)
-	tags, err := vfs.store.TagsByNames(tagNames)
-	for _, tagName := range tagNames {
-		if !containsTag(tags, tagName) {
-			return nil, fuse.ENOENT
-		}
+	if query == nil {
+		return nil, fuse.ENOENT
 	}
 
 	now := time.Now()
@@ -545,7 +607,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 	return file.Path(), fuse.OK
 }
 
-func (vfs FuseVfs) getLinkName(file *database.File) string {
+func (vfs FuseVfs) getLinkName(file *entities.File) string {
 	extension := filepath.Ext(file.Path())
 	fileName := filepath.Base(file.Path())
 	linkName := fileName[0 : len(fileName)-len(extension)]
@@ -562,7 +624,7 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
 	tagIds := make([]uint, len(tagNames))
 
 	for index, tagName := range tagNames {
-		tag, err := vfs.store.Db.TagByName(tagName)
+		tag, err := vfs.store.TagByName(tagName)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
@@ -576,6 +638,9 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
 	return tagIds, nil
 }
 
+func (vfs FuseVfs) saveQuery(query string) {
+}
+
 func uitoa(ui uint) string {
 	return strconv.FormatUint(uint64(ui), 10)
 }
@@ -585,7 +650,7 @@ func atoui(str string) (uint, error) {
 	return uint(ui64), err
 }
 
-func containsTag(tags database.Tags, tagName string) bool {
+func containsTag(tags entities.Tags, tagName string) bool {
 	for _, tag := range tags {
 		if tag.Name == tagName {
 			return true

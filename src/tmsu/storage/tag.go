@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 // The number of tags in the database.
@@ -30,32 +30,32 @@ func (storage *Storage) TagCount() (uint, error) {
 }
 
 // The set of tags.
-func (storage *Storage) Tags() (database.Tags, error) {
+func (storage *Storage) Tags() (entities.Tags, error) {
 	return storage.Db.Tags()
 }
 
 // Retrieves a spceific tag.
-func (storage Storage) Tag(id uint) (*database.Tag, error) {
+func (storage Storage) Tag(id uint) (*entities.Tag, error) {
 	return storage.Db.Tag(id)
 }
 
 // Retrieves a specific tag.
-func (storage Storage) TagByName(name string) (*database.Tag, error) {
+func (storage Storage) TagByName(name string) (*entities.Tag, error) {
 	return storage.Db.TagByName(name)
 }
 
 // Retrieves the set of named tags.
-func (storage Storage) TagsByNames(names []string) (database.Tags, error) {
+func (storage Storage) TagsByNames(names []string) (entities.Tags, error) {
 	return storage.Db.TagsByNames(names)
 }
 
 // Retrieves the set of tags for the specified file.
-func (storage *Storage) TagsByFileId(fileId uint) (database.Tags, error) {
+func (storage *Storage) TagsByFileId(fileId uint) (entities.Tags, error) {
 	return storage.Db.TagsByFileId(fileId)
 }
 
 // Retrieves the set of tags for the specified path.
-func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
+func (storage *Storage) TagsForPath(path string) (entities.Tags, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
@@ -67,7 +67,7 @@ func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 	}
 
 	if file == nil {
-		return database.Tags{}, nil
+		return entities.Tags{}, nil
 	}
 
 	return storage.Db.TagsByFileId(file.Id)
@@ -75,13 +75,13 @@ func (storage *Storage) TagsForPath(path string) (database.Tags, error) {
 
 // The set of further tags for which there are tagged files given
 // a particular set of tags.
-func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
+func (storage Storage) TagsForTags(tagIds []uint) (entities.Tags, error) {
 	files, err := storage.FilesWithTags(tagIds, []uint{})
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve tags for tags %v: %v", tagIds, err)
 	}
 
-	furtherTags := make(database.Tags, 0, 10)
+	furtherTags := make(entities.Tags, 0, 10)
 	for _, file := range files {
 		tags, err := storage.TagsByFileId(file.Id)
 		if err != nil {
@@ -89,7 +89,7 @@ func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
 		}
 
 		for _, tag := range tags {
-			if !containsTagId(tagIds, tag.Id) && !containsTag(furtherTags, tag) {
+			if !containsTagId(tagIds, tag.Id) && !furtherTags.Contains(tag) {
 				furtherTags = append(furtherTags, tag)
 			}
 		}
@@ -99,7 +99,7 @@ func (storage Storage) TagsForTags(tagIds []uint) (database.Tags, error) {
 }
 
 // Adds a tag.
-func (storage *Storage) AddTag(name string) (*database.Tag, error) {
+func (storage *Storage) AddTag(name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (storage *Storage) AddTag(name string) (*database.Tag, error) {
 }
 
 // Renames a tag.
-func (storage Storage) RenameTag(tagId uint, name string) (*database.Tag, error) {
+func (storage Storage) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
@@ -117,7 +117,7 @@ func (storage Storage) RenameTag(tagId uint, name string) (*database.Tag, error)
 }
 
 // Copies a tag.
-func (storage Storage) CopyTag(sourceTagId uint, name string) (*database.Tag, error) {
+func (storage Storage) CopyTag(sourceTagId uint, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
@@ -177,16 +177,6 @@ func validateTagName(tagName string) error {
 func containsTagId(items []uint, searchItem uint) bool {
 	for _, item := range items {
 		if item == searchItem {
-			return true
-		}
-	}
-
-	return false
-}
-
-func containsTag(tags database.Tags, searchTag *database.Tag) bool {
-	for _, tag := range tags {
-		if tag.Id == searchTag.Id {
 			return true
 		}
 	}

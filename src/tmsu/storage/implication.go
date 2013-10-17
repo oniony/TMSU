@@ -18,17 +18,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 // Retrieves the complete set of tag implications.
-func (storage *Storage) Implications() (database.Implications, error) {
+func (storage *Storage) Implications() (entities.Implications, error) {
 	return storage.Db.Implications()
 }
 
 // Retrieves the set of implications for the specified tags.
-func (storage *Storage) ImplicationsForTags(tagIds ...uint) (database.Implications, error) {
-	resultantImplications := make(database.Implications, 0)
+func (storage *Storage) ImplicationsForTags(tagIds ...uint) (entities.Implications, error) {
+	resultantImplications := make(entities.Implications, 0)
 
 	impliedTagIds := make([]uint, len(tagIds))
 	copy(impliedTagIds, tagIds)
@@ -73,7 +73,7 @@ func (storage Storage) RemoveImplicationsForTagId(tagId uint) error {
 
 // unexported
 
-func containsImplication(implications database.Implications, implication *database.Implication) bool {
+func containsImplication(implications entities.Implications, implication *entities.Implication) bool {
 	for _, imp := range implications {
 		if imp.ImplyingTag.Id == implication.ImplyingTag.Id && imp.ImpliedTag.Id == implication.ImpliedTag.Id {
 			return true

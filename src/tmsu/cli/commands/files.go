@@ -25,7 +25,7 @@ import (
 	"tmsu/path"
 	"tmsu/query"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type FilesCommand struct {
@@ -59,14 +59,11 @@ will be interpretted as an implicit 'and', e.g. 'chalk cheese' is interpretted a
 
 Examples:
 
-    $ tmsu files music
-    $ tmsu files music mp3                # implict 'and'
-    $ tmsu files music and mp3            # same query but with explicit 'and'
-    $ tmsu files music not flac
-    $ tmsu files music and not flac       # same query with explicit 'and'
-    $ tmsu files mp3 or flac
-    $ tmsu files music mp3 or flac
-    $ tmsu files (music and mp3) or flac  # same query written in full`
+    $ tmsu files music                     # files tagged 'music'
+    $ tmsu files music mp3                 # files with both 'music' and 'mp3'
+    $ tmsu files music and mp3             # same query but with explicit 'and'
+    $ tmsu files music and not flac        # those with 'music' but not 'flac'
+    $ tmsu files "music and (mp3 or flac)" # 'music' and either 'mp3' or 'flac'`
 }
 
 func (FilesCommand) Options() cli.Options {
@@ -120,7 +117,7 @@ func (command FilesCommand) listAllFiles() error {
 
 func (command FilesCommand) listFilesForQuery(args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("Query must be specified. Use --all to show all files.")
+		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
 
 	store, err := storage.Open()
@@ -137,6 +134,10 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 	expression, err := query.Parse(queryText)
 	if err != nil {
 		return err
+	}
+
+	if command.verbose {
+		log.Info("checking tag names")
 	}
 
 	tagNames := query.TagNames(expression)
@@ -156,10 +157,14 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 		return fmt.Errorf("could not query files: %v", err)
 	}
 
-	return command.listFiles(files)
+	if err = command.listFiles(files); err != nil {
+		return err
+	}
+
+	return nil
 }
 
-func (command *FilesCommand) listFiles(files database.Files) error {
+func (command *FilesCommand) listFiles(files entities.Files) error {
 	tree := path.NewTree()
 	for _, file := range files {
 		tree.Add(file.Path(), file.IsDir)
@@ -209,7 +214,7 @@ func (command *FilesCommand) listFiles(files database.Files) error {
 	return nil
 }
 
-func containsTag(tags database.Tags, tagName string) bool {
+func containsTag(tags entities.Tags, tagName string) bool {
 	for _, tag := range tags {
 		if tag.Name == tagName {
 			return true

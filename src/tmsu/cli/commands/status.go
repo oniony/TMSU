@@ -26,7 +26,7 @@ import (
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type StatusCommand struct {
@@ -242,7 +242,7 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 	return report, nil
 }
 
-func (command *StatusCommand) checkFiles(files database.Files, report *StatusReport) error {
+func (command *StatusCommand) checkFiles(files entities.Files, report *StatusReport) error {
 	for _, file := range files {
 		err := command.checkFile(file, report)
 		if err != nil {
@@ -253,7 +253,7 @@ func (command *StatusCommand) checkFiles(files database.Files, report *StatusRep
 	return nil
 }
 
-func (command *StatusCommand) checkFile(file *database.File, report *StatusReport) error {
+func (command *StatusCommand) checkFile(file *entities.File, report *StatusReport) error {
 	relPath := path.Rel(file.Path())
 
 	if command.verbose {

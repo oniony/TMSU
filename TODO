@@ -1,18 +1,18 @@
 HIGH
 
-E Proper file queries, e.g. 'big and round or square and not green'.
-    * Implicit AND.
-    * Parenthesis support.
-E Add support for meta-data or tag values.
-    file            id, path, ...
-    tag             id, name
-    value           id, value
-    file_tag        file_id, tag_id, value_id
+T Document mounting via fstab
+T Document VFS queries.
+E Additional VFS operations.
 E Issue #33: provide binary for 64 bit Linux.
 E Ensure unit-tests cover all command options.
 
 MEDIUM
 
+E Add support for meta-data or tag values.
+    file            id, path, ...
+    tag             id, name
+    value           id, value
+    file_tag        file_id, tag_id, value_id
 E Improve formatting when terminal detected.
 E Issue #39: Hide tag folders in VFS where tag makes no difference because set of files is identical.
     * Hard to do in a performant way.
@@ -28,7 +28,7 @@ E Storage level operations should ensure database consistency. E.g. deleting a t
 E Auto-tags (from Exif data or configured rules)
 E Tag-aliases, e.g. 'movie' -> 'film'
 
-Key: [B]ug [E]nhancement [C]lean-up [R]efactoring
+Key: [B]ug [E]nhancement [C]lean-up [R]efactoring [T]ask
 
 * * *
 

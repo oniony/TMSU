@@ -26,7 +26,7 @@ import (
 	"tmsu/log"
 	_path "tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 type RepairCommand struct {
@@ -192,7 +192,7 @@ type fileIdAndInfoMap map[string]struct {
 	fileId uint
 	stat   os.FileInfo
 }
-type databaseFileMap map[string]database.File
+type databaseFileMap map[string]entities.File
 
 func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
 	if command.verbose {

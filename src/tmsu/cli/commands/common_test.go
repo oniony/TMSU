@@ -8,7 +8,7 @@ import (
 	"testing"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/database"
+	"tmsu/storage/entities"
 )
 
 func configureOutput() (string, string, error) {
@@ -42,7 +42,7 @@ func compareOutput(test *testing.T, expected, actual string) {
 	}
 }
 
-func expectTags(test *testing.T, store *storage.Storage, file *database.File, tags ...*database.Tag) {
+func expectTags(test *testing.T, store *storage.Storage, file *entities.File, tags ...*entities.Tag) {
 	fileTags, err := store.FileTagsByFileId(file.Id)
 	if err != nil {
 		test.Fatal(err)

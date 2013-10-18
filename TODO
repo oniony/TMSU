@@ -1,5 +1,8 @@
 HIGH
 
+R Move to common Command struct rather than struct type per command.
+E Issue #55: Add support for --database option to replace TMSU_DB.
+E Issue #55: Zsh completion to honour --database.
 T Document mounting via fstab
 T Document VFS queries.
 E Additional VFS operations.

@@ -15,61 +15,48 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"math"
 	"sort"
 	"strconv"
-	"tmsu/cli"
 	"tmsu/log"
 )
 
-type HelpCommand struct {
-	Commands map[cli.CommandName]cli.Command
+var HelpCommand = &Command{
+	Name:     "help",
+	Synopsis: "List commands or show help for a particular command",
+	Description: `tmsu help [OPTION]... [COMMAND]
+
+Shows help summary or, where COMMAND is specified, help for COMMAND.`,
+	Options: Options{{"--list", "-l", "list commands", false, ""}},
+	Exec:    helpExec,
 }
 
-func (HelpCommand) Name() cli.CommandName {
-	return "help"
-}
-
-func (HelpCommand) Synopsis() string {
-	return "List commands or show help for a particular command"
-}
-
-func (HelpCommand) Description() string {
-	return `tmsu help [OPTION]... [COMMAND]
-
-Shows help summary or, where COMMAND is specified, help for COMMAND.`
-}
-
-func (HelpCommand) Options() cli.Options {
-	return cli.Options{{"--list", "-l", "list commands", false, ""}}
-}
-
-func (command HelpCommand) Exec(options cli.Options, args []string) error {
+func helpExec(options Options, args []string) error {
 	if options.HasOption("--list") {
-		command.listCommands()
+		listCommands()
 	} else {
 		switch len(args) {
 		case 0:
-			command.summary()
+			summary()
 		default:
-			commandName := cli.CommandName(args[0])
-			command.describeCommand(commandName)
+			commandName := args[0]
+			describeCommand(commandName)
 		}
 	}
 
 	return nil
 }
 
-func (helpCommand HelpCommand) summary() {
+func summary() {
 	log.Print("TMSU")
 	log.Print()
 
 	var maxWidth int = 0
-	commandNames := make(cli.CommandNames, 0, len(helpCommand.Commands))
-	for _, command := range helpCommand.Commands {
+	commandNames := make([]string, 0, len(commands))
+	for _, command := range commands {
 		commandName := command.Name()
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
@@ -78,7 +65,7 @@ func (helpCommand HelpCommand) summary() {
 	sort.Sort(commandNames)
 
 	for _, commandName := range commandNames {
-		command, _ := helpCommand.Commands[commandName]
+		command, _ := commands[commandName]
 
 		commandSummary := command.Synopsis()
 		if commandSummary == "" {
@@ -91,10 +78,10 @@ func (helpCommand HelpCommand) summary() {
 	log.Print()
 }
 
-func (helpCommand HelpCommand) listCommands() {
-	commandNames := make(cli.CommandNames, 0, len(helpCommand.Commands))
+func listCommands() {
+	commandNames := make([]string, 0, len(commands))
 
-	for _, command := range helpCommand.Commands {
+	for _, command := range commands {
 		if command.Synopsis() == "" {
 			continue
 		}
@@ -109,8 +96,8 @@ func (helpCommand HelpCommand) listCommands() {
 	}
 }
 
-func (helpCommand HelpCommand) describeCommand(commandName cli.CommandName) {
-	command := helpCommand.Commands[commandName]
+func describeCommand(commandName string) {
+	command := commands[commandName]
 	if command == nil {
 		log.Printf("No such command '%v'.", commandName)
 		return

@@ -15,43 +15,28 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
 
-type RenameCommand struct {
-	verbose bool
-}
-
-func (RenameCommand) Name() cli.CommandName {
-	return "rename"
-}
-
-func (RenameCommand) Synopsis() string {
-	return "Rename a tag"
-}
-
-func (RenameCommand) Description() string {
-	return `tmsu rename OLD NEW
+var RenameCommand = &Command{
+	Name:     "rename",
+	Synopsis: "Rename a tag",
+	Description: `tmsu rename OLD NEW
 
 Renames a tag from OLD to NEW.
 
 Attempting to rename a tag with a new name for which a tag already exists will result in an error.
-To merge tags use the 'merge' command instead.`
+To merge tags use the 'merge' command instead.`,
+	Options: Options{},
+	Exec:    renameExec,
 }
 
-func (RenameCommand) Options() cli.Options {
-	return cli.Options{}
-}
-
-func (command RenameCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-
+func renameExec(options Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -85,9 +70,7 @@ func (command RenameCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("tag '%v' already exists.", destTagName)
 	}
 
-	if command.verbose {
-		log.Infof("renaming tag '%v' to '%v'.", sourceTagName, destTagName)
-	}
+	log.Suppf("renaming tag '%v' to '%v'.", sourceTagName, destTagName)
 
 	_, err = store.RenameTag(sourceTag.Id, destTagName)
 	if err != nil {

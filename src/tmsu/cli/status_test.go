@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"tmsu/cli"
 	"tmsu/log"
 )
 
@@ -60,15 +59,15 @@ func TestStatusReport(test *testing.T) {
 
 	tagCommand := TagCommand{false, false}
 
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/b", "b"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/b", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/d", "d"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/d", "d"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -85,8 +84,7 @@ func TestStatusReport(test *testing.T) {
 
 	// test
 
-	statusCommand := StatusCommand{false, false}
-	if err := statusCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
+	if err := statusCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
 		test.Fatal(err)
 	}
 

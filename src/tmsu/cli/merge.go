@@ -15,40 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
 
-type MergeCommand struct {
-	verbose bool
-}
-
-func (MergeCommand) Name() cli.CommandName {
-	return "merge"
-}
-
-func (MergeCommand) Synopsis() string {
-	return "Merge tags"
-}
-
-func (MergeCommand) Description() string {
-	return `tmsu merge TAG... DEST
+var MergeCommand = &Command{
+	Name:     "merge",
+	Synopsis: "Merge tags",
+	Description: `tmsu merge TAG... DEST
         
-Merges TAGs into tag DEST resulting in a single tag of name DEST.`
+Merges TAGs into tag DEST resulting in a single tag of name DEST.`,
+	Options: Options{},
+	Exec:    mergeExec,
 }
 
-func (MergeCommand) Options() cli.Options {
-	return cli.Options{}
-}
-
-func (command MergeCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-
+func mergeExec(options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments.")
 	}
@@ -81,18 +66,14 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			return fmt.Errorf("no such tag '%v'.", sourceTagName)
 		}
 
-		if command.verbose {
-			log.Infof("finding files tagged '%v'.", sourceTagName)
-		}
+		log.Suppf("finding files tagged '%v'.", sourceTagName)
 
 		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
 		}
 
-		if command.verbose {
-			log.Infof("applying tag '%v' to these files.", destTagName)
-		}
+		log.Suppf("applying tag '%v' to these files.", destTagName)
 
 		for _, fileTag := range fileTags {
 			_, err = store.AddFileTag(fileTag.FileId, destTag.Id)
@@ -101,25 +82,19 @@ func (command MergeCommand) Exec(options cli.Options, args []string) error {
 			}
 		}
 
-		if command.verbose {
-			log.Infof("untagging files '%v'.", sourceTagName)
-		}
+		log.Suppf("untagging files '%v'.", sourceTagName)
 
 		if err := store.RemoveFileTagsByTagId(sourceTag.Id); err != nil {
 			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
 		}
 
-		if command.verbose {
-			log.Infof("updating tag implications involving tag '%v'.", sourceTagName)
-		}
+		log.Suppf("updating tag implications involving tag '%v'.", sourceTagName)
 
 		if err := store.UpdateImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
 			return fmt.Errorf("could not update tag implications involving tag '%v': %v", sourceTagName, err)
 		}
 
-		if command.verbose {
-			log.Infof("deleting tag '%v'.", sourceTagName)
-		}
+		log.Suppf("deleting tag '%v'.", sourceTagName)
 
 		err = store.DeleteTag(sourceTag.Id)
 		if err != nil {

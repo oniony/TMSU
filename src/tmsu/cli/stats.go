@@ -15,36 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
 
-type StatsCommand struct{}
+var StatsCommand = &Command{
+	Name:     "stats",
+	Synopsis: "Show database statistics",
+	Description: `tmsu stats
 
-func (StatsCommand) Name() cli.CommandName {
-	return "stats"
+Shows the database statistics.`,
+	Options: Options{},
+	Exec:    statsExec,
 }
 
-func (StatsCommand) Synopsis() string {
-	return "Show database statistics"
-}
-
-func (StatsCommand) Description() string {
-	return `tmsu stats
-
-Shows the database statistics.`
-}
-
-func (StatsCommand) Options() cli.Options {
-	return cli.Options{}
-}
-
-func (StatsCommand) Exec(options cli.Options, args []string) error {
+func statsExec(options Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

@@ -24,6 +24,7 @@ import (
 
 var Outfile = os.Stdout
 var Errfile = os.Stderr
+var Verbose = false
 
 func Fatal(values ...interface{}) {
 	Warn(values...)
@@ -51,6 +52,24 @@ func Info(values ...interface{}) {
 }
 
 func Infof(format string, values ...interface{}) {
+	format = "tmsu: " + format + "\n"
+	fmt.Fprintf(Outfile, format, values...)
+}
+
+func Supp(values ...interface{}) {
+	if !Verbose {
+		return
+	}
+
+	fmt.Fprintf(Outfile, "tmsu: ")
+	fmt.Fprintln(Outfile, values...)
+}
+
+func Suppf(format string, values ...interface{}) {
+	if !Verbose {
+		return
+	}
+
 	format = "tmsu: " + format + "\n"
 	fmt.Fprintf(Outfile, format, values...)
 }

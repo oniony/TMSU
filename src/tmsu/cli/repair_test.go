@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
@@ -44,7 +43,7 @@ func TestRepairMovedFile(test *testing.T) {
 	defer os.Remove("/tmp/tmsu/a")
 
 	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -52,11 +51,11 @@ func TestRepairMovedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false, false}
+	command := repairCommand{false, false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"/tmp/tmsu"}); err != nil {
+	if err := command.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -94,7 +93,7 @@ func TestRepairModifiedFile(test *testing.T) {
 	defer os.Remove("/tmp/tmsu/a")
 
 	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -102,11 +101,11 @@ func TestRepairModifiedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false, false}
+	command := repairCommand{false, false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"/tmp/tmsu"}); err != nil {
+	if err := command.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -150,7 +149,7 @@ func TestReportsMissingFiles(test *testing.T) {
 	}
 
 	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -158,11 +157,11 @@ func TestReportsMissingFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RepairCommand{false, false, false}
+	command := repairCommand{false, false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+	if err := command.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

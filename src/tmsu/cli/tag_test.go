@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
-	"tmsu/cli"
 	"tmsu/storage"
 )
 
@@ -41,11 +40,9 @@ func TestSingleTag(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/a")
 
-	tagCommand := TagCommand{false, false}
-
 	// test
 
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -105,11 +102,9 @@ func TestMultipleTags(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/a")
 
-	tagCommand := TagCommand{false, false}
-
 	// test
 
-	if err := tagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "apple", "banana", "clementine"}); err != nil {
+	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple", "banana", "clementine"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -192,11 +187,9 @@ func TestTagMultipleFiles(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/b")
 
-	tagCommand := TagCommand{false, false}
-
 	// test
 
-	if err := tagCommand.Exec(cli.Options{cli.Option{"--tags", "-t", "", true, "apple banana"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := tagCommand.Exec(Options{Option{"--tags", "-t", "", true, "apple banana"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 

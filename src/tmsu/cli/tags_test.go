@@ -15,14 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"io/ioutil"
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
@@ -72,11 +71,9 @@ func TestTagsForSingleFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false, false}
-
 	// test
 
-	if err := tagsCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a"}); err != nil {
+	if err := tagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -142,11 +139,9 @@ func TestTagsForMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false, false}
-
 	// test
 
-	if err := tagsCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := tagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -187,11 +182,9 @@ func TestAllTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagsCommand := TagsCommand{false, false}
-
 	// test
 
-	if err := tagsCommand.Exec(cli.Options{cli.Option{"--all", "-a", "", false, ""}}, []string{}); err != nil {
+	if err := tagsCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
@@ -23,47 +23,32 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/entities"
 )
 
-type TagCommand struct {
-	verbose   bool
-	recursive bool
-}
-
-func (TagCommand) Name() cli.CommandName {
-	return "tag"
-}
-
-func (TagCommand) Synopsis() string {
-	return "Apply tags to files"
-}
-
-func (TagCommand) Description() string {
-	return `tmsu tag [OPTION]... FILE TAG...
+var TagCommand = &Command{
+	Name:     "tag",
+	Synopsis: "Apply tags to files",
+	Description: `tmsu tag [OPTION]... FILE TAG...
 tmsu tag [OPTION]... --tags "TAG..." FILE...
 tmsu tag [OPTION]... --from FILE FILE...
 
-Tags the file FILE with the tag(s) specified.`
-}
-
-func (TagCommand) Options() cli.Options {
-	return cli.Options{{"--tags", "-t", "the set of tags to apply", true, ""},
+Tags the file FILE with the tag(s) specified.`,
+	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
-		{"--from", "-f", "copy tags from the specified file", true, ""}}
+		{"--from", "-f", "copy tags from the specified file", true, ""}},
+	Exec: tagExec,
 }
 
-func (command TagCommand) Exec(options cli.Options, args []string) error {
+func tagExec(options Options, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("too few arguments.")
 	}
 
-	command.verbose = options.HasOption("--verbose")
-	command.recursive = options.HasOption("--recursive")
+	recursive := options.HasOption("--recursive")
 
 	store, err := storage.Open()
 	if err != nil {
@@ -83,12 +68,12 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 			return fmt.Errorf("at least one file to tag must be specified")
 		}
 
-		tagIds, err := command.lookupTagIds(store, tagNames)
+		tagIds, err := lookupOrCreateTagIds(store, tagNames)
 		if err != nil {
 			return err
 		}
 
-		if err := command.tagPaths(store, paths, tagIds); err != nil {
+		if err := tagPaths(store, paths, tagIds, recursive); err != nil {
 			return err
 		}
 	case options.HasOption("--from"):
@@ -108,7 +93,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		}
 
 		for _, path := range args {
-			if err = command.tagPath(store, path, tagIds); err != nil {
+			if err = tagPath(store, path, tagIds, recursive); err != nil {
 				return err
 			}
 		}
@@ -120,17 +105,17 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 		path := args[0]
 		tagNames := args[1:]
 
-		err := cli.ValidateTagNames(tagNames)
+		err := ValidateTagNames(tagNames)
 		if err != nil {
 			return err
 		}
 
-		tagIds, err := command.lookupTagIds(store, tagNames)
+		tagIds, err := lookupOrCreateTagIds(store, tagNames)
 		if err != nil {
 			return err
 		}
 
-		if err = command.tagPath(store, path, tagIds); err != nil {
+		if err = tagPath(store, path, tagIds, recursive); err != nil {
 			return err
 		}
 	}
@@ -138,7 +123,7 @@ func (command TagCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) ([]uint, error) {
+func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error) {
 	tags, err := store.TagsByNames(names)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve tags %v: %v", names, err)
@@ -157,9 +142,7 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 		}
 	}
 
-	if command.verbose {
-		log.Infof("retrieving tag implications")
-	}
+	log.Suppf("retrieving tag implications")
 
 	tagIds := make([]uint, len(tags))
 	for index, tag := range tags {
@@ -181,9 +164,9 @@ func (command TagCommand) lookupTagIds(store *storage.Storage, names []string) (
 	return tagIds, nil
 }
 
-func (command TagCommand) tagPaths(store *storage.Storage, paths []string, tagIds []uint) error {
+func tagPaths(store *storage.Storage, paths []string, tagIds []uint, recursive bool) error {
 	for _, path := range paths {
-		if err := command.tagPath(store, path, tagIds); err != nil {
+		if err := tagPath(store, path, tagIds, recursive); err != nil {
 			return err
 		}
 	}
@@ -191,7 +174,7 @@ func (command TagCommand) tagPaths(store *storage.Storage, paths []string, tagId
 	return nil
 }
 
-func (command TagCommand) tagPath(store *storage.Storage, path string, tagIds []uint) error {
+func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -214,22 +197,20 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tagIds []
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		file, err = command.addFile(store, absPath, stat.ModTime(), uint(stat.Size()), stat.IsDir())
+		file, err = addFile(store, absPath, stat.ModTime(), uint(stat.Size()), stat.IsDir())
 		if err != nil {
 			return fmt.Errorf("%v: could not add file: %v", path, err)
 		}
 	}
 
-	if command.verbose {
-		log.Infof("%v: applying tags.", file.Path())
-	}
+	log.Suppf("%v: applying tags.", file.Path())
 
 	if err = store.AddFileTags(file.Id, tagIds); err != nil {
 		return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
 	}
 
-	if command.recursive && stat.IsDir() {
-		if err = command.tagRecursively(store, path, tagIds); err != nil {
+	if recursive && stat.IsDir() {
+		if err = tagRecursively(store, path, tagIds); err != nil {
 			return err
 		}
 	}
@@ -237,7 +218,7 @@ func (command TagCommand) tagPath(store *storage.Storage, path string, tagIds []
 	return nil
 }
 
-func (command TagCommand) tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
+func tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -252,7 +233,7 @@ func (command TagCommand) tagRecursively(store *storage.Storage, path string, ta
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = command.tagPath(store, childPath, tagIds); err != nil {
+		if err = tagPath(store, childPath, tagIds, true); err != nil {
 			return err
 		}
 	}
@@ -260,10 +241,8 @@ func (command TagCommand) tagRecursively(store *storage.Storage, path string, ta
 	return nil
 }
 
-func (command *TagCommand) addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {
-	if command.verbose {
-		log.Infof("%v: adding file.", path)
-	}
+func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {
+	log.Suppf("%v: adding file.", path)
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {

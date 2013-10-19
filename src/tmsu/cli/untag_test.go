@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/storage"
 )
@@ -63,11 +62,9 @@ func TestSingleUntag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	untagCommand := UntagCommand{false, false}
-
 	// test
 
-	if err := untagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
+	if err := untagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -122,11 +119,9 @@ func TestMultipleUntag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	untagCommand := UntagCommand{false, false}
-
 	// test
 
-	if err := untagCommand.Exec(cli.Options{}, []string{"/tmp/tmsu/a", "apple", "banana"}); err != nil {
+	if err := untagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple", "banana"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -186,11 +181,9 @@ func TestUntagMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	untagCommand := UntagCommand{false, false}
-
 	// test
 
-	if err := untagCommand.Exec(cli.Options{cli.Option{"--tags", "-t", "", true, "apple"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := untagCommand.Exec(Options{Option{"--tags", "-t", "", true, "apple"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -250,11 +243,9 @@ func TestUntagAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	untagCommand := UntagCommand{false, false}
-
 	// test
 
-	if err := untagCommand.Exec(cli.Options{cli.Option{"--all", "-a", "", false, ""}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := untagCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 

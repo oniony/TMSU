@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
@@ -23,27 +23,15 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
-	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/log"
 	"tmsu/vfs"
 )
 
-type MountCommand struct {
-	verbose    bool
-	allowOther bool
-}
-
-func (MountCommand) Name() cli.CommandName {
-	return "mount"
-}
-
-func (MountCommand) Synopsis() string {
-	return "Mount the virtual file-system"
-}
-
-func (MountCommand) Description() string {
-	return `tmsu mount
+var MountCommand = &Command{
+	Name:     "mount",
+	Synopsis: "Mount the virtual filesystem",
+	Description: `tmsu mount
 tmsu mount [OPTION]... [FILE] MOUNTPOINT
 
 Without arguments, lists the currently mounted file-systems, otherwise mounts a
@@ -55,29 +43,26 @@ If FILE is not specified but the TMSU_DB environment variable is defined then
 the database at TMSU_DB is mounted.
 
 Where neither FILE is specified nor TMSU_DB defined then the default database
-is mounted.`
+is mounted.`,
+	Options: Options{Option{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in fuse.conf)", false, ""}},
+	Exec:    mountExec,
 }
 
-func (MountCommand) Options() cli.Options {
-	return cli.Options{{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in fuse.conf)", false, ""}}
-}
-
-func (command MountCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.allowOther = options.HasOption("--allow-other")
+func mountExec(options Options, args []string) error {
+	allowOther := options.HasOption("--allow-other")
 
 	argCount := len(args)
 
 	switch argCount {
 	case 0:
-		err := command.listMounts()
+		err := listMounts()
 		if err != nil {
 			return fmt.Errorf("could not list mounts: %v", err)
 		}
 	case 1:
 		mountPath := args[0]
 
-		err := command.mountSelected(mountPath)
+		err := mountSelected(mountPath, allowOther)
 		if err != nil {
 			return fmt.Errorf("could not mount database at '%v': %v", mountPath, err)
 		}
@@ -85,7 +70,7 @@ func (command MountCommand) Exec(options cli.Options, args []string) error {
 		databasePath := args[0]
 		mountPath := args[1]
 
-		err := command.mountExplicit(databasePath, mountPath)
+		err := mountExplicit(databasePath, mountPath, allowOther)
 		if err != nil {
 			return fmt.Errorf("could not mount database '%v' at '%v': %v", databasePath, mountPath, err)
 		}
@@ -96,18 +81,16 @@ func (command MountCommand) Exec(options cli.Options, args []string) error {
 	return nil
 }
 
-func (command MountCommand) listMounts() error {
-	if command.verbose {
-		log.Info("retrieving mount table.")
-	}
+func listMounts() error {
+	log.Supp("retrieving mount table.")
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
 		return fmt.Errorf("could not get mount table: %v", err)
 	}
 
-	if command.verbose && len(mt) == 0 {
-		log.Info("mount table is empty.")
+	if len(mt) == 0 {
+		log.Supp("mount table is empty.")
 	}
 
 	for _, mount := range mt {
@@ -117,20 +100,20 @@ func (command MountCommand) listMounts() error {
 	return nil
 }
 
-func (command MountCommand) mountSelected(mountPath string) error {
+func mountSelected(mountPath string, allowOther bool) error {
 	databasePath, err := common.GetDatabasePath()
 	if err != nil {
 		return fmt.Errorf("could not get selected database configuration: %v", err)
 	}
 
-	if err = command.mountExplicit(databasePath, mountPath); err != nil {
+	if err = mountExplicit(databasePath, mountPath, allowOther); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (command MountCommand) mountExplicit(databasePath string, mountPath string) error {
+func mountExplicit(databasePath string, mountPath string, allowOther bool) error {
 	stat, err := os.Stat(mountPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not stat: %v", mountPath, err)
@@ -150,12 +133,10 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 		return fmt.Errorf("%v: database does not exist.")
 	}
 
-	if command.verbose {
-		log.Infof("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
-	}
+	log.Suppf("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
 
 	args := []string{"vfs", databasePath, mountPath}
-	if command.allowOther {
+	if allowOther {
 		args = append(args, "--allow-other")
 	}
 
@@ -171,16 +152,12 @@ func (command MountCommand) mountExplicit(databasePath string, mountPath string)
 		return fmt.Errorf("could not start daemon: %v", err)
 	}
 
-	if command.verbose {
-		log.Info("sleeping.")
-	}
+	log.Supp("sleeping.")
 
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
-	if command.verbose {
-		log.Info("checking whether daemon started successfully.")
-	}
+	log.Supp("checking whether daemon started successfully.")
 
 	var waitStatus syscall.WaitStatus
 	var rusage syscall.Rusage

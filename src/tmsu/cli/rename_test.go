@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/storage"
 )
@@ -61,11 +60,11 @@ func TestRenameSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RenameCommand{false}
+	command := renameCommand{false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"source", "dest"}); err != nil {
+	if err := command.Exec(Options{}, []string{"source", "dest"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -100,11 +99,11 @@ func TestRenameNonExistentSourceTag(test *testing.T) {
 	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	command := RenameCommand{false}
+	command := renameCommand{false}
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"source", "dest"})
+	err := command.Exec(Options{}, []string{"source", "dest"})
 
 	// validate
 
@@ -119,11 +118,11 @@ func TestRenameInvalidDestTag(test *testing.T) {
 	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	command := RenameCommand{false}
+	command := renameCommand{false}
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"source", "slash/invalid"})
+	err := command.Exec(Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 
@@ -154,11 +153,11 @@ func TestRenameDestTagAlreadyExists(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := RenameCommand{false}
+	command := renameCommand{false}
 
 	// test
 
-	err = command.Exec(cli.Options{}, []string{"source", "dest"})
+	err = command.Exec(Options{}, []string{"source", "dest"})
 
 	// validate
 

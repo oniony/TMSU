@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
 	"strings"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/query"
@@ -28,27 +27,10 @@ import (
 	"tmsu/storage/entities"
 )
 
-type FilesCommand struct {
-	verbose   bool
-	directory bool
-	file      bool
-	top       bool
-	leaf      bool
-	recursive bool
-	print0    bool
-	count     bool
-}
-
-func (FilesCommand) Name() cli.CommandName {
-	return "files"
-}
-
-func (FilesCommand) Synopsis() string {
-	return "List files with particular tags"
-}
-
-func (FilesCommand) Description() string {
-	return `tmsu files [OPTION]... QUERY 
+var FilesCommand = &Command{
+	Name:     "files",
+	Synopsis: "List files with particular tags",
+	Description: `tmsu files [OPTION]... QUERY 
 
 Lists the files that match the QUERY specified. QUERY may contain tag names,
 logical operators ('not', 'and', 'or') and parentheses.
@@ -63,60 +45,56 @@ Examples:
     $ tmsu files music mp3                 # files with both 'music' and 'mp3'
     $ tmsu files music and mp3             # same query but with explicit 'and'
     $ tmsu files music and not flac        # those with 'music' but not 'flac'
-    $ tmsu files "music and (mp3 or flac)" # 'music' and either 'mp3' or 'flac'`
-}
-
-func (FilesCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
+    $ tmsu files "music and (mp3 or flac)" # 'music' and either 'mp3' or 'flac'`,
+	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)", false, ""},
 		{"--leaf", "-l", "list only the bottom-most (leaf) items", false, ""},
 		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
-		{"--count", "-c", "lists the number of files rather than their names", false, ""}}
+		{"--count", "-c", "lists the number of files rather than their names", false, ""}},
+	Exec: filesExec,
 }
 
-func (command FilesCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.directory = options.HasOption("--directory")
-	command.file = options.HasOption("--file")
-	command.top = options.HasOption("--top")
-	command.leaf = options.HasOption("--leaf")
-	command.recursive = options.HasOption("--recursive")
-	command.print0 = options.HasOption("--print0")
-	command.count = options.HasOption("--count")
+func filesExec(options Options, args []string) error {
+	dirOnly := options.HasOption("--directory")
+	fileOnly := options.HasOption("--file")
+	topOnly := options.HasOption("--top")
+	leafOnly := options.HasOption("--leaf")
+	recursive := options.HasOption("--recursive")
+	print0 := options.HasOption("--print0")
+	showCount := options.HasOption("--count")
 
 	if options.HasOption("--all") {
-		return command.listAllFiles()
+		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 	}
 
-	return command.listFilesForQuery(args)
+	queryText := strings.Join(args, " ")
+	return listFilesForQuery(queryText, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
 // unexported
 
-func (command FilesCommand) listAllFiles() error {
+func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
-	if command.verbose {
-		log.Info("retrieving all files from database.")
-	}
+	log.Supp("retrieving all files from database.")
 
 	files, err := store.Files()
 	if err != nil {
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	return command.listFiles(files)
+	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
-func (command FilesCommand) listFilesForQuery(args []string) error {
-	if len(args) == 0 {
+func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
+	if queryText == "" {
 		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
 
@@ -126,19 +104,14 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 	}
 	defer store.Close()
 
-	if command.verbose {
-		log.Info("parsing query")
-	}
+	log.Supp("parsing query")
 
-	queryText := strings.Join(args, " ")
 	expression, err := query.Parse(queryText)
 	if err != nil {
 		return err
 	}
 
-	if command.verbose {
-		log.Info("checking tag names")
-	}
+	log.Supp("checking tag names")
 
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByNames(tagNames)
@@ -148,32 +121,30 @@ func (command FilesCommand) listFilesForQuery(args []string) error {
 		}
 	}
 
-	if command.verbose {
-		log.Info("querying database")
-	}
+	log.Supp("querying database")
 
 	files, err := store.QueryFiles(expression)
 	if err != nil {
 		return fmt.Errorf("could not query files: %v", err)
 	}
 
-	if err = command.listFiles(files); err != nil {
+	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (command *FilesCommand) listFiles(files entities.Files) error {
+func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	tree := path.NewTree()
 	for _, file := range files {
 		tree.Add(file.Path(), file.IsDir)
 	}
 
-	if command.top {
+	if topOnly {
 		tree = tree.TopLevel()
 	} else {
-		if command.recursive {
+		if recursive {
 			fsFiles, err := path.Enumerate(tree.TopLevel().Paths())
 			if err != nil {
 				return err
@@ -185,25 +156,25 @@ func (command *FilesCommand) listFiles(files entities.Files) error {
 		}
 	}
 
-	if command.leaf {
+	if leafOnly {
 		tree = tree.Leaves()
 	}
 
-	if command.file {
+	if fileOnly {
 		tree = tree.Files()
 	}
 
-	if command.directory {
+	if dirOnly {
 		tree = tree.Directories()
 	}
 
-	if command.count {
+	if showCount {
 		log.Print(len(tree.Paths()))
 	} else {
 		for _, absPath := range tree.Paths() {
 			relPath := path.Rel(absPath)
 
-			if command.print0 {
+			if print0 {
 				log.Print0(relPath)
 			} else {
 				log.Print(relPath)

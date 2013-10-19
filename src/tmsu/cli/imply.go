@@ -15,42 +15,27 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
 
-type ImplyCommand struct {
-	verbose bool
-}
-
-func (ImplyCommand) Name() cli.CommandName {
-	return "imply"
-}
-
-func (ImplyCommand) Synopsis() string {
-	return "Creates a tag implication"
-}
-
-func (ImplyCommand) Description() string {
-	return `tmsu [OPTION] imply TAG1 TAG2
+var ImplyCommand = &Command{
+	Name:     "imply",
+	Synopsis: "Creates a tag implication",
+	Description: `tmsu [OPTION] imply TAG1 TAG2
 tmsu imply --list
 
-Creates a tag implication such that whenever TAG1 is applied, TAG2 is automatically applied.`
+Creates a tag implication such that whenever TAG1 is applied, TAG2 is automatically applied.`,
+	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""},
+		Option{"--list", "-l", "lists the tag implications", false, ""}},
+	Exec: implyExec,
 }
 
-func (ImplyCommand) Options() cli.Options {
-	return cli.Options{cli.Option{"--delete", "-d", "deletes the tag implication", false, ""},
-		cli.Option{"--list", "-l", "lists the tag implications", false, ""}}
-}
-
-func (command ImplyCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-
+func implyExec(options Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -59,28 +44,26 @@ func (command ImplyCommand) Exec(options cli.Options, args []string) error {
 
 	switch {
 	case options.HasOption("--list"):
-		return command.listImplications(store)
+		return listImplications(store)
 	case options.HasOption("--delete"):
 		if len(args) < 2 {
 			return fmt.Errorf("Implying and implied tag must be specified.")
 		}
 
-		return command.deleteImplication(store, args[0], args[1])
+		return deleteImplication(store, args[0], args[1])
 	}
 
 	if len(args) < 2 {
 		return fmt.Errorf("Implying and implied tag must be specified.")
 	}
 
-	return command.addImplication(store, args[0], args[1])
+	return addImplication(store, args[0], args[1])
 }
 
 // unexported
 
-func (command ImplyCommand) listImplications(store *storage.Storage) error {
-	if command.verbose {
-		log.Infof("retrieving tag implications.")
-	}
+func listImplications(store *storage.Storage) error {
+	log.Suppf("retrieving tag implications.")
 
 	implications, err := store.Implications()
 	if err != nil {
@@ -114,7 +97,7 @@ func (command ImplyCommand) listImplications(store *storage.Storage) error {
 	return nil
 }
 
-func (command ImplyCommand) addImplication(store *storage.Storage, tagName, impliedTagName string) error {
+func addImplication(store *storage.Storage, tagName, impliedTagName string) error {
 	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -131,9 +114,7 @@ func (command ImplyCommand) addImplication(store *storage.Storage, tagName, impl
 		return fmt.Errorf("no such tag '%v'.", impliedTagName)
 	}
 
-	if command.verbose {
-		log.Infof("adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
-	}
+	log.Suppf("adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
 	if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
 		return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
@@ -142,7 +123,7 @@ func (command ImplyCommand) addImplication(store *storage.Storage, tagName, impl
 	return nil
 }
 
-func (command ImplyCommand) deleteImplication(store *storage.Storage, tagName, impliedTagName string) error {
+func deleteImplication(store *storage.Storage, tagName, impliedTagName string) error {
 	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -159,9 +140,7 @@ func (command ImplyCommand) deleteImplication(store *storage.Storage, tagName, i
 		return fmt.Errorf("no such tag '%v'.", impliedTagName)
 	}
 
-	if command.verbose {
-		log.Infof("removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
-	}
+	log.Suppf("removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
 	if err = store.RemoveImplication(tag.Id, impliedTag.Id); err != nil {
 		return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)

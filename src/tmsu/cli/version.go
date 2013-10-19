@@ -15,35 +15,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
-	"tmsu/cli"
 	"tmsu/common"
 	"tmsu/log"
 )
 
-type VersionCommand struct{}
+var VersionCommand = &Command{
+	Name:     "version",
+	Synopsis: "Display version and copyright information",
+	Description: `tmsu version
 
-func (VersionCommand) Name() cli.CommandName {
-	return "version"
+Displays version and copyright information.`,
+	Options: Options{},
+	Exec:    versionExec,
 }
 
-func (VersionCommand) Synopsis() string {
-	return "Display version and copyright information"
-}
-
-func (VersionCommand) Description() string {
-	return `tmsu version
-
-Displays version and copyright information.`
-}
-
-func (VersionCommand) Options() cli.Options {
-	return cli.Options{}
-}
-
-func (VersionCommand) Exec(options cli.Options, args []string) error {
+func versionExec(options Options, args []string) error {
 	log.Print("TMSU", common.Version)
 	log.Print()
 	log.Print(`Copyright © 2011-2013 Paul Ruane.

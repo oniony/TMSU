@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"io/ioutil"
@@ -23,7 +23,6 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
@@ -58,11 +57,11 @@ func TestDupesSingle(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false, false}
+	command := dupesCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+	if err := command.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -114,11 +113,11 @@ func TestDupesMultiple(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false, false}
+	command := dupesCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+	if err := command.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -169,11 +168,11 @@ func TestDupesNone(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false, false}
+	command := dupesCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{}); err != nil {
+	if err := command.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -231,11 +230,11 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false, false}
+	command := dupesCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{path}); err != nil {
+	if err := command.Exec(Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -293,11 +292,11 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DupesCommand{false, false}
+	command := dupesCommand{false, false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{path}); err != nil {
+	if err := command.Exec(Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -359,7 +358,7 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{path}); err != nil {
+	if err := command.Exec(Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 

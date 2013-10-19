@@ -15,35 +15,23 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/storage"
 	"tmsu/storage/entities"
 )
 
-type StatusCommand struct {
-	verbose   bool
-	directory bool
-}
-
-func (StatusCommand) Name() cli.CommandName {
-	return "status"
-}
-
-func (StatusCommand) Synopsis() string {
-	return "List the file tagging status"
-}
-
-func (StatusCommand) Description() string {
-	return `tmsu status [PATH]...
+var StatusCommand = &Command{
+	Name:     "status",
+	Synopsis: "List the file tagging status",
+	Description: `tmsu status [PATH]...
 
 Shows the status of PATHs.
 
@@ -60,7 +48,9 @@ or size to that in the database. Missing files are those in the database but
 that no longer exist in the file-system.
 
 Note: The 'repair' command can be used to fix problems caused by files that have
-been modified or moved on disk.`
+been modified or moved on disk.`,
+	Options: Options{Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""}},
+	Exec:    statusExec,
 }
 
 type Status byte
@@ -99,57 +89,30 @@ func NewReport() *StatusReport {
 	return &StatusReport{make([]Row, 0, 10)}
 }
 
-func (StatusCommand) Options() cli.Options {
-	return cli.Options{cli.Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""}}
-}
-
-func (command StatusCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.directory = options.HasOption("--directory")
+func statusExec(options Options, args []string) error {
+	dirOnly := options.HasOption("--directory")
 
 	var report *StatusReport
 	var err error
 
 	if len(args) == 0 {
-		report, err = command.statusDatabase()
+		report, err = statusDatabase(dirOnly)
 		if err != nil {
 			return err
 		}
 	} else {
-		report, err = command.statusPaths(args)
+		report, err = statusPaths(args, dirOnly)
 		if err != nil {
 			return err
 		}
 	}
 
-	for _, row := range report.Rows {
-		if row.Status == TAGGED {
-			command.printRow(row)
-		}
-	}
-
-	for _, row := range report.Rows {
-		if row.Status == MODIFIED {
-			command.printRow(row)
-		}
-	}
-
-	for _, row := range report.Rows {
-		if row.Status == MISSING {
-			command.printRow(row)
-		}
-	}
-
-	for _, row := range report.Rows {
-		if row.Status == UNTAGGED {
-			command.printRow(row)
-		}
-	}
+	printReport(report)
 
 	return nil
 }
 
-func (command StatusCommand) statusDatabase() (*StatusReport, error) {
+func statusDatabase(dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
 
 	store, err := storage.Open()
@@ -158,16 +121,14 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 	}
 	defer store.Close()
 
-	if command.verbose {
-		log.Info("retrieving all files from database.")
-	}
+	log.Supp("retrieving all files from database.")
 
 	files, err := store.Files()
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	err = command.checkFiles(files, report)
+	err = statusCheckFiles(files, report)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +144,7 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 	}
 
 	for _, path := range topLevelPaths {
-		if err = command.findNewFiles(path, report); err != nil {
+		if err = findNewFiles(path, report, dirOnly); err != nil {
 			return nil, err
 		}
 	}
@@ -191,7 +152,7 @@ func (command StatusCommand) statusDatabase() (*StatusReport, error) {
 	return report, nil
 }
 
-func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) {
+func statusPaths(paths []string, dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
 
 	store, err := storage.Open()
@@ -211,29 +172,27 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
 		if file != nil {
-			err = command.checkFile(file, report)
+			err = statusCheckFile(file, report)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		if !command.directory {
-			if command.verbose {
-				log.Infof("%v: retrieving files from database.", path)
-			}
+		if !dirOnly {
+			log.Suppf("%v: retrieving files from database.", path)
 
 			files, err := store.FilesByDirectory(absPath)
 			if err != nil {
 				return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
 			}
 
-			err = command.checkFiles(files, report)
+			err = statusCheckFiles(files, report)
 			if err != nil {
 				return nil, err
 			}
 		}
 
-		err = command.findNewFiles(path, report)
+		err = findNewFiles(path, report, dirOnly)
 		if err != nil {
 			return nil, err
 		}
@@ -242,9 +201,9 @@ func (command StatusCommand) statusPaths(paths []string) (*StatusReport, error) 
 	return report, nil
 }
 
-func (command *StatusCommand) checkFiles(files entities.Files, report *StatusReport) error {
+func statusCheckFiles(files entities.Files, report *StatusReport) error {
 	for _, file := range files {
-		err := command.checkFile(file, report)
+		err := statusCheckFile(file, report)
 		if err != nil {
 			return err
 		}
@@ -253,20 +212,16 @@ func (command *StatusCommand) checkFiles(files entities.Files, report *StatusRep
 	return nil
 }
 
-func (command *StatusCommand) checkFile(file *entities.File, report *StatusReport) error {
+func statusCheckFile(file *entities.File, report *StatusReport) error {
 	relPath := path.Rel(file.Path())
 
-	if command.verbose {
-		log.Infof("%v: checking file status.", file.Path())
-	}
+	log.Suppf("%v: checking file status.", file.Path())
 
 	stat, err := os.Stat(file.Path())
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			if command.verbose {
-				log.Infof("%v: file is missing.", file.Path())
-			}
+			log.Suppf("%v: file is missing.", file.Path())
 
 			report.AddRow(Row{relPath, MISSING})
 			return nil
@@ -280,15 +235,11 @@ func (command *StatusCommand) checkFile(file *entities.File, report *StatusRepor
 		}
 	} else {
 		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
-			if command.verbose {
-				log.Infof("%v: file is modified.", file.Path())
-			}
+			log.Suppf("%v: file is modified.", file.Path())
 
 			report.AddRow(Row{relPath, MODIFIED})
 		} else {
-			if command.verbose {
-				log.Infof("%v: file is unchanged.", file.Path())
-			}
+			log.Suppf("%v: file is unchanged.", file.Path())
 
 			report.AddRow(Row{relPath, TAGGED})
 		}
@@ -297,10 +248,8 @@ func (command *StatusCommand) checkFile(file *entities.File, report *StatusRepor
 	return nil
 }
 
-func (command *StatusCommand) findNewFiles(searchPath string, report *StatusReport) error {
-	if command.verbose {
-		log.Infof("%v: finding new files.", searchPath)
-	}
+func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
+	log.Suppf("%v: finding new files.", searchPath)
 
 	relPath := path.Rel(searchPath)
 
@@ -326,7 +275,7 @@ func (command *StatusCommand) findNewFiles(searchPath string, report *StatusRepo
 		}
 	}
 
-	if !command.directory && stat.IsDir() {
+	if !dirOnly && stat.IsDir() {
 		dir, err := os.Open(absPath)
 		if err != nil {
 			return fmt.Errorf("%v: could not open file: %v", searchPath, err)
@@ -339,7 +288,7 @@ func (command *StatusCommand) findNewFiles(searchPath string, report *StatusRepo
 
 		for _, dirName := range dirNames {
 			dirPath := filepath.Join(searchPath, dirName)
-			err = command.findNewFiles(dirPath, report)
+			err = findNewFiles(dirPath, report, dirOnly)
 			if err != nil {
 				return err
 			}
@@ -349,6 +298,32 @@ func (command *StatusCommand) findNewFiles(searchPath string, report *StatusRepo
 	return nil
 }
 
-func (command *StatusCommand) printRow(row Row) {
+func printReport(report *StatusReport) {
+	for _, row := range report.Rows {
+		if row.Status == TAGGED {
+			printRow(row)
+		}
+	}
+
+	for _, row := range report.Rows {
+		if row.Status == MODIFIED {
+			printRow(row)
+		}
+	}
+
+	for _, row := range report.Rows {
+		if row.Status == MISSING {
+			printRow(row)
+		}
+	}
+
+	for _, row := range report.Rows {
+		if row.Status == UNTAGGED {
+			printRow(row)
+		}
+	}
+}
+
+func printRow(row Row) {
 	log.Printf("%v %v", string(row.Status), row.Path)
 }

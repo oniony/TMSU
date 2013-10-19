@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	_path "tmsu/path"
@@ -29,22 +28,10 @@ import (
 	"tmsu/storage/entities"
 )
 
-type RepairCommand struct {
-	verbose bool
-	pretend bool
-	force   bool
-}
-
-func (RepairCommand) Name() cli.CommandName {
-	return "repair"
-}
-
-func (RepairCommand) Synopsis() string {
-	return "Repair the database"
-}
-
-func (RepairCommand) Description() string {
-	return `tmsu [OPTION]... repair [PATH]...
+var RepairCommand = &Command{
+	Name:     "repair",
+	Synopsis: "Repair the database",
+	Description: `tmsu [OPTION]... repair [PATH]...
 
 Fixes broken paths and stale fingerprints in the database caused by file
 modifications and moves.
@@ -71,18 +58,15 @@ as this would destroy the tagging information associated with them. If you do
 wish to clear missing files from the database and destroying the associated
 tagging information then use the --force option.
 
-Untagged files are reported but not added to the database.`
+Untagged files are reported but not added to the database.`,
+	Options: Options{{"--pretend", "-p", "do not make any changes", false, ""},
+		{"--force", "-f", "remove missing files from the database", false, ""}},
+	Exec: repairExec,
 }
 
-func (RepairCommand) Options() cli.Options {
-	return cli.Options{{"--pretend", "-p", "do not make any changes", false, ""},
-		{"--force", "-f", "remove missing files from the database", false, ""}}
-}
-
-func (command RepairCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.pretend = options.HasOption("--pretend")
-	command.force = options.HasOption("--force")
+func repairExec(options Options, args []string) error {
+	pretend := options.HasOption("--pretend")
+	force := options.HasOption("--force")
 
 	store, err := storage.Open()
 	if err != nil {
@@ -91,18 +75,16 @@ func (command RepairCommand) Exec(options cli.Options, args []string) error {
 	defer store.Close()
 
 	if len(args) == 0 {
-		return command.repairDatabase(store)
+		return repairDatabase(store, pretend, force)
 	}
 
-	return command.repairPaths(store, args)
+	return repairPaths(store, args, pretend, force)
 }
 
 //- unexported
 
-func (command RepairCommand) repairDatabase(store *storage.Storage) error {
-	if command.verbose {
-		log.Info("retrieving all files from the database.")
-	}
+func repairDatabase(store *storage.Storage, pretend, force bool) error {
+	log.Supp("retrieving all files from the database.")
 
 	files, err := store.Files()
 	if err != nil {
@@ -114,7 +96,7 @@ func (command RepairCommand) repairDatabase(store *storage.Storage) error {
 		paths[index] = files[index].Path()
 	}
 
-	err = command.checkFiles(store, paths)
+	err = repairFiles(store, paths, pretend, force)
 	if err != nil {
 		return err
 	}
@@ -122,7 +104,7 @@ func (command RepairCommand) repairDatabase(store *storage.Storage) error {
 	return nil
 }
 
-func (command RepairCommand) repairPaths(store *storage.Storage, paths []string) error {
+func repairPaths(store *storage.Storage, paths []string, pretend, force bool) error {
 	absPaths := make([]string, len(paths))
 
 	for index, path := range paths {
@@ -134,11 +116,9 @@ func (command RepairCommand) repairPaths(store *storage.Storage, paths []string)
 		absPaths[index] = absPath
 	}
 
-	if command.verbose {
-		log.Infof("identifying top-level paths.")
-	}
+	log.Suppf("identifying top-level paths.")
 
-	err := command.checkFiles(store, absPaths)
+	err := repairFiles(store, absPaths, pretend, force)
 	if err != nil {
 		return err
 	}
@@ -146,7 +126,7 @@ func (command RepairCommand) repairPaths(store *storage.Storage, paths []string)
 	return nil
 }
 
-func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) error {
+func repairFiles(store *storage.Storage, paths []string, pretend, force bool) error {
 	tree := _path.NewTree()
 	for _, path := range paths {
 		tree.Add(path, false)
@@ -163,17 +143,17 @@ func (command RepairCommand) checkFiles(store *storage.Storage, paths []string) 
 		return err
 	}
 
-	_, untagged, modified, missing := command.determineStatuses(fsPaths, dbPaths)
+	_, untagged, modified, missing := determineStatuses(fsPaths, dbPaths)
 
-	if err = command.repairModified(store, modified); err != nil {
+	if err = repairModified(store, modified, pretend); err != nil {
 		return err
 	}
 
-	if err = command.repairMoved(store, missing, untagged); err != nil {
+	if err = repairMoved(store, missing, untagged, pretend); err != nil {
 		return err
 	}
 
-	if err = command.repairMissing(store, missing); err != nil {
+	if err = repairMissing(store, missing, pretend, force); err != nil {
 		return err
 	}
 
@@ -194,10 +174,8 @@ type fileIdAndInfoMap map[string]struct {
 }
 type databaseFileMap map[string]entities.File
 
-func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
-	if command.verbose {
-		log.Info("determining file statuses")
-	}
+func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
+	log.Supp("determining file statuses")
 
 	tagged = make(databaseFileMap, 100)
 	untagged = make(fileInfoMap, 100)
@@ -228,10 +206,8 @@ func (command RepairCommand) determineStatuses(fsPaths fileInfoMap, dbPaths data
 	return tagged, untagged, modified, missing
 }
 
-func (command RepairCommand) repairModified(store *storage.Storage, modified fileIdAndInfoMap) error {
-	if command.verbose {
-		log.Info("repairing modified files")
-	}
+func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool) error {
+	log.Supp("repairing modified files")
 
 	for path, fileIdAndStat := range modified {
 		fileId := fileIdAndStat.fileId
@@ -244,7 +220,7 @@ func (command RepairCommand) repairModified(store *storage.Storage, modified fil
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}
 
-		if !command.pretend {
+		if !pretend {
 			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", path, err)
@@ -256,17 +232,13 @@ func (command RepairCommand) repairModified(store *storage.Storage, modified fil
 	return nil
 }
 
-func (command RepairCommand) repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap) error {
-	if command.verbose {
-		log.Info("repairing moved files")
-	}
+func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap, pretend bool) error {
+	log.Supp("repairing moved files")
 
 	moved := make([]string, 0, 10)
 
 	for path, dbFile := range missing {
-		if command.verbose {
-			log.Infof("%v: searching for new location", path)
-		}
+		log.Suppf("%v: searching for new location", path)
 
 		for candidatePath, stat := range untagged {
 			if stat.Size() == dbFile.Size {
@@ -280,7 +252,7 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 
 					moved = append(moved, path)
 
-					if !command.pretend {
+					if !pretend {
 						_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
 						if err != nil {
 							return fmt.Errorf("%v: could not update file in database: %v", path, err)
@@ -302,9 +274,9 @@ func (command RepairCommand) repairMoved(store *storage.Storage, missing databas
 	return nil
 }
 
-func (command RepairCommand) repairMissing(store *storage.Storage, missing databaseFileMap) error {
+func repairMissing(store *storage.Storage, missing databaseFileMap, pretend, force bool) error {
 	for path, dbFile := range missing {
-		if command.force && !command.pretend {
+		if force && !pretend {
 			if err := store.RemoveFileTagsByFileId(dbFile.Id); err != nil {
 				return fmt.Errorf("%v: could not delete file-tags: %v", path, err)
 			}

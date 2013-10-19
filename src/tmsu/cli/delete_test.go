@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/storage"
 )
@@ -78,11 +77,11 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := DeleteCommand{false}
+	command := deleteCommand{false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"deathrow"}); err != nil {
+	if err := command.Exec(Options{}, []string{"deathrow"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -133,7 +132,7 @@ func TestDeleteNonExistentTag(test *testing.T) {
 	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	command := DeleteCommand{false}
+	command := deleteCommand{false}
 
 	// test
 

@@ -15,76 +15,55 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
 	"os"
 	"os/exec"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/vfs"
 )
 
-type UnmountCommand struct {
-	verbose bool
-}
-
-func (UnmountCommand) Name() cli.CommandName {
-	return "unmount"
-}
-
-func (UnmountCommand) Synopsis() string {
-	return "Unmount the virtual file-system"
-}
-
-func (UnmountCommand) Description() string {
-	return `tmsu unmount MOUNTPOINT
+var UnmountCommand = &Command{
+	Name:     "unmount",
+	Synopsis: "Unmount the virtual file-system",
+	Description: `tmsu unmount MOUNTPOINT
 tmsu unmount --all
 
-Unmounts the virtual file-system at MOUNTPOINT.`
+Unmounts the virtual file-system at MOUNTPOINT.`,
+	Options: Options{{"--all", "-a", "unmounts all mounted TMSU file-systems", false, ""}},
+	Exec:    unmountExec,
 }
 
-func (UnmountCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "unmounts all mounted TMSU file-systems", false, ""}}
-}
-
-func (command UnmountCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-
+func unmountExec(options Options, args []string) error {
 	if options.HasOption("--all") {
-		return command.unmountAll()
+		return unmountAll()
 	}
 
 	if len(args) < 1 {
 		return fmt.Errorf("path to unmount not speciified.")
 	}
 
-	return command.unmount(args[0])
+	return unmount(args[0])
 }
 
-func (command UnmountCommand) unmount(path string) error {
-	if command.verbose {
-		log.Info("searching path for fusermount.")
-	}
+func unmount(path string) error {
+	log.Supp("searching path for fusermount.")
 
 	fusermountPath, err := exec.LookPath("fusermount")
 	if err != nil {
 		return fmt.Errorf("could not find 'fusermount': ensure fuse is installed: %v", err)
 	}
 
-	if command.verbose {
-		log.Infof("running: %v -u %v.", fusermountPath, path)
-	}
+	log.Suppf("running: %v -u %v.", fusermountPath, path)
 
 	process, err := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
 	if err != nil {
 		return fmt.Errorf("could not start 'fusermount': %v", err)
 	}
 
-	if command.verbose {
-		log.Info("waiting for process to exit.")
-	}
+	log.Supp("waiting for process to exit.")
 
 	processState, err := process.Wait()
 	if err != nil {
@@ -97,22 +76,20 @@ func (command UnmountCommand) unmount(path string) error {
 	return nil
 }
 
-func (command UnmountCommand) unmountAll() error {
-	if command.verbose {
-		log.Info("retrieving mount table.")
-	}
+func unmountAll() error {
+	log.Supp("retrieving mount table.")
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
 		return fmt.Errorf("could not get mount table: %v", err)
 	}
 
-	if command.verbose && len(mt) == 0 {
-		log.Info("mount table is empty.")
+	if len(mt) == 0 {
+		log.Supp("mount table is empty.")
 	}
 
 	for _, mount := range mt {
-		err = command.unmount(mount.MountPath)
+		err = unmount(mount.MountPath)
 		if err != nil {
 			return err
 		}

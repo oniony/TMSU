@@ -18,57 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package main
 
 import (
-	"os"
 	"tmsu/cli"
-	"tmsu/cli/commands"
-	"tmsu/log"
 )
 
 func main() {
-	helpCommand := &commands.HelpCommand{}
-	commands := map[cli.CommandName]cli.Command{
-		"copy":    commands.CopyCommand{},
-		"delete":  commands.DeleteCommand{},
-		"dupes":   commands.DupesCommand{},
-		"files":   commands.FilesCommand{},
-		"help":    helpCommand,
-		"imply":   commands.ImplyCommand{},
-		"merge":   commands.MergeCommand{},
-		"mount":   commands.MountCommand{},
-		"rename":  commands.RenameCommand{},
-		"repair":  commands.RepairCommand{},
-		"stats":   commands.StatsCommand{},
-		"status":  commands.StatusCommand{},
-		"tag":     commands.TagCommand{},
-		"tags":    commands.TagsCommand{},
-		"unmount": commands.UnmountCommand{},
-		"untag":   commands.UntagCommand{},
-		"version": commands.VersionCommand{},
-		"vfs":     commands.VfsCommand{},
-	}
-	helpCommand.Commands = commands
-
-	globalOptions := cli.Options{cli.Option{"--verbose", "-v", "show verbose messages", false, ""},
-		cli.Option{"--help", "-h", "show help and exit", false, ""},
-		cli.Option{"--version", "-V", "show version information and exit", false, ""}}
-
-	parser := cli.NewOptionParser(globalOptions, commands)
-	commandName, options, arguments, err := parser.Parse(os.Args[1:])
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	if commandName == "" {
-		commandName = "help"
-	}
-
-	command := commands[commandName]
-	if command == nil {
-		log.Fatalf("Invalid command '%v'.", commandName)
-	}
-
-	err = command.Exec(options, arguments)
-	if err != nil {
-		log.Fatal(err.Error())
-	}
+	cli.Run()
 }

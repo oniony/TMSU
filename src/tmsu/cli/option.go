@@ -53,15 +53,15 @@ func (options Options) Get(name string) *Option {
 
 type OptionParser struct {
 	globalOptions Options
-	commandByName map[CommandName]Command
+	commandByName map[string]*Command
 }
 
-func NewOptionParser(globalOptions Options, commandByName map[CommandName]Command) *OptionParser {
+func NewOptionParser(globalOptions Options, commandByName map[string]*Command) *OptionParser {
 	parser := OptionParser{globalOptions, commandByName}
 	return &parser
 }
 
-func (parser *OptionParser) Parse(args []string) (commandName CommandName, options Options, arguments []string, err error) {
+func (parser *OptionParser) Parse(args []string) (commandName string, options Options, arguments []string, err error) {
 	commandName = ""
 	options = make(Options, 0)
 	arguments = make([]string, 0)
@@ -91,24 +91,17 @@ func (parser *OptionParser) Parse(args []string) (commandName CommandName, optio
 				options = append(options, *option)
 			} else {
 				if commandName == "" {
-					commandName = CommandName(arg)
+					commandName = arg
 
-					command := parser.commandByName[commandName]
-					if command != nil {
-						possibleOptions = append(possibleOptions, command.Options()...)
+					command, ok := parser.commandByName[commandName]
+					if ok {
+						possibleOptions = append(possibleOptions, command.Options...)
 					}
 				} else {
 					arguments = append(arguments, arg)
 				}
 			}
 		}
-	}
-
-	if options.HasOption("--version") {
-		commandName = "version"
-	}
-	if options.HasOption("--help") {
-		commandName = "help"
 	}
 
 	return

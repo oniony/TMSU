@@ -15,12 +15,11 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
 	"path/filepath"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	_path "tmsu/path"
@@ -28,63 +27,45 @@ import (
 	"tmsu/storage/entities"
 )
 
-type DupesCommand struct {
-	verbose   bool
-	recursive bool
-}
-
-func (DupesCommand) Name() cli.CommandName {
-	return "dupes"
-}
-
-func (DupesCommand) Synopsis() string {
-	return "Identify duplicate files"
-}
-
-func (DupesCommand) Description() string {
-	return `tmsu dupes [FILE]...
+var DupesCommand = &Command{
+	Name:     "dupes",
+	Synopsis: "Identify duplicate files",
+	Description: `tmsu dupes [FILE]...
 
 Identifies all files in the database that are exact duplicates of FILE. If no
-FILE is specified then identifies duplicates between files in the database.`
+FILE is specified then identifies duplicates between files in the database.`,
+	Options: Options{Option{"--recursive", "-r", "recursively check directory contents", false, ""}},
+	Exec:    dupesExec,
 }
 
-func (DupesCommand) Options() cli.Options {
-	return cli.Options{cli.Option{"--recursive", "-r", "recursively check directory contents", false, ""}}
-}
-
-func (command DupesCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.recursive = options.HasOption("--recursive")
+func dupesExec(options Options, args []string) error {
+	recursive := options.HasOption("--recursive")
 
 	switch len(args) {
 	case 0:
-		command.findDuplicatesInDb()
+		findDuplicatesInDb()
 	default:
-		return command.findDuplicatesOf(args)
+		return findDuplicatesOf(args, recursive)
 	}
 
 	return nil
 }
 
-func (command DupesCommand) findDuplicatesInDb() error {
+func findDuplicatesInDb() error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
-	if command.verbose {
-		log.Info("identifying duplicate files.")
-	}
+	log.Supp("identifying duplicate files.")
 
 	fileSets, err := store.DuplicateFiles()
 	if err != nil {
 		return fmt.Errorf("could not identify duplicate files: %v", err)
 	}
 
-	if command.verbose {
-		log.Infof("found %v sets of duplicate files.", len(fileSets))
-	}
+	log.Suppf("found %v sets of duplicate files.", len(fileSets))
 
 	for index, fileSet := range fileSets {
 		if index > 0 {
@@ -102,14 +83,14 @@ func (command DupesCommand) findDuplicatesInDb() error {
 	return nil
 }
 
-func (command DupesCommand) findDuplicatesOf(paths []string) error {
+func findDuplicatesOf(paths []string, recursive bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
-	if command.recursive {
+	if recursive {
 		p, err := _path.Enumerate(paths)
 		if err != nil {
 			return fmt.Errorf("could not enumerate paths: %v", err)
@@ -123,9 +104,7 @@ func (command DupesCommand) findDuplicatesOf(paths []string) error {
 
 	first := true
 	for _, path := range paths {
-		if command.verbose {
-			log.Infof("%v: identifying duplicate files.", path)
-		}
+		log.Suppf("%v: identifying duplicate files.", path)
 
 		fp, err := fingerprint.Create(path)
 		if err != nil {

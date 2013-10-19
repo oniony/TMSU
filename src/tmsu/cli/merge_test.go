@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/storage"
 )
@@ -88,7 +87,7 @@ func TestMergeSingleTag(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"a", "b"}); err != nil {
+	if err := command.Exec(Options{}, []string{"a", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -197,11 +196,11 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := MergeCommand{false}
+	command := mergeCommand{false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"a", "b", "c"}); err != nil {
+	if err := command.Exec(Options{}, []string{"a", "b", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -256,11 +255,11 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := MergeCommand{false}
+	command := mergeCommand{false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"a", "b"}); err == nil {
+	if err := command.Exec(Options{}, []string{"a", "b"}); err == nil {
 		test.Fatal("Expected non-existent source tag to be identified.")
 	}
 }
@@ -282,11 +281,11 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := MergeCommand{false}
+	command := mergeCommand{false}
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"a", "b"}); err == nil {
+	if err := command.Exec(Options{}, []string{"a", "b"}); err == nil {
 		test.Fatal("Expected non-existent destination tag to be identified.")
 	}
 }
@@ -312,7 +311,7 @@ func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"a", "a"}); err == nil {
+	if err := command.Exec(Options{}, []string{"a", "a"}); err == nil {
 		test.Fatal("Expected source and destination the same tag to be identified.")
 	}
 }

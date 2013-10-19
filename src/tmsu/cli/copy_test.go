@@ -15,13 +15,12 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/cli"
 	"tmsu/fingerprint"
 	"tmsu/storage"
 )
@@ -61,11 +60,9 @@ func TestCopySuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := CopyCommand{false}
-
 	// test
 
-	if err := command.Exec(cli.Options{}, []string{"source", "dest"}); err != nil {
+	if err := copyCommand.Exec(Options{}, []string{"source", "dest"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -93,7 +90,7 @@ func TestCopyNonExistentSourceTag(test *testing.T) {
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"source", "dest"})
+	err := command.Exec(Options{}, []string{"source", "dest"})
 
 	// validate
 
@@ -112,7 +109,7 @@ func TestCopyInvalidDestTag(test *testing.T) {
 
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"source", "slash/invalid"})
+	err := command.Exec(Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 
@@ -147,7 +144,7 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 
 	// test
 
-	err = command.Exec(cli.Options{}, []string{"source", "dest"})
+	err = command.Exec(Options{}, []string{"source", "dest"})
 
 	// validate
 

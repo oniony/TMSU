@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
@@ -23,61 +23,44 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/entities"
 )
 
-type TagsCommand struct {
-	verbose bool
-	count   bool
-}
-
-func (TagsCommand) Name() cli.CommandName {
-	return "tags"
-}
-
-func (TagsCommand) Synopsis() string {
-	return "List tags"
-}
-
-func (TagsCommand) Description() string {
-	return `tmsu tags [OPTION]... [FILE]...
+var TagsCommand = &Command{
+	Name:     "tags",
+	Synopsis: "List tags",
+	Description: `tmsu tags [OPTION]... [FILE]...
 
 Lists the tags applied to FILEs.
 
-When run with no arguments, tags for the current working directory are listed.`
+When run with no arguments, tags for the current working directory are listed.`,
+	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
+		{"--count", "-c", "lists the number of tags rather than their names", false, ""}},
+	Exec: tagsExec,
 }
 
-func (TagsCommand) Options() cli.Options {
-	return cli.Options{{"--all", "-a", "lists all of the tags defined", false, ""},
-		{"--count", "-c", "lists the number of tags rather than their names", false, ""}}
-}
-
-func (command TagsCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-	command.count = options.HasOption("--count")
+func tagsExec(options Options, args []string) error {
+	showCount := options.HasOption("--count")
 
 	if options.HasOption("--all") {
-		return command.listAllTags()
+		return listAllTags(showCount)
 	}
 
-	return command.listTags(args)
+	return listTags(args, showCount)
 }
 
-func (command TagsCommand) listAllTags() error {
+func listAllTags(showCount bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
-	if command.verbose {
-		log.Info("retrieving all tags.")
-	}
+	log.Supp("retrieving all tags.")
 
-	if command.count {
+	if showCount {
 		count, err := store.TagCount()
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag count: %v", err)
@@ -98,7 +81,7 @@ func (command TagsCommand) listAllTags() error {
 	return nil
 }
 
-func (command TagsCommand) listTags(paths []string) error {
+func listTags(paths []string, showCount bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -107,20 +90,18 @@ func (command TagsCommand) listTags(paths []string) error {
 
 	switch len(paths) {
 	case 0:
-		return command.listTagsForWorkingDirectory(store)
+		return listTagsForWorkingDirectory(store, showCount)
 	case 1:
-		return command.listTagsForPath(store, paths[0])
+		return listTagsForPath(store, paths[0], showCount)
 	default:
-		return command.listTagsForPaths(store, paths)
+		return listTagsForPaths(store, paths, showCount)
 	}
 
 	return nil
 }
 
-func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) error {
-	if command.verbose {
-		log.Infof("%v: retrieving tags.", path)
-	}
+func listTagsForPath(store *storage.Storage, path string, showCount bool) error {
+	log.Suppf("%v: retrieving tags.", path)
 
 	var tags, err = store.TagsForPath(path)
 	if err != nil {
@@ -141,7 +122,7 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) 
 		}
 	}
 
-	if command.count {
+	if showCount {
 		log.Print(len(tags))
 	} else {
 		for _, tag := range tags {
@@ -152,11 +133,9 @@ func (command TagsCommand) listTagsForPath(store *storage.Storage, path string) 
 	return nil
 }
 
-func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []string) error {
+func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) error {
 	for _, path := range paths {
-		if command.verbose {
-			log.Infof("%v: retrieving tags.", path)
-		}
+		log.Suppf("%v: retrieving tags.", path)
 
 		var tags, err = store.TagsForPath(path)
 		if err != nil {
@@ -164,7 +143,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 			continue
 		}
 
-		if command.count {
+		if showCount {
 			log.Print(path + ": " + strconv.Itoa(len(tags)))
 		} else {
 			log.Print(path + ": " + formatTags(tags))
@@ -174,7 +153,7 @@ func (command TagsCommand) listTagsForPaths(store *storage.Storage, paths []stri
 	return nil
 }
 
-func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) error {
+func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return fmt.Errorf("could not open working directory: %v", err)
@@ -189,9 +168,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) e
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		if command.verbose {
-			log.Infof("%v: retrieving tags.", dirName)
-		}
+		log.Suppf("%v: retrieving tags.", dirName)
 
 		var tags, err = store.TagsForPath(dirName)
 
@@ -204,7 +181,7 @@ func (command TagsCommand) listTagsForWorkingDirectory(store *storage.Storage) e
 			continue
 		}
 
-		if command.count {
+		if showCount {
 			log.Print(dirName + ": " + strconv.Itoa(len(tags)))
 		} else {
 			log.Print(dirName + ": " + formatTags(tags))

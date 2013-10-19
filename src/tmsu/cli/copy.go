@@ -15,40 +15,25 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/log"
 	"tmsu/storage"
 )
 
-type CopyCommand struct {
-	verbose bool
+var CopyCommand = &Command{
+	Name:     "copy",
+	Synopsis: "Create a copy of a tag",
+	Description: `tmsu copy TAG NEW
+
+Creates a new tag NEW applied to the same set of files as TAG.`,
+	Options: Options{},
+	Exec:    copyExec,
 }
 
-func (CopyCommand) Name() cli.CommandName {
-	return "copy"
-}
-
-func (CopyCommand) Synopsis() string {
-	return "Create a copy of a tag"
-}
-
-func (CopyCommand) Description() string {
-	return `tmsu copy TAG NEW
-
-Creates a new tag NEW applied to the same set of files as TAG.`
-}
-
-func (CopyCommand) Options() cli.Options {
-	return cli.Options{}
-}
-
-func (command CopyCommand) Exec(options cli.Options, args []string) error {
-	command.verbose = options.HasOption("--verbose")
-
+func copyExec(options Options, args []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -74,9 +59,7 @@ func (command CopyCommand) Exec(options cli.Options, args []string) error {
 		return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
 	}
 
-	if command.verbose {
-		log.Infof("copying tag '%v' to '%v'.", sourceTagName, destTagName)
-	}
+	log.Suppf("copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
 	if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
 		return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)

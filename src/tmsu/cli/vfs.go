@@ -15,33 +15,22 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package commands
+package cli
 
 import (
 	"fmt"
-	"tmsu/cli"
 	"tmsu/vfs"
 )
 
-type VfsCommand struct{}
-
-func (VfsCommand) Name() cli.CommandName {
-	return "vfs"
+var VfsCommand = &Command{
+	Name:        "vfs",
+	Synopsis:    "",
+	Description: "",
+	Options:     Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option", false, ""}},
+	Exec:        vfsExec,
 }
 
-func (VfsCommand) Synopsis() string {
-	return ""
-}
-
-func (VfsCommand) Description() string {
-	return ""
-}
-
-func (VfsCommand) Options() cli.Options {
-	return cli.Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option", false, ""}}
-}
-
-func (VfsCommand) Exec(options cli.Options, args []string) error {
+func vfsExec(options Options, args []string) error {
 	if len(args) == 0 {
 		fmt.Errorf("Mountpoint not specified.")
 	}

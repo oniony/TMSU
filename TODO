@@ -1,8 +1,8 @@
 HIGH
 
-E Issue #55: Add support for --database option to replace TMSU_DB.
-E Zsh completion for the --database global option.
 T Work out why Sqlite3 is suddenly so slow to build.
+E Zsh completion for the --database global option.
+    * Need to get it to honour --database when suggesting tags.
 E Issue #55: Zsh completion to honour --database.
 T Doc: Mounting via fstab
 T Doc: VFS queries.

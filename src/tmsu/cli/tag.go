@@ -131,7 +131,7 @@ func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error
 
 	for _, name := range names {
 		if !tags.Any(func(tag *entities.Tag) bool { return tag.Name == name }) {
-			log.Infof("New tag '%v'.", name)
+			log.Warnf("New tag '%v'.", name)
 
 			tag, err := store.AddTag(name)
 			if err != nil {

@@ -21,7 +21,7 @@ import (
 	"database/sql"
 	"errors"
 	"strings"
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // The number of tags in the database.

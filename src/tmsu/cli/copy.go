@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var CopyCommand = &Command{
+var CopyCommand = Command{
 	Name:     "copy",
 	Synopsis: "Create a copy of a tag",
 	Description: `tmsu copy TAG NEW

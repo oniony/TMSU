@@ -22,7 +22,7 @@ import (
 	"tmsu/vfs"
 )
 
-var VfsCommand = &Command{
+var VfsCommand = Command{
 	Name:        "vfs",
 	Synopsis:    "",
 	Description: "",

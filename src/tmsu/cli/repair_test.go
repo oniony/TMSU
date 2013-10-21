@@ -42,8 +42,7 @@ func TestRepairMovedFile(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/a")
 
-	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -51,11 +50,9 @@ func TestRepairMovedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := repairCommand{false, false, false}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
+	if err := RepairCommand.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -92,8 +89,7 @@ func TestRepairModifiedFile(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/a")
 
-	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -101,11 +97,9 @@ func TestRepairModifiedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := repairCommand{false, false, false}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
+	if err := RepairCommand.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -148,8 +142,7 @@ func TestReportsMissingFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	tagCommand := TagCommand{false, false}
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -157,11 +150,9 @@ func TestReportsMissingFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := repairCommand{false, false, false}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{}); err != nil {
+	if err := RepairCommand.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

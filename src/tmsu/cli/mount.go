@@ -23,12 +23,12 @@ import (
 	"os/exec"
 	"syscall"
 	"time"
-	"tmsu/common"
 	"tmsu/log"
+	"tmsu/storage/database"
 	"tmsu/vfs"
 )
 
-var MountCommand = &Command{
+var MountCommand = Command{
 	Name:     "mount",
 	Synopsis: "Mount the virtual filesystem",
 	Description: `tmsu mount
@@ -62,7 +62,7 @@ func mountExec(options Options, args []string) error {
 	case 1:
 		mountPath := args[0]
 
-		err := mountSelected(mountPath, allowOther)
+		err := mountDefault(mountPath, allowOther)
 		if err != nil {
 			return fmt.Errorf("could not mount database at '%v': %v", mountPath, err)
 		}
@@ -100,13 +100,8 @@ func listMounts() error {
 	return nil
 }
 
-func mountSelected(mountPath string, allowOther bool) error {
-	databasePath, err := common.GetDatabasePath()
-	if err != nil {
-		return fmt.Errorf("could not get selected database configuration: %v", err)
-	}
-
-	if err = mountExplicit(databasePath, mountPath, allowOther); err != nil {
+func mountDefault(mountPath string, allowOther bool) error {
+	if err := mountExplicit(database.Path, mountPath, allowOther); err != nil {
 		return err
 	}
 

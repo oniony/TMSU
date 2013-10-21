@@ -1,10 +1,12 @@
 HIGH
 
-R Move to common Command struct rather than struct type per command.
 E Issue #55: Add support for --database option to replace TMSU_DB.
+E Zsh completion for the --database global option.
+T Work out why Sqlite3 is suddenly so slow to build.
 E Issue #55: Zsh completion to honour --database.
-T Document mounting via fstab
-T Document VFS queries.
+T Doc: Mounting via fstab
+T Doc: VFS queries.
+B Long options should use equals rather than space.
 E Additional VFS operations.
 E Issue #33: provide binary for 64 bit Linux.
 E Ensure unit-tests cover all command options.

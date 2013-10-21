@@ -21,12 +21,12 @@ import (
 	"fmt"
 	"path/filepath"
 	"strings"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var UntagCommand = &Command{
+var UntagCommand = Command{
 	Name:     "untag",
 	Synopsis: "Remove tags from files",
 	Description: `tmsu untag [OPTION]... FILE TAG...

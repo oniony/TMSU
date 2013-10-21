@@ -24,7 +24,7 @@ import (
 	"tmsu/log"
 )
 
-var HelpCommand = &Command{
+var HelpCommand = Command{
 	Name:     "help",
 	Synopsis: "List commands or show help for a particular command",
 	Description: `tmsu help [OPTION]... [COMMAND]
@@ -33,6 +33,8 @@ Shows help summary or, where COMMAND is specified, help for COMMAND.`,
 	Options: Options{{"--list", "-l", "list commands", false, ""}},
 	Exec:    helpExec,
 }
+
+var helpCommands map[string]*Command
 
 func helpExec(options Options, args []string) error {
 	if options.HasOption("--list") {
@@ -55,41 +57,50 @@ func summary() {
 	log.Print()
 
 	var maxWidth int = 0
-	commandNames := make([]string, 0, len(commands))
-	for _, command := range commands {
-		commandName := command.Name()
+	commandNames := make([]string, 0, len(helpCommands))
+	for _, command := range helpCommands {
+		commandName := command.Name
 		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
 		commandNames = append(commandNames, commandName)
 	}
 
-	sort.Sort(commandNames)
+	sort.Strings(commandNames)
 
 	for _, commandName := range commandNames {
-		command, _ := commands[commandName]
+		command, _ := helpCommands[commandName]
 
-		commandSummary := command.Synopsis()
+		commandSummary := command.Synopsis
 		if commandSummary == "" {
 			continue
 		}
 
-		log.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v", command.Name(), commandSummary)
+		log.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v", command.Name, commandSummary)
+	}
+
+	log.Print()
+
+	log.Print("Global options:")
+	log.Print()
+
+	for _, option := range globalOptions {
+		log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
 	}
 
 	log.Print()
 }
 
 func listCommands() {
-	commandNames := make([]string, 0, len(commands))
+	commandNames := make([]string, 0, len(helpCommands))
 
-	for _, command := range commands {
-		if command.Synopsis() == "" {
+	for _, command := range helpCommands {
+		if command.Synopsis == "" {
 			continue
 		}
 
-		commandNames = append(commandNames, command.Name())
+		commandNames = append(commandNames, command.Name)
 	}
 
-	sort.Sort(commandNames)
+	sort.Strings(commandNames)
 
 	for _, commandName := range commandNames {
 		log.Print(commandName)
@@ -97,21 +108,21 @@ func listCommands() {
 }
 
 func describeCommand(commandName string) {
-	command := commands[commandName]
+	command := helpCommands[commandName]
 	if command == nil {
 		log.Printf("No such command '%v'.", commandName)
 		return
 	}
 
-	log.Print(command.Description())
+	log.Print(command.Description)
 
-	if len(command.Options()) > 0 {
+	if len(command.Options) > 0 {
 		log.Print()
 
 		log.Print("Options:")
 		log.Print()
 
-		for _, option := range command.Options() {
+		for _, option := range command.Options {
 			log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
 		}
 	}

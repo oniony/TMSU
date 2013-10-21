@@ -20,7 +20,7 @@ package database
 import (
 	"database/sql"
 	"strings"
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // Retrieves the complete set of tag implications.

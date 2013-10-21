@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // Determines whether the specified file has the specified tag applied.

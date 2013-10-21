@@ -27,10 +27,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/query"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
 const tagsDir = "tags"

@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"tmsu/entities"
 	"tmsu/fingerprint"
 	"tmsu/query"
-	"tmsu/storage/entities"
 )
 
 // Retrieves the total number of tracked files.

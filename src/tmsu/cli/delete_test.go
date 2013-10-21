@@ -77,11 +77,9 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := deleteCommand{false}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"deathrow"}); err != nil {
+	if err := DeleteCommand.Exec(Options{}, []string{"deathrow"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -132,11 +130,9 @@ func TestDeleteNonExistentTag(test *testing.T) {
 	databasePath := configureDatabase()
 	defer os.Remove(databasePath)
 
-	command := deleteCommand{false}
-
 	// test
 
-	err := command.Exec(cli.Options{}, []string{"deleteme"})
+	err := DeleteCommand.Exec(Options{}, []string{"deleteme"})
 
 	// validate
 

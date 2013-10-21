@@ -59,11 +59,9 @@ func TestFilesAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{Option{"-a", "--all", "", false, ""}}, []string{}); err != nil {
+	if err := FilesCommand.Exec(Options{Option{"-a", "--all", "", false, ""}}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -126,11 +124,9 @@ func TestFilesSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -192,11 +188,9 @@ func TestFilesNotSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"not", "b"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"not", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -266,11 +260,9 @@ func TestFilesImplicitAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b", "c"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -340,11 +332,9 @@ func TestFilesAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b", "and", "c"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b", "and", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -414,11 +404,9 @@ func TestFilesImplicitAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b", "not", "c"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b", "not", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -488,11 +476,9 @@ func TestFilesAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b", "and", "not", "c"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b", "and", "not", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -562,11 +548,9 @@ func TestFilesOr(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	command := filesCommand{}
-
 	// test
 
-	if err := command.Exec(Options{}, []string{"b", "or", "c"}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{"b", "or", "c"}); err != nil {
 		test.Fatal(err)
 	}
 

@@ -20,14 +20,14 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
+	"tmsu/entities"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	_path "tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var DupesCommand = &Command{
+var DupesCommand = Command{
 	Name:     "dupes",
 	Synopsis: "Identify duplicate files",
 	Description: `tmsu dupes [FILE]...

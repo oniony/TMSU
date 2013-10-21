@@ -57,17 +57,15 @@ func TestStatusReport(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/d")
 
-	tagCommand := TagCommand{false, false}
-
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "a"}); err != nil {
 		test.Fatal(err)
 	}
 
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/b", "b"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/b", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
-	if err := tagCommand.Exec(Options{}, []string{"/tmp/tmsu/d", "d"}); err != nil {
+	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/d", "d"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -84,7 +82,7 @@ func TestStatusReport(test *testing.T) {
 
 	// test
 
-	if err := statusCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
+	if err := StatusCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
 		test.Fatal(err)
 	}
 

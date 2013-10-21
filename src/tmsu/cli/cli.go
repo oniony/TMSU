@@ -20,33 +20,45 @@ package cli
 import (
 	"os"
 	"tmsu/log"
+	"tmsu/storage/database"
 )
 
+type Command struct {
+	Name        string
+	Synopsis    string
+	Description string
+	Options     Options
+	Exec        func(options Options, args []string) error
+}
+
 var commands = map[string]*Command{
-	"copy":    CopyCommand,
-	"delete":  DeleteCommand,
-	"dupes":   DupesCommand,
-	"files":   FilesCommand,
-	"help":    HelpCommand,
-	"imply":   ImplyCommand,
-	"merge":   MergeCommand,
-	"mount":   MountCommand,
-	"rename":  RenameCommand,
-	"repair":  RepairCommand,
-	"stats":   StatsCommand,
-	"status":  StatusCommand,
-	"tag":     TagCommand,
-	"tags":    TagsCommand,
-	"unmount": UnmountCommand,
-	"untag":   UntagCommand,
-	"version": VersionCommand,
-	"vfs":     VfsCommand}
+	"copy":    &CopyCommand,
+	"delete":  &DeleteCommand,
+	"dupes":   &DupesCommand,
+	"files":   &FilesCommand,
+	"help":    &HelpCommand,
+	"imply":   &ImplyCommand,
+	"merge":   &MergeCommand,
+	"mount":   &MountCommand,
+	"rename":  &RenameCommand,
+	"repair":  &RepairCommand,
+	"stats":   &StatsCommand,
+	"status":  &StatusCommand,
+	"tag":     &TagCommand,
+	"tags":    &TagsCommand,
+	"unmount": &UnmountCommand,
+	"untag":   &UntagCommand,
+	"version": &VersionCommand,
+	"vfs":     &VfsCommand}
 
 var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", false, ""},
 	Option{"--help", "-h", "show help and exit", false, ""},
-	Option{"--version", "-V", "show version information and exit", false, ""}}
+	Option{"--version", "-V", "show version information and exit", false, ""},
+	Option{"--database", "-d", "use the specified database", true, ""}}
 
 func Run() {
+	helpCommands = commands
+
 	parser := NewOptionParser(globalOptions, commands)
 	commandName, options, arguments, err := parser.Parse(os.Args[1:])
 	if err != nil {
@@ -56,14 +68,15 @@ func Run() {
 	switch {
 	case options.HasOption("--version"):
 		commandName = "version"
-	case options.HasOption("--help"):
-		commandName = "help"
-	case commandName == "":
+	case options.HasOption("--help"), commandName == "":
 		commandName = "help"
 	}
 
 	if options.HasOption("--verbose") {
 		log.Verbose = true
+	}
+	if dbOption := options.Get("--database"); dbOption != nil && dbOption.Argument != "" {
+		database.Path = dbOption.Argument
 	}
 
 	command := commands[commandName]

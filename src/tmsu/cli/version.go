@@ -22,7 +22,7 @@ import (
 	"tmsu/log"
 )
 
-var VersionCommand = &Command{
+var VersionCommand = Command{
 	Name:     "version",
 	Synopsis: "Display version and copyright information",
 	Description: `tmsu version

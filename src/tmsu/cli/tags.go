@@ -23,12 +23,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var TagsCommand = &Command{
+var TagsCommand = Command{
 	Name:     "tags",
 	Synopsis: "List tags",
 	Description: `tmsu tags [OPTION]... [FILE]...

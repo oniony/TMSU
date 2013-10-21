@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var ImplyCommand = &Command{
+var ImplyCommand = Command{
 	Name:     "imply",
 	Synopsis: "Creates a tag implication",
 	Description: `tmsu [OPTION] imply TAG1 TAG2

@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var RenameCommand = &Command{
+var RenameCommand = Command{
 	Name:     "rename",
 	Synopsis: "Rename a tag",
 	Description: `tmsu rename OLD NEW

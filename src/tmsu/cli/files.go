@@ -20,14 +20,14 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/query"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var FilesCommand = &Command{
+var FilesCommand = Command{
 	Name:     "files",
 	Synopsis: "List files with particular tags",
 	Description: `tmsu files [OPTION]... QUERY 

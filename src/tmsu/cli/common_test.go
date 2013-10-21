@@ -6,9 +6,9 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
 func configureOutput() (string, string, error) {

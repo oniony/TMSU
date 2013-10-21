@@ -128,6 +128,7 @@ v0.3.0 (in development)
     directory under the 'queries' directory.
   * Added script to allow the virtual filesystem to be mounted via the
     system mount command or on startup via the fstab.
+  * Added global option --database for specifying database location.
 
 v0.2.2
 ------

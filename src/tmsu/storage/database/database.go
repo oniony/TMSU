@@ -22,26 +22,36 @@ import (
 	"errors"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
+	"os/user"
 	"path/filepath"
-	"tmsu/common"
 	"tmsu/log"
 )
+
+var Path string
+
+func init() {
+	if path := os.Getenv("TMSU_DB"); path != "" {
+		Path = path
+	} else {
+		u, err := user.Current()
+		if err != nil {
+			log.Fatalf("could not identify current user: %v", err)
+		}
+
+		Path = filepath.Join(u.HomeDir, ".tmsu", "default.db")
+	}
+}
 
 type Database struct {
 	connection *sql.DB
 }
 
 func Open() (*Database, error) {
-	databasePath, err := common.GetDatabasePath()
-	if err != nil {
-		return nil, err
-	}
-
 	// attempt to create database directory
-	dir := filepath.Dir(databasePath)
+	dir := filepath.Dir(Path)
 	os.MkdirAll(dir, os.ModeDir|0755)
 
-	return OpenAt(databasePath)
+	return OpenAt(Path)
 }
 
 func OpenAt(path string) (*Database, error) {

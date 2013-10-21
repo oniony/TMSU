@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var DeleteCommand = &Command{
+var DeleteCommand = Command{
 	Name:     "delete",
 	Synopsis: "Delete one or more tags",
 	Description: `tmsu delete TAG...

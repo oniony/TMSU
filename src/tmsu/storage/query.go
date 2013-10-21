@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package storage
 
 import (
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // The complete set of queries.

@@ -8,3 +8,4 @@
 ^src/tmsu/common/version.gen.go$
 ^src/main/_testmain.go$
 ^bin/
+^dist/

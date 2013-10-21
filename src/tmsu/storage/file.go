@@ -20,9 +20,9 @@ package storage
 import (
 	"fmt"
 	"time"
+	"tmsu/entities"
 	"tmsu/fingerprint"
 	"tmsu/query"
-	"tmsu/storage/entities"
 )
 
 // Retrieves the total number of tracked files.

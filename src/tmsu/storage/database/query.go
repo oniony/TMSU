@@ -20,7 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // The complete set of queries.

@@ -21,14 +21,14 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"tmsu/entities"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	_path "tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var RepairCommand = &Command{
+var RepairCommand = Command{
 	Name:     "repair",
 	Synopsis: "Repair the database",
 	Description: `tmsu [OPTION]... repair [PATH]...

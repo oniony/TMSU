@@ -21,7 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"path/filepath"
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // The number of tags in the database.

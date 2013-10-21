@@ -10,9 +10,10 @@ _tmsu() {
 	local cmd ret=1
 
 	_arguments -C \
-	    ''{--verbose,-v}'[show verbose messages]' \
-	    ''{--version,-V}'[show version information and exit]' \
-	    ''{--help,-h}'[show help and exit]' \
+	    {--verbose,-v}'[show verbose messages]' \
+	    {--version,-V}'[show version information and exit]' \
+	    {--database,-d+}'[use the specified database]:database_path:_files' \
+	    {--help,-h}'[show help and exit]' \
 		'1: :_tmsu_commands' \
 		'*::arg:->args' \
 		&& ret=0

@@ -23,13 +23,13 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"tmsu/entities"
 	"tmsu/fingerprint"
 	"tmsu/log"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var TagCommand = &Command{
+var TagCommand = Command{
 	Name:     "tag",
 	Synopsis: "Apply tags to files",
 	Description: `tmsu tag [OPTION]... FILE TAG...

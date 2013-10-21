@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var MergeCommand = &Command{
+var MergeCommand = Command{
 	Name:     "merge",
 	Synopsis: "Merge tags",
 	Description: `tmsu merge TAG... DEST

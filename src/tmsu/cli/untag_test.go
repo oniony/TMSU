@@ -64,7 +64,7 @@ func TestSingleUntag(test *testing.T) {
 
 	// test
 
-	if err := untagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
+	if err := UntagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -121,7 +121,7 @@ func TestMultipleUntag(test *testing.T) {
 
 	// test
 
-	if err := untagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple", "banana"}); err != nil {
+	if err := UntagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple", "banana"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -183,7 +183,7 @@ func TestUntagMultipleFiles(test *testing.T) {
 
 	// test
 
-	if err := untagCommand.Exec(Options{Option{"--tags", "-t", "", true, "apple"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := UntagCommand.Exec(Options{Option{"--tags", "-t", "", true, "apple"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -245,7 +245,7 @@ func TestUntagAll(test *testing.T) {
 
 	// test
 
-	if err := untagCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := UntagCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 

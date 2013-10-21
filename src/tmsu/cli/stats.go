@@ -23,7 +23,7 @@ import (
 	"tmsu/storage"
 )
 
-var StatsCommand = &Command{
+var StatsCommand = Command{
 	Name:     "stats",
 	Synopsis: "Show database statistics",
 	Description: `tmsu stats

@@ -20,7 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"tmsu/storage/entities"
+	"tmsu/entities"
 )
 
 // Determines whether the specified file has the specified tag applied.

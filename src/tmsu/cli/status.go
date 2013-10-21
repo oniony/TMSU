@@ -22,13 +22,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/path"
 	"tmsu/storage"
-	"tmsu/storage/entities"
 )
 
-var StatusCommand = &Command{
+var StatusCommand = Command{
 	Name:     "status",
 	Synopsis: "List the file tagging status",
 	Description: `tmsu status [PATH]...

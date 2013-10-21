@@ -25,7 +25,7 @@ import (
 	"tmsu/vfs"
 )
 
-var UnmountCommand = &Command{
+var UnmountCommand = Command{
 	Name:     "unmount",
 	Synopsis: "Unmount the virtual file-system",
 	Description: `tmsu unmount MOUNTPOINT

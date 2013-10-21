@@ -2,7 +2,6 @@ HIGH
 
 T Doc: Mounting via fstab
 T Doc: VFS queries.
-B Long options should use equals rather than space.
 E Additional VFS operations.
 E Issue #33: provide binary for 64 bit Linux.
 E Ensure unit-tests cover all command options.

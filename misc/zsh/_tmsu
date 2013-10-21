@@ -6,15 +6,34 @@
 local context curcontext="$curcontext" state state_descr line
 typeset -A opt_args
 
+local db
+
 _tmsu() {
-	local cmd ret=1
+	local cmd db ret=1
+	integer i=2
+
+    # store which database to use
+    while (( i < $#words ))
+    do
+        if [[ $words[$i] == --database=* ]];
+        then
+            db="$words[$i]"
+        fi
+
+        if [[ $words[$i] == -database ]];
+        then
+            db="--database=$words[$i+1]"
+        fi
+
+        (( i++ ))
+    done
 
 	_arguments -C \
 	    {--verbose,-v}'[show verbose messages]' \
 	    {--version,-V}'[show version information and exit]' \
-	    {--database,-d+}'[use the specified database]:database_path:_files' \
+	    {--database=,-d}'[use the specified database]:file:_files' \
 	    {--help,-h}'[show help and exit]' \
-		'1: :_tmsu_commands' \
+		': :_tmsu_commands' \
 		'*::arg:->args' \
 		&& ret=0
 
@@ -46,7 +65,7 @@ _tmsu_tags() {
 	typeset -a tag_list
 	local tag
 
-	_call_program tmsu tmsu tags --all | while read -A tag
+	_call_program tmsu tmsu $db tags --all | while read -A tag
 	do
 		tag_list+=$tag[1]:gs/:/\\:/
 	done
@@ -72,7 +91,7 @@ _tmsu_query() {
 # commands
 
 _tmsu_cmd_copy() {
-    _arguments -s -w '1:tag:_tmsu_tags' && ret=0
+    _arguments -s -w ':tag:_tmsu_tags' && ret=0
 }
 
 _tmsu_cmd_delete() {
@@ -116,8 +135,8 @@ _tmsu_cmd_merge() {
 
 _tmsu_cmd_mount() {
     _arguments -s -w ''{--allow-other,-o}'[allow other users access to the VFS (requires root or setting in fuse.conf)]' \
-                     '1:file:_files' \
-	                 '2:mountpoint:_dirs' \
+                     ':file:_files' \
+	                 ':mountpoint:_dirs' \
 	&& ret=0
 }
 
@@ -177,7 +196,6 @@ _tmsu_cmd_tag() {
 
 _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
-	                 ''{--count,-c}'[lists the tag count]' \
 	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '*:file:_files' \
 	&& ret=0
@@ -185,7 +203,7 @@ _tmsu_cmd_tags() {
 
 _tmsu_cmd_unmount() {
 	_arguments -s -w ''{--all,-a}'[unmount all]' \
-	                 '1:mountpoint:_files' \
+	                 ':mountpoint:_files' \
 	&& ret=0
 }
 

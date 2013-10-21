@@ -1,6 +1,5 @@
 HIGH
 
-T Work out why Sqlite3 is suddenly so slow to build.
 E Zsh completion for the --database global option.
     * Need to get it to honour --database when suggesting tags.
 E Issue #55: Zsh completion to honour --database.

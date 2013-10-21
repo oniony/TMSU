@@ -1,6 +1,5 @@
 HIGH
 
-E Issue #55: Zsh completion to honour --database.
 T Doc: Mounting via fstab
 T Doc: VFS queries.
 B Long options should use equals rather than space.

@@ -77,13 +77,13 @@ _tmsu_query() {
 	typeset -a tag_list
 	local tag
 
-	_call_program tmsu tmsu tags --all | while read -A tag
+	_call_program tmsu tmsu $db tags --all | while read -A tag
 	do
 		tag_list+=$tag[1]:gs/:/\\:/
 	done
-	tag_list+='and'
-	tag_list+='or'
-	tag_list+='not'
+	tag_list+='AND'
+	tag_list+='OR'
+	tag_list+='NOT'
 
 	_describe -t tags 'tags' tag_list
 }

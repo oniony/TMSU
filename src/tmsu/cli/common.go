@@ -37,7 +37,7 @@ func ValidateTagName(tagName string) error {
 		return errors.New("tag name cannot be empty.")
 	case ".", "..":
 		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
-	case "and", "or", "not":
+	case "and", "or", "not", "AND", "OR", "NOT":
 		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
 	}
 

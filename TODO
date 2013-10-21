@@ -1,7 +1,5 @@
 HIGH
 
-E Zsh completion for the --database global option.
-    * Need to get it to honour --database when suggesting tags.
 E Issue #55: Zsh completion to honour --database.
 T Doc: Mounting via fstab
 T Doc: VFS queries.

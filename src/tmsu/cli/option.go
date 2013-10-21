@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 )
 
 type Option struct {
@@ -77,15 +78,26 @@ func (parser *OptionParser) Parse(args []string) (commandName string, options Op
 			parseOptions = false
 		} else {
 			if parseOptions && arg[0] == '-' {
-				option := lookupOption(possibleOptions, arg)
+				parts := strings.Split(arg, "=")
+				if len(parts) > 2 {
+					err = fmt.Errorf("syntax error: %v", arg)
+					return
+				}
+				optionName := parts[0]
+
+				option := lookupOption(possibleOptions, optionName)
 				if option == nil {
-					err = fmt.Errorf("invalid option '%v'.", arg)
+					err = fmt.Errorf("invalid option '%v'.", optionName)
 					return
 				}
 
 				if option.HasArgument {
-					option.Argument = args[index+1]
-					index++
+					if len(parts) == 2 {
+						option.Argument = parts[1]
+					} else {
+						option.Argument = args[index+1]
+						index++
+					}
 				}
 
 				options = append(options, *option)

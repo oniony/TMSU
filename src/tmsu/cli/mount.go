@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"syscall"
 	"time"
 	"tmsu/log"
@@ -57,14 +58,14 @@ func mountExec(options Options, args []string) error {
 	case 0:
 		err := listMounts()
 		if err != nil {
-			return fmt.Errorf("could not list mounts: %v", err)
+			return err
 		}
 	case 1:
 		mountPath := args[0]
 
 		err := mountDefault(mountPath, allowOther)
 		if err != nil {
-			return fmt.Errorf("could not mount database at '%v': %v", mountPath, err)
+			return err
 		}
 	case 2:
 		databasePath := args[0]
@@ -72,7 +73,7 @@ func mountExec(options Options, args []string) error {
 
 		err := mountExplicit(databasePath, mountPath, allowOther)
 		if err != nil {
-			return fmt.Errorf("could not mount database '%v' at '%v': %v", databasePath, mountPath, err)
+			return err
 		}
 	default:
 		return fmt.Errorf("Too many arguments.")
@@ -109,6 +110,10 @@ func mountDefault(mountPath string, allowOther bool) error {
 }
 
 func mountExplicit(databasePath string, mountPath string, allowOther bool) error {
+	if alreadyMounted(mountPath) {
+		return fmt.Errorf("%v: mount path already in use", mountPath)
+	}
+
 	stat, err := os.Stat(mountPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not stat: %v", mountPath, err)
@@ -174,4 +179,24 @@ func mountExplicit(databasePath string, mountPath string, allowOther bool) error
 	}
 
 	return nil
+}
+
+func alreadyMounted(path string) bool {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return false
+	}
+
+	mt, err := vfs.GetMountTable()
+	if err != nil {
+		return false
+	}
+
+	for _, mount := range mt {
+		if mount.MountPath == absPath {
+			return true
+		}
+	}
+
+	return false
 }

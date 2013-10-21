@@ -122,6 +122,13 @@ Release Notes
 v0.3.0 (in development)
 -----------------------
 
+  Note: This release changes what tag names are allowed. To ensure the tag
+  names in your existing databases are still valid, please run the following
+  script:
+
+      $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
+      $ sqlite3 -init misc/db-upgrades/clean_tag_names.sql ~/.tmsu/default.db
+
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
     ketchup)'
   * Added support for file queries in the virtual filesystem: create a query

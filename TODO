@@ -8,6 +8,7 @@ E Ensure unit-tests cover all command options.
 
 MEDIUM
 
+E Issue #20: man page.
 E Add support for meta-data or tag values.
     file            id, path, ...
     tag             id, name

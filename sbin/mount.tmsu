@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
 
 export PATH
+
+# to allow other users access to the TMSU mount, enable the 'user_allow_other' option
+# in /etc/fuse.conf and then pass the 'allow_other' option below.
+#tmsu mount options=allow_other $1 $2
+
 tmsu mount $1 $2

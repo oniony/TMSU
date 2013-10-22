@@ -156,7 +156,7 @@ func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error
 
 	for _, implication := range implications {
 		if !contains(tagIds, implication.ImpliedTag.Id) {
-			log.Infof("tag '%v' is implied.", implication.ImpliedTag.Name)
+			log.Warnf("tag '%v' is implied.", implication.ImpliedTag.Name)
 			tagIds = append(tagIds, implication.ImpliedTag.Id)
 		}
 	}

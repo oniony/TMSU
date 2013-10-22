@@ -42,11 +42,11 @@ type FuseVfs struct {
 	server    *fuse.Server
 }
 
-func MountVfs(databasePath string, mountPath string, allowOther bool) (*FuseVfs, error) {
+func MountVfs(databasePath string, mountPath string, options []string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
 	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
 	conn := nodefs.NewFileSystemConnector(pathFs, nil)
-	mountOptions := &fuse.MountOptions{AllowOther: allowOther}
+	mountOptions := &fuse.MountOptions{Options: options}
 
 	server, err := fuse.NewServer(conn.RawFS(), mountPath, mountOptions)
 	if err != nil {

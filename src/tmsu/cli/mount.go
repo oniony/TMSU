@@ -44,13 +44,21 @@ If FILE is not specified but the TMSU_DB environment variable is defined then
 the database at TMSU_DB is mounted.
 
 Where neither FILE is specified nor TMSU_DB defined then the default database
-is mounted.`,
-	Options: Options{Option{"--allow-other", "-o", "allow other users access to the VFS (requires root or setting in fuse.conf)", false, ""}},
+is mounted.
+
+To allow other users access to the mounted filesystem, pass the 'allow_other'
+FUSE option, e.g. 'tmsu mount --option=allow_other mp'. (FUSE only allows the
+root user to use this option unless 'user_allow_other' is present in
+'/etc/fuse.conf'.)`,
+	Options: Options{Option{"--options", "-o", "mount options (passed to fusermount)", true, ""}},
 	Exec:    mountExec,
 }
 
 func mountExec(options Options, args []string) error {
-	allowOther := options.HasOption("--allow-other")
+	var mountOptions string
+	if options.HasOption("--options") {
+		mountOptions = options.Get("--options").Argument
+	}
 
 	argCount := len(args)
 
@@ -63,7 +71,7 @@ func mountExec(options Options, args []string) error {
 	case 1:
 		mountPath := args[0]
 
-		err := mountDefault(mountPath, allowOther)
+		err := mountDefault(mountPath, mountOptions)
 		if err != nil {
 			return err
 		}
@@ -71,7 +79,7 @@ func mountExec(options Options, args []string) error {
 		databasePath := args[0]
 		mountPath := args[1]
 
-		err := mountExplicit(databasePath, mountPath, allowOther)
+		err := mountExplicit(databasePath, mountPath, mountOptions)
 		if err != nil {
 			return err
 		}
@@ -101,15 +109,15 @@ func listMounts() error {
 	return nil
 }
 
-func mountDefault(mountPath string, allowOther bool) error {
-	if err := mountExplicit(database.Path, mountPath, allowOther); err != nil {
+func mountDefault(mountPath string, mountOptions string) error {
+	if err := mountExplicit(database.Path, mountPath, mountOptions); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func mountExplicit(databasePath string, mountPath string, allowOther bool) error {
+func mountExplicit(databasePath string, mountPath string, mountOptions string) error {
 	if alreadyMounted(mountPath) {
 		return fmt.Errorf("%v: mount path already in use", mountPath)
 	}
@@ -135,11 +143,7 @@ func mountExplicit(databasePath string, mountPath string, allowOther bool) error
 
 	log.Suppf("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
 
-	args := []string{"vfs", databasePath, mountPath}
-	if allowOther {
-		args = append(args, "--allow-other")
-	}
-
+	args := []string{"vfs", databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
 
 	errorPipe, err := daemon.StderrPipe()

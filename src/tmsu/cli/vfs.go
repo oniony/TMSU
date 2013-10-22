@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"strings"
 	"tmsu/vfs"
 )
 
@@ -26,7 +27,7 @@ var VfsCommand = Command{
 	Name:        "vfs",
 	Synopsis:    "",
 	Description: "",
-	Options:     Options{{"--allow-other", "-o", "turn on FUSE 'allow_other' option", false, ""}},
+	Options:     Options{{"--options", "-o", "mount options", true, ""}},
 	Exec:        vfsExec,
 }
 
@@ -35,11 +36,15 @@ func vfsExec(options Options, args []string) error {
 		fmt.Errorf("Mountpoint not specified.")
 	}
 
-	allowOther := options.HasOption("--allow-other")
+	mountOptions := []string{}
+	if options.HasOption("--options") {
+		mountOptions = strings.Split(options.Get("--options").Argument, ",")
+	}
+
 	databasePath := args[0]
 	mountPath := args[1]
 
-	vfs, err := vfs.MountVfs(databasePath, mountPath, allowOther)
+	vfs, err := vfs.MountVfs(databasePath, mountPath, mountOptions)
 	if err != nil {
 		return fmt.Errorf("could not mount virtual filesystem for database '%v' at '%v': %v", databasePath, mountPath, err)
 	}

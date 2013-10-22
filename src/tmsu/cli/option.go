@@ -78,11 +78,7 @@ func (parser *OptionParser) Parse(args []string) (commandName string, options Op
 			parseOptions = false
 		} else {
 			if parseOptions && arg[0] == '-' {
-				parts := strings.Split(arg, "=")
-				if len(parts) > 2 {
-					err = fmt.Errorf("syntax error: %v", arg)
-					return
-				}
+				parts := strings.SplitN(arg, "=", 2)
 				optionName := parts[0]
 
 				option := lookupOption(possibleOptions, optionName)

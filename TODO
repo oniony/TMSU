@@ -5,6 +5,7 @@ T Doc: VFS queries.
 E Additional VFS operations.
 E Issue #33: provide binary for 64 bit Linux.
 E Ensure unit-tests cover all command options.
+T Add examples to built-in help now help removed from wiki.
 
 MEDIUM
 

@@ -38,7 +38,7 @@ dist: compile
 	cp README.md dist
 	cp COPYING dist
 	@mkdir -p dist/man
-	gzip -kf misc/man/tmsu.1 >dist/man/tmsu.1.gz
+	gzip -kfc misc/man/tmsu.1 >dist/man/tmsu.1.gz
 	@mkdir -p dist/misc/zsh
 	cp misc/zsh/_tmsu dist/misc/zsh
 	tar czf $(DIST_FILE) dist
@@ -52,7 +52,7 @@ install:
 	cp sbin/mount.tmsu $(MOUNT_INSTALL_DIR)
 	@echo "Installing man page"
 	mkdir -p $(MAN_INSTALL_DIR)
-	gzip -kf misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
+	gzip -kfc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
 	@echo "Installing Zsh completion"
 	@echo -n "    "
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)

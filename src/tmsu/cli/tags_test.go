@@ -30,7 +30,7 @@ import (
 func TestTagsForSingleFile(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -88,7 +88,7 @@ func TestTagsForSingleFile(test *testing.T) {
 func TestTagsForMultipleFiles(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -156,7 +156,7 @@ func TestTagsForMultipleFiles(test *testing.T) {
 func TestAllTags(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()

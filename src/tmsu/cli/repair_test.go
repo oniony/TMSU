@@ -28,7 +28,7 @@ import (
 func TestRepairMovedFile(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -75,7 +75,7 @@ func TestRepairMovedFile(test *testing.T) {
 func TestRepairModifiedFile(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -122,7 +122,7 @@ func TestRepairModifiedFile(test *testing.T) {
 func TestReportsMissingFiles(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -161,5 +161,5 @@ func TestReportsMissingFiles(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	compareOutput(test, "tmsu: New tag 'a'.\ntmsu: /tmp/tmsu/a: missing\n", string(bytes))
+	compareOutput(test, "tmsu: /tmp/tmsu/a: missing\n", string(bytes))
 }

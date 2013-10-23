@@ -28,7 +28,7 @@ import (
 func TestCopySuccessful(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -83,7 +83,7 @@ func TestCopySuccessful(test *testing.T) {
 func TestCopyNonExistentSourceTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	// test
@@ -100,7 +100,7 @@ func TestCopyNonExistentSourceTag(test *testing.T) {
 func TestCopyInvalidDestTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	// test
@@ -117,7 +117,7 @@ func TestCopyInvalidDestTag(test *testing.T) {
 func TestCopyDestTagAlreadyExists(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()

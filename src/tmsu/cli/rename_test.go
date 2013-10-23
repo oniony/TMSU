@@ -28,7 +28,7 @@ import (
 func TestRenameSuccessful(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -94,7 +94,7 @@ func TestRenameSuccessful(test *testing.T) {
 func TestRenameNonExistentSourceTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	// test
@@ -111,7 +111,7 @@ func TestRenameNonExistentSourceTag(test *testing.T) {
 func TestRenameInvalidDestTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	// test
@@ -128,7 +128,7 @@ func TestRenameInvalidDestTag(test *testing.T) {
 func TestRenameDestTagAlreadyExists(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()

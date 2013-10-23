@@ -28,7 +28,7 @@ import (
 func TestMergeSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -116,7 +116,7 @@ func TestMergeSingleTag(test *testing.T) {
 func TestMergeMultipleTags(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -237,7 +237,7 @@ func TestMergeMultipleTags(test *testing.T) {
 func TestMergeNonExistentSourceTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -261,7 +261,7 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 func TestMergeNonExistentDestinationTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -285,7 +285,7 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()

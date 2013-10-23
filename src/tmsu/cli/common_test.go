@@ -9,6 +9,7 @@ import (
 	"tmsu/entities"
 	"tmsu/log"
 	"tmsu/storage"
+	"tmsu/storage/database"
 )
 
 func configureOutput() (string, string, error) {
@@ -29,10 +30,9 @@ func configureOutput() (string, string, error) {
 	return outPath, errPath, nil
 }
 
-func configureDatabase() string {
+func testDatabase() string {
 	databasePath := filepath.Join(os.TempDir(), "tmsu_test.db")
-	os.Setenv("TMSU_DB", databasePath)
-
+	database.Path = databasePath
 	return databasePath
 }
 

@@ -26,7 +26,7 @@ import (
 func TestSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -88,7 +88,7 @@ func TestSingleTag(test *testing.T) {
 func TestMultipleTags(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -168,7 +168,7 @@ func TestMultipleTags(test *testing.T) {
 func TestTagMultipleFiles(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()

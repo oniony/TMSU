@@ -27,7 +27,7 @@ import (
 func TestStatusReport(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -91,5 +91,5 @@ func TestStatusReport(test *testing.T) {
 	log.Outfile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(log.Outfile)
-	compareOutput(test, "tmsu: New tag 'a'.\ntmsu: New tag 'b'.\ntmsu: New tag 'd'.\nT /tmp/tmsu/a\nM /tmp/tmsu/b\n! /tmp/tmsu/d\nU /tmp/tmsu/c\n", string(bytes))
+	compareOutput(test, "T /tmp/tmsu/a\nM /tmp/tmsu/b\n! /tmp/tmsu/d\nU /tmp/tmsu/c\n", string(bytes))
 }

@@ -2,13 +2,13 @@ Overview
 ========
 
 TMSU is a program that allows you to organise your files by associating them
-with tags. It provides a tool for managing these tags and a virtual file system
+with tags. It provides a tool for managing these tags and a virtual filesystem
 to allow tag-based access to your files.
 
-TMSU's virtual file system does not store your files: it merely provides an
-alternative, tagged-based view of your files stored elsewhere in the file
-system. That way you have the freedom to choose the most suitable file system
-for storage whilst still benefiting from tag-based access.
+TMSU's virtual filesystem does not store your files: it merely provides an
+alternative, tag-based view of your files stored elsewhere in the filesystem.
+That way you have the freedom to choose the most suitable filesystem for
+storage whilst still benefiting from tag-based access.
 
 Usage
 =====
@@ -140,7 +140,7 @@ v0.3.0 (in development)
 v0.2.2
 ------
 
-  * Fixed virtual file system.
+  * Fixed virtual filesystem.
 
 v0.2.1
 ------

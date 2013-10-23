@@ -1,0 +1,125 @@
+.TH TMSU 1 General Commands Manual
+.SH NAME
+tmsu \- tag files and view them in a tag-based virtual filesystem
+.SH SYNOPSIS
+.B tmsu
+\fICOMMAND\fR [\fIOPTION\fR]... [\fIARGUMENT\fR]...
+.SH DESCRIPTION
+.PP
+TMSU allows you to organise your files by associating them with tags.
+A tag based view of the files can be mounted as a virtual filesystem
+so that tag-based access can be made from any other program.
+.PP
+TMSU's virtual filesystem does not store your files: it merely provides an
+alternative, tag-based view of your files stored elsewhere in the filesystem.
+That way you have the freedom to choose the most suitable filesystem for
+storage whilst still benefiting from tag-based access.
+.SH GLOBAL OPTIONS
+.TP
+\fB-v\fR, \fB\-\-verbose\fR
+show verbose messages
+.TP
+\fB-h\fR, \fB\-\-help\fR
+show help and exit
+.TP
+\fB-V\fR, \fB\-\-version\fR
+show version inforamtion and exit
+.TP
+\fB-d\fR \fIPATH\fR, \fB\-\-database\fR=\fIPATH\fR
+use the specified database
+.SH COMMANDS
+.TP
+.B
+copy
+Creates a copy of a tag
+.TP
+.B
+delete
+Delete one or more tags
+.TP
+.B
+dupes
+Identify duplicate files
+.TP
+.B
+files
+List files with particular tags
+.TP
+.B
+help
+List commands or show help for a particular command
+.TP
+.B
+imply
+Creates a tag implication
+.TP
+.B
+merge
+Merge tags
+.TP
+.B
+mount
+Mount the virtual filesystem
+.TP
+.B
+rename
+Rename a tag
+.TP
+.B
+repair
+Repair the database
+.TP
+.B
+stats
+Show database statistics
+.TP
+.B
+status
+List the file tagging status
+.TP
+.B
+tag
+Apply tags to files
+.TP
+.B
+tags
+List tags
+.TP
+.B
+unmount
+Unmount the virtual filesystem
+.TP
+.B
+untag
+Remove tags from files
+.TP
+.B
+version
+Display version and copyright information
+.SH FILES
+.TP
+.B
+~/.tmsu/defaultdb
+the default database path
+.PP
+The TMSU database is stored in Sqlite3 format and can be accessed
+directly, if necessary, with the Sqlite3 tooling.
+.PP
+The default database path can be overriden by specifying
+the \fB--database=\fR\fIPATH\fR global option or by setting
+the \fBTMSU_DB\fR environment variable.
+.SH ENVIRONMENT VARIABLES
+.TP
+\fBTMSU_DB\fR
+the database path
+.SH AUTHOR
+Written by Paul Ruane <paul@tmsu.org>.
+.SH REPORTING BUGS
+Please report any bugs to the project mailing list <ml@tmsu.org>
+or add to the issue tracker via http://tmsu.org/.
+.SH COPYRIGHT
+Copyright © 2011-2013 Paul Ruane.
+
+This program comes with ABSOLUTELY NO WARRANTY.
+This is free software, and you are welcome to redistribute it under certain conditions.
+See the accompanying COPYING file for further details.

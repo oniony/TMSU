@@ -28,7 +28,7 @@ import (
 func TestSingleUntag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -85,7 +85,7 @@ func TestSingleUntag(test *testing.T) {
 func TestMultipleUntag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -147,7 +147,7 @@ func TestMultipleUntag(test *testing.T) {
 func TestUntagMultipleFiles(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -209,7 +209,7 @@ func TestUntagMultipleFiles(test *testing.T) {
 func TestUntagAll(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()

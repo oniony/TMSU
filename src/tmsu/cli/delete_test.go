@@ -28,7 +28,7 @@ import (
 func TestDeleteSuccessful(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	store, err := storage.Open()
@@ -127,7 +127,7 @@ func TestDeleteSuccessful(test *testing.T) {
 func TestDeleteNonExistentTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	// test

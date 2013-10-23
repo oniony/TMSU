@@ -1,6 +1,7 @@
 # installation paths
 INSTALL_DIR=/usr/bin
-MOUNT_INSTALL_DIR=/sbin
+MOUNT_INSTALL_DIR=/usr/sbin
+MAN_INSTALL_DIR=/usr/share/man
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 # other vars
@@ -36,6 +37,8 @@ dist: compile
 	cp -R bin dist
 	cp README.md dist
 	cp COPYING dist
+	@mkdir -p dist/man
+	gzip -kf misc/man/tmsu.1 >dist/man/tmsu.1.gz
 	@mkdir -p dist/misc/zsh
 	cp misc/zsh/_tmsu dist/misc/zsh
 	tar czf $(DIST_FILE) dist
@@ -47,6 +50,9 @@ install:
 	@echo "Installing 'mount' command support"
 	@echo -n "    "
 	cp sbin/mount.tmsu $(MOUNT_INSTALL_DIR)
+	@echo "Installing man page"
+	mkdir -p $(MAN_INSTALL_DIR)
+	gzip -kf misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
 	@echo "Installing Zsh completion"
 	@echo -n "    "
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
@@ -60,6 +66,8 @@ uninstall:
 	@echo "Uninstalling mount support"
 	@echo -n "    "
 	rm $(MOUNT_INSTALL_DIR)/mount.tmsu
+	@echo "Uninstalling man page"
+	rm $(MAN_INSTALL_DIR)/tmsu.1.gz
 	@echo "Uninstalling Zsh completion"
 	@echo -n "    "
 	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu

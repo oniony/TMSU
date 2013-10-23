@@ -30,7 +30,7 @@ import (
 func TestFilesAll(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -76,7 +76,7 @@ func TestFilesAll(test *testing.T) {
 func TestFilesSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -141,7 +141,7 @@ func TestFilesSingleTag(test *testing.T) {
 func TestFilesNotSingleTag(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -205,7 +205,7 @@ func TestFilesNotSingleTag(test *testing.T) {
 func TestFilesImplicitAnd(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -277,7 +277,7 @@ func TestFilesImplicitAnd(test *testing.T) {
 func TestFilesAnd(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -349,7 +349,7 @@ func TestFilesAnd(test *testing.T) {
 func TestFilesImplicitAndNot(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -421,7 +421,7 @@ func TestFilesImplicitAndNot(test *testing.T) {
 func TestFilesAndNot(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -493,7 +493,7 @@ func TestFilesAndNot(test *testing.T) {
 func TestFilesOr(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()

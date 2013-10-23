@@ -31,7 +31,7 @@ import (
 func TestDupesSingle(test *testing.T) {
 	// set-up
 
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -73,7 +73,7 @@ func TestDupesSingle(test *testing.T) {
 
 func TestDupesMultiple(test *testing.T) {
 	// set-up
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -127,7 +127,7 @@ func TestDupesMultiple(test *testing.T) {
 
 func TestDupesNone(test *testing.T) {
 	// set-up
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -180,7 +180,7 @@ func TestDupesNone(test *testing.T) {
 
 func TestDupesSingleUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -240,7 +240,7 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 
 func TestDupesMultipleUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()
@@ -300,7 +300,7 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 
 func TestDupesNoneUntaggedFile(test *testing.T) {
 	// set-up
-	databasePath := configureDatabase()
+	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
 	outPath, errPath, err := configureOutput()

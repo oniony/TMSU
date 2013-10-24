@@ -37,10 +37,12 @@ dist: compile
 	cp -R bin dist
 	cp README.md dist
 	cp COPYING dist
+	@mkdir -p dist/bin
+	cp misc/bin/mount.tmsu dist/bin/
 	@mkdir -p dist/man
 	gzip -kfc misc/man/tmsu.1 >dist/man/tmsu.1.gz
 	@mkdir -p dist/misc/zsh
-	cp misc/zsh/_tmsu dist/misc/zsh
+	cp misc/zsh/_tmsu dist/misc/zsh/
 	tar czf $(DIST_FILE) dist
 
 install:

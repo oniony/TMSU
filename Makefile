@@ -1,7 +1,7 @@
 # installation paths
 INSTALL_DIR=/usr/bin
 MOUNT_INSTALL_DIR=/usr/sbin
-MAN_INSTALL_DIR=/usr/share/man
+MAN_INSTALL_DIR=/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 # other vars
@@ -51,7 +51,9 @@ install:
 	@echo -n "    "
 	cp sbin/mount.tmsu $(MOUNT_INSTALL_DIR)
 	@echo "Installing man page"
+	@echo -n "    "
 	mkdir -p $(MAN_INSTALL_DIR)
+	@echo -n "    "
 	gzip -kfc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
 	@echo "Installing Zsh completion"
 	@echo -n "    "

@@ -44,32 +44,23 @@ dist: compile
 	tar czf $(DIST_FILE) dist
 
 install:
-	@echo "Installing TMSU"
-	@echo -n "    "
+	@echo "* Installing TMSU"
 	cp bin/tmsu $(INSTALL_DIR)
-	@echo "Installing 'mount' command support"
-	@echo -n "    "
-	cp sbin/mount.tmsu $(MOUNT_INSTALL_DIR)
-	@echo "Installing man page"
-	@echo -n "    "
+	@echo "* Installing 'mount' command support"
+	cp misc/bin/mount.tmsu $(MOUNT_INSTALL_DIR)
+	@echo "* Installing man page"
 	mkdir -p $(MAN_INSTALL_DIR)
-	@echo -n "    "
 	gzip -kfc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
-	@echo "Installing Zsh completion"
-	@echo -n "    "
+	@echo "* Installing Zsh completion"
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
-	@echo -n "    "
 	cp misc/zsh/_tmsu $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
-	@echo "Uninstalling TMSU"
-	@echo -n "    "
+	@echo "* Uninstalling TMSU"
 	rm $(INSTALL_DIR)/tmsu
-	@echo "Uninstalling mount support"
-	@echo -n "    "
+	@echo "* Uninstalling mount support"
 	rm $(MOUNT_INSTALL_DIR)/mount.tmsu
-	@echo "Uninstalling man page"
+	@echo "* Uninstalling man page"
 	rm $(MAN_INSTALL_DIR)/tmsu.1.gz
-	@echo "Uninstalling Zsh completion"
-	@echo -n "    "
+	@echo "* Uninstalling Zsh completion"
 	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu

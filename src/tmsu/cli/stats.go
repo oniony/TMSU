@@ -55,9 +55,23 @@ func statsExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve taggings count: %v", err)
 	}
 
+	var averageTagsPerFile float32
+	if fileCount > 0 {
+		averageTagsPerFile = float32(fileTagCount) / float32(fileCount)
+	}
+
+	var averageFilesPerTag float32
+	if tagCount > 0 {
+		averageFilesPerTag = float32(fileTagCount) / float32(tagCount)
+	}
+
 	log.Printf("     Tags: %v", tagCount)
 	log.Printf("    Files: %v", fileCount)
 	log.Printf(" Taggings: %v", fileTagCount)
+	log.Print()
+	log.Printf("Average tags per file: %1.2f", averageTagsPerFile)
+	log.Printf("Average files per tag: %1.2f", averageFilesPerTag)
+	log.Print()
 
 	return nil
 }

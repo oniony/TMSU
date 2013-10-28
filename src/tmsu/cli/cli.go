@@ -54,7 +54,7 @@ var commands = map[string]*Command{
 var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", false, ""},
 	Option{"--help", "-h", "show help and exit", false, ""},
 	Option{"--version", "-V", "show version information and exit", false, ""},
-	Option{"--database", "-d", "use the specified database", true, ""}}
+	Option{"--database", "-D", "use the specified database", true, ""}}
 
 func Run() {
 	helpCommands = commands

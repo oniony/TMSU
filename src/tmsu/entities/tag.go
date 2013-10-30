@@ -65,3 +65,9 @@ func (tags Tags) Any(predicate func(*Tag) bool) bool {
 
 	return false
 }
+
+type TagFileCount struct {
+	Id        uint
+	Name      string
+	FileCount uint
+}

@@ -140,6 +140,11 @@ func (storage Storage) DeleteTag(tagId uint) error {
 	return storage.Db.DeleteTag(tagId)
 }
 
+// Retrieves the most popular tags.
+func (storage Storage) TopTags(count uint) ([]entities.TagFileCount, error) {
+	return storage.Db.TopTags(count)
+}
+
 // unexported
 
 func validateTagName(tagName string) error {

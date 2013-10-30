@@ -50,3 +50,10 @@ func (files Files) Where(predicate func(*File) bool) Files {
 
 	return result
 }
+
+type FileTagCount struct {
+	FileId    uint
+	Directory string
+	Name      string
+	TagCount  uint
+}

@@ -201,6 +201,44 @@ func (db Database) DeleteTag(tagId uint) error {
 	return nil
 }
 
+// Retrieves the most popular tags.
+func (db *Database) TopTags(count uint) ([]entities.TagFileCount, error) {
+	sql := `SELECT t.id, t.name, count(file_id)
+            FROM file_tag ft, tag t
+            WHERE ft.tag_id = t.id
+            GROUP BY ft.tag_id
+            ORDER BY count(file_id) DESC
+            LIMIT ?`
+
+	rows, err := db.connection.Query(sql, count)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tags := make([]entities.TagFileCount, 0, 10)
+	for {
+		if !rows.Next() {
+			break
+		}
+		if rows.Err() != nil {
+			return nil, rows.Err()
+		}
+
+		var tagId uint
+		var name string
+		var count uint
+		err := rows.Scan(&tagId, &name, &count)
+		if err != nil {
+			return nil, err
+		}
+
+		tags = append(tags, entities.TagFileCount{tagId, name, count})
+	}
+
+	return tags, nil
+}
+
 // unexported
 
 func readTag(rows *sql.Rows) (*entities.Tag, error) {

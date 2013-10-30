@@ -49,21 +49,21 @@ func unmountExec(options Options, args []string) error {
 }
 
 func unmount(path string) error {
-	log.Supp("searching path for fusermount.")
+	log.Info(2, "searching path for fusermount.")
 
 	fusermountPath, err := exec.LookPath("fusermount")
 	if err != nil {
 		return fmt.Errorf("could not find 'fusermount': ensure fuse is installed: %v", err)
 	}
 
-	log.Suppf("running: %v -u %v.", fusermountPath, path)
+	log.Infof(2, "running: %v -u %v.", fusermountPath, path)
 
 	process, err := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
 	if err != nil {
 		return fmt.Errorf("could not start 'fusermount': %v", err)
 	}
 
-	log.Supp("waiting for process to exit.")
+	log.Info(2, "waiting for process to exit.")
 
 	processState, err := process.Wait()
 	if err != nil {
@@ -77,7 +77,7 @@ func unmount(path string) error {
 }
 
 func unmountAll() error {
-	log.Supp("retrieving mount table.")
+	log.Info(2, "retrieving mount table.")
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
@@ -85,7 +85,7 @@ func unmountAll() error {
 	}
 
 	if len(mt) == 0 {
-		log.Supp("mount table is empty.")
+		log.Info(2, "mount table is empty.")
 	}
 
 	for _, mount := range mt {

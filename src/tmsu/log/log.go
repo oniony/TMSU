@@ -24,7 +24,7 @@ import (
 
 var Outfile = os.Stdout
 var Errfile = os.Stderr
-var Verbose = false
+var Verbosity = 1
 
 func Fatal(values ...interface{}) {
 	Warn(values...)
@@ -46,49 +46,12 @@ func Warnf(format string, values ...interface{}) {
 	fmt.Fprintf(Errfile, format, values...)
 }
 
-func Info(values ...interface{}) {
+func Info(verbosity uint, values ...interface{}) {
 	fmt.Fprintf(Outfile, "tmsu: ")
 	fmt.Fprintln(Outfile, values...)
 }
 
-func Infof(format string, values ...interface{}) {
+func Infof(verbosity uint, format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(Outfile, format, values...)
-}
-
-func Supp(values ...interface{}) {
-	if !Verbose {
-		return
-	}
-
-	fmt.Fprintf(Outfile, "tmsu: ")
-	fmt.Fprintln(Outfile, values...)
-}
-
-func Suppf(format string, values ...interface{}) {
-	if !Verbose {
-		return
-	}
-
-	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(Outfile, format, values...)
-}
-
-func Print(values ...interface{}) {
-	fmt.Fprintln(Outfile, values...)
-}
-
-func Printf(format string, values ...interface{}) {
-	format = format + "\n"
-	fmt.Fprintf(Outfile, format, values...)
-}
-
-func Print0(values ...interface{}) {
-	fmt.Fprint(Outfile, values...)
-	fmt.Fprint(Outfile, "\000")
-}
-
-func Print0f(format string, values ...interface{}) {
-	format = format + "\000"
 	fmt.Fprintf(Outfile, format, values...)
 }

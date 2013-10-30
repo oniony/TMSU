@@ -66,14 +66,14 @@ func mergeExec(options Options, args []string) error {
 			return fmt.Errorf("no such tag '%v'.", sourceTagName)
 		}
 
-		log.Suppf("finding files tagged '%v'.", sourceTagName)
+		log.Infof(2, "finding files tagged '%v'.", sourceTagName)
 
 		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
 		if err != nil {
 			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
 		}
 
-		log.Suppf("applying tag '%v' to these files.", destTagName)
+		log.Infof(2, "applying tag '%v' to these files.", destTagName)
 
 		for _, fileTag := range fileTags {
 			_, err = store.AddFileTag(fileTag.FileId, destTag.Id)
@@ -82,19 +82,19 @@ func mergeExec(options Options, args []string) error {
 			}
 		}
 
-		log.Suppf("untagging files '%v'.", sourceTagName)
+		log.Infof(2, "untagging files '%v'.", sourceTagName)
 
 		if err := store.RemoveFileTagsByTagId(sourceTag.Id); err != nil {
 			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
 		}
 
-		log.Suppf("updating tag implications involving tag '%v'.", sourceTagName)
+		log.Infof(2, "updating tag implications involving tag '%v'.", sourceTagName)
 
 		if err := store.UpdateImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
 			return fmt.Errorf("could not update tag implications involving tag '%v': %v", sourceTagName, err)
 		}
 
-		log.Suppf("deleting tag '%v'.", sourceTagName)
+		log.Infof(2, "deleting tag '%v'.", sourceTagName)
 
 		err = store.DeleteTag(sourceTag.Id)
 		if err != nil {

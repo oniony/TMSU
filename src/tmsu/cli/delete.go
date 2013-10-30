@@ -63,35 +63,35 @@ func deleteTag(store *storage.Storage, tagName string) error {
 		return fmt.Errorf("no such tag '%v'.", tagName)
 	}
 
-	log.Suppf("finding files tagged '%v'.", tagName)
+	log.Infof(2, "finding files tagged '%v'.", tagName)
 
 	fileTags, err := store.FileTagsByTagId(tag.Id)
 	if err != nil {
 		return fmt.Errorf("could not retrieve taggings for tag '%v': %v", tagName, err)
 	}
 
-	log.Suppf("removing applications of tag '%v'.", tagName)
+	log.Infof(2, "removing applications of tag '%v'.", tagName)
 
 	err = store.RemoveFileTagsByTagId(tag.Id)
 	if err != nil {
 		return fmt.Errorf("could not remove taggings for tag '%v': %v", tagName, err)
 	}
 
-	log.Suppf("removing tags implications involving tag '%v'.", tagName)
+	log.Infof(2, "removing tags implications involving tag '%v'.", tagName)
 
 	err = store.RemoveImplicationsForTagId(tag.Id)
 	if err != nil {
 		return fmt.Errorf("could not remove tag implications involving tag '%v': %v", tagName, err)
 	}
 
-	log.Suppf("deleting tag '%v'.", tagName)
+	log.Infof(2, "deleting tag '%v'.", tagName)
 
 	err = store.DeleteTag(tag.Id)
 	if err != nil {
 		return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 	}
 
-	log.Suppf("identifying files left untagged as a result of tag deletion.")
+	log.Infof(2, "identifying files left untagged as a result of tag deletion.")
 
 	removedFileCount := 0
 	for _, fileTag := range fileTags {
@@ -109,7 +109,7 @@ func deleteTag(store *storage.Storage, tagName string) error {
 		}
 	}
 
-	log.Suppf("removed %v untagged files.", removedFileCount)
+	log.Infof(2, "removed %v untagged files.", removedFileCount)
 
 	return nil
 }

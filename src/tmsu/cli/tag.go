@@ -142,7 +142,7 @@ func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error
 		}
 	}
 
-	log.Suppf("retrieving tag implications")
+	log.Infof(2, "retrieving tag implications")
 
 	tagIds := make([]uint, len(tags))
 	for index, tag := range tags {
@@ -203,7 +203,7 @@ func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool)
 		}
 	}
 
-	log.Suppf("%v: applying tags.", file.Path())
+	log.Infof(2, "%v: applying tags.", file.Path())
 
 	if err = store.AddFileTags(file.Id, tagIds); err != nil {
 		return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
@@ -242,7 +242,7 @@ func tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
 }
 
 func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {
-	log.Suppf("%v: adding file.", path)
+	log.Infof(2, "%v: adding file.", path)
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {

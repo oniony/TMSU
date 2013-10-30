@@ -20,7 +20,6 @@ package cli
 import (
 	"fmt"
 	"math"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -66,26 +65,26 @@ func statsExec(options Options, args []string) error {
 		averageFilesPerTag = float32(fileTagCount) / float32(tagCount)
 	}
 
-	log.Print("BASICS")
-	log.Print()
-	log.Printf("  Tags:     %v", tagCount)
-	log.Printf("  Files:    %v", fileCount)
-	log.Printf("  Taggings: %v", fileTagCount)
-	log.Print()
+	fmt.Println("BASICS")
+	fmt.Println()
+	fmt.Printf("  Tags:     %v\n", tagCount)
+	fmt.Printf("  Files:    %v\n", fileCount)
+	fmt.Printf("  Taggings: %v\n", fileTagCount)
+	fmt.Println()
 
-	log.Print("AVERAGES")
-	log.Print()
-	log.Printf("  Tags per file: %1.2f", averageTagsPerFile)
-	log.Printf("  Files per tag: %1.2f", averageFilesPerTag)
-	log.Print()
+	fmt.Println("AVERAGES")
+	fmt.Println()
+	fmt.Printf("  Tags per file: %1.2f\n", averageTagsPerFile)
+	fmt.Printf("  Files per tag: %1.2f\n", averageFilesPerTag)
+	fmt.Println()
 
 	topTags, err := store.TopTags(10)
 	if err != nil {
 		return fmt.Errorf("could not retrieve top tags: %v", err)
 	}
 
-	log.Printf("TOP TAGS")
-	log.Print()
+	fmt.Println("TOP TAGS")
+	fmt.Println()
 	maxLength := 0
 	maxCountWidth := 0
 	for _, tag := range topTags {
@@ -98,9 +97,9 @@ func statsExec(options Options, args []string) error {
 		}
 	}
 	for _, tag := range topTags {
-		log.Printf("  %*v %*s", maxCountWidth, tag.FileCount, -maxLength, tag.Name)
+		fmt.Printf("  %*v %*s\n", maxCountWidth, tag.FileCount, -maxLength, tag.Name)
 	}
-	log.Print()
+	fmt.Println()
 
 	return nil
 }

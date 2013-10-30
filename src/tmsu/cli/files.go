@@ -83,7 +83,7 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showC
 	}
 	defer store.Close()
 
-	log.Supp("retrieving all files from database.")
+	log.Info(2, "retrieving all files from database.")
 
 	files, err := store.Files()
 	if err != nil {
@@ -104,14 +104,14 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 	}
 	defer store.Close()
 
-	log.Supp("parsing query")
+	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
 	if err != nil {
 		return err
 	}
 
-	log.Supp("checking tag names")
+	log.Info(2, "checking tag names")
 
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByNames(tagNames)
@@ -121,7 +121,7 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 		}
 	}
 
-	log.Supp("querying database")
+	log.Info(2, "querying database")
 
 	files, err := store.QueryFiles(expression)
 	if err != nil {
@@ -169,15 +169,15 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 	}
 
 	if showCount {
-		log.Print(len(tree.Paths()))
+		fmt.Print(len(tree.Paths()))
 	} else {
 		for _, absPath := range tree.Paths() {
 			relPath := path.Rel(absPath)
 
 			if print0 {
-				log.Print0(relPath)
+				fmt.Printf("%v\000", relPath)
 			} else {
-				log.Print(relPath)
+				fmt.Print(relPath)
 			}
 		}
 	}

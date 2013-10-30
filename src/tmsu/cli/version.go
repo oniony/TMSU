@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
+	"fmt"
 	"tmsu/common"
-	"tmsu/log"
 )
 
 var VersionCommand = Command{
@@ -33,9 +33,9 @@ Displays version and copyright information.`,
 }
 
 func versionExec(options Options, args []string) error {
-	log.Print("TMSU", common.Version)
-	log.Print()
-	log.Print(`Copyright © 2011-2013 Paul Ruane.
+	fmt.Print("TMSU", common.Version)
+	fmt.Print()
+	fmt.Print(`Copyright © 2011-2013 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

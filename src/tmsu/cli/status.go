@@ -121,7 +121,7 @@ func statusDatabase(dirOnly bool) (*StatusReport, error) {
 	}
 	defer store.Close()
 
-	log.Supp("retrieving all files from database.")
+	log.Info(2, "retrieving all files from database.")
 
 	files, err := store.Files()
 	if err != nil {
@@ -179,7 +179,7 @@ func statusPaths(paths []string, dirOnly bool) (*StatusReport, error) {
 		}
 
 		if !dirOnly {
-			log.Suppf("%v: retrieving files from database.", path)
+			log.Infof(2, "%v: retrieving files from database.", path)
 
 			files, err := store.FilesByDirectory(absPath)
 			if err != nil {
@@ -215,13 +215,13 @@ func statusCheckFiles(files entities.Files, report *StatusReport) error {
 func statusCheckFile(file *entities.File, report *StatusReport) error {
 	relPath := path.Rel(file.Path())
 
-	log.Suppf("%v: checking file status.", file.Path())
+	log.Infof(2, "%v: checking file status.", file.Path())
 
 	stat, err := os.Stat(file.Path())
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			log.Suppf("%v: file is missing.", file.Path())
+			log.Infof(2, "%v: file is missing.", file.Path())
 
 			report.AddRow(Row{relPath, MISSING})
 			return nil
@@ -235,11 +235,11 @@ func statusCheckFile(file *entities.File, report *StatusReport) error {
 		}
 	} else {
 		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
-			log.Suppf("%v: file is modified.", file.Path())
+			log.Infof(2, "%v: file is modified.", file.Path())
 
 			report.AddRow(Row{relPath, MODIFIED})
 		} else {
-			log.Suppf("%v: file is unchanged.", file.Path())
+			log.Infof(2, "%v: file is unchanged.", file.Path())
 
 			report.AddRow(Row{relPath, TAGGED})
 		}
@@ -249,7 +249,7 @@ func statusCheckFile(file *entities.File, report *StatusReport) error {
 }
 
 func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
-	log.Suppf("%v: finding new files.", searchPath)
+	log.Infof(2, "%v: finding new files.", searchPath)
 
 	relPath := path.Rel(searchPath)
 
@@ -325,5 +325,5 @@ func printReport(report *StatusReport) {
 }
 
 func printRow(row Row) {
-	log.Printf("%v %v", string(row.Status), row.Path)
+	fmt.Printf("%v %v", string(row.Status), row.Path)
 }

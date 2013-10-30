@@ -58,25 +58,25 @@ func findDuplicatesInDb() error {
 	}
 	defer store.Close()
 
-	log.Supp("identifying duplicate files.")
+	log.Info(2, "identifying duplicate files.")
 
 	fileSets, err := store.DuplicateFiles()
 	if err != nil {
 		return fmt.Errorf("could not identify duplicate files: %v", err)
 	}
 
-	log.Suppf("found %v sets of duplicate files.", len(fileSets))
+	log.Infof(2, "found %v sets of duplicate files.", len(fileSets))
 
 	for index, fileSet := range fileSets {
 		if index > 0 {
-			log.Print()
+			fmt.Print()
 		}
 
-		log.Printf("Set of %v duplicates:", len(fileSet))
+		fmt.Printf("Set of %v duplicates:", len(fileSet))
 
 		for _, file := range fileSet {
 			relPath := _path.Rel(file.Path())
-			log.Printf("  %v", relPath)
+			fmt.Printf("  %v", relPath)
 		}
 	}
 
@@ -104,7 +104,7 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 
 	first := true
 	for _, path := range paths {
-		log.Suppf("%v: identifying duplicate files.", path)
+		log.Infof(2, "%v: identifying duplicate files.", path)
 
 		fp, err := fingerprint.Create(path)
 		if err != nil {
@@ -132,19 +132,19 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 			if first {
 				first = false
 			} else {
-				log.Print()
+				fmt.Print()
 			}
 
-			log.Printf("%v:", path)
+			fmt.Printf("%v:", path)
 
 			for _, dupe := range dupes {
 				relPath := _path.Rel(dupe.Path())
-				log.Printf("  %v", relPath)
+				fmt.Printf("  %v", relPath)
 			}
 		} else {
 			for _, dupe := range dupes {
 				relPath := _path.Rel(dupe.Path())
-				log.Print(relPath)
+				fmt.Print(relPath)
 			}
 		}
 	}

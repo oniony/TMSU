@@ -18,10 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
+	"fmt"
 	"math"
 	"sort"
 	"strconv"
-	"tmsu/log"
 )
 
 var HelpCommand = Command{
@@ -53,8 +53,8 @@ func helpExec(options Options, args []string) error {
 }
 
 func summary() {
-	log.Print("TMSU")
-	log.Print()
+	fmt.Println("TMSU")
+	fmt.Println()
 
 	var maxWidth int = 0
 	commandNames := make([]string, 0, len(helpCommands))
@@ -74,19 +74,19 @@ func summary() {
 			continue
 		}
 
-		log.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v", command.Name, commandSummary)
+		fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, commandSummary)
 	}
 
-	log.Print()
+	fmt.Println()
 
-	log.Print("Global options:")
-	log.Print()
+	fmt.Println("Global options:")
+	fmt.Println()
 
 	for _, option := range globalOptions {
-		log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
+		fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 	}
 
-	log.Print()
+	fmt.Println()
 }
 
 func listCommands() {
@@ -103,27 +103,27 @@ func listCommands() {
 	sort.Strings(commandNames)
 
 	for _, commandName := range commandNames {
-		log.Print(commandName)
+		fmt.Println(commandName)
 	}
 }
 
 func describeCommand(commandName string) {
 	command := helpCommands[commandName]
 	if command == nil {
-		log.Printf("No such command '%v'.", commandName)
+		fmt.Printf("No such command '%v'.\n", commandName)
 		return
 	}
 
-	log.Print(command.Description)
+	fmt.Println(command.Description)
 
 	if len(command.Options) > 0 {
-		log.Print()
+		fmt.Println()
 
-		log.Print("Options:")
-		log.Print()
+		fmt.Println("Options:")
+		fmt.Println()
 
 		for _, option := range command.Options {
-			log.Printf("  %v, %v: %v", option.ShortName, option.LongName, option.Description)
+			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 		}
 	}
 }

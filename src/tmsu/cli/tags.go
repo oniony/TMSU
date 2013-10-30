@@ -58,7 +58,7 @@ func listAllTags(showCount bool) error {
 	}
 	defer store.Close()
 
-	log.Supp("retrieving all tags.")
+	log.Info(2, "retrieving all tags.")
 
 	if showCount {
 		count, err := store.TagCount()
@@ -66,7 +66,7 @@ func listAllTags(showCount bool) error {
 			return fmt.Errorf("could not retrieve tag count: %v", err)
 		}
 
-		log.Print(count)
+		fmt.Print(count)
 	} else {
 		tags, err := store.Tags()
 		if err != nil {
@@ -74,7 +74,7 @@ func listAllTags(showCount bool) error {
 		}
 
 		for _, tag := range tags {
-			log.Print(tag.Name)
+			fmt.Print(tag.Name)
 		}
 	}
 
@@ -101,7 +101,7 @@ func listTags(paths []string, showCount bool) error {
 }
 
 func listTagsForPath(store *storage.Storage, path string, showCount bool) error {
-	log.Suppf("%v: retrieving tags.", path)
+	log.Infof(2, "%v: retrieving tags.", path)
 
 	var tags, err = store.TagsForPath(path)
 	if err != nil {
@@ -123,10 +123,10 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 	}
 
 	if showCount {
-		log.Print(len(tags))
+		fmt.Print(len(tags))
 	} else {
 		for _, tag := range tags {
-			log.Print(tag.Name)
+			fmt.Print(tag.Name)
 		}
 	}
 
@@ -135,7 +135,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 
 func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) error {
 	for _, path := range paths {
-		log.Suppf("%v: retrieving tags.", path)
+		log.Infof(2, "%v: retrieving tags.", path)
 
 		var tags, err = store.TagsForPath(path)
 		if err != nil {
@@ -144,9 +144,9 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 		}
 
 		if showCount {
-			log.Print(path + ": " + strconv.Itoa(len(tags)))
+			fmt.Print(path + ": " + strconv.Itoa(len(tags)))
 		} else {
-			log.Print(path + ": " + formatTags(tags))
+			fmt.Print(path + ": " + formatTags(tags))
 		}
 	}
 
@@ -168,7 +168,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 	sort.Strings(dirNames)
 
 	for _, dirName := range dirNames {
-		log.Suppf("%v: retrieving tags.", dirName)
+		log.Infof(2, "%v: retrieving tags.", dirName)
 
 		var tags, err = store.TagsForPath(dirName)
 
@@ -182,9 +182,9 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 		}
 
 		if showCount {
-			log.Print(dirName + ": " + strconv.Itoa(len(tags)))
+			fmt.Print(dirName + ": " + strconv.Itoa(len(tags)))
 		} else {
-			log.Print(dirName + ": " + formatTags(tags))
+			fmt.Print(dirName + ": " + formatTags(tags))
 		}
 	}
 

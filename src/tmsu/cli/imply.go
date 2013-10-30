@@ -63,7 +63,7 @@ func implyExec(options Options, args []string) error {
 // unexported
 
 func listImplications(store *storage.Storage) error {
-	log.Suppf("retrieving tag implications.")
+	log.Infof(2, "retrieving tag implications.")
 
 	implications, err := store.Implications()
 	if err != nil {
@@ -114,7 +114,7 @@ func addImplication(store *storage.Storage, tagName, impliedTagName string) erro
 		return fmt.Errorf("no such tag '%v'.", impliedTagName)
 	}
 
-	log.Suppf("adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
+	log.Infof(2, "adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
 	if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
 		return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
@@ -140,7 +140,7 @@ func deleteImplication(store *storage.Storage, tagName, impliedTagName string) e
 		return fmt.Errorf("no such tag '%v'.", impliedTagName)
 	}
 
-	log.Suppf("removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
+	log.Infof(2, "removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
 	if err = store.RemoveImplication(tag.Id, impliedTag.Id); err != nil {
 		return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)

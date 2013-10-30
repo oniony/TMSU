@@ -74,7 +74,7 @@ func renameExec(options Options, args []string) error {
 		return fmt.Errorf("tag '%v' already exists.", destTagName)
 	}
 
-	log.Suppf("renaming tag '%v' to '%v'.", sourceTagName, destTagName)
+	log.Infof(2, "renaming tag '%v' to '%v'.", sourceTagName, destTagName)
 
 	_, err = store.RenameTag(sourceTag.Id, destTagName)
 	if err != nil {

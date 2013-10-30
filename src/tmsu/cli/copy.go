@@ -59,7 +59,7 @@ func copyExec(options Options, args []string) error {
 		return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
 	}
 
-	log.Suppf("copying tag '%v' to '%v'.", sourceTagName, destTagName)
+	log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
 	if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
 		return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)

@@ -91,7 +91,7 @@ func mountExec(options Options, args []string) error {
 }
 
 func listMounts() error {
-	log.Supp("retrieving mount table.")
+	log.Info(2, "retrieving mount table.")
 
 	mt, err := vfs.GetMountTable()
 	if err != nil {
@@ -99,11 +99,11 @@ func listMounts() error {
 	}
 
 	if len(mt) == 0 {
-		log.Supp("mount table is empty.")
+		log.Info(2, "mount table is empty.")
 	}
 
 	for _, mount := range mt {
-		log.Printf("'%v' at '%v'", mount.DatabasePath, mount.MountPath)
+		fmt.Printf("'%v' at '%v'", mount.DatabasePath, mount.MountPath)
 	}
 
 	return nil
@@ -141,7 +141,7 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 		return fmt.Errorf("%v: database does not exist.")
 	}
 
-	log.Suppf("spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
+	log.Infof(2, "spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
 
 	args := []string{"vfs", databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
@@ -156,12 +156,12 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 		return fmt.Errorf("could not start daemon: %v", err)
 	}
 
-	log.Supp("sleeping.")
+	log.Info(2, "sleeping.")
 
 	const HALF_SECOND = 500000000
 	time.Sleep(HALF_SECOND)
 
-	log.Supp("checking whether daemon started successfully.")
+	log.Info(2, "checking whether daemon started successfully.")
 
 	var waitStatus syscall.WaitStatus
 	var rusage syscall.Rusage

@@ -157,7 +157,7 @@ func untagPathAll(store *storage.Storage, path string, recursive bool) error {
 		return fmt.Errorf("%v: file is not tagged.", path)
 	}
 
-	log.Suppf("%v: removing all tags.", file.Path())
+	log.Infof(2, "%v: removing all tags.", file.Path())
 
 	if err := store.RemoveFileTagsByFileId(file.Id); err != nil {
 		return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
@@ -203,7 +203,7 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 	}
 
 	for _, tagId := range tagIds {
-		log.Suppf("%v: unapplying tag #%v.", file.Path(), tagId)
+		log.Infof(2, "%v: unapplying tag #%v.", file.Path(), tagId)
 
 		if err := store.RemoveFileTag(file.Id, tagId); err != nil {
 			return fmt.Errorf("%v: could not remove tag #%v: %v", file.Path(), tagId, err)
@@ -222,7 +222,7 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 
 		for _, childFile := range childFiles {
 			for _, tagId := range tagIds {
-				log.Suppf("%v: unapplying tag #%v.", childFile.Path(), tagId)
+				log.Infof(2, "%v: unapplying tag #%v.", childFile.Path(), tagId)
 
 				if err := store.RemoveFileTag(childFile.Id, tagId); err != nil {
 					return fmt.Errorf("%v: could not remove tag #%v: %v", childFile.Path(), tagId, err)
@@ -239,7 +239,7 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 }
 
 func removeUntaggedFile(store *storage.Storage, file *entities.File) error {
-	log.Suppf("%v: identifying whether file is tagged.", file.Path())
+	log.Infof(2, "%v: identifying whether file is tagged.", file.Path())
 
 	filetagCount, err := store.FileTagCountByFileId(file.Id)
 	if err != nil {
@@ -247,7 +247,7 @@ func removeUntaggedFile(store *storage.Storage, file *entities.File) error {
 	}
 
 	if filetagCount == 0 {
-		log.Suppf("%v: removing untagged file.", file.Path())
+		log.Infof(2, "%v: removing untagged file.", file.Path())
 
 		err = store.RemoveFile(file.Id)
 		if err != nil {

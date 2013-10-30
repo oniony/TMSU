@@ -73,7 +73,7 @@ func Run() {
 	}
 
 	if options.HasOption("--verbose") {
-		log.Verbose = true
+		log.Verbosity = 2
 	}
 	if dbOption := options.Get("--database"); dbOption != nil && dbOption.Argument != "" {
 		database.Path = dbOption.Argument

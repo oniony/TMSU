@@ -84,7 +84,7 @@ func repairExec(options Options, args []string) error {
 //- unexported
 
 func repairDatabase(store *storage.Storage, pretend, force bool) error {
-	log.Supp("retrieving all files from the database.")
+	log.Infof(2, "retrieving all files from the database.")
 
 	files, err := store.Files()
 	if err != nil {
@@ -116,7 +116,7 @@ func repairPaths(store *storage.Storage, paths []string, pretend, force bool) er
 		absPaths[index] = absPath
 	}
 
-	log.Suppf("identifying top-level paths.")
+	log.Infof(2, "identifying top-level paths.")
 
 	err := repairFiles(store, absPaths, pretend, force)
 	if err != nil {
@@ -158,7 +158,7 @@ func repairFiles(store *storage.Storage, paths []string, pretend, force bool) er
 	}
 
 	for path, _ := range untagged {
-		log.Infof("%v: untagged", path)
+		log.Infof(1, "%v: untagged", path)
 	}
 
 	//TODO cleanup: any files that have no tags: remove
@@ -175,7 +175,7 @@ type fileIdAndInfoMap map[string]struct {
 type databaseFileMap map[string]entities.File
 
 func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
-	log.Supp("determining file statuses")
+	log.Infof(2, "determining file statuses")
 
 	tagged = make(databaseFileMap, 100)
 	untagged = make(fileInfoMap, 100)
@@ -207,13 +207,13 @@ func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged dat
 }
 
 func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool) error {
-	log.Supp("repairing modified files")
+	log.Infof(2, "repairing modified files")
 
 	for path, fileIdAndStat := range modified {
 		fileId := fileIdAndStat.fileId
 		stat := fileIdAndStat.stat
 
-		log.Infof("%v: modified", path)
+		log.Infof(1, "%v: modified", path)
 
 		fingerprint, err := fingerprint.Create(path)
 		if err != nil {
@@ -233,12 +233,12 @@ func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend b
 }
 
 func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap, pretend bool) error {
-	log.Supp("repairing moved files")
+	log.Infof(2, "repairing moved files")
 
 	moved := make([]string, 0, 10)
 
 	for path, dbFile := range missing {
-		log.Suppf("%v: searching for new location", path)
+		log.Infof(2, "%v: searching for new location", path)
 
 		for candidatePath, stat := range untagged {
 			if stat.Size() == dbFile.Size {
@@ -248,7 +248,7 @@ func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileI
 				}
 
 				if fingerprint == dbFile.Fingerprint {
-					log.Infof("%v: moved to %v", path, candidatePath)
+					log.Infof(1, "%v: moved to %v", path, candidatePath)
 
 					moved = append(moved, path)
 
@@ -285,9 +285,9 @@ func repairMissing(store *storage.Storage, missing databaseFileMap, pretend, for
 				return fmt.Errorf("%v: could not delete file: %v", path, err)
 			}
 
-			log.Infof("%v: removed", path)
+			log.Infof(1, "%v: removed", path)
 		} else {
-			log.Infof("%v: missing", path)
+			log.Infof(1, "%v: missing", path)
 		}
 	}
 

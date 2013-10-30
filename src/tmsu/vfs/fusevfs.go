@@ -78,36 +78,36 @@ func (vfs FuseVfs) SetDebug(debug bool) {
 }
 
 func (vfs FuseVfs) Access(name string, mode uint32, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Access(%v, %v)", name, mode)
-	defer log.Infof("END Access(%v, %v)", name, mode)
+	log.Infof(2, "BEGIN Access(%v, %v)", name, mode)
+	defer log.Infof(2, "END Access(%v, %v)", name, mode)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Chmod(name string, mode uint32, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Chmod(%v, %v)", name, mode)
-	defer log.Infof("BEGIN Chmod(%v, %v)", name, mode)
+	log.Infof(2, "BEGIN Chmod(%v, %v)", name, mode)
+	defer log.Infof(2, "BEGIN Chmod(%v, %v)", name, mode)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Chown(name string, uid uint32, gid uint32, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Chown(%v, %v, %v)", name, uid, gid)
-	defer log.Infof("BEGIN Chown(%v, %v)", name, uid, gid)
+	log.Infof(2, "BEGIN Chown(%v, %v, %v)", name, uid, gid)
+	defer log.Infof(2, "BEGIN Chown(%v, %v)", name, uid, gid)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Create(name string, flags uint32, mode uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
-	log.Infof("BEGIN Create(%v, %v, %v)", name, flags, mode)
-	defer log.Infof("BEGIN Create(%v, %v)", name, flags, mode)
+	log.Infof(2, "BEGIN Create(%v, %v, %v)", name, flags, mode)
+	defer log.Infof(2, "BEGIN Create(%v, %v)", name, flags, mode)
 
 	return nil, fuse.ENOSYS
 }
 
 func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse.Status) {
-	log.Infof("BEGIN GetAttr(%v)", name)
-	defer log.Infof("END GetAttr(%v)", name)
+	log.Infof(2, "BEGIN GetAttr(%v)", name)
+	defer log.Infof(2, "END GetAttr(%v)", name)
 
 	switch name {
 	case "":
@@ -131,29 +131,29 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 }
 
 func (vfs FuseVfs) GetXAttr(name string, attr string, context *fuse.Context) ([]byte, fuse.Status) {
-	log.Infof("BEGIN GetXAttr(%v, %v)", name, attr)
-	defer log.Infof("END GetAttr(%v, %v)", name, attr)
+	log.Infof(2, "BEGIN GetXAttr(%v, %v)", name, attr)
+	defer log.Infof(2, "END GetAttr(%v, %v)", name, attr)
 
 	return nil, fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Link(oldName string, newName string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Link(%v, %v)", oldName, newName)
-	defer log.Infof("END Link(%v, %v)", oldName, newName)
+	log.Infof(2, "BEGIN Link(%v, %v)", oldName, newName)
+	defer log.Infof(2, "END Link(%v, %v)", oldName, newName)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) ListXAttr(name string, context *fuse.Context) ([]string, fuse.Status) {
-	log.Infof("BEGIN ListXAttr(%v)", name)
-	defer log.Infof("END ListXAttr(%v)", name)
+	log.Infof(2, "BEGIN ListXAttr(%v)", name)
+	defer log.Infof(2, "END ListXAttr(%v)", name)
 
 	return nil, fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Mkdir(%v)", name)
-	defer log.Infof("END Mkdir(%v)", name)
+	log.Infof(2, "BEGIN Mkdir(%v)", name)
+	defer log.Infof(2, "END Mkdir(%v)", name)
 
 	path := vfs.splitPath(name)
 
@@ -198,32 +198,32 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 }
 
 func (vfs FuseVfs) Mknod(name string, mode uint32, dev uint32, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Mknod(%v)", name)
-	defer log.Infof("END Mknod(%v)", name)
+	log.Infof(2, "BEGIN Mknod(%v)", name)
+	defer log.Infof(2, "END Mknod(%v)", name)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) OnMount(nodeFs *pathfs.PathNodeFs) {
-	log.Infof("BEGIN OnMount()")
-	defer log.Infof("END OnMount()")
+	log.Infof(2, "BEGIN OnMount()")
+	defer log.Infof(2, "END OnMount()")
 }
 
 func (vfs FuseVfs) OnUnmount() {
-	log.Infof("BEGIN OnUnmount()")
-	defer log.Infof("END OnUnmount()")
+	log.Infof(2, "BEGIN OnUnmount()")
+	defer log.Infof(2, "END OnUnmount()")
 }
 
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
-	log.Infof("BEGIN Open(%v)", name)
-	defer log.Infof("END Open(%v)", name)
+	log.Infof(2, "BEGIN Open(%v)", name)
+	defer log.Infof(2, "END Open(%v)", name)
 
 	return nil, fuse.ENOSYS
 }
 
 func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN OpenDir(%v)", name)
-	defer log.Infof("END OpenDir(%v)", name)
+	log.Infof(2, "BEGIN OpenDir(%v)", name)
+	defer log.Infof(2, "END OpenDir(%v)", name)
 
 	switch name {
 	case "":
@@ -246,8 +246,8 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 }
 
 func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.Status) {
-	log.Infof("BEGIN Readlink(%v)", name)
-	defer log.Infof("END Readlink(%v)", name)
+	log.Infof(2, "BEGIN Readlink(%v)", name)
+	defer log.Infof(2, "END Readlink(%v)", name)
 
 	path := vfs.splitPath(name)
 	switch path[0] {
@@ -259,22 +259,22 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 }
 
 func (vfs FuseVfs) RemoveXAttr(name string, attr string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN RemoveXAttr(%v, %v)", name, attr)
-	defer log.Infof("END RemoveXAttr(%v, %v)", name, attr)
+	log.Infof(2, "BEGIN RemoveXAttr(%v, %v)", name, attr)
+	defer log.Infof(2, "END RemoveXAttr(%v, %v)", name, attr)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Rename(%v, %v)", oldName, newName)
-	defer log.Infof("END Rename(%v, %v)", oldName, newName)
+	log.Infof(2, "BEGIN Rename(%v, %v)", oldName, newName)
+	defer log.Infof(2, "END Rename(%v, %v)", oldName, newName)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Rmdir(%v)", name)
-	defer log.Infof("END Rmdir(%v)", name)
+	log.Infof(2, "BEGIN Rmdir(%v)", name)
+	defer log.Infof(2, "END Rmdir(%v)", name)
 
 	path := vfs.splitPath(name)
 
@@ -298,15 +298,15 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 }
 
 func (vfs FuseVfs) SetXAttr(name string, attr string, data []byte, flags int, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN SetXAttr(%v, %v)", name, attr)
-	defer log.Infof("END SetXAttr(%v, %v)", name, attr)
+	log.Infof(2, "BEGIN SetXAttr(%v, %v)", name, attr)
+	defer log.Infof(2, "END SetXAttr(%v, %v)", name, attr)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) StatFs(name string) *fuse.StatfsOut {
-	log.Infof("BEGIN StatFs(%v)", name)
-	defer log.Infof("END StatFs(%v)", name)
+	log.Infof(2, "BEGIN StatFs(%v)", name)
+	defer log.Infof(2, "END StatFs(%v)", name)
 
 	return &fuse.StatfsOut{}
 }
@@ -316,22 +316,22 @@ func (vfs FuseVfs) String() string {
 }
 
 func (vfs FuseVfs) Symlink(value string, linkName string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Symlink(%v, %v)", value, linkName)
-	defer log.Infof("END Symlink(%v, %v)", value, linkName)
+	log.Infof(2, "BEGIN Symlink(%v, %v)", value, linkName)
+	defer log.Infof(2, "END Symlink(%v, %v)", value, linkName)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Truncate(name string, offset uint64, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Truncate(%v)", name)
-	defer log.Infof("END Truncate(%v)", name)
+	log.Infof(2, "BEGIN Truncate(%v)", name)
+	defer log.Infof(2, "END Truncate(%v)", name)
 
 	return fuse.ENOSYS
 }
 
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
-	log.Infof("BEGIN Unlink(%v)", name)
-	defer log.Infof("END Unlink(%v)", name)
+	log.Infof(2, "BEGIN Unlink(%v)", name)
+	defer log.Infof(2, "END Unlink(%v)", name)
 
 	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
@@ -396,8 +396,8 @@ func (vfs FuseVfs) parseFileId(name string) uint {
 }
 
 func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN topDirectories")
-	defer log.Infof("END topDirectories")
+	log.Infof(2, "BEGIN topDirectories")
+	defer log.Infof(2, "END topDirectories")
 
 	entries := []fuse.DirEntry{fuse.DirEntry{Name: tagsDir, Mode: fuse.S_IFDIR},
 		fuse.DirEntry{Name: queriesDir, Mode: fuse.S_IFDIR}}
@@ -405,8 +405,8 @@ func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN tagDirectories")
-	defer log.Infof("END tagDirectories")
+	log.Infof(2, "BEGIN tagDirectories")
+	defer log.Infof(2, "END tagDirectories")
 
 	tags, err := vfs.store.Tags()
 	if err != nil {
@@ -422,8 +422,8 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN queriesDirectories")
-	defer log.Infof("END queriesDirectories")
+	log.Infof(2, "BEGIN queriesDirectories")
+	defer log.Infof(2, "END queriesDirectories")
 
 	queries, err := vfs.store.Queries()
 	if err != nil {
@@ -439,8 +439,8 @@ func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
-	log.Infof("BEGIN getTagsAttr")
-	defer log.Infof("END getTagsAttr")
+	log.Infof(2, "BEGIN getTagsAttr")
+	defer log.Infof(2, "END getTagsAttr")
 
 	tagCount, err := vfs.store.TagCount()
 	if err != nil {
@@ -452,16 +452,16 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) getQueryAttr() (*fuse.Attr, fuse.Status) {
-	log.Infof("BEGIN getQueryAttr")
-	defer log.Infof("END getQueryAttr")
+	log.Infof(2, "BEGIN getQueryAttr")
+	defer log.Infof(2, "END getQueryAttr")
 
 	now := time.Now()
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: 0, Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
-	log.Infof("BEGIN getTaggedEntryAttr(%v)", path)
-	defer log.Infof("END getTaggedEntryAttr(%v)", path)
+	log.Infof(2, "BEGIN getTaggedEntryAttr(%v)", path)
+	defer log.Infof(2, "END getTaggedEntryAttr(%v)", path)
 
 	pathLength := len(path)
 	name := path[pathLength-1]
@@ -486,8 +486,8 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
-	log.Infof("BEGIN getQueryEntryAttr(%v)", path)
-	defer log.Infof("END getQueryEntryAttr(%v)", path)
+	log.Infof(2, "BEGIN getQueryEntryAttr(%v)", path)
+	defer log.Infof(2, "END getQueryEntryAttr(%v)", path)
 
 	pathLength := len(path)
 	name := path[pathLength-1]
@@ -535,8 +535,8 @@ func (vfs FuseVfs) getFileEntryAttr(fileId uint) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN openTaggedEntryDir(%v)", path)
-	defer log.Infof("END openTaggedEntryDir(%v)", path)
+	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
+	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
 	tagIds, err := vfs.tagNamesToIds(path)
 	if err != nil {
@@ -569,8 +569,8 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 }
 
 func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
-	log.Infof("BEGIN openQueryEntryDir(%v)", path)
-	defer log.Infof("END openQueryEntryDir(%v)", path)
+	log.Infof(2, "BEGIN openQueryEntryDir(%v)", path)
+	defer log.Infof(2, "END openQueryEntryDir(%v)", path)
 
 	queryText := path[0]
 	expression, err := query.Parse(queryText)
@@ -593,8 +593,8 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 }
 
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
-	log.Infof("BEGIN readTaggedEntryLink(%v)", path)
-	defer log.Infof("END readTaggedEntryLink(%v)", path)
+	log.Infof(2, "BEGIN readTaggedEntryLink(%v)", path)
+	defer log.Infof(2, "END readTaggedEntryLink(%v)", path)
 
 	name := path[len(path)-1]
 

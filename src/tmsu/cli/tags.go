@@ -66,7 +66,7 @@ func listAllTags(showCount bool) error {
 			return fmt.Errorf("could not retrieve tag count: %v", err)
 		}
 
-		fmt.Print(count)
+		fmt.Println(count)
 	} else {
 		tags, err := store.Tags()
 		if err != nil {
@@ -74,7 +74,7 @@ func listAllTags(showCount bool) error {
 		}
 
 		for _, tag := range tags {
-			fmt.Print(tag.Name)
+			fmt.Println(tag.Name)
 		}
 	}
 
@@ -123,10 +123,10 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 	}
 
 	if showCount {
-		fmt.Print(len(tags))
+		fmt.Println(len(tags))
 	} else {
 		for _, tag := range tags {
-			fmt.Print(tag.Name)
+			fmt.Println(tag.Name)
 		}
 	}
 
@@ -144,9 +144,9 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 		}
 
 		if showCount {
-			fmt.Print(path + ": " + strconv.Itoa(len(tags)))
+			fmt.Println(path + ": " + strconv.Itoa(len(tags)))
 		} else {
-			fmt.Print(path + ": " + formatTags(tags))
+			fmt.Println(path + ": " + formatTags(tags))
 		}
 	}
 
@@ -182,9 +182,9 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 		}
 
 		if showCount {
-			fmt.Print(dirName + ": " + strconv.Itoa(len(tags)))
+			fmt.Println(dirName + ": " + strconv.Itoa(len(tags)))
 		} else {
-			fmt.Print(dirName + ": " + formatTags(tags))
+			fmt.Println(dirName + ": " + formatTags(tags))
 		}
 	}
 

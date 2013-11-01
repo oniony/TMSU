@@ -24,7 +24,7 @@ import (
 
 var Outfile = os.Stdout
 var Errfile = os.Stderr
-var Verbosity = 1
+var Verbosity uint = 1
 
 func Fatal(values ...interface{}) {
 	Warn(values...)
@@ -47,11 +47,19 @@ func Warnf(format string, values ...interface{}) {
 }
 
 func Info(verbosity uint, values ...interface{}) {
+	if verbosity > Verbosity {
+		return
+	}
+
 	fmt.Fprintf(Outfile, "tmsu: ")
 	fmt.Fprintln(Outfile, values...)
 }
 
 func Infof(verbosity uint, format string, values ...interface{}) {
+	if verbosity > Verbosity {
+		return
+	}
+
 	format = "tmsu: " + format + "\n"
 	fmt.Fprintf(Outfile, format, values...)
 }

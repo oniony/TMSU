@@ -31,7 +31,7 @@ _tmsu() {
 	_arguments -C \
 	    {--verbose,-v}'[show verbose messages]' \
 	    {--version,-V}'[show version information and exit]' \
-	    {--database=,-d}'[use the specified database]:file:_files' \
+	    {--database=,-D}'[use the specified database]:file:_files' \
 	    {--help,-h}'[show help and exit]' \
 		': :_tmsu_commands' \
 		'*::arg:->args' \

@@ -169,7 +169,7 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 	}
 
 	if showCount {
-		fmt.Print(len(tree.Paths()))
+		fmt.Println(len(tree.Paths()))
 	} else {
 		for _, absPath := range tree.Paths() {
 			relPath := path.Rel(absPath)
@@ -177,7 +177,7 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 			if print0 {
 				fmt.Printf("%v\000", relPath)
 			} else {
-				fmt.Print(relPath)
+				fmt.Println(relPath)
 			}
 		}
 	}

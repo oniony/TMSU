@@ -325,5 +325,5 @@ func printReport(report *StatusReport) {
 }
 
 func printRow(row Row) {
-	fmt.Printf("%v %v", string(row.Status), row.Path)
+	fmt.Printf("%v %v\n", string(row.Status), row.Path)
 }

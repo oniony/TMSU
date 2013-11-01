@@ -33,9 +33,9 @@ Displays version and copyright information.`,
 }
 
 func versionExec(options Options, args []string) error {
-	fmt.Print("TMSU", common.Version)
-	fmt.Print()
-	fmt.Print(`Copyright © 2011-2013 Paul Ruane.
+	fmt.Println("TMSU", common.Version)
+	fmt.Println()
+	fmt.Println(`Copyright © 2011-2013 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

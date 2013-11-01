@@ -42,6 +42,18 @@ func (options Options) HasOption(name string) bool {
 	return false
 }
 
+func (options Options) Count(name string) uint {
+	var count uint = 0
+
+	for _, option := range options {
+		if option.LongName == name || option.ShortName == name {
+			count++
+		}
+	}
+
+	return count
+}
+
 func (options Options) Get(name string) *Option {
 	for _, option := range options {
 		if option.LongName == name || option.ShortName == name {

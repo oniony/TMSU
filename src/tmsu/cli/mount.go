@@ -103,7 +103,7 @@ func listMounts() error {
 	}
 
 	for _, mount := range mt {
-		fmt.Printf("'%v' at '%v'", mount.DatabasePath, mount.MountPath)
+		fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
 	}
 
 	return nil

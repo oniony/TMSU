@@ -72,9 +72,8 @@ func Run() {
 		commandName = "help"
 	}
 
-	if options.HasOption("--verbose") {
-		log.Verbosity = 2
-	}
+	log.Verbosity = options.Count("--verbose") + 1
+
 	if dbOption := options.Get("--database"); dbOption != nil && dbOption.Argument != "" {
 		database.Path = dbOption.Argument
 	}

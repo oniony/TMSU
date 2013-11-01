@@ -69,14 +69,14 @@ func findDuplicatesInDb() error {
 
 	for index, fileSet := range fileSets {
 		if index > 0 {
-			fmt.Print()
+			fmt.Println()
 		}
 
-		fmt.Printf("Set of %v duplicates:", len(fileSet))
+		fmt.Printf("Set of %v duplicates: %v\n", len(fileSet))
 
 		for _, file := range fileSet {
 			relPath := _path.Rel(file.Path())
-			fmt.Printf("  %v", relPath)
+			fmt.Printf("  %v\n", relPath)
 		}
 	}
 
@@ -132,19 +132,19 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 			if first {
 				first = false
 			} else {
-				fmt.Print()
+				fmt.Println()
 			}
 
-			fmt.Printf("%v:", path)
+			fmt.Printf("%v:\n", path)
 
 			for _, dupe := range dupes {
 				relPath := _path.Rel(dupe.Path())
-				fmt.Printf("  %v", relPath)
+				fmt.Printf("  %v\n", relPath)
 			}
 		} else {
 			for _, dupe := range dupes {
 				relPath := _path.Rel(dupe.Path())
-				fmt.Print(relPath)
+				fmt.Println(relPath)
 			}
 		}
 	}

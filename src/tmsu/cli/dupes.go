@@ -72,7 +72,7 @@ func findDuplicatesInDb() error {
 			fmt.Println()
 		}
 
-		fmt.Printf("Set of %v duplicates: %v\n", len(fileSet))
+		fmt.Printf("Set of %v duplicates:\n", len(fileSet))
 
 		for _, file := range fileSet {
 			relPath := _path.Rel(file.Path())

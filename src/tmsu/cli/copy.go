@@ -26,7 +26,7 @@ import (
 var CopyCommand = Command{
 	Name:     "copy",
 	Synopsis: "Create a copy of a tag",
-	Description: `tmsu copy TAG NEW
+	Description: `tmsu copy TAG NEW...
 
 Creates a new tag NEW applied to the same set of files as TAG.`,
 	Options: Options{},
@@ -41,7 +41,7 @@ func copyExec(options Options, args []string) error {
 	defer store.Close()
 
 	sourceTagName := args[0]
-	destTagName := args[1]
+	destTagNames := args[1:]
 
 	sourceTag, err := store.Db.TagByName(sourceTagName)
 	if err != nil {
@@ -51,18 +51,20 @@ func copyExec(options Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
-	destTag, err := store.Db.TagByName(destTagName)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
-	}
-	if destTag != nil {
-		return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
-	}
+	for _, destTagName := range destTagNames {
+		destTag, err := store.Db.TagByName(destTagName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
+		}
+		if destTag != nil {
+			return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
+		}
 
-	log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
+		log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
-	if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
-		return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
+		if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
+			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
+		}
 	}
 
 	return nil

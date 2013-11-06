@@ -26,10 +26,10 @@ import (
 var ImplyCommand = Command{
 	Name:     "imply",
 	Synopsis: "Creates a tag implication",
-	Description: `tmsu [OPTION] imply TAG1 TAG2
+	Description: `tmsu [OPTION] imply TAG IMPL...
 tmsu imply --list
 
-Creates a tag implication such that whenever TAG1 is applied, TAG2 is automatically applied.`,
+Creates a tag implication such that whenever TAG is applied, IMPL are automatically applied.`,
 	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""},
 		Option{"--list", "-l", "lists the tag implications", false, ""}},
 	Exec: implyExec,
@@ -50,14 +50,14 @@ func implyExec(options Options, args []string) error {
 			return fmt.Errorf("Implying and implied tag must be specified.")
 		}
 
-		return deleteImplication(store, args[0], args[1])
+		return deleteImplications(store, args[0], args[1:])
 	}
 
 	if len(args) < 2 {
-		return fmt.Errorf("Implying and implied tag must be specified.")
+		return fmt.Errorf("Implying and implied tags must be specified.")
 	}
 
-	return addImplication(store, args[0], args[1])
+	return addImplications(store, args[0], args[1:])
 }
 
 // unexported
@@ -78,26 +78,63 @@ func listImplications(store *storage.Storage) error {
 		}
 	}
 
-	previousImplyingTagName := ""
-	for _, implication := range implications {
-		if implication.ImplyingTag.Name != previousImplyingTagName {
-			if previousImplyingTagName != "" {
-				fmt.Println()
+	if len(implications) > 0 {
+		previousImplyingTagName := ""
+		for _, implication := range implications {
+			if implication.ImplyingTag.Name != previousImplyingTagName {
+				if previousImplyingTagName != "" {
+					fmt.Println()
+				}
+
+				previousImplyingTagName = implication.ImplyingTag.Name
+
+				fmt.Printf("%*v ⇒ %v", width, implication.ImplyingTag.Name, implication.ImpliedTag.Name)
+			} else {
+				fmt.Printf(" %v", implication.ImpliedTag.Name)
 			}
+		}
 
-			previousImplyingTagName = implication.ImplyingTag.Name
+		fmt.Println()
+	}
 
-			fmt.Printf("%*v -> %v", width, implication.ImplyingTag.Name, implication.ImpliedTag.Name)
-		} else {
-			fmt.Printf(", %v", implication.ImpliedTag.Name)
+	return nil
+}
+
+func addImplications(store *storage.Storage, tagName string, impliedTagNames []string) error {
+	log.Infof(2, "looking up tag '%v'.", tagName)
+
+	tag, err := store.Db.TagByName(tagName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+	}
+	if tag == nil {
+		return fmt.Errorf("no such tag '%v'.", tagName)
+	}
+
+	for _, impliedTagName := range impliedTagNames {
+		log.Infof(2, "looking up tag '%v'.", impliedTagName)
+
+		impliedTag, err := store.Db.TagByName(impliedTagName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
+		}
+		if impliedTag == nil {
+			return fmt.Errorf("no such tag '%v'.", impliedTagName)
+		}
+
+		log.Infof(2, "adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
+
+		if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
+			return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
 		}
 	}
-	fmt.Println()
 
 	return nil
 }
 
-func addImplication(store *storage.Storage, tagName, impliedTagName string) error {
+func deleteImplications(store *storage.Storage, tagName string, impliedTagNames []string) error {
+	log.Infof(2, "looking up tag '%v'.", tagName)
+
 	tag, err := store.Db.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -106,44 +143,22 @@ func addImplication(store *storage.Storage, tagName, impliedTagName string) erro
 		return fmt.Errorf("no such tag '%v'.", tagName)
 	}
 
-	impliedTag, err := store.Db.TagByName(impliedTagName)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
-	}
-	if impliedTag == nil {
-		return fmt.Errorf("no such tag '%v'.", impliedTagName)
-	}
+	for _, impliedTagName := range impliedTagNames {
+		log.Infof(2, "looking up tag '%v'.", impliedTagName)
 
-	log.Infof(2, "adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
+		impliedTag, err := store.Db.TagByName(impliedTagName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
+		}
+		if impliedTag == nil {
+			return fmt.Errorf("no such tag '%v'.", impliedTagName)
+		}
 
-	if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
-		return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
-	}
+		log.Infof(2, "removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
-	return nil
-}
-
-func deleteImplication(store *storage.Storage, tagName, impliedTagName string) error {
-	tag, err := store.Db.TagByName(tagName)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
-	}
-	if tag == nil {
-		return fmt.Errorf("no such tag '%v'.", tagName)
-	}
-
-	impliedTag, err := store.Db.TagByName(impliedTagName)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
-	}
-	if impliedTag == nil {
-		return fmt.Errorf("no such tag '%v'.", impliedTagName)
-	}
-
-	log.Infof(2, "removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
-
-	if err = store.RemoveImplication(tag.Id, impliedTag.Id); err != nil {
-		return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
+		if err = store.RemoveImplication(tag.Id, impliedTag.Id); err != nil {
+			return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
+		}
 	}
 
 	return nil

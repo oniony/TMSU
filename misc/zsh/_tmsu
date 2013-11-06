@@ -165,8 +165,23 @@ _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 ''{--from+,-f}'[copy tags from the specified file]:source:_files' \
-	                 '*:file:_files' \
+	                 '*:: :->items' \
 	&& ret=0
+
+	case $state in
+        (items)
+            if (( ${+opt_args[--tags]} ))
+            then
+                _wanted files expl 'files' _files
+            else
+                if (( CURRENT == 1 ))
+                then
+                    _wanted files expl 'file' _files
+                else
+                    _wanted tags expl 'tags' _tmsu_tags
+                fi
+            fi
+    esac
 }
 
 _tmsu_cmd_tags() {

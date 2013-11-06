@@ -192,6 +192,8 @@ func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool)
 		}
 	}
 
+	log.Infof(2, "%v: checking if file exists", absPath)
+
 	file, err := store.FileByPath(absPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
@@ -242,12 +244,14 @@ func tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
 }
 
 func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {
-	log.Infof(2, "%v: adding file.", path)
+	log.Infof(2, "%v: creating fingerprint", path)
 
 	fingerprint, err := fingerprint.Create(path)
 	if err != nil {
 		return nil, fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 	}
+
+	log.Infof(2, "%v: adding file.", path)
 
 	file, err := store.AddFile(path, fingerprint, modTime, int64(size), isDir)
 	if err != nil {

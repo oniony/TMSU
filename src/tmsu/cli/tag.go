@@ -33,31 +33,38 @@ var TagCommand = Command{
 	Name:     "tag",
 	Synopsis: "Apply tags to files",
 	Description: `tmsu tag [OPTION]... FILE TAG...
-tmsu tag [OPTION]... --tags "TAG..." FILE...
-tmsu tag [OPTION]... --from FILE FILE...
+tmsu tag [OPTION]... --tags="TAG..." FILE...
+tmsu tag [OPTION]... --from=FILE FILE...
+tmsu tag [OPTION]... --create="TAG..."
 
 Tags the file FILE with the tag(s) specified.`,
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
-		{"--from", "-f", "copy tags from the specified file", true, ""}},
+		{"--from", "-f", "copy tags from the specified file", true, ""},
+		{"--create", "-c", "create a tag without tagging any files", true, ""}},
 	Exec: tagExec,
 }
 
 func tagExec(options Options, args []string) error {
-	if len(args) < 1 {
-		return fmt.Errorf("too few arguments.")
-	}
-
 	recursive := options.HasOption("--recursive")
 
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
 	switch {
+	case options.HasOption("--create"):
+		tagNames := strings.Fields(options.Get("--create").Argument)
+		if len(tagNames) == 0 {
+			return fmt.Errorf("set of tags to create must be specified")
+		}
+
+		if len(args) > 0 {
+			return fmt.Errorf("too many arguments")
+		}
+
+		createTags(tagNames)
 	case options.HasOption("--tags"):
+		if len(args) < 1 {
+			return fmt.Errorf("files to tag must be specified")
+		}
+
 		tagNames := strings.Fields(options.Get("--tags").Argument)
 		if len(tagNames) == 0 {
 			return fmt.Errorf("set of tags to apply must be specified")
@@ -68,53 +75,99 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("at least one file to tag must be specified")
 		}
 
-		tagIds, err := lookupOrCreateTagIds(store, tagNames)
-		if err != nil {
-			return err
+		tagPaths(tagNames, paths, recursive)
+	case options.HasOption("--from"):
+		if len(args) < 1 {
+			return fmt.Errorf("files to tag must be specified")
 		}
 
-		if err := tagPaths(store, paths, tagIds, recursive); err != nil {
-			return err
-		}
-	case options.HasOption("--from"):
 		fromPath, err := filepath.Abs(options.Get("--from").Argument)
 		if err != nil {
 			return fmt.Errorf("%v: could not get absolute path: %v", fromPath, err)
 		}
 
-		tags, err := store.TagsForPath(fromPath)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve tags: %v", fromPath)
-		}
+		paths := args
 
-		tagIds := make([]uint, len(tags))
-		for index, tag := range tags {
-			tagIds[index] = tag.Id
-		}
-
-		for _, path := range args {
-			if err = tagPath(store, path, tagIds, recursive); err != nil {
-				return err
-			}
-		}
+		tagFrom(fromPath, paths, recursive)
 	default:
 		if len(args) < 2 {
 			return fmt.Errorf("file to tag and tags to apply must be specified.")
 		}
 
-		path := args[0]
+		paths := args[0:1]
 		tagNames := args[1:]
 
-		err := ValidateTagNames(tagNames)
+		tagPaths(tagNames, paths, recursive)
+	}
+
+	return nil
+}
+
+func createTags(names []string) error {
+	store, err := storage.Open()
+	if err != nil {
+		return fmt.Errorf("could not open storage: %v", err)
+	}
+	defer store.Close()
+
+	tags, err := store.TagsByNames(names)
+	if err != nil {
+		return fmt.Errorf("could not retrieve tags %v: %v", names, err)
+	}
+
+	if len(tags) > 0 {
+		return fmt.Errorf("tags already exists: %v", tags[0].Name)
+	}
+
+	for _, name := range names {
+		_, err := store.AddTag(name)
 		if err != nil {
+			return fmt.Errorf("could not add tag '%v': %v", name, err)
+		}
+	}
+
+	return nil
+}
+
+func tagPaths(tagNames, paths []string, recursive bool) error {
+	store, err := storage.Open()
+	if err != nil {
+		return fmt.Errorf("could not open storage: %v", err)
+	}
+	defer store.Close()
+
+	tagIds, err := lookupOrCreateTagIds(store, tagNames)
+	if err != nil {
+		return err
+	}
+
+	for _, path := range paths {
+		if err := tagPath(store, path, tagIds, recursive); err != nil {
 			return err
 		}
+	}
 
-		tagIds, err := lookupOrCreateTagIds(store, tagNames)
-		if err != nil {
-			return err
-		}
+	return nil
+}
 
+func tagFrom(fromPath string, paths []string, recursive bool) error {
+	store, err := storage.Open()
+	if err != nil {
+		return fmt.Errorf("could not open storage: %v", err)
+	}
+	defer store.Close()
+
+	tags, err := store.TagsForPath(fromPath)
+	if err != nil {
+		return fmt.Errorf("%v: could not retrieve tags: %v", fromPath)
+	}
+
+	tagIds := make([]uint, len(tags))
+	for index, tag := range tags {
+		tagIds[index] = tag.Id
+	}
+
+	for _, path := range paths {
 		if err = tagPath(store, path, tagIds, recursive); err != nil {
 			return err
 		}
@@ -162,16 +215,6 @@ func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error
 	}
 
 	return tagIds, nil
-}
-
-func tagPaths(store *storage.Storage, paths []string, tagIds []uint, recursive bool) error {
-	for _, path := range paths {
-		if err := tagPath(store, path, tagIds, recursive); err != nil {
-			return err
-		}
-	}
-
-	return nil
 }
 
 func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool) error {

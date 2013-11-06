@@ -165,6 +165,7 @@ _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 ''{--from+,-f}'[copy tags from the specified file]:source:_files' \
+	                 ''{--create+,-c}'[create a tag withou tagging any files]:source:_files' \
 	                 '*:: :->items' \
 	&& ret=0
 

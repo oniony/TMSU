@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -125,12 +124,11 @@ func TestReportsMissingFiles(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -158,8 +156,8 @@ func TestReportsMissingFiles(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "tmsu: /tmp/tmsu/a: missing\n", string(bytes))
 }

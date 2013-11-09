@@ -21,7 +21,6 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
-	"tmsu/log"
 )
 
 func TestStatusReport(test *testing.T) {
@@ -30,12 +29,11 @@ func TestStatusReport(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	if err := createFile("/tmp/tmsu/a", "a"); err != nil {
 		test.Fatalf("Could not create file: %v", err)
@@ -88,8 +86,8 @@ func TestStatusReport(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "T /tmp/tmsu/a\nM /tmp/tmsu/b\n! /tmp/tmsu/d\nU /tmp/tmsu/c\n", string(bytes))
 }

@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 	"tmsu/fingerprint"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -33,12 +32,11 @@ func TestTagsForSingleFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -79,9 +77,9 @@ func TestTagsForSingleFile(test *testing.T) {
 
 	// verify
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "apple\nbanana\n", string(bytes))
 }
 
@@ -91,12 +89,11 @@ func TestTagsForMultipleFiles(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -147,9 +144,9 @@ func TestTagsForMultipleFiles(test *testing.T) {
 
 	// verify
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/tmsu/a: apple banana\n/tmp/tmsu/b: apple\n", string(bytes))
 }
 
@@ -159,12 +156,11 @@ func TestAllTags(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -190,8 +186,8 @@ func TestAllTags(test *testing.T) {
 
 	// verify
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "apple\nbanana\n", string(bytes))
 }

@@ -28,7 +28,12 @@ var DeleteCommand = Command{
 	Synopsis: "Delete one or more tags",
 	Description: `tmsu delete TAG...
 
-Permanently deletes the TAGs specified.`,
+Permanently deletes the TAGs specified.
+
+Examples:
+
+    $ tmsu delete pineapple
+    $ tmsu delete red green blue`,
 	Options: Options{},
 	Exec:    deleteExec,
 }

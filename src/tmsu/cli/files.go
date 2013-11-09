@@ -41,11 +41,18 @@ will be interpretted as an implicit 'and', e.g. 'chalk cheese' is interpretted a
 
 Examples:
 
-    $ tmsu files music
     $ tmsu files music mp3                 # files with both 'music' and 'mp3'
+    /tmp/some jazz.mp3
+    /tmp/some pop.mp3
     $ tmsu files music and mp3             # same query but with explicit 'and'
-    $ tmsu files music and not flac
-    $ tmsu files "music and (mp3 or flac)"`,
+    /tmp/some jazz.mp3
+    /tmp/some pop.mp3
+    $ tmsu files music and not mp3
+    /tmp/some classical.flac
+    $ tmsu files "music and (mp3 or flac)"
+    /tmp/some classical.flac
+    /tmp/some jazz.mp3
+    /tmp/some pop.mp3`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},

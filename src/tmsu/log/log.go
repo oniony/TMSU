@@ -22,8 +22,6 @@ import (
 	"os"
 )
 
-var Outfile = os.Stdout
-var Errfile = os.Stderr
 var Verbosity uint = 1
 
 func Fatal(values ...interface{}) {
@@ -37,13 +35,13 @@ func Fatalf(format string, values ...interface{}) {
 }
 
 func Warn(values ...interface{}) {
-	fmt.Fprint(Errfile, "tmsu: ")
-	fmt.Fprintln(Errfile, values...)
+	fmt.Fprint(os.Stderr, "tmsu: ")
+	fmt.Fprintln(os.Stderr, values...)
 }
 
 func Warnf(format string, values ...interface{}) {
 	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(Errfile, format, values...)
+	fmt.Fprintf(os.Stderr, format, values...)
 }
 
 func Info(verbosity uint, values ...interface{}) {
@@ -51,8 +49,8 @@ func Info(verbosity uint, values ...interface{}) {
 		return
 	}
 
-	fmt.Fprintf(Outfile, "tmsu: ")
-	fmt.Fprintln(Outfile, values...)
+	fmt.Printf("tmsu: ")
+	fmt.Println(values...)
 }
 
 func Infof(verbosity uint, format string, values ...interface{}) {
@@ -61,5 +59,5 @@ func Infof(verbosity uint, format string, values ...interface{}) {
 	}
 
 	format = "tmsu: " + format + "\n"
-	fmt.Fprintf(Outfile, format, values...)
+	fmt.Printf(format, values...)
 }

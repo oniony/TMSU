@@ -24,7 +24,6 @@ import (
 	"testing"
 	"time"
 	"tmsu/fingerprint"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -34,12 +33,11 @@ func TestDupesSingle(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -65,9 +63,9 @@ func TestDupesSingle(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n", string(bytes))
 }
 
@@ -76,12 +74,11 @@ func TestDupesMultiple(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -119,9 +116,9 @@ func TestDupesMultiple(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "Set of 2 duplicates:\n  /tmp/a\n  /tmp/a/b\n\nSet of 3 duplicates:\n  /tmp/a/d\n  /tmp/b\n  /tmp/e/f\n", string(bytes))
 }
 
@@ -130,12 +127,11 @@ func TestDupesNone(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -172,9 +168,9 @@ func TestDupesNone(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "", string(bytes))
 }
 
@@ -183,12 +179,11 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)
@@ -232,9 +227,9 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/a\n", string(bytes))
 }
 
@@ -243,12 +238,11 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)
@@ -292,9 +286,9 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/a\n/tmp/a/b\n/tmp/e/f\n", string(bytes))
 }
 
@@ -303,12 +297,11 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	path := filepath.Join(os.TempDir(), "tmsu-file")
 	_, err = os.Create(path)
@@ -352,8 +345,8 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "", string(bytes))
 }

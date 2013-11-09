@@ -28,7 +28,12 @@ var CopyCommand = Command{
 	Synopsis: "Create a copy of a tag",
 	Description: `tmsu copy TAG NEW...
 
-Creates a new tag NEW applied to the same set of files as TAG.`,
+Creates a new tag NEW applied to the same set of files as TAG.
+
+Examples:
+
+    $ tmsu copy cheese wine
+    $ tmsu copy report document`,
 	Options: Options{},
 	Exec:    copyExec,
 }

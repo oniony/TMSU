@@ -33,7 +33,16 @@ var DupesCommand = Command{
 	Description: `tmsu dupes [FILE]...
 
 Identifies all files in the database that are exact duplicates of FILE. If no
-FILE is specified then identifies duplicates between files in the database.`,
+FILE is specified then identifies duplicates between files in the database.
+
+Examples:
+
+    $ tmsu dupes
+    Set of 2 duplicates:
+      /tmp/song.mp3
+      /tmp/copy of song.mp3
+    $ tmsu dupes /tmp/song.mp3
+    /tmp/copy of song.mp3`,
 	Options: Options{Option{"--recursive", "-r", "recursively check directory contents", false, ""}},
 	Exec:    dupesExec,
 }

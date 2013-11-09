@@ -7,27 +7,42 @@ import (
 	"strings"
 	"testing"
 	"tmsu/entities"
-	"tmsu/log"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
 
-func configureOutput() (string, string, error) {
+var stdout = os.Stdout
+var stderr = os.Stderr
+
+var outFile *os.File
+var errFile *os.File
+
+func redirectStreams() error {
 	outPath := filepath.Join(os.TempDir(), "tmsu_test.out")
-	outFile, err := os.Create(outPath)
+	of, err := os.Create(outPath)
 	if err != nil {
-		return "", "", fmt.Errorf("could not create output file '%v': %v", outPath, err)
+		return fmt.Errorf("could not create output file '%v': %v", outPath, err)
 	}
-	log.Outfile = outFile
+	os.Stdout = of
+	outFile = of
 
 	errPath := filepath.Join(os.TempDir(), "tmsu_test.err")
-	errFile, err := os.Create(errPath)
+	ef, err := os.Create(errPath)
 	if err != nil {
-		return "", "", fmt.Errorf("could not create error file '%v': %v", outPath, err)
+		return fmt.Errorf("could not create error file '%v': %v", outPath, err)
 	}
-	log.Errfile = errFile
+	os.Stderr = ef
+	errFile = ef
 
-	return outPath, errPath, nil
+	return nil
+}
+
+func restoreStreams() {
+	os.Stdout = stdout
+	os.Stderr = stderr
+
+	os.Remove(outFile.Name())
+	os.Remove(errFile.Name())
 }
 
 func testDatabase() string {

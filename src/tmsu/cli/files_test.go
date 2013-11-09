@@ -23,7 +23,6 @@ import (
 	"testing"
 	"time"
 	"tmsu/fingerprint"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -33,12 +32,11 @@ func TestFilesAll(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -67,9 +65,9 @@ func TestFilesAll(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b\n/tmp/b/a\n/tmp/d\n", string(bytes))
 }
 
@@ -79,12 +77,11 @@ func TestFilesSingleTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -132,9 +129,9 @@ func TestFilesSingleTag(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
 }
 
@@ -144,12 +141,11 @@ func TestFilesNotSingleTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -196,9 +192,9 @@ func TestFilesNotSingleTag(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/d\n", string(bytes))
 }
 
@@ -208,12 +204,11 @@ func TestFilesImplicitAnd(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -268,9 +263,9 @@ func TestFilesImplicitAnd(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b/a\n", string(bytes))
 }
 
@@ -280,12 +275,11 @@ func TestFilesAnd(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -340,9 +334,9 @@ func TestFilesAnd(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b/a\n", string(bytes))
 }
 
@@ -352,12 +346,11 @@ func TestFilesImplicitAndNot(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -412,9 +405,9 @@ func TestFilesImplicitAndNot(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
@@ -424,12 +417,11 @@ func TestFilesAndNot(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -484,9 +476,9 @@ func TestFilesAndNot(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b\n", string(bytes))
 }
 
@@ -496,12 +488,11 @@ func TestFilesOr(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	outPath, errPath, err := configureOutput()
+	err := redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}
-	defer os.Remove(outPath)
-	defer os.Remove(errPath)
+	defer restoreStreams()
 
 	store, err := storage.Open()
 	if err != nil {
@@ -556,9 +547,9 @@ func TestFilesOr(test *testing.T) {
 
 	// validate
 
-	log.Outfile.Seek(0, 0)
+	outFile.Seek(0, 0)
 
-	bytes, err := ioutil.ReadAll(log.Outfile)
+	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
 }
 

@@ -59,7 +59,9 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("too many arguments")
 		}
 
-		createTags(tagNames)
+		if err := createTags(tagNames); err != nil {
+			return err
+		}
 	case options.HasOption("--tags"):
 		if len(args) < 1 {
 			return fmt.Errorf("files to tag must be specified")
@@ -75,7 +77,9 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("at least one file to tag must be specified")
 		}
 
-		tagPaths(tagNames, paths, recursive)
+		if err := tagPaths(tagNames, paths, recursive); err != nil {
+			return err
+		}
 	case options.HasOption("--from"):
 		if len(args) < 1 {
 			return fmt.Errorf("files to tag must be specified")
@@ -88,7 +92,9 @@ func tagExec(options Options, args []string) error {
 
 		paths := args
 
-		tagFrom(fromPath, paths, recursive)
+		if err := tagFrom(fromPath, paths, recursive); err != nil {
+			return err
+		}
 	default:
 		if len(args) < 2 {
 			return fmt.Errorf("file to tag and tags to apply must be specified.")
@@ -97,7 +103,9 @@ func tagExec(options Options, args []string) error {
 		paths := args[0:1]
 		tagNames := args[1:]
 
-		tagPaths(tagNames, paths, recursive)
+		if err := tagPaths(tagNames, paths, recursive); err != nil {
+			return err
+		}
 	}
 
 	return nil

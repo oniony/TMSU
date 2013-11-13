@@ -57,7 +57,7 @@ Examples:
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (excludes the contents of matching directories)", false, ""},
-		{"--leaf", "-l", "list only the bottom-most (leaf) items", false, ""},
+		{"--leaf", "-l", "list only the leaf items (files and empty directories)", false, ""},
 		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""}},

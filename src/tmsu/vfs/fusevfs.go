@@ -269,7 +269,30 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 	log.Infof(2, "BEGIN Rename(%v, %v)", oldName, newName)
 	defer log.Infof(2, "END Rename(%v, %v)", oldName, newName)
 
-	return fuse.ENOSYS
+	oldPath := vfs.splitPath(oldName)
+	newPath := vfs.splitPath(newName)
+
+	if len(oldPath) != 2 || len(newPath) != 2 {
+		return fuse.EPERM
+	}
+
+	if oldPath[0] != tagsDir || newPath[0] != tagsDir {
+		return fuse.EPERM
+	}
+
+	oldTagName := oldPath[1]
+	newTagName := newPath[1]
+
+	tag, err := vfs.store.TagByName(oldTagName)
+	if err != nil {
+		log.Fatalf("could not retrieve tag '%v': %v", oldTagName, err)
+	}
+
+	if _, err := vfs.store.RenameTag(tag.Id, newTagName); err != nil {
+		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
+	}
+
+	return fuse.OK
 }
 
 func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {

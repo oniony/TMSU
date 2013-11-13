@@ -246,13 +246,15 @@ func removeUntaggedFile(store *storage.Storage, file *entities.File) error {
 		return fmt.Errorf("%v: could not get tag count: %v", file.Path(), err)
 	}
 
-	if filetagCount == 0 {
-		log.Infof(2, "%v: removing untagged file.", file.Path())
+	if filetagCount != 0 {
+		return nil
+	}
 
-		err = store.RemoveFile(file.Id)
-		if err != nil {
-			return fmt.Errorf("%v: could not remove file: %v", file.Path(), err)
-		}
+	log.Infof(2, "%v: removing untagged file.", file.Path())
+
+	err = store.RemoveFile(file.Id)
+	if err != nil {
+		return fmt.Errorf("%v: could not remove file: %v", file.Path(), err)
 	}
 
 	return nil

@@ -133,9 +133,15 @@ v0.3.0 (in development)
     ketchup)'
   * Added support for file queries in the virtual filesystem: create a query
     directory under the 'queries' directory.
+  * Added global option --database for specifying database location.
+  * Added ability to rename and delete tags via the virtual filesystem.
+  * 'tag' command now allows tags to be created up front.
+  * 'copy' and 'imply' commands now support multiple destination tags.
+  * Improved 'stats' command.
+  * Added man page.
   * Added script to allow the virtual filesystem to be mounted via the
     system mount command or on startup via the fstab.
-  * Added global option --database for specifying database location.
+  * Bug fixes.
 
 v0.2.2
 ------

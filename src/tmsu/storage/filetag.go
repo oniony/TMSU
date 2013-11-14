@@ -41,6 +41,11 @@ func (storage *Storage) FileTagCountByFileId(fileId uint) (uint, error) {
 	return storage.Db.FileTagCountByFileId(fileId)
 }
 
+// Retrieves the count of file tags for the specified tag.
+func (storage *Storage) FileTagCountByTagId(tagId uint) (uint, error) {
+	return storage.Db.FileTagCountByTagId(tagId)
+}
+
 // Retrieves the file tags with the specified tag ID.
 func (storage *Storage) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	return storage.Db.FileTagsByTagId(tagId)

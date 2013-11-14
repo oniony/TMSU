@@ -83,6 +83,21 @@ func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 	return readCount(rows)
 }
 
+// Retrieves the count of file tags for the specified tag.
+func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
+	var sql string
+
+	sql = `SELECT count(1) FROM file_tag WHERE tag_id = ?1`
+
+	rows, err := db.connection.Query(sql, tagId)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return readCount(rows)
+}
+
 // Retrieves the set of file tags with the specified tag ID.
 func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id

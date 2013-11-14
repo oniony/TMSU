@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"tmsu/entities"
 	"tmsu/log"
@@ -287,6 +288,9 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 	if err != nil {
 		log.Fatalf("could not retrieve tag '%v': %v", oldTagName, err)
 	}
+	if tag == nil {
+		return fuse.ENOENT
+	}
 
 	if _, err := vfs.store.RenameTag(tag.Id, newTagName); err != nil {
 		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
@@ -301,12 +305,35 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 	path := vfs.splitPath(name)
 
-	if len(path) != 2 {
-		return fuse.EPERM
-	}
-
 	switch path[0] {
+	case tagsDir:
+		tagName := path[len(path)-1]
+		tag, err := vfs.store.TagByName(tagName)
+		if err != nil {
+			log.Fatalf("could not retrieve tag '%v': %v", tagName, err)
+		}
+		if tag == nil {
+			return fuse.ENOENT
+		}
+
+		count, err := vfs.store.FileTagCountByTagId(tag.Id)
+		if err != nil {
+			log.Fatalf("could not retrieve file-tag count for tag '%v': %v", tagName, err)
+		}
+		if count > 0 {
+			return fuse.Status(syscall.ENOTEMPTY)
+		}
+
+		if err := vfs.store.DeleteTag(tag.Id); err != nil {
+			log.Fatalf("could not delete tag '%v': %v", tagName, err)
+		}
+
+		return fuse.OK
 	case queriesDir:
+		if len(path) != 2 {
+			return fuse.EPERM
+		}
+
 		text := path[1]
 
 		err := vfs.store.DeleteQuery(text)
@@ -358,29 +385,35 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
-		// cannot unlink tag directories
+		// can only unlink file symbolic links
 		return fuse.EPERM
 	}
 
+	file, err := vfs.store.File(fileId)
+	if err != nil {
+		log.Fatal("could not retrieve file '%v': %v", fileId, err)
+	}
+	if file == nil {
+		// reply ok if file doesn't exist otherwise recursive deletes fail
+		return fuse.OK
+	}
 	path := vfs.splitPath(name)
 
 	switch path[0] {
 	case tagsDir:
-		tagNames := path[1 : len(path)-1]
+		tagName := path[len(path)-2]
 
-		for _, tagName := range tagNames {
-			tag, err := vfs.store.TagByName(tagName)
-			if err != nil {
-				log.Fatal(err)
-			}
-			if tag == nil {
-				log.Fatalf("Could not retrieve tag '%v'.", tagName)
-			}
+		tag, err := vfs.store.TagByName(tagName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if tag == nil {
+			log.Fatalf("could not retrieve tag '%v'.", tagName)
+		}
 
-			err = vfs.store.RemoveFileTag(fileId, tag.Id)
-			if err != nil {
-				log.Fatal(err)
-			}
+		err = vfs.store.RemoveFileTag(fileId, tag.Id)
+		if err != nil {
+			log.Fatal(err)
 		}
 
 		if err := vfs.removeUntaggedFile(fileId); err != nil {

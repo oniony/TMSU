@@ -307,7 +307,12 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 	switch path[0] {
 	case tagsDir:
-		tagName := path[len(path)-1]
+		if len(path) != 2 {
+			// can only remove top-level tag directories
+			return fuse.EPERM
+		}
+
+		tagName := path[1]
 		tag, err := vfs.store.TagByName(tagName)
 		if err != nil {
 			log.Fatalf("could not retrieve tag '%v': %v", tagName, err)
@@ -331,6 +336,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 		return fuse.OK
 	case queriesDir:
 		if len(path) != 2 {
+			// can only remove top-level queries directories
 			return fuse.EPERM
 		}
 

@@ -36,6 +36,12 @@ import (
 
 const tagsDir = "tags"
 const queriesDir = "queries"
+const queryDirHelp = `Create a directory with the query text as the directory name:.
+
+  $ mkdir "cheese and wine"
+  $ mkdir "cheese and not wine"
+  $ mkdir "cheese and (biscuits or wine)"
+  $ mkdir "cheese and not (pineapple or biscuits or wine)"`
 
 type FuseVfs struct {
 	store     *storage.Storage
@@ -218,6 +224,10 @@ func (vfs FuseVfs) OnUnmount() {
 func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodefs.File, fuse.Status) {
 	log.Infof(2, "BEGIN Open(%v)", name)
 	defer log.Infof(2, "END Open(%v)", name)
+
+	if name == filepath.Join(queriesDir, "README") {
+		return nodefs.NewDataFile([]byte(queryDirHelp)), fuse.OK
+	}
 
 	return nil, fuse.ENOSYS
 }
@@ -496,6 +506,10 @@ func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
 		log.Fatalf("Could not retrieve queries: %v", err)
 	}
 
+	if len(queries) == 0 {
+		return []fuse.DirEntry{fuse.DirEntry{Name: "README", Mode: fuse.S_IFREG}}, fuse.OK
+	}
+
 	entries := make([]fuse.DirEntry, len(queries))
 	for index, query := range queries {
 		entries[index] = fuse.DirEntry{Name: query.Text, Mode: fuse.S_IFDIR}
@@ -557,6 +571,11 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 
 	pathLength := len(path)
 	name := path[pathLength-1]
+
+	if len(path) == 1 && path[0] == "README" {
+		now := time.Now()
+		return &fuse.Attr{Mode: fuse.S_IFREG | 0644, Nlink: 1, Size: uint64(len(queryDirHelp)), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+	}
 
 	fileId := vfs.parseFileId(name)
 	if fileId != 0 {

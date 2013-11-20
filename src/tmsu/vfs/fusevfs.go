@@ -40,12 +40,19 @@ const queryHelpFilename = "README.md"
 const queryDirHelp = `Query Directories
 -----------------
 
-Create directories with the query text as the directory names:
+Navigate to any directory that is a valid query to see a view of the files that
+match the query:
 
-    $ mkdir "cheese and wine"
-    $ mkdir "not cheese"
-    $ mkdir "cheese and (tomato or mushroom)"
-    $ mkdir "cheese and not (pineapple or biscuits or wine)"`
+    $ ls
+    README.md
+    $ ls "cheese and wine"
+    pinot_cheddar.12  edam_blanc.14
+    $ ls "cheese and (tomato or mushroom)
+    margherita.7  funghi.11
+    $ ls
+    cheese and (tomato or mushroom)  cheese and wine 
+
+Query directories are saved automatically and can be removed with ` + "`rmdir`."
 
 type FuseVfs struct {
 	store     *storage.Storage
@@ -178,31 +185,12 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 
 		_, err := vfs.store.AddTag(name)
 		if err != nil {
-			log.Fatalf("Could not create tag '%v': %v", name, err)
+			log.Fatalf("could not create tag '%v': %v", name, err)
 		}
 
 		return fuse.OK
 	case queriesDir:
-		queryText := path[1]
-
-		expression, err := query.Parse(queryText)
-		if err != nil {
-			return fuse.ENOENT
-		}
-
-		tagNames := query.TagNames(expression)
-		tags, err := vfs.store.TagsByNames(tagNames)
-		for _, tagName := range tagNames {
-			if !containsTag(tags, tagName) {
-				return fuse.EINVAL
-			}
-		}
-
-		if _, err = vfs.store.AddQuery(queryText); err != nil {
-			log.Fatalf("Could not save query '%v': %v", queryText, err)
-		}
-
-		return fuse.OK
+		return fuse.EINVAL
 	}
 
 	return fuse.ENOSYS
@@ -358,7 +346,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 		err := vfs.store.DeleteQuery(text)
 		if err != nil {
-			log.Fatalf("Could not remove tag '%v': %v", name, err)
+			log.Fatalf("could not remove tag '%v': %v", name, err)
 		}
 
 		return fuse.OK
@@ -509,7 +497,7 @@ func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
 
 	queries, err := vfs.store.Queries()
 	if err != nil {
-		log.Fatalf("Could not retrieve queries: %v", err)
+		log.Fatalf("could not retrieve queries: %v", err)
 	}
 
 	if len(queries) == 0 {
@@ -530,7 +518,7 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 
 	tagCount, err := vfs.store.TagCount()
 	if err != nil {
-		log.Fatalf("Could not get tag count: %v", err)
+		log.Fatalf("could not get tag count: %v", err)
 	}
 
 	now := time.Now()
@@ -560,7 +548,7 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	// tag directory
 	tagIds, err := vfs.tagNamesToIds(path)
 	if err != nil {
-		log.Fatalf("Could not lookup tag IDs: %v.", err)
+		log.Fatalf("could not lookup tag IDs: %v.", err)
 	}
 	if tagIds == nil {
 		return nil, fuse.ENOENT
@@ -583,20 +571,36 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		return &fuse.Attr{Mode: fuse.S_IFREG | 0444, Nlink: 1, Size: uint64(len(queryDirHelp)), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 	}
 
-	fileId := vfs.parseFileId(name)
-	if fileId != 0 {
-		return vfs.getFileEntryAttr(fileId)
+	if len(path) > 1 {
+		fileId := vfs.parseFileId(name)
+		if fileId != 0 {
+			return vfs.getFileEntryAttr(fileId)
+		}
+
+		return nil, fuse.ENOENT
 	}
 
 	queryText := path[0]
 
-	query, err := vfs.store.Query(queryText)
-	if err != nil {
-		log.Fatalf("Could not lookup query '%v': %v", queryText, err)
-	}
-	if query == nil {
+	if queryText[len(queryText)-1] == ' ' {
+		// prevent multiple entries for same query when typing path in a GUI
 		return nil, fuse.ENOENT
 	}
+
+	expression, err := query.Parse(queryText)
+	if err != nil {
+		return nil, fuse.ENOENT
+	}
+
+	tagNames := query.TagNames(expression)
+	tags, err := vfs.store.TagsByNames(tagNames)
+	for _, tagName := range tagNames {
+		if !containsTag(tags, tagName) {
+			return nil, fuse.ENOENT
+		}
+	}
+
+	_, _ = vfs.store.AddQuery(queryText)
 
 	now := time.Now()
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
@@ -605,7 +609,7 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 func (vfs FuseVfs) getFileEntryAttr(fileId uint) (*fuse.Attr, fuse.Status) {
 	file, err := vfs.store.File(fileId)
 	if err != nil {
-		log.Fatalf("Could not retrieve file #%v: %v", fileId, err)
+		log.Fatalf("could not retrieve file #%v: %v", fileId, err)
 	}
 	if file == nil {
 		return &fuse.Attr{Mode: fuse.S_IFREG}, fuse.ENOENT
@@ -631,7 +635,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 
 	tagIds, err := vfs.tagNamesToIds(path)
 	if err != nil {
-		log.Fatalf("Could not lookup tag IDs: %v.", err)
+		log.Fatalf("could not lookup tag IDs: %v.", err)
 	}
 	if tagIds == nil {
 		return nil, fuse.ENOENT
@@ -639,12 +643,12 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 
 	furtherTagIds, err := vfs.store.TagsForTags(tagIds)
 	if err != nil {
-		log.Fatalf("Could not retrieve tags for tags: %v", err)
+		log.Fatalf("could not retrieve tags for tags: %v", err)
 	}
 
 	files, err := vfs.store.FilesWithTags(tagIds, []uint{})
 	if err != nil {
-		log.Fatalf("Could not retrieve tagged files: %v", err)
+		log.Fatalf("could not retrieve tagged files: %v", err)
 	}
 
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagIds))
@@ -664,14 +668,23 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 	defer log.Infof(2, "END openQueryEntryDir(%v)", path)
 
 	queryText := path[0]
+
 	expression, err := query.Parse(queryText)
 	if err != nil {
 		return nil, fuse.ENOENT
 	}
 
+	tagNames := query.TagNames(expression)
+	tags, err := vfs.store.TagsByNames(tagNames)
+	for _, tagName := range tagNames {
+		if !containsTag(tags, tagName) {
+			return nil, fuse.ENOENT
+		}
+	}
+
 	files, err := vfs.store.QueryFiles(expression)
 	if err != nil {
-		log.Fatalf("Could not query files: %v", err)
+		log.Fatalf("could not query files: %v", err)
 	}
 
 	entries := make([]fuse.DirEntry, 0, len(files))
@@ -696,7 +709,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 
 	file, err := vfs.store.File(fileId)
 	if err != nil {
-		log.Fatalf("Could not find file %v in database.", fileId)
+		log.Fatalf("could not find file %v in database.", fileId)
 	}
 
 	return file.Path(), fuse.OK

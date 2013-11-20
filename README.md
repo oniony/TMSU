@@ -131,8 +131,7 @@ v0.3.0 (in development)
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
     ketchup)'
-  * Added support for file queries in the virtual filesystem: create a query
-    directory under the 'queries' directory.
+  * Added support for file query directories in the virtual filesystem.
   * Added global option --database for specifying database location.
   * Added ability to rename and delete tags via the virtual filesystem.
   * 'tag' command now allows tags to be created up front.

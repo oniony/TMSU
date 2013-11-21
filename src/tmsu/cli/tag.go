@@ -35,13 +35,13 @@ var TagCommand = Command{
 	Description: `tmsu tag [OPTION]... FILE TAG...
 tmsu tag [OPTION]... --tags="TAG..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
-tmsu tag [OPTION]... --create="TAG..."
+tmsu tag [OPTION]... --create TAG...
 
 Tags the file FILE with the tag(s) specified.`,
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the specified file", true, ""},
-		{"--create", "-c", "create a tag without tagging any files", true, ""}},
+		{"--create", "-c", "create a tag without tagging any files", false, ""}},
 	Exec: tagExec,
 }
 
@@ -50,16 +50,11 @@ func tagExec(options Options, args []string) error {
 
 	switch {
 	case options.HasOption("--create"):
-		tagNames := strings.Fields(options.Get("--create").Argument)
-		if len(tagNames) == 0 {
+		if len(args) == 0 {
 			return fmt.Errorf("set of tags to create must be specified")
 		}
 
-		if len(args) > 0 {
-			return fmt.Errorf("too many arguments")
-		}
-
-		if err := createTags(tagNames); err != nil {
+		if err := createTags(args); err != nil {
 			return err
 		}
 	case options.HasOption("--tags"):

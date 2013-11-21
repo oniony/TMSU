@@ -31,9 +31,15 @@ var UntagCommand = Command{
 	Synopsis: "Remove tags from files",
 	Description: `tmsu untag [OPTION]... FILE TAG...
 tmsu untag [OPTION]... --all FILE...
-tmsu untag [OPTION]... --tags "TAG..." FILE...
+tmsu untag [OPTION]... --tags="TAG..." FILE...
 
-Disassociates FILE with the TAGs specified.`,
+Disassociates FILE with the TAGs specified.
+
+Examples:
+
+    $ tmsu untag mountain.jpg hill
+    $ tmsu untag --all mountain-copy.jpg
+    $ tmsu untag --tags="river underwater" forest.jpg desert.jpg`,
 	Options: Options{{"--all", "-a", "strip each file of all tags", false, ""},
 		{"--tags", "-t", "the set of tags to remove", true, ""},
 		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""}},

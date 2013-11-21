@@ -37,7 +37,14 @@ tmsu tag [OPTION]... --tags="TAG..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
 tmsu tag [OPTION]... --create TAG...
 
-Tags the file FILE with the tag(s) specified.`,
+Tags the file FILE with the tag(s) specified.
+
+Examples:
+
+    $ tmsu tag mountain1.jpg photo landscape holiday good country:france
+    $ tmsu tag --from=mountain1.jpg mountain2.jpg
+    $ tmsu tag --tags="landscape" field1.jpg field2.jpg
+    $ tmsu tag --create bad rubbish awful`,
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the specified file", true, ""},

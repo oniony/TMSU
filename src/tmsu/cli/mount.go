@@ -49,7 +49,13 @@ is mounted.
 To allow other users access to the mounted filesystem, pass the 'allow_other'
 FUSE option, e.g. 'tmsu mount --option=allow_other mp'. (FUSE only allows the
 root user to use this option unless 'user_allow_other' is present in
-'/etc/fuse.conf'.)`,
+'/etc/fuse.conf'.)
+
+Examples:
+
+    $ tmsu mount mp
+    $ tmsu mount /tmp/db mp
+    $ tmsu mount --options=allow_other mp`,
 	Options: Options{Option{"--options", "-o", "mount options (passed to fusermount)", true, ""}},
 	Exec:    mountExec,
 }

@@ -24,11 +24,16 @@ import (
 )
 
 var VfsCommand = Command{
-	Name:        "vfs",
-	Synopsis:    "",
-	Description: "",
-	Options:     Options{{"--options", "-o", "mount options", true, ""}},
-	Exec:        vfsExec,
+	Name:     "vfs",
+	Synopsis: "",
+	Description: `This command is the foreground process which hosts the virtual filesystem.
+It is run automatically when a virtual filesystem is mounted using the 'mount' command
+and terminated when the virtual filesystem is unmounted.
+
+It is not normally necessary to issue this command manually unless debugging the virtual
+filesystem. For debug output use the --verbose option.`,
+	Options: Options{{"--options", "-o", "mount options", true, ""}},
+	Exec:    vfsExec,
 }
 
 func vfsExec(options Options, args []string) error {

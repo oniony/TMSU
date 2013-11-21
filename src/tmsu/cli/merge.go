@@ -28,7 +28,12 @@ var MergeCommand = Command{
 	Synopsis: "Merge tags",
 	Description: `tmsu merge TAG... DEST
         
-Merges TAGs into tag DEST resulting in a single tag of name DEST.`,
+Merges TAGs into tag DEST resulting in a single tag of name DEST.
+
+Examples:
+
+    $ tmsu merge cehese cheese
+    $ tmsu merge outdoors outdoor outside`,
 	Options: Options{},
 	Exec:    mergeExec,
 }

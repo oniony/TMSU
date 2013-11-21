@@ -31,7 +31,11 @@ var RenameCommand = Command{
 Renames a tag from OLD to NEW.
 
 Attempting to rename a tag with a new name for which a tag already exists will result in an error.
-To merge tags use the 'merge' command instead.`,
+To merge tags use the 'merge' command instead.
+
+Examples:
+
+    $ tmsu rename montain mountain`,
 	Options: Options{},
 	Exec:    renameExec,
 }

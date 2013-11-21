@@ -58,7 +58,13 @@ as this would destroy the tagging information associated with them. If you do
 wish to clear missing files from the database and destroying the associated
 tagging information then use the --force option.
 
-Untagged files are reported but not added to the database.`,
+Untagged files are reported but not added to the database.
+
+Examples:
+
+    $ tmsu repair
+    $ tmsu repair .
+    $ tmsu repair --force`,
 	Options: Options{{"--pretend", "-p", "do not make any changes", false, ""},
 		{"--force", "-f", "remove missing files from the database", false, ""}},
 	Exec: repairExec,

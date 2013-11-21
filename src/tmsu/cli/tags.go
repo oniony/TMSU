@@ -35,7 +35,18 @@ var TagsCommand = Command{
 
 Lists the tags applied to FILEs.
 
-When run with no arguments, tags for the current working directory are listed.`,
+When run with no arguments, tags for the current working directory are listed.
+
+Examples:
+
+    $ tmsu tags
+    tralala.mp3: mp3 music opera 
+    $ tmsu tags tralala.mp3
+    mp3
+    music
+    opera
+    $ tmsu tags --count tralala.mp3
+    3`,
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
 		{"--count", "-c", "lists the number of tags rather than their names", false, ""}},
 	Exec: tagsExec,

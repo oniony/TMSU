@@ -130,7 +130,7 @@ v0.3.0 (in development)
       $ sqlite3 -init misc/db-upgrades/clean_tag_names.sql ~/.tmsu/default.db
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
-    ketchup)'
+    ketchup)'.
   * Added support for file query directories in the virtual filesystem.
   * Added global option --database for specifying database location.
   * Added ability to rename and delete tags via the virtual filesystem.

@@ -119,8 +119,8 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
-v0.3.0 (in development)
------------------------
+v0.3.0
+------
 
   Note: This release changes what tag names are allowed. To ensure the tag
   names in your existing databases are still valid, please run the following

@@ -9,7 +9,9 @@ VER=0.3.0
 SHELL=/bin/sh
 HGREV=$(shell hg id)
 ARCH=$(shell uname -m)
-DIST_FILE=tmsu-$(ARCH)-$(VER).tgz
+DIST_NAME=tmsu-$(ARCH)-$(VER)
+DIST_DIR=$(DIST_NAME)
+DIST_FILE=$(DIST_NAME).tgz
 
 export GOPATH:=$(GOPATH):$(PWD)
 
@@ -19,7 +21,7 @@ clean:
 	go clean tmsu
 	rm -f src/tmsu/common/version.gen.go
 	rm -Rf bin
-	rm -Rf dist
+	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 generate:
@@ -33,17 +35,17 @@ test: compile
 	go test tmsu/...
 
 dist: compile
-	@mkdir -p dist
-	cp -R bin dist
-	cp README.md dist
-	cp COPYING dist
-	@mkdir -p dist/bin
-	cp misc/bin/mount.tmsu dist/bin/
-	@mkdir -p dist/man
-	gzip -kfc misc/man/tmsu.1 >dist/man/tmsu.1.gz
-	@mkdir -p dist/misc/zsh
-	cp misc/zsh/_tmsu dist/misc/zsh/
-	tar czf $(DIST_FILE) dist
+	@mkdir -p $(DIST_DIR)
+	cp -R bin $(DIST_DIR)
+	cp README.md $(DIST_DIR)
+	cp COPYING $(DIST_DIR)
+	@mkdir -p $(DIST_DIR)/bin
+	cp misc/bin/mount.tmsu $(DIST_DIR)/bin/
+	@mkdir -p $(DIST_DIR)/man
+	gzip -kfc misc/man/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
+	@mkdir -p $(DIST_DIR)/misc/zsh
+	cp misc/zsh/_tmsu $(DIST_DIR)/misc/zsh/
+	tar czf $(DIST_FILE) $(DIST_DIR)
 
 install:
 	@echo "* Installing TMSU"

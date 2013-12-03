@@ -109,7 +109,7 @@ TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>.
 The creation of TMSU is motivation in itself, but if you should feel inclinded
 to make a small gift via Bitcoin then it shall be gratefully received:
 
-  * 1C5p cGyP Rqta uqFi 1UCi 9VJa FZta EqyY pz
+  * 1C5pcGyPRqtauqFi1UCi9VJaFZtaEqyYpz
 
 TMSU is written in Go: <http://www.golang.org/>
 

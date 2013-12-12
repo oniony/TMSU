@@ -24,6 +24,16 @@ func Parse(query string) (Expression, error) {
 	return parser.Parse()
 }
 
+func HasAll(tagNames []string) Expression {
+	var expression Expression = EmptyExpression{}
+
+	for _, tagName := range tagNames {
+		expression = AndExpression{expression, TagExpression{tagName}}
+	}
+
+	return expression
+}
+
 func TagNames(expression Expression) []string {
 	names := make([]string, 0, 10)
 	names = tagNames(expression, names)

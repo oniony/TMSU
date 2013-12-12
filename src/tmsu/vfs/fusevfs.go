@@ -633,27 +633,35 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
-	tagIds, err := vfs.tagNamesToIds(path)
+	expression := query.HasAll(path)
+	files, err := vfs.store.QueryFiles(expression)
 	if err != nil {
-		log.Fatalf("could not lookup tag IDs: %v.", err)
-	}
-	if tagIds == nil {
-		return nil, fuse.ENOENT
+		log.Fatalf("could not query files: %v", err)
 	}
 
-	furtherTagIds, err := vfs.store.TagsForTags(tagIds)
-	if err != nil {
-		log.Fatalf("could not retrieve tags for tags: %v", err)
+	tagNames := make(map[string]interface{}, len(path))
+	for _, tagName := range path {
+		tagNames[tagName] = nil
 	}
 
-	files, err := vfs.store.FilesWithTags(tagIds, []uint{})
-	if err != nil {
-		log.Fatalf("could not retrieve tagged files: %v", err)
+	furtherTagNames := make([]string, 0, 10)
+	for _, file := range files {
+		tagsForFile, err := vfs.store.TagsByFileId(file.Id)
+		if err != nil {
+			log.Fatalf("could not retrieve tags for file '%v': %v", file.Id, err)
+		}
+
+		for _, tag := range tagsForFile {
+			_, has := tagNames[tag.Name]
+			if !has {
+				furtherTagNames = append(furtherTagNames, tag.Name)
+			}
+		}
 	}
 
-	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagIds))
-	for _, tag := range furtherTagIds {
-		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR | 0755})
+	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagNames))
+	for _, tagName := range furtherTagNames {
+		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
 	}
 	for _, file := range files {
 		linkName := vfs.getLinkName(file)

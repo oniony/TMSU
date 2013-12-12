@@ -73,31 +73,6 @@ func (storage *Storage) TagsForPath(path string) (entities.Tags, error) {
 	return storage.Db.TagsByFileId(file.Id)
 }
 
-// The set of further tags for which there are tagged files given
-// a particular set of tags.
-func (storage Storage) TagsForTags(tagIds []uint) (entities.Tags, error) {
-	files, err := storage.FilesWithTags(tagIds, []uint{})
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve tags for tags %v: %v", tagIds, err)
-	}
-
-	furtherTags := make(entities.Tags, 0, 10)
-	for _, file := range files {
-		tags, err := storage.TagsByFileId(file.Id)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve tags for file #%v: %v", file.Id, err)
-		}
-
-		for _, tag := range tags {
-			if !containsTagId(tagIds, tag.Id) && !furtherTags.Contains(tag) {
-				furtherTags = append(furtherTags, tag)
-			}
-		}
-	}
-
-	return furtherTags, nil
-}
-
 // Adds a tag.
 func (storage *Storage) AddTag(name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {

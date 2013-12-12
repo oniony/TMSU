@@ -126,4 +126,6 @@ func describeCommand(commandName string) {
 			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 		}
 	}
+
+	fmt.Println()
 }

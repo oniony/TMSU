@@ -36,6 +36,9 @@ func (parser Parser) Parse() (Expression, error) {
 type Expression interface {
 }
 
+type EmptyExpression struct {
+}
+
 type OrExpression struct {
 	LeftOperand  Expression
 	RightOperand Expression

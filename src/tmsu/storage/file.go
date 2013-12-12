@@ -76,41 +76,21 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 	return storage.Db.FilesByFingerprint(fingerprint)
 }
 
-// The number of files with the specified tag.
-func (storage *Storage) FileCountWithTag(tagId uint) (uint, error) {
-	return storage.Db.FileCountWithTag(tagId)
+// Retrieves the count of files with the specified tags.
+func (storage *Storage) FileCountWithTags(tagNames []string) (uint, error) {
+	expression := query.HasAll(tagNames)
+	return storage.Db.QueryFileCount(expression)
 }
 
-// Retrieves the set of files with the specified tag.
-func (storage *Storage) FilesWithTag(tagId uint) (entities.Files, error) {
-	return storage.Db.FilesWithTag(tagId)
+// Retrieves the set of files with the specified tags.
+func (storage *Storage) FilesWithTags(tagNames []string) (entities.Files, error) {
+	expression := query.HasAll(tagNames)
+	return storage.Db.QueryFiles(expression)
 }
 
-// The number of files with the specified set of tags.
-func (storage *Storage) FileCountWithTags(tagIds []uint) (uint, error) {
-	if len(tagIds) == 1 {
-		fmt.Println("Shortcut as single tag")
-		return storage.Db.FileCountWithTag(tagIds[0])
-	}
-
-	return storage.Db.FileCountWithTags(tagIds)
-}
-
-// Retrieves the set of files with the specified set of tags.
-func (storage *Storage) FilesWithTags(includeTagIds, excludeTagIds []uint) (entities.Files, error) {
-	files, err := storage.Db.FilesWithTags(includeTagIds, excludeTagIds)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve files: %v", err)
-	}
-
-	resultFiles := make(entities.Files, 0, len(files))
-	for _, file := range files {
-		if file != nil {
-			resultFiles = append(resultFiles, file)
-		}
-	}
-
-	return resultFiles, nil
+// Retrieves the count of files that match the specified query.
+func (storage *Storage) QueryFileCount(expression query.Expression) (uint, error) {
+	return storage.Db.QueryFileCount(expression)
 }
 
 // Retrieves the set of files that match the specified query.

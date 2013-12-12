@@ -137,128 +137,22 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (ent
 	return readFiles(rows, make(entities.Files, 0, 1))
 }
 
-// Retrieves the count of files with the specified tag.
-func (db *Database) FileCountWithTag(tagId uint) (uint, error) {
-	sql := `SELECT count(1)
-            FROM file_tag
-            WHERE tag_id == ?`
+// Retrieves the count of files matching the specified query.
+func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
+	sql := buildCountQuery(expression)
 
-	rows, err := db.connection.Query(sql, tagId)
+	rows, err := db.connection.Query(sql)
 	if err != nil {
 		return 0, err
 	}
 	defer rows.Close()
 
 	return readCount(rows)
-}
-
-// Retrieves the set of files with the specified tag.
-func (db *Database) FilesWithTag(tagId uint) (entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-            FROM file
-            WHERE id IN (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id = ?1
-		    )
-            ORDER BY directory || '/' || name`
-
-	rows, err := db.connection.Query(sql, tagId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(entities.Files, 0, 10))
-}
-
-// Retrieves the count of files with the specified tags.
-func (db *Database) FileCountWithTags(tagIds []uint) (uint, error) {
-	tagCount := len(tagIds)
-
-	sql := `SELECT count(1)
-	        FROM (
-                SELECT file_id
-                FROM file_tag
-                WHERE tag_id IN (?1`
-
-	for idx := 2; idx <= tagCount; idx += 1 {
-		sql += ", ?" + strconv.Itoa(idx)
-	}
-
-	sql += `    )
-                GROUP BY file_id
-                HAVING count(tag_id) == ?` + strconv.Itoa(tagCount+1) + `
-            )`
-
-	params := make([]interface{}, tagCount+1)
-	for index, tagId := range tagIds {
-		params[index] = interface{}(tagId)
-	}
-	params[tagCount] = tagCount
-
-	rows, err := db.connection.Query(sql, params...)
-	if err != nil {
-		return 0, err
-	}
-	defer rows.Close()
-
-	return readCount(rows)
-}
-
-// Retrieves the set of files with the specified tags.
-func (db *Database) FilesWithTags(includeTagIds []uint, excludeTagIds []uint) (entities.Files, error) {
-	includeTagCount := len(includeTagIds)
-	excludeTagCount := len(excludeTagIds)
-
-	builder := NewBuilder()
-
-	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-                       FROM file
-                       WHERE 1==1`)
-
-	if includeTagCount > 0 {
-		builder.AppendSql(`AND id IN (SELECT file_id
-                                      FROM file_tag
-                                      WHERE tag_id IN (`)
-
-		for _, includeTagId := range includeTagIds {
-			builder.AppendParam(includeTagId)
-		}
-
-		builder.AppendSql(`) GROUP BY file_id
-                             HAVING count(tag_id) == `)
-		builder.AppendParam(includeTagCount)
-		builder.AppendSql(`)`)
-	}
-
-	if excludeTagCount > 0 {
-		builder.AppendSql(`AND id NOT IN (SELECT file_id
-                                          FROM file_tag
-                                          WHERE tag_id IN (`)
-
-		for _, excludeTagId := range excludeTagIds {
-			builder.AppendParam(excludeTagId)
-		}
-
-		builder.AppendSql(`))`)
-	}
-
-	builder.AppendSql(`ORDER BY directory || '/' || name`)
-
-	rows, err := db.connection.Query(builder.Sql, builder.Params...)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readFiles(rows, make(entities.Files, 0, 10))
 }
 
 // Retrieves the set of files matching the specified query.
 func (db *Database) QueryFiles(expression query.Expression) (entities.Files, error) {
 	sql := buildQuery(expression)
-
 	rows, err := db.connection.Query(sql)
 	if err != nil {
 		return nil, err
@@ -449,6 +343,15 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
+func buildCountQuery(expression query.Expression) string {
+	builder := NewBuilder()
+
+	builder.AppendSql("SELECT count(id) FROM file where 1=1 AND\n")
+	buildQueryBranch(expression, builder)
+
+	return builder.Sql
+}
+
 func buildQuery(expression query.Expression) string {
 	builder := NewBuilder()
 
@@ -482,6 +385,8 @@ WHERE tag_id = (SELECT id
 		builder.AppendSql("\nOR\n")
 		buildQueryBranch(exp.RightOperand, builder)
 		builder.AppendSql(")\n")
+	case query.EmptyExpression:
+		builder.AppendSql("1 == 1\n")
 	default:
 		panic("Unsupported expression type.")
 	}

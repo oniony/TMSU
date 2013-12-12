@@ -119,6 +119,9 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.4.0 (in development)
+------
+
 v0.3.0
 ------
 

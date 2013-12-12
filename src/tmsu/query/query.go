@@ -25,9 +25,13 @@ func Parse(query string) (Expression, error) {
 }
 
 func HasAll(tagNames []string) Expression {
-	var expression Expression = EmptyExpression{}
+	if len(tagNames) == 0 {
+		return EmptyExpression{}
+	}
 
-	for _, tagName := range tagNames {
+	var expression Expression = TagExpression{tagNames[0]}
+
+	for _, tagName := range tagNames[1:] {
 		expression = AndExpression{expression, TagExpression{tagName}}
 	}
 

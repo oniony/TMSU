@@ -150,7 +150,7 @@ func (db *Database) AddFileTags(fileId uint, tagIds []uint) error {
 		}
 	}
 
-	// TODO reinstate once Ubuntu ships with Sqlite 3.7.15
+	// TODO reinstate once Ubuntu and Mint ship with Sqlite 3.7.15
 	//	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
 	//            VALUES `
 

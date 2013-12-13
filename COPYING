@@ -2,7 +2,7 @@
 CONTENTS
 --------------------------------------------------------------------------------
 
-* tmsu License
+* TMSU License
 * Go-Fuse License
 * Go-Sqlite3 License
 
@@ -689,7 +689,7 @@ Public License instead of this License.  But first, please read
 GO-FUSE LICENSE
 --------------------------------------------------------------------------------
 
-tmsu makes use of the 'go-fuse' library (https://github.com/hanwen/go-fuse)
+TMSU makes use of the 'go-fuse' library (https://github.com/hanwen/go-fuse)
 which is licensed under a New BSD License.
 
     New BSD License
@@ -726,7 +726,7 @@ which is licensed under a New BSD License.
 GO-SQLITE3 LICENSE
 --------------------------------------------------------------------------------
 
-tmsu makes use of the 'go-sqlite3' library (http://github.com/mattn/go-sqlite3/)
+TMSU makes use of the 'go-sqlite3' library (http://github.com/mattn/go-sqlite3/)
 which is licensed under an New BSD License.
 
     Copyright © 2012 Yasuhiro Matsumoto, http://mattn.kaoriya.net

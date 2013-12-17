@@ -9,3 +9,4 @@
 ^src/main/_testmain.go$
 ^bin/
 ^dist/
+^tmsu-i686-.\..\..$

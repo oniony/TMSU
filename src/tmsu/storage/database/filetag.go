@@ -24,12 +24,12 @@ import (
 )
 
 // Determines whether the specified file has the specified tag applied.
-func (db *Database) FileTagExists(fileId, tagId uint) (bool, error) {
+func (db *Database) FileTagExists(fileId, tagId, value_id uint) (bool, error) {
 	sql := `SELECT count(1)
             FROM file_tag
-            WHERE file_id = ?1 AND tag_id = ?2`
+            WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
-	rows, err := db.connection.Query(sql, fileId, tagId)
+	rows, err := db.connection.Query(sql, fileId, tagId, value_id)
 	if err != nil {
 		return false, err
 	}
@@ -43,7 +43,8 @@ func (db *Database) FileTagExists(fileId, tagId uint) (bool, error) {
 func (db *Database) FileTagCount() (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1) FROM file_tag`
+	sql = `SELECT count(1)
+	       FROM file_tag`
 
 	rows, err := db.connection.Query(sql)
 	if err != nil {
@@ -56,7 +57,7 @@ func (db *Database) FileTagCount() (uint, error) {
 
 // Retrieves the complete set of file tags.
 func (db *Database) FileTags() (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id
+	sql := `SELECT file_id, tag_id, value_id
 	        FROM file_tag`
 
 	rows, err := db.connection.Query(sql)
@@ -72,7 +73,9 @@ func (db *Database) FileTags() (entities.FileTags, error) {
 func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1) FROM file_tag WHERE file_id = ?1`
+	sql = `SELECT count(1)
+	       FROM file_tag
+	       WHERE file_id = ?1`
 
 	rows, err := db.connection.Query(sql, fileId)
 	if err != nil {
@@ -87,7 +90,9 @@ func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1) FROM file_tag WHERE tag_id = ?1`
+	sql = `SELECT count(1)
+	       FROM file_tag
+	       WHERE tag_id = ?1`
 
 	rows, err := db.connection.Query(sql, tagId)
 	if err != nil {
@@ -100,7 +105,7 @@ func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
 
 // Retrieves the set of file tags with the specified tag ID.
 func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id
+	sql := `SELECT file_id, tag_id, value_id
 	        FROM file_tag
 	        WHERE tag_id = ?1`
 
@@ -113,9 +118,9 @@ func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	return readFileTags(rows, make(entities.FileTags, 0, 10))
 }
 
-// Retrieves the set of file tags with the specified file ID.
+// Retrieves the set of file tags for the specified file.
 func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id
+	sql := `SELECT file_id, tag_id, value_id
             FROM file_tag
             WHERE file_id = ?1`
 
@@ -129,58 +134,24 @@ func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
 }
 
 // Adds a file tag.
-func (db *Database) AddFileTag(fileId, tagId uint) (*entities.FileTag, error) {
-	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
-            VALUES (?1, ?2)`
+func (db *Database) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, error) {
+	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id, value_id)
+            VALUES (?1, ?2, ?3)`
 
-	_, err := db.connection.Exec(sql, fileId, tagId)
+	_, err := db.connection.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
 		return nil, err
 	}
 
-	return &entities.FileTag{fileId, tagId}, nil
+	return &entities.FileTag{fileId, tagId, valueId}, nil
 }
 
-// Adds a set of file tags.
-func (db *Database) AddFileTags(fileId uint, tagIds []uint) error {
-	for _, tagId := range tagIds {
-		_, err := db.AddFileTag(fileId, tagId)
-		if err != nil {
-			return err
-		}
-	}
-
-	// TODO reinstate once Ubuntu and Mint ship with Sqlite 3.7.15
-	//	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id)
-	//            VALUES `
-
-	//	params := make([]interface{}, len(tagIds)+1)
-	//	params[0] = fileId
-	//
-	//	for index, tagId := range tagIds {
-	//		params[index+1] = tagId
-	//
-	//		if index > 0 {
-	//			sql += ", "
-	//		}
-	//
-	//		sql += fmt.Sprintf("(?1, ?%v)", strconv.Itoa(index+2))
-	//	}
-	//
-	//	_, err := db.connection.Exec(sql, params...)
-	//	if err != nil {
-	//		return err
-	//	}
-	//
-	return nil
-}
-
-// Removes an file tag.
-func (db *Database) DeleteFileTag(fileId, tagId uint) error {
+// Removes a file tag.
+func (db *Database) DeleteFileTag(fileId, tagId, valueId uint) error {
 	sql := `DELETE FROM file_tag
-	        WHERE file_id = ?1 AND tag_id = ?2`
+	        WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
-	result, err := db.connection.Exec(sql, fileId, tagId)
+	result, err := db.connection.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
 		return err
 	}
@@ -224,8 +195,8 @@ func (db *Database) DeleteFileTagsByTagId(tagId uint) error {
 
 // Copies file tags from one tag to another.
 func (db *Database) CopyFileTags(sourceTagId uint, destTagId uint) error {
-	sql := `INSERT INTO file_tag (file_id, tag_id)
-            SELECT file_id, ?2
+	sql := `INSERT INTO file_tag (file_id, tag_id, value_id)
+            SELECT file_id, ?2, value_id
             FROM file_tag
             WHERE tag_id = ?1`
 
@@ -245,13 +216,13 @@ func readFileTags(rows *sql.Rows, fileTags entities.FileTags) (entities.FileTags
 			return nil, rows.Err()
 		}
 
-		var fileId, tagId uint
-		err := rows.Scan(&fileId, &tagId)
+		var fileId, tagId, valueId uint
+		err := rows.Scan(&fileId, &tagId, &valueId)
 		if err != nil {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, &entities.FileTag{fileId, tagId})
+		fileTags = append(fileTags, &entities.FileTag{fileId, tagId, valueId})
 	}
 
 	return fileTags, nil

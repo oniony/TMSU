@@ -410,6 +410,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	switch path[0] {
 	case tagsDir:
 		tagName := path[len(path)-2]
+		//TODO value name
 
 		tag, err := vfs.store.TagByName(tagName)
 		if err != nil {
@@ -419,7 +420,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve tag '%v'.", tagName)
 		}
 
-		err = vfs.store.RemoveFileTag(fileId, tag.Id)
+		err = vfs.store.RemoveFileTag(fileId, tag.Id, 0)
 		if err != nil {
 			log.Fatal(err)
 		}

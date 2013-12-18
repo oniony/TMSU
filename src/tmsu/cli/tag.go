@@ -146,13 +146,13 @@ func tagPaths(tagNames, paths []string, recursive bool) error {
 	}
 	defer store.Close()
 
-	tagIds, err := lookupOrCreateTagIds(store, tagNames)
+	tagInfos, err := lookupOrCreateTags(store, tagNames)
 	if err != nil {
 		return err
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, path, tagIds, recursive); err != nil {
+		if err := tagPath(store, path, tagInfos, recursive); err != nil {
 			return err
 		}
 	}
@@ -167,18 +167,26 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 	}
 	defer store.Close()
 
-	tags, err := store.TagsForPath(fromPath)
+	file, err := store.FileByPath(fromPath)
 	if err != nil {
-		return fmt.Errorf("%v: could not retrieve tags: %v", fromPath)
+		return fmt.Errorf("%v: could not retrieve file: %v", fromPath, err)
+	}
+	if file == nil {
+		return fmt.Errorf("%v: path is not tagged")
 	}
 
-	tagIds := make([]uint, len(tags))
-	for index, tag := range tags {
-		tagIds[index] = tag.Id
+	fileTags, err := store.FileTagsByFileId(file.Id)
+	if err != nil {
+		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
+	}
+
+	tagInfos := make([]tagIdValueId, len(fileTags))
+	for index, fileTag := range fileTags {
+		tagInfos[index] = tagIdValueId{fileTag.TagId, fileTag.ValueId}
 	}
 
 	for _, path := range paths {
-		if err = tagPath(store, path, tagIds, recursive); err != nil {
+		if err = tagPath(store, path, tagInfos, recursive); err != nil {
 			return err
 		}
 	}
@@ -186,30 +194,64 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 	return nil
 }
 
-func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error) {
-	tags, err := store.TagsByNames(names)
-	if err != nil {
-		return nil, fmt.Errorf("could not retrieve tags %v: %v", names, err)
-	}
+type tagIdValueId struct {
+	tagId   uint
+	valueId uint
+}
 
-	for _, name := range names {
-		if !tags.Any(func(tag *entities.Tag) bool { return tag.Name == name }) {
-			log.Warnf("New tag '%v'.", name)
+func lookupOrCreateTags(store *storage.Storage, nameAndOptionalValues []string) ([]tagIdValueId, error) {
+	tagInfos := make([]tagIdValueId, len(nameAndOptionalValues))
 
-			tag, err := store.AddTag(name)
-			if err != nil {
-				return nil, fmt.Errorf("could not add tag '%v': %v", name, err)
-			}
+	for index, nameAndOptionalValue := range nameAndOptionalValues {
+		parts := strings.Split(nameAndOptionalValue, "=")
+		tagName := parts[0]
+		valueName := ""
 
-			tags = append(tags, tag)
+		switch len(parts) {
+		case 0:
+			return nil, fmt.Errorf("tag name cannot be empty")
+		case 1:
+			valueName = ""
+		case 2:
+			valueName = parts[1]
+		default:
+			return nil, fmt.Errorf("invalid tag name '%v': too many '='", nameAndOptionalValues)
 		}
+
+		tag, err := store.TagByName(tagName)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+		}
+		if tag == nil {
+			log.Warnf("New tag '%v'.", tagName)
+
+			tag, err = store.AddTag(tagName)
+			if err != nil {
+				return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+			}
+		}
+
+		value, err := store.ValueByName(valueName)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
+		}
+		if value == nil {
+			log.Warnf("New value '%v'.", valueName)
+
+			value, err = store.AddValue(valueName)
+			if err != nil {
+				return nil, fmt.Errorf("could not create value '%v': %v", valueName, err)
+			}
+		}
+
+		tagInfos[index] = tagIdValueId{tag.Id, value.Id}
 	}
 
 	log.Infof(2, "retrieving tag implications")
 
-	tagIds := make([]uint, len(tags))
-	for index, tag := range tags {
-		tagIds[index] = tag.Id
+	tagIds := make([]uint, len(tagInfos))
+	for index, tagInfo := range tagInfos {
+		tagIds[index] = tagInfo.tagId
 	}
 
 	implications, err := store.ImplicationsForTags(tagIds...)
@@ -218,16 +260,16 @@ func lookupOrCreateTagIds(store *storage.Storage, names []string) ([]uint, error
 	}
 
 	for _, implication := range implications {
-		if !contains(tagIds, implication.ImpliedTag.Id) {
+		if !containsTag(tagInfos, implication.ImpliedTag.Id) {
 			log.Warnf("tag '%v' is implied.", implication.ImpliedTag.Name)
-			tagIds = append(tagIds, implication.ImpliedTag.Id)
+			tagInfos = append(tagInfos, tagIdValueId{implication.ImpliedTag.Id, 0})
 		}
 	}
 
-	return tagIds, nil
+	return tagInfos, nil
 }
 
-func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool) error {
+func tagPath(store *storage.Storage, path string, tagInfos []tagIdValueId, recursive bool) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -260,12 +302,14 @@ func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool)
 
 	log.Infof(2, "%v: applying tags.", file.Path())
 
-	if err = store.AddFileTags(file.Id, tagIds); err != nil {
-		return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
+	for _, tagInfo := range tagInfos {
+		if _, err = store.AddFileTag(file.Id, tagInfo.tagId, tagInfo.valueId); err != nil {
+			return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
+		}
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, path, tagIds); err != nil {
+		if err = tagRecursively(store, path, tagInfos); err != nil {
 			return err
 		}
 	}
@@ -273,7 +317,7 @@ func tagPath(store *storage.Storage, path string, tagIds []uint, recursive bool)
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
+func tagRecursively(store *storage.Storage, path string, tagInfos []tagIdValueId) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -288,7 +332,7 @@ func tagRecursively(store *storage.Storage, path string, tagIds []uint) error {
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = tagPath(store, childPath, tagIds, true); err != nil {
+		if err = tagPath(store, childPath, tagInfos, true); err != nil {
 			return err
 		}
 	}
@@ -314,9 +358,9 @@ func addFile(store *storage.Storage, path string, modTime time.Time, size uint, 
 	return file, nil
 }
 
-func contains(tagIds []uint, tagId uint) bool {
-	for _, id := range tagIds {
-		if id == tagId {
+func containsTag(tagInfos []tagIdValueId, tagId uint) bool {
+	for _, info := range tagInfos {
+		if info.tagId == tagId {
 			return true
 		}
 	}

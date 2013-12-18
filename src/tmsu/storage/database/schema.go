@@ -22,12 +22,38 @@ import (
 )
 
 func (db Database) CreateSchema() error {
-	var sql string
+	if err := db.CreateTagTable(); err != nil {
+		return err
+	}
 
-	sql = `CREATE TABLE IF NOT EXISTS tag (
-               id INTEGER PRIMARY KEY,
-               name TEXT NOT NULL
-           )`
+	if err := db.CreateFileTable(); err != nil {
+		return err
+	}
+
+	if err := db.CreateValueTable(); err != nil {
+		return err
+	}
+
+	if err := db.CreateFileTagTable(); err != nil {
+		return err
+	}
+
+	if err := db.CreateImplicationTable(); err != nil {
+		return err
+	}
+
+	if err := db.CreateQueryTable(); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db Database) CreateTagTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS tag (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL
+            )`
 
 	if _, err := db.connection.Exec(sql); err != nil {
 		return err
@@ -40,16 +66,20 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS file (
-               id INTEGER PRIMARY KEY,
-               directory TEXT NOT NULL,
-               name TEXT NOT NULL,
-               fingerprint TEXT NOT NULL,
-               mod_time DATETIME NOT NULL,
-               size INTEGER NOT NULL,
-               is_dir BOOLEAN NOT NULL,
-               CONSTRAINT con_file_path UNIQUE (directory, name)
-           )`
+	return nil
+}
+
+func (db Database) CreateFileTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS file (
+                id INTEGER PRIMARY KEY,
+                directory TEXT NOT NULL,
+                name TEXT NOT NULL,
+                fingerprint TEXT NOT NULL,
+                mod_time DATETIME NOT NULL,
+                size INTEGER NOT NULL,
+                is_dir BOOLEAN NOT NULL,
+                CONSTRAINT con_file_path UNIQUE (directory, name)
+            )`
 
 	if _, err := db.connection.Exec(sql); err != nil {
 		return err
@@ -62,13 +92,33 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS file_tag (
-               file_id INTEGER NOT NULL,
-               tag_id INTEGER NOT NULL,
-               PRIMARY KEY (file_id, tag_id),
-               FOREIGN KEY (file_id) REFERENCES file(id),
-               FOREIGN KEY (tag_id) REFERENCES tag(id)
-           )`
+	return nil
+}
+
+func (db Database) CreateValueTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS value (
+                id INTEGER PRIMARY KEY,
+                name TEXT NOT NULL,
+                CONSTRAINT con_value_name UNIQUE (name)
+            )`
+
+	if _, err := db.connection.Exec(sql); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db Database) CreateFileTagTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS file_tag (
+                file_id INTEGER NOT NULL,
+                tag_id INTEGER NOT NULL,
+                value_id INTEGER NOT NULL,
+                PRIMARY KEY (file_id, tag_id, value_id),
+                FOREIGN KEY (file_id) REFERENCES file(id),
+                FOREIGN KEY (tag_id) REFERENCES tag(id)
+                FOREIGN KEY (value_id) REFERENCES value(id)
+            )`
 
 	if _, err := db.connection.Exec(sql); err != nil {
 		return err
@@ -88,19 +138,27 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS implication (
-               tag_id INTEGER NOT NULL,
-               implied_tag_id INTEGER_NOT_NULL,
-               PRIMARY KEY (tag_id, implied_tag_id)
-           )`
+	return nil
+}
+
+func (db Database) CreateImplicationTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS implication (
+                tag_id INTEGER NOT NULL,
+                implied_tag_id INTEGER_NOT_NULL,
+                PRIMARY KEY (tag_id, implied_tag_id)
+            )`
 
 	if _, err := db.connection.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE TABLE IF NOT EXISTS query (
-               text TEXT PRIMARY KEY
-           )`
+	return nil
+}
+
+func (db Database) CreateQueryTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS query (
+                text TEXT PRIMARY KEY
+            )`
 
 	if _, err := db.connection.Exec(sql); err != nil {
 		return err

@@ -123,7 +123,7 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByNames(tagNames)
 	for _, tagName := range tagNames {
-		if !containsTag(tags, tagName) {
+		if !tags.ContainsName(tagName) {
 			return fmt.Errorf("no such tag '%v'.", tagName)
 		}
 	}
@@ -190,14 +190,4 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 	}
 
 	return nil
-}
-
-func containsTag(tags entities.Tags, tagName string) bool {
-	for _, tag := range tags {
-		if tag.Name == tagName {
-			return true
-		}
-	}
-
-	return false
 }

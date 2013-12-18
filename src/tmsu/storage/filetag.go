@@ -22,8 +22,8 @@ import (
 )
 
 // Determines whether the specified file has the specified tag applied.
-func (storage *Storage) FileTagExists(fileId, tagId uint) (bool, error) {
-	return storage.Db.FileTagExists(fileId, tagId)
+func (storage *Storage) FileTagExists(fileId, tagId, valueId uint) (bool, error) {
+	return storage.Db.FileTagExists(fileId, tagId, valueId)
 }
 
 // Retrieves the total count of file tags in the database.
@@ -56,23 +56,14 @@ func (storage *Storage) FileTagsByFileId(fileId uint) (entities.FileTags, error)
 	return storage.Db.FileTagsByFileId(fileId)
 }
 
-// Adds an file tag.
-func (storage *Storage) AddFileTag(fileId, tagId uint) (*entities.FileTag, error) {
-	return storage.Db.AddFileTag(fileId, tagId)
-}
-
-// Adds a set of file tags.
-func (storage *Storage) AddFileTags(fileId uint, tagIds []uint) error {
-	if len(tagIds) == 0 {
-		return nil
-	}
-
-	return storage.Db.AddFileTags(fileId, tagIds)
+// Adds a file tag.
+func (storage *Storage) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, error) {
+	return storage.Db.AddFileTag(fileId, tagId, valueId)
 }
 
 // Remove file tag.
-func (storage *Storage) RemoveFileTag(fileId, tagId uint) error {
-	return storage.Db.DeleteFileTag(fileId, tagId)
+func (storage *Storage) RemoveFileTag(fileId, tagId, valueId uint) error {
+	return storage.Db.DeleteFileTag(fileId, tagId, valueId)
 }
 
 // Removes all of the file tags for the specified file.

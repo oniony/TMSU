@@ -211,7 +211,8 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 	for _, tagId := range tagIds {
 		log.Infof(2, "%v: unapplying tag #%v.", file.Path(), tagId)
 
-		if err := store.RemoveFileTag(file.Id, tagId); err != nil {
+		//TODO value id
+		if err := store.RemoveFileTag(file.Id, tagId, 0); err != nil {
 			return fmt.Errorf("%v: could not remove tag #%v: %v", file.Path(), tagId, err)
 		}
 	}
@@ -230,7 +231,8 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 			for _, tagId := range tagIds {
 				log.Infof(2, "%v: unapplying tag #%v.", childFile.Path(), tagId)
 
-				if err := store.RemoveFileTag(childFile.Id, tagId); err != nil {
+				//TODO value id
+				if err := store.RemoveFileTag(childFile.Id, tagId, 0); err != nil {
 					return fmt.Errorf("%v: could not remove tag #%v: %v", childFile.Path(), tagId, err)
 				}
 			}

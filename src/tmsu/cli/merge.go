@@ -81,7 +81,7 @@ func mergeExec(options Options, args []string) error {
 		log.Infof(2, "applying tag '%v' to these files.", destTagName)
 
 		for _, fileTag := range fileTags {
-			_, err = store.AddFileTag(fileTag.FileId, destTag.Id)
+			_, err = store.AddFileTag(fileTag.FileId, destTag.Id, fileTag.ValueId)
 			if err != nil {
 				return fmt.Errorf("could not apply tag '%v' to file #%v: %v", destTagName, fileTag.FileId, err)
 			}

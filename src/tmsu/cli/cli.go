@@ -19,7 +19,7 @@ package cli
 
 import (
 	"os"
-	"tmsu/log"
+	"tmsu/common/log"
 	"tmsu/storage/database"
 )
 

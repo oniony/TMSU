@@ -20,7 +20,7 @@ package entities
 import (
 	"path/filepath"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 )
 
 type File struct {

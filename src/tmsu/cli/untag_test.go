@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -52,12 +52,12 @@ func TestSingleUntag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id)
+	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id)
+	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -109,12 +109,12 @@ func TestMultipleUntag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id)
+	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id)
+	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -171,12 +171,12 @@ func TestUntagMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileA.Id, appleTag.Id)
+	_, err = store.AddFileTag(fileA.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileB.Id, appleTag.Id)
+	_, err = store.AddFileTag(fileB.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -233,12 +233,12 @@ func TestUntagAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileA.Id, appleTag.Id)
+	_, err = store.AddFileTag(fileA.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileB.Id, appleTag.Id)
+	_, err = store.AddFileTag(fileB.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}

@@ -19,9 +19,10 @@ package storage
 
 import (
 	"fmt"
+	"path/filepath"
 	"time"
+	"tmsu/common/fingerprint"
 	"tmsu/entities"
-	"tmsu/fingerprint"
 	"tmsu/query"
 )
 
@@ -42,7 +43,12 @@ func (storage *Storage) File(id uint) (*entities.File, error) {
 
 // Retrieves the file with the specified path.
 func (storage *Storage) FileByPath(path string) (*entities.File, error) {
-	return storage.Db.FileByPath(path)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return nil, fmt.Errorf("%v: could not retrieve absolute path: %v", path, err)
+	}
+
+	return storage.Db.FileByPath(absPath)
 }
 
 // Retrieves all files that are under the specified directory.

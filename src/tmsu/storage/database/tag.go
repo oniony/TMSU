@@ -68,6 +68,33 @@ func (db Database) Tag(id uint) (*entities.Tag, error) {
 	return readTag(rows)
 }
 
+// Retrieves a specific set of tags.
+func (db Database) TagsByIds(ids []uint) (entities.Tags, error) {
+	sql := `SELECT id, name
+	        FROM tag
+	        WHERE id IN (?`
+	sql += strings.Repeat(",?", len(ids)-1)
+	sql += ")"
+
+	params := make([]interface{}, len(ids))
+	for index, id := range ids {
+		params[index] = id
+	}
+
+	rows, err := db.connection.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tags, err := readTags(rows, make(entities.Tags, 0, len(ids)))
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
 // Retrieves a specific tag.
 func (db Database) TagByName(name string) (*entities.Tag, error) {
 	sql := `SELECT id, name
@@ -100,36 +127,17 @@ func (db Database) TagsByNames(names []string) (entities.Tags, error) {
 		params[index] = name
 	}
 
-	result, err := db.connection.Query(sql, params...)
+	rows, err := db.connection.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
 
-	tags, err := readTags(result, make(entities.Tags, 0, len(names)))
+	tags, err := readTags(rows, make(entities.Tags, 0, len(names)))
 	if err != nil {
 		return nil, err
 	}
 
 	return tags, nil
-}
-
-// Retrieves the set of tags for the specified file.
-func (db *Database) TagsByFileId(fileId uint) (entities.Tags, error) {
-	sql := `SELECT id, name
-            FROM tag
-            WHERE id IN (
-                SELECT tag_id
-                FROM file_tag
-                WHERE file_id = ?1)
-            ORDER BY name`
-
-	rows, err := db.connection.Query(sql, fileId)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	return readTags(rows, make(entities.Tags, 0, 10))
 }
 
 // Adds a tag.

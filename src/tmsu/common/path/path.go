@@ -22,7 +22,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"tmsu/log"
+	"tmsu/common/log"
 )
 
 type FileSystemFile struct {

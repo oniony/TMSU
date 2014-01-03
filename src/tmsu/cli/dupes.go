@@ -20,10 +20,10 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
+	"tmsu/common/fingerprint"
+	"tmsu/common/log"
+	_path "tmsu/common/path"
 	"tmsu/entities"
-	"tmsu/fingerprint"
-	"tmsu/log"
-	_path "tmsu/path"
 	"tmsu/storage"
 )
 

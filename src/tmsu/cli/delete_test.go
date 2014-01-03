@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -62,18 +62,18 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagDeathrow.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagDeathrow.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileF.Id, tagFreeman.Id); err != nil {
+	if _, err := store.AddFileTag(fileF.Id, tagFreeman.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagDeathrow.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagDeathrow.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagFreeman.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagFreeman.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 

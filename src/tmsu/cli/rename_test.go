@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -52,11 +52,11 @@ func TestRenameSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, sourceTag.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, sourceTag.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileAB.Id, sourceTag.Id); err != nil {
+	if _, err := store.AddFileTag(fileAB.Id, sourceTag.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 

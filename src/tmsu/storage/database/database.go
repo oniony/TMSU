@@ -24,7 +24,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"tmsu/log"
+	"tmsu/common/log"
 )
 
 var Path string

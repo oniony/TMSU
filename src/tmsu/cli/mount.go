@@ -24,7 +24,7 @@ import (
 	"path/filepath"
 	"syscall"
 	"time"
-	"tmsu/log"
+	"tmsu/common/log"
 	"tmsu/storage/database"
 	"tmsu/vfs"
 )

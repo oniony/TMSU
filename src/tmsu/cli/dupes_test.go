@@ -23,7 +23,7 @@ import (
 	"path/filepath"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 

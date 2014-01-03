@@ -21,7 +21,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
-	"tmsu/log"
+	"tmsu/common/log"
 	"tmsu/vfs"
 )
 

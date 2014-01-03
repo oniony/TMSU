@@ -20,9 +20,9 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/common/log"
+	"tmsu/common/path"
 	"tmsu/entities"
-	"tmsu/log"
-	"tmsu/path"
 	"tmsu/query"
 	"tmsu/storage"
 )

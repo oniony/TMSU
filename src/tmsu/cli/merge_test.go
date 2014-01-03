@@ -21,7 +21,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -67,19 +67,19 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA1.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA1.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB1.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB1.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -170,27 +170,27 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA1.Id, tagA.Id); err != nil {
+	if _, err := store.AddFileTag(fileA1.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB1.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB1.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileC.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileC.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileC1.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileC1.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 

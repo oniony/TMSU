@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -59,12 +59,12 @@ func TestTagsForSingleFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id)
+	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id)
+	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -121,17 +121,17 @@ func TestTagsForMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(aFile.Id, appleTag.Id)
+	_, err = store.AddFileTag(aFile.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(aFile.Id, bananaTag.Id)
+	_, err = store.AddFileTag(aFile.Id, bananaTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(bFile.Id, appleTag.Id)
+	_, err = store.AddFileTag(bFile.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}

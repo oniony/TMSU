@@ -28,8 +28,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+	"tmsu/common/log"
 	"tmsu/entities"
-	"tmsu/log"
 	"tmsu/query"
 	"tmsu/storage"
 )
@@ -647,12 +647,22 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 
 	furtherTagNames := make([]string, 0, 10)
 	for _, file := range files {
-		tagsForFile, err := vfs.store.TagsByFileId(file.Id)
+		fileTags, err := vfs.store.FileTagsByFileId(file.Id)
 		if err != nil {
-			log.Fatalf("could not retrieve tags for file '%v': %v", file.Id, err)
+			log.Fatalf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
 
-		for _, tag := range tagsForFile {
+		tagIds := make([]uint, len(fileTags))
+		for index, fileTag := range fileTags {
+			tagIds[index] = fileTag.TagId
+		}
+
+		tags, err := vfs.store.TagsByIds(tagIds)
+		if err != nil {
+			log.Fatalf("could not retrieve tags: %v", err)
+		}
+
+		for _, tag := range tags {
 			_, has := tagNames[tag.Name]
 			if !has {
 				furtherTagNames = append(furtherTagNames, tag.Name)

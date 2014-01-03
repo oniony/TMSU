@@ -19,7 +19,7 @@ package cli
 
 import (
 	"fmt"
-	"tmsu/log"
+	"tmsu/common/log"
 	"tmsu/storage"
 )
 

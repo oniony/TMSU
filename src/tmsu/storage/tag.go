@@ -20,7 +20,6 @@ package storage
 import (
 	"errors"
 	"fmt"
-	"path/filepath"
 	"tmsu/entities"
 )
 
@@ -34,9 +33,14 @@ func (storage *Storage) Tags() (entities.Tags, error) {
 	return storage.Db.Tags()
 }
 
-// Retrieves a spceific tag.
+// Retrieves a specific tag.
 func (storage Storage) Tag(id uint) (*entities.Tag, error) {
 	return storage.Db.Tag(id)
+}
+
+// Retrieves a specific set of tags.
+func (storage Storage) TagsByIds(ids []uint) (entities.Tags, error) {
+	return storage.Db.TagsByIds(ids)
 }
 
 // Retrieves a specific tag.
@@ -47,30 +51,6 @@ func (storage Storage) TagByName(name string) (*entities.Tag, error) {
 // Retrieves the set of named tags.
 func (storage Storage) TagsByNames(names []string) (entities.Tags, error) {
 	return storage.Db.TagsByNames(names)
-}
-
-// Retrieves the set of tags for the specified file.
-func (storage *Storage) TagsByFileId(fileId uint) (entities.Tags, error) {
-	return storage.Db.TagsByFileId(fileId)
-}
-
-// Retrieves the set of tags for the specified path.
-func (storage *Storage) TagsForPath(path string) (entities.Tags, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not get absolute path: %v", path, err)
-	}
-
-	file, err := storage.Db.FileByPath(absPath)
-	if err != nil {
-		return nil, fmt.Errorf("'%v': could not retrieve file from database: %v", path, err)
-	}
-
-	if file == nil {
-		return entities.Tags{}, nil
-	}
-
-	return storage.Db.TagsByFileId(file.Id)
 }
 
 // Adds a tag.

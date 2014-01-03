@@ -22,7 +22,7 @@ import (
 	"os"
 	"testing"
 	"time"
-	"tmsu/fingerprint"
+	"tmsu/common/fingerprint"
 	"tmsu/storage"
 )
 
@@ -111,13 +111,13 @@ func TestFilesSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -174,13 +174,13 @@ func TestFilesNotSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -242,16 +242,16 @@ func TestFilesImplicitAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -313,16 +313,16 @@ func TestFilesAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -384,16 +384,16 @@ func TestFilesImplicitAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -455,16 +455,16 @@ func TestFilesAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
@@ -526,16 +526,16 @@ func TestFilesOr(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id); err != nil {
+	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id); err != nil {
+	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 

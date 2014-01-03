@@ -23,8 +23,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"time"
+	"tmsu/common/fingerprint"
 	"tmsu/entities"
-	"tmsu/fingerprint"
 	"tmsu/query"
 )
 

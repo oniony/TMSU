@@ -23,8 +23,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"tmsu/common/log"
 	"tmsu/entities"
-	"tmsu/log"
 	"tmsu/storage"
 )
 
@@ -114,12 +114,23 @@ func listTags(paths []string, showCount bool) error {
 func listTagsForPath(store *storage.Storage, path string, showCount bool) error {
 	log.Infof(2, "%v: retrieving tags.", path)
 
-	var tags, err = store.TagsForPath(path)
+	file, err := store.FileByPath(path)
 	if err != nil {
-		return fmt.Errorf("%v: could not retrieve tags: %v", path, err)
+		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 
-	if len(tags) == 0 {
+	var tagNames []string
+	if file != nil {
+		fileTags, err := store.FileTagsByFileId(file.Id)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve file-tags: %v", path, err)
+		}
+
+		tagNames, err = lookupTagNames(store, fileTags)
+		if err != nil {
+			return err
+		}
+	} else {
 		_, err := os.Stat(path)
 		if err != nil {
 			switch {
@@ -134,10 +145,11 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 	}
 
 	if showCount {
-		fmt.Println(len(tags))
+		fmt.Println(len(tagNames))
 	} else {
-		for _, tag := range tags {
-			fmt.Println(tag.Name)
+
+		for _, tagName := range tagNames {
+			fmt.Println(tagName)
 		}
 	}
 
@@ -148,16 +160,29 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 	for _, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
 
-		var tags, err = store.TagsForPath(path)
+		file, err := store.FileByPath(path)
 		if err != nil {
 			log.Warn(err.Error())
 			continue
 		}
 
+		var tagNames []string
+		if file != nil {
+			fileTags, err := store.FileTagsByFileId(file.Id)
+			if err != nil {
+				return err
+			}
+
+			tagNames, err = lookupTagNames(store, fileTags)
+			if err != nil {
+				return err
+			}
+		}
+
 		if showCount {
-			fmt.Println(path + ": " + strconv.Itoa(len(tags)))
+			fmt.Println(path + ": " + strconv.Itoa(len(tagNames)))
 		} else {
-			fmt.Println(path + ": " + formatTags(tags))
+			fmt.Println(path + ": " + strings.Join(tagNames, " "))
 		}
 	}
 
@@ -181,32 +206,64 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 	for _, dirName := range dirNames {
 		log.Infof(2, "%v: retrieving tags.", dirName)
 
-		var tags, err = store.TagsForPath(dirName)
-
+		file, err := store.FileByPath(dirName)
 		if err != nil {
 			log.Warn(err.Error())
 			continue
 		}
-
-		if len(tags) == 0 {
+		if file == nil {
 			continue
 		}
 
+		fileTags, err := store.FileTagsByFileId(file.Id)
+		if err != nil {
+			return fmt.Errorf("could not retrieve file-tags: %v", err)
+		}
+
+		tagNames, err := lookupTagNames(store, fileTags)
+		if err != nil {
+			return err
+		}
+
 		if showCount {
-			fmt.Println(dirName + ": " + strconv.Itoa(len(tags)))
+			fmt.Println(dirName + ": " + strconv.Itoa(len(tagNames)))
 		} else {
-			fmt.Println(dirName + ": " + formatTags(tags))
+			fmt.Println(dirName + ": " + strings.Join(tagNames, " "))
 		}
 	}
 
 	return nil
 }
 
-func formatTags(tags entities.Tags) string {
-	tagNames := make([]string, len(tags))
-	for index, tag := range tags {
-		tagNames[index] = tag.Name
+func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]string, error) {
+	tagNames := make([]string, 0, len(fileTags))
+
+	for _, fileTag := range fileTags {
+		tag, err := store.Tag(fileTag.TagId)
+		if err != nil {
+			return nil, fmt.Errorf("could not lookup tag: %v", err)
+		}
+		if tag == nil {
+			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
+		}
+
+		var tagName string
+		if fileTag.ValueId == 0 {
+			tagName = tag.Name
+		} else {
+			value, err := store.Value(fileTag.ValueId)
+			if err != nil {
+				return nil, fmt.Errorf("could not lookup value: %v", err)
+			}
+			if value == nil {
+				return nil, fmt.Errorf("value '%v' does not exist", fileTag.ValueId)
+			}
+
+			tagName = tag.Name + "=" + value.Name
+		}
+
+		tagNames = append(tagNames, tagName)
 	}
 
-	return strings.Join(tagNames, " ")
+	return tagNames, nil
 }

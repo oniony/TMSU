@@ -172,7 +172,7 @@ v0.2.0
 
 - - -
 
-Copyright 2011 Paul Ruane
+Copyright 2011-2014 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

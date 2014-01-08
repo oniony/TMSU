@@ -28,13 +28,13 @@ func TestSingleTag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(lookAhead, "cheese", test)
+	validateSymbolToken(lookAhead, "cheese", test)
 
 	token, err := scanner.Next()
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "cheese", test)
+	validateSymbolToken(token, "cheese", test)
 
 	lookAhead, err = scanner.LookAhead()
 	if err != nil {
@@ -62,13 +62,41 @@ func TestSingleTagInParenthesese(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "cheese", test)
+	validateSymbolToken(token, "cheese", test)
 
 	token, err = scanner.Next()
 	if err != nil {
 		test.Fatal(err)
 	}
 	validateCloseParen(token, test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateEnd(token, test)
+}
+
+func TestSingleTagWithValue(test *testing.T) {
+	scanner := NewScanner("filling=cheese")
+
+	token, err := scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateSymbolToken(token, "filling", test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateEqualOperator(token, test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateSymbolToken(token, "cheese", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -90,7 +118,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "cheese", test)
+	validateSymbolToken(token, "cheese", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -108,7 +136,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "peas", test)
+	validateSymbolToken(token, "peas", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -120,7 +148,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "sweetcorn", test)
+	validateSymbolToken(token, "sweetcorn", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -144,7 +172,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateTagToken(token, "beans", test)
+	validateSymbolToken(token, "beans", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -155,10 +183,10 @@ func TestComplexQuery(test *testing.T) {
 
 // unexported
 
-func validateTagToken(token Token, expectedName string, test *testing.T) {
-	tag := token.(TagToken)
+func validateSymbolToken(token Token, expectedName string, test *testing.T) {
+	tag := token.(SymbolToken)
 	if tag.name != expectedName {
-		test.Fatalf("Expected tag '%v' but was '%v'.", expectedName, tag.name)
+		test.Fatalf("Expected symbol '%v' but was '%v'.", expectedName, tag.name)
 	}
 }
 
@@ -189,14 +217,38 @@ func validateOrOperator(token Token, test *testing.T) {
 	}
 }
 
+func validateEqualOperator(token Token, test *testing.T) {
+	switch token.(type) {
+	case EqualOperatorToken:
+		return
+	default:
+		test.Fatalf("Expected '=' operator but was '%v'.", token)
+	}
+}
+
 func validateOpenParen(token Token, test *testing.T) {
-	_ = token.(OpenParenToken)
+	switch token.(type) {
+	case OpenParenToken:
+		return
+	default:
+		test.Fatalf("Expected '(' but was '%v'.", token)
+	}
 }
 
 func validateCloseParen(token Token, test *testing.T) {
-	_ = token.(CloseParenToken)
+	switch token.(type) {
+	case CloseParenToken:
+		return
+	default:
+		test.Fatalf("Expected ')' but was '%v'.", token)
+	}
 }
 
 func validateEnd(token Token, test *testing.T) {
-	_ = token.(EndToken)
+	switch token.(type) {
+	case EndToken:
+		return
+	default:
+		test.Fatalf("Expected end but was '%v'.", token)
+	}
 }

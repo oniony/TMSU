@@ -49,11 +49,20 @@ type AndExpression struct {
 	RightOperand Expression
 }
 
+type EqualsExpression struct {
+	Tag   TagExpression
+	Value ValueExpression
+}
+
 type NotExpression struct {
 	Operand Expression
 }
 
 type TagExpression struct {
+	Name string
+}
+
+type ValueExpression struct {
 	Name string
 }
 
@@ -126,7 +135,7 @@ func (parser Parser) and() (Expression, error) {
 			leftOperand = AndExpression{leftOperand, rightOperand}
 		case OrOperatorToken, CloseParenToken, EndToken:
 			return leftOperand, nil
-		case NotOperatorToken, TagToken, OpenParenToken:
+		case NotOperatorToken, SymbolToken, OpenParenToken:
 			rightOperand, err := parser.not()
 			if err != nil {
 				return nil, err
@@ -174,8 +183,8 @@ func (parser Parser) not() (Expression, error) {
 		default:
 			return nil, fmt.Errorf("unexpected token: %v", Type(token2))
 		}
-	case TagToken:
-		operand, err := parser.tag()
+	case SymbolToken:
+		operand, err := parser.equals()
 		if err != nil {
 			return nil, err
 		}
@@ -186,16 +195,56 @@ func (parser Parser) not() (Expression, error) {
 	}
 }
 
-func (parser Parser) tag() (Expression, error) {
-	token, err := parser.scanner.Next()
+func (parser Parser) equals() (Expression, error) {
+	tag, err := parser.tag()
 	if err != nil {
 		return nil, err
 	}
 
+	token, err := parser.scanner.LookAhead()
+	if err != nil {
+		return nil, err
+	}
+
+	switch token.(type) {
+	case EqualOperatorToken:
+		parser.scanner.Next()
+
+		value, err := parser.value()
+		if err != nil {
+			return nil, err
+		}
+
+		return EqualsExpression{tag, value}, nil
+	}
+
+	return tag, nil
+}
+
+func (parser Parser) tag() (TagExpression, error) {
+	token, err := parser.scanner.Next()
+	if err != nil {
+		return TagExpression{}, err
+	}
+
 	switch typedToken := token.(type) {
-	case TagToken:
+	case SymbolToken:
 		return TagExpression{typedToken.name}, nil
 	default:
-		return nil, fmt.Errorf("unexpected token: %v.", Type(token))
+		return TagExpression{}, fmt.Errorf("unexpected token: %v.", Type(token))
+	}
+}
+
+func (parser Parser) value() (ValueExpression, error) {
+	token, err := parser.scanner.Next()
+	if err != nil {
+		return ValueExpression{}, err
+	}
+
+	switch typedToken := token.(type) {
+	case SymbolToken:
+		return ValueExpression{typedToken.name}, nil
+	default:
+		return ValueExpression{}, fmt.Errorf("unexpected token: %v", Type(token))
 	}
 }

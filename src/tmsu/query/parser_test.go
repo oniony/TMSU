@@ -36,6 +36,22 @@ func TestTagParsing(test *testing.T) {
 	validateTag(expression, "cheese", test)
 }
 
+func TestTagWithValueParsing(test *testing.T) {
+	scanner := NewScanner("filling=cheese")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	equals := validateEquals(expression)
+	validateTag(equals.Tag, "filling", test)
+	validateValue(equals.Value, "cheese", test)
+}
+
 func TestNotParsing(test *testing.T) {
 	scanner := NewScanner("not cheese")
 	parser := NewParser(scanner)
@@ -313,6 +329,10 @@ func validateAnd(expression Expression) AndExpression {
 	return expression.(AndExpression)
 }
 
+func validateEquals(expression Expression) EqualsExpression {
+	return expression.(EqualsExpression)
+}
+
 func validateTag(expression Expression, expectedName string, test *testing.T) TagExpression {
 	tag := expression.(TagExpression)
 	if tag.Name != expectedName {
@@ -320,6 +340,15 @@ func validateTag(expression Expression, expectedName string, test *testing.T) Ta
 	}
 
 	return tag
+}
+
+func validateValue(expression Expression, expectedName string, test *testing.T) ValueExpression {
+	value := expression.(ValueExpression)
+	if value.Name != expectedName {
+		test.Fatalf("Expected '%v' value but was '%v'.", value.Name)
+	}
+
+	return value
 }
 
 func dump(expression Expression) {

@@ -24,15 +24,15 @@ import (
 	"unicode"
 )
 
-var tagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct}
+var symbolChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct}
 
 type Token interface {
 }
 
 func Type(token Token) string {
 	switch token.(type) {
-	case TagToken:
-		return "tag"
+	case SymbolToken:
+		return "symbol"
 	case OpenParenToken:
 		return "'('"
 	case CloseParenToken:
@@ -43,6 +43,8 @@ func Type(token Token) string {
 		return "'and'"
 	case OrOperatorToken:
 		return "'or'"
+	case EqualOperatorToken:
+		return "="
 	case EndToken:
 		return "EOF"
 	case nil:
@@ -61,7 +63,7 @@ type OpenParenToken struct {
 type CloseParenToken struct {
 }
 
-type TagToken struct {
+type SymbolToken struct {
 	name string
 }
 
@@ -72,6 +74,9 @@ type AndOperatorToken struct {
 }
 
 type OrOperatorToken struct {
+}
+
+type EqualOperatorToken struct {
 }
 
 type Scanner struct {
@@ -132,8 +137,10 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return CloseParenToken{}, nil
 	case r == rune('-'):
 		return NotOperatorToken{}, nil
-	case unicode.IsOneOf(tagChars, r):
-		return scanner.readTagTokenOrOperatorToken(r)
+	case r == rune('='):
+		return EqualOperatorToken{}, nil
+	case unicode.IsOneOf(symbolChars, r):
+		return scanner.readTextToken(r)
 	default:
 		return nil, fmt.Errorf("Unepxected character '%v'.", r)
 	}
@@ -141,7 +148,7 @@ func (scanner *Scanner) readToken() (Token, error) {
 	panic("unreachable")
 }
 
-func (scanner *Scanner) readTagTokenOrOperatorToken(r rune) (Token, error) {
+func (scanner *Scanner) readTextToken(r rune) (Token, error) {
 	text, err := scanner.readString(r)
 	if err != nil {
 		return nil, err
@@ -154,12 +161,12 @@ func (scanner *Scanner) readTagTokenOrOperatorToken(r rune) (Token, error) {
 		return AndOperatorToken{}, nil
 	case "or", "OR":
 		return OrOperatorToken{}, nil
-	default:
-		return TagToken{text}, nil
 	}
+
+	return SymbolToken{text}, nil
 }
 
-func (scanner *Scanner) readString(r rune) (string, error) {
+func (scanner *Scanner) readString(r ...rune) (string, error) {
 	text := string(r)
 
 	stop := false
@@ -175,10 +182,10 @@ func (scanner *Scanner) readString(r rune) (string, error) {
 		}
 
 		switch {
-		case unicode.IsSpace(r), r == rune(')'), r == rune('('):
+		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='):
 			scanner.stream.UnreadRune()
 			return text, nil
-		case unicode.IsOneOf(tagChars, r):
+		case unicode.IsOneOf(symbolChars, r):
 			text += string(r)
 		default:
 			return "", fmt.Errorf("Unexpected character '%v'.", r)

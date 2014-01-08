@@ -372,6 +372,8 @@ WHERE tag_id = (SELECT id
                 WHERE name = '` + exp.Name + `'))
 `)
 		expression = nil
+	case query.EqualsExpression:
+		//TODO URHERE
 	case query.NotExpression:
 		builder.AppendSql("\nNOT\n")
 		buildQueryBranch(exp.Operand, builder)

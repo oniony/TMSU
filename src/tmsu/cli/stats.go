@@ -45,6 +45,11 @@ func statsExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve tag count: %v", err)
 	}
 
+	valueCount, err := store.ValueCount()
+	if err != nil {
+		return fmt.Errorf("could not retrieve value count: %v", err)
+	}
+
 	fileCount, err := store.FileCount()
 	if err != nil {
 		return fmt.Errorf("could not retrieve file count: %v", err)
@@ -65,17 +70,18 @@ func statsExec(options Options, args []string) error {
 		averageFilesPerTag = float32(fileTagCount) / float32(tagCount)
 	}
 
-	fmt.Println("BASICS")
+	fmt.Println("COUNTS")
 	fmt.Println()
 	fmt.Printf("  Tags:     %v\n", tagCount)
+	fmt.Printf("  Values:   %v\n", valueCount)
 	fmt.Printf("  Files:    %v\n", fileCount)
 	fmt.Printf("  Taggings: %v\n", fileTagCount)
 	fmt.Println()
 
 	fmt.Println("AVERAGES")
 	fmt.Println()
-	fmt.Printf("  Tags per file: %1.2f\n", averageTagsPerFile)
-	fmt.Printf("  Files per tag: %1.2f\n", averageFilesPerTag)
+	fmt.Printf("  Tags per file:  %1.2f\n", averageTagsPerFile)
+	fmt.Printf("  Files per tag:  %1.2f\n", averageFilesPerTag)
 	fmt.Println()
 
 	topTags, err := store.TopTags(10)

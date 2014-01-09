@@ -165,12 +165,8 @@ func untagPathAll(store *storage.Storage, path string, recursive bool) error {
 
 	log.Infof(2, "%v: removing all tags.", file.Path())
 
-	if err := store.RemoveFileTagsByFileId(file.Id); err != nil {
+	if err := store.DeleteFileTagsByFileId(file.Id); err != nil {
 		return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
-	}
-
-	if err := removeUntaggedFile(store, file); err != nil {
-		return err
 	}
 
 	if recursive {
@@ -180,14 +176,9 @@ func untagPathAll(store *storage.Storage, path string, recursive bool) error {
 		}
 
 		for _, childFile := range childFiles {
-			if err := store.RemoveFileTagsByFileId(childFile.Id); err != nil {
+			if err := store.DeleteFileTagsByFileId(childFile.Id); err != nil {
 				return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err)
 			}
-
-			if err := removeUntaggedFile(store, childFile); err != nil {
-				return err
-			}
-
 		}
 	}
 
@@ -212,13 +203,9 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 		log.Infof(2, "%v: unapplying tag #%v.", file.Path(), tagId)
 
 		//TODO value id
-		if err := store.RemoveFileTag(file.Id, tagId, 0); err != nil {
+		if err := store.DeleteFileTag(file.Id, tagId, 0); err != nil {
 			return fmt.Errorf("%v: could not remove tag #%v: %v", file.Path(), tagId, err)
 		}
-	}
-
-	if err := removeUntaggedFile(store, file); err != nil {
-		return err
 	}
 
 	if recursive {
@@ -232,37 +219,11 @@ func untagPath(store *storage.Storage, path string, tagIds []uint, recursive boo
 				log.Infof(2, "%v: unapplying tag #%v.", childFile.Path(), tagId)
 
 				//TODO value id
-				if err := store.RemoveFileTag(childFile.Id, tagId, 0); err != nil {
+				if err := store.DeleteFileTag(childFile.Id, tagId, 0); err != nil {
 					return fmt.Errorf("%v: could not remove tag #%v: %v", childFile.Path(), tagId, err)
 				}
 			}
-
-			if err := removeUntaggedFile(store, childFile); err != nil {
-				return err
-			}
 		}
-	}
-
-	return nil
-}
-
-func removeUntaggedFile(store *storage.Storage, file *entities.File) error {
-	log.Infof(2, "%v: identifying whether file is tagged.", file.Path())
-
-	filetagCount, err := store.FileTagCountByFileId(file.Id)
-	if err != nil {
-		return fmt.Errorf("%v: could not get tag count: %v", file.Path(), err)
-	}
-
-	if filetagCount != 0 {
-		return nil
-	}
-
-	log.Infof(2, "%v: removing untagged file.", file.Path())
-
-	err = store.RemoveFile(file.Id)
-	if err != nil {
-		return fmt.Errorf("%v: could not remove file: %v", file.Path(), err)
 	}
 
 	return nil

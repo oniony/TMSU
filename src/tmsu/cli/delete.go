@@ -19,7 +19,6 @@ package cli
 
 import (
 	"fmt"
-	"tmsu/common/log"
 	"tmsu/storage"
 )
 
@@ -50,71 +49,19 @@ func deleteExec(options Options, args []string) error {
 	defer store.Close()
 
 	for _, tagName := range args {
-		err = deleteTag(store, tagName)
+		tag, err := store.TagByName(tagName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+		}
+		if tag == nil {
+			return fmt.Errorf("no such tag '%v'.", tagName)
+		}
+
+		err = store.DeleteTag(tag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 		}
 	}
-
-	return nil
-}
-
-func deleteTag(store *storage.Storage, tagName string) error {
-	tag, err := store.TagByName(tagName)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
-	}
-	if tag == nil {
-		return fmt.Errorf("no such tag '%v'.", tagName)
-	}
-
-	log.Infof(2, "finding files tagged '%v'.", tagName)
-
-	fileTags, err := store.FileTagsByTagId(tag.Id)
-	if err != nil {
-		return fmt.Errorf("could not retrieve taggings for tag '%v': %v", tagName, err)
-	}
-
-	log.Infof(2, "removing applications of tag '%v'.", tagName)
-
-	err = store.RemoveFileTagsByTagId(tag.Id)
-	if err != nil {
-		return fmt.Errorf("could not remove taggings for tag '%v': %v", tagName, err)
-	}
-
-	log.Infof(2, "removing tags implications involving tag '%v'.", tagName)
-
-	err = store.RemoveImplicationsForTagId(tag.Id)
-	if err != nil {
-		return fmt.Errorf("could not remove tag implications involving tag '%v': %v", tagName, err)
-	}
-
-	log.Infof(2, "deleting tag '%v'.", tagName)
-
-	err = store.DeleteTag(tag.Id)
-	if err != nil {
-		return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
-	}
-
-	log.Infof(2, "identifying files left untagged as a result of tag deletion.")
-
-	removedFileCount := 0
-	for _, fileTag := range fileTags {
-		count, err := store.FileTagCountByFileId(fileTag.FileId)
-		if err != nil {
-			return fmt.Errorf("could not retrieve taggings count for file #%v: %v", fileTag.FileId, err)
-		}
-		if count == 0 {
-			err := store.RemoveFile(fileTag.FileId)
-			if err != nil {
-				return fmt.Errorf("could not remove file #%v: %v", fileTag.FileId, err)
-			}
-
-			removedFileCount += 1
-		}
-	}
-
-	log.Infof(2, "removed %v untagged files.", removedFileCount)
 
 	return nil
 }

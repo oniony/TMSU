@@ -283,11 +283,11 @@ func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileI
 func repairMissing(store *storage.Storage, missing databaseFileMap, pretend, force bool) error {
 	for path, dbFile := range missing {
 		if force && !pretend {
-			if err := store.RemoveFileTagsByFileId(dbFile.Id); err != nil {
+			if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
 				return fmt.Errorf("%v: could not delete file-tags: %v", path, err)
 			}
 
-			if err := store.RemoveFile(dbFile.Id); err != nil {
+			if err := store.DeleteFile(dbFile.Id); err != nil {
 				return fmt.Errorf("%v: could not delete file: %v", path, err)
 			}
 

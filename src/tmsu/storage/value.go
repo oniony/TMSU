@@ -22,7 +22,12 @@ import (
 	"tmsu/entities"
 )
 
-// Retrieves a spceific value.
+// Retrievse the count of values.
+func (storage Storage) ValueCount() (uint, error) {
+	return storage.Db.ValueCount()
+}
+
+// Retrieves a specific value.
 func (storage Storage) Value(id uint) (*entities.Value, error) {
 	return storage.Db.Value(id)
 }
@@ -52,6 +57,7 @@ func (storage *Storage) AddValue(name string) (*entities.Value, error) {
 
 // Deletes a value.
 func (storage Storage) DeleteValue(valueId uint) error {
+	//TODO delete filetags that reference the value
 	return storage.Db.DeleteValue(valueId)
 }
 

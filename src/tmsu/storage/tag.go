@@ -92,7 +92,22 @@ func (storage Storage) CopyTag(sourceTagId uint, name string) (*entities.Tag, er
 
 // Deletes a tag.
 func (storage Storage) DeleteTag(tagId uint) error {
-	return storage.Db.DeleteTag(tagId)
+	err := storage.DeleteFileTagsByTagId(tagId)
+	if err != nil {
+		return err
+	}
+
+	err = storage.DeleteImplicationsForTagId(tagId)
+	if err != nil {
+		return fmt.Errorf("could not remove tag implications involving tag '%v': %v", tagId, err)
+	}
+
+	err = storage.Db.DeleteTag(tagId)
+	if err != nil {
+		return fmt.Errorf("could not delete tag '%v': %v", tagId, err)
+	}
+
+	return nil
 }
 
 // Retrieves the most popular tags.

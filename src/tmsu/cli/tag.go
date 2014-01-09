@@ -150,9 +150,15 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	for _, tagArg := range tagArgs {
 		parts := strings.Split(tagArg, "=")
 		tagName := parts[0]
-		valueName := ""
-		if len(parts) > 1 {
+		var valueName string
+
+		switch len(parts) {
+		case 1:
+			valueName = ""
+		case 2:
 			valueName = parts[1]
+		default:
+			return fmt.Errorf("too many '='")
 		}
 
 		tag, err := store.TagByName(tagName)
@@ -198,7 +204,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 				log.Warnf("tag '%v' is implied.", implication.ImpliedTag.Name)
 
 				for _, path := range paths {
-					if err := tagPath(store, path, tag.Id, 0, recursive); err != nil {
+					if err := tagPath(store, path, implication.ImpliedTag.Id, 0, recursive); err != nil {
 						return err
 					}
 				}

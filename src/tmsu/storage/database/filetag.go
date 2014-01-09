@@ -118,6 +118,38 @@ func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	return readFileTags(rows, make(entities.FileTags, 0, 10))
 }
 
+// Retrieves the count of file tags for the specified value.
+func (db *Database) FileTagCountByValueId(valueId uint) (uint, error) {
+	var sql string
+
+	sql = `SELECT count(1)
+	       FROM file_tag
+	       WHERE value_id = ?1`
+
+	rows, err := db.connection.Query(sql, valueId)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+
+	return readCount(rows)
+}
+
+// Retrieves the set of file tags with the specified value ID.
+func (db *Database) FileTagsByValueId(valueId uint) (entities.FileTags, error) {
+	sql := `SELECT file_id, tag_id, value_id
+	        FROM file_tag
+	        WHERE value_id = ?1`
+
+	rows, err := db.connection.Query(sql, valueId)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFileTags(rows, make(entities.FileTags, 0, 10))
+}
+
 // Retrieves the set of file tags for the specified file.
 func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id, value_id

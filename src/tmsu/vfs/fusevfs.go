@@ -420,12 +420,8 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve tag '%v'.", tagName)
 		}
 
-		err = vfs.store.RemoveFileTag(fileId, tag.Id, 0)
+		err = vfs.store.DeleteFileTag(fileId, tag.Id, 0)
 		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := vfs.removeUntaggedFile(fileId); err != nil {
 			log.Fatal(err)
 		}
 
@@ -766,23 +762,6 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
 }
 
 func (vfs FuseVfs) saveQuery(query string) {
-}
-
-func (vfs FuseVfs) removeUntaggedFile(fileId uint) error {
-	filetagCount, err := vfs.store.FileTagCountByFileId(fileId)
-	if err != nil {
-		return fmt.Errorf("could not get tag count: %v", err)
-	}
-
-	if filetagCount != 0 {
-		return nil
-	}
-
-	if err := vfs.store.RemoveFile(fileId); err != nil {
-		return fmt.Errorf("could not remove file: %v", err)
-	}
-
-	return nil
 }
 
 func uitoa(ui uint) string {

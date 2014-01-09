@@ -61,13 +61,13 @@ func (storage Storage) UpdateImplicationsForTagId(tagId, impliedTagId uint) erro
 	return storage.Db.UpdateImplicationsForTagId(tagId, impliedTagId)
 }
 
-// Removes the specified implication
-func (storage Storage) RemoveImplication(tagId, impliedTagId uint) error {
+// Deletes the specified implication
+func (storage Storage) DeleteImplication(tagId, impliedTagId uint) error {
 	return storage.Db.DeleteImplication(tagId, impliedTagId)
 }
 
-// Removes implications featuring the specified tag.
-func (storage Storage) RemoveImplicationsForTagId(tagId uint) error {
+// Deletes implications featuring the specified tag.
+func (storage Storage) DeleteImplicationsForTagId(tagId uint) error {
 	return storage.Db.DeleteImplicationsForTagId(tagId)
 }
 

@@ -104,22 +104,22 @@ func (storage *Storage) QueryFiles(expression query.Expression) (entities.Files,
 	return storage.Db.QueryFiles(expression)
 }
 
-// Retrieves the sets of duplicate files within the entities.
+// Retrieves the sets of duplicate files within the database.
 func (storage *Storage) DuplicateFiles() ([]entities.Files, error) {
 	return storage.Db.DuplicateFiles()
 }
 
-// Adds a file to the entities.
+// Adds a file to the database.
 func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	return storage.Db.InsertFile(path, fingerprint, modTime, size, isDir)
 }
 
-// Updates a file in the entities.
+// Updates a file in the database.
 func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size, isDir)
 }
 
-// Removes a file from the entities.
-func (storage *Storage) RemoveFile(fileId uint) error {
+// Deletes a file from the database.
+func (storage *Storage) DeleteFile(fileId uint) error {
 	return storage.Db.DeleteFile(fileId)
 }

@@ -23,6 +23,19 @@ import (
 	"tmsu/entities"
 )
 
+// Retrieves the count of values.
+func (db Database) ValueCount() (uint, error) {
+	sql := `SELECT count(1)
+            FROM value`
+
+	rows, err := db.connection.Query(sql)
+	if err != nil {
+		return 0, err
+	}
+
+	return readCount(rows)
+}
+
 // Retrieves a specific value.
 func (db Database) Value(id uint) (*entities.Value, error) {
 	sql := `SELECT id, name

@@ -127,6 +127,19 @@ Release Notes
 v0.4.0 (in development)
 ------
 
+  Note: This release changes the database schema. To upgrade your v0.3.0
+  database please run the following:
+
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
+    $ sqlite3 -init misc/db-upgrade/0.3_to_0.4.0.sql
+
+  Note: This release removes support for tag implications. Implications will be
+  replaced with a fuller tag relationship facility in a later version and a
+  script to upgrade your saved implications will be provided at this time.
+
+  * Added support for tag values, e.g. 'country=uk'.
+  * Bug fixes.
+
 v0.3.0
 ------
 
@@ -135,7 +148,7 @@ v0.3.0
   script:
 
       $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
-      $ sqlite3 -init misc/db-upgrades/clean_tag_names.sql ~/.tmsu/default.db
+      $ sqlite3 -init misc/db-upgrade/clean_tag_names.sql ~/.tmsu/default.db
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
     ketchup)'.
@@ -180,7 +193,7 @@ v0.2.0
 
 - - -
 
-Copyright 2011 Paul Ruane
+Copyright 2011-2014 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

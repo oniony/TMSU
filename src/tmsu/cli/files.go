@@ -32,20 +32,29 @@ var FilesCommand = Command{
 	Synopsis: "List files with particular tags",
 	Description: `tmsu files [OPTION]... QUERY 
 
-Lists the files that match the QUERY specified. QUERY may contain tag names,
-logical operators ('not', 'and', 'or') and parentheses.
+Lists the files that match the QUERY specified.
 
-If multiple tags are specified without a logical operator between them this
-will be interpretted as an implicit 'and', e.g. 'chalk cheese' is interpretted as
-'chalk and cheese'.
+QUERY may contain:
+
+  * Tag names to match
+  * The logical operators: 'and', 'or' and 'not'
+  * The comparison operator: '='
+  * Parentheses: '(' and ')'
+
+The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
+interpretted as 'chalk and cheese'.
+
+The comparison operator '=' is used to match on a particular tag value, for
+example, 'country=uk' will only match files with a 'country' value of 'uk'.
 
 Examples:
 
-    $ tmsu files music mp3                 # files with both 'music' and 'mp3'
-    $ tmsu files music and mp3             # same query but with explicit 'and'
+    $ tmsu files music mp3                # files with both 'music' and 'mp3'
+    $ tmsu files music and mp3            # same query but with explicit 'and'
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
-    $ tmsu files origin=france             # tagged 'origin' with a value 'france'`,
+    $ tmsu files year=2014                # tagged 'year' with a value '2014'
+    $ tmus files year                     # tagged 'year' (any or no value)`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},

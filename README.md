@@ -82,6 +82,13 @@ The following steps are for compiling from source.
 
 4. Clone the TMSU respository:
 
+    To clone the current stable release branch:
+
+        $ hg clone -r release https://bitbucket.org/oniony/tmsu
+
+    Active development takes place on the default branch. This branch is subject
+    to build failures and breaking changes:
+
         $ hg clone https://bitbucket.org/oniony/tmsu
 
 5. Make the project

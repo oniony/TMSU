@@ -134,6 +134,13 @@ func (db Database) CreateFileTagTable() error {
 		return err
 	}
 
+	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
+           ON file_tag(value_id)`
+
+	if _, err := db.connection.Exec(sql); err != nil {
+		return err
+	}
+
 	return nil
 }
 

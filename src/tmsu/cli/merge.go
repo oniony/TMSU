@@ -93,12 +93,6 @@ func mergeExec(options Options, args []string) error {
 			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
 		}
 
-		log.Infof(2, "updating tag implications involving tag '%v'.", sourceTagName)
-
-		if err := store.UpdateImplicationsForTagId(sourceTag.Id, destTag.Id); err != nil {
-			return fmt.Errorf("could not update tag implications involving tag '%v': %v", sourceTagName, err)
-		}
-
 		log.Infof(2, "deleting tag '%v'.", sourceTagName)
 
 		err = store.DeleteTag(sourceTag.Id)

@@ -97,11 +97,6 @@ func (storage Storage) DeleteTag(tagId uint) error {
 		return err
 	}
 
-	err = storage.DeleteImplicationsForTagId(tagId)
-	if err != nil {
-		return fmt.Errorf("could not remove tag implications involving tag '%v': %v", tagId, err)
-	}
-
 	err = storage.Db.DeleteTag(tagId)
 	if err != nil {
 		return fmt.Errorf("could not delete tag '%v': %v", tagId, err)

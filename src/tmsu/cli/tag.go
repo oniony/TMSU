@@ -32,16 +32,19 @@ import (
 var TagCommand = Command{
 	Name:     "tag",
 	Synopsis: "Apply tags to files",
-	Description: `tmsu tag [OPTION]... FILE TAG...
-tmsu tag [OPTION]... --tags="TAG..." FILE...
+	Description: `tmsu tag [OPTION]... FILE TAG[=VALUE]...
+tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
 tmsu tag [OPTION]... --create TAG...
 
-Tags the file FILE with the tag(s) specified.
+Tags the file FILE with the TAGs specified.
+
+Optionally tags applied to files may be attributed with a VALUE using the
+TAG=VALUE syntax.
 
 Examples:
 
-    $ tmsu tag mountain1.jpg photo landscape holiday good country:france
+    $ tmsu tag mountain1.jpg photo landscape holiday good country=france
     $ tmsu tag --from=mountain1.jpg mountain2.jpg
     $ tmsu tag --tags="landscape" field1.jpg field2.jpg
     $ tmsu tag --create bad rubbish awful`,
@@ -146,7 +149,6 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	}
 	defer store.Close()
 
-	tagIds := make([]uint, 0, len(tagArgs))
 	for _, tagArg := range tagArgs {
 		parts := strings.Split(tagArg, "=")
 		tagName := parts[0]
@@ -163,7 +165,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 
 		tag, err := store.TagByName(tagName)
 		if err != nil {
-			return err
+			return fmt.Errorf("could not look up tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
 			log.Warnf("New tag '%v'.", tagName)
@@ -173,7 +175,6 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 				return fmt.Errorf("could not create tag '%v': %v", tagName, err)
 			}
 		}
-		tagIds = append(tagIds, tag.Id)
 
 		value, err := store.ValueByName(valueName)
 		if err != nil {
@@ -189,25 +190,6 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 		for _, path := range paths {
 			if err := tagPath(store, path, tag.Id, value.Id, recursive); err != nil {
 				return err
-			}
-		}
-
-		log.Infof(2, "retrieving tag implications")
-
-		implications, err := store.ImplicationsForTags(tagIds...)
-		if err != nil {
-			return fmt.Errorf("could not retrieve implied tags: %v", err)
-		}
-
-		for _, implication := range implications {
-			if !containsTag(tagIds, implication.ImpliedTag.Id) {
-				log.Warnf("tag '%v' is implied.", implication.ImpliedTag.Name)
-
-				for _, path := range paths {
-					if err := tagPath(store, path, implication.ImpliedTag.Id, 0, recursive); err != nil {
-						return err
-					}
-				}
 			}
 		}
 	}

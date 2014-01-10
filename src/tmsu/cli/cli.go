@@ -37,7 +37,6 @@ var commands = map[string]*Command{
 	"dupes":   &DupesCommand,
 	"files":   &FilesCommand,
 	"help":    &HelpCommand,
-	"imply":   &ImplyCommand,
 	"merge":   &MergeCommand,
 	"mount":   &MountCommand,
 	"rename":  &RenameCommand,

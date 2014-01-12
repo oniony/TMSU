@@ -189,7 +189,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 
 		for _, path := range paths {
 			if err := tagPath(store, path, tag.Id, value.Id, recursive); err != nil {
-				return err
+				log.Warn(err)
 			}
 		}
 	}
@@ -220,7 +220,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 	for _, fileTag := range fileTags {
 		for _, path := range paths {
 			if err = tagPath(store, path, fileTag.TagId, fileTag.ValueId, recursive); err != nil {
-				return err
+				log.Warn(err)
 			}
 		}
 	}

@@ -149,6 +149,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	}
 	defer store.Close()
 
+	wasError := false
 	for _, tagArg := range tagArgs {
 		parts := strings.Split(tagArg, "=")
 		tagName := parts[0]
@@ -190,8 +191,13 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 		for _, path := range paths {
 			if err := tagPath(store, path, tag.Id, value.Id, recursive); err != nil {
 				log.Warn(err)
+				wasError = true
 			}
 		}
+	}
+
+	if wasError {
+		return fmt.Errorf("failed to tag all paths")
 	}
 
 	return nil
@@ -217,12 +223,18 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
 	}
 
+	wasError := false
 	for _, fileTag := range fileTags {
 		for _, path := range paths {
 			if err = tagPath(store, path, fileTag.TagId, fileTag.ValueId, recursive); err != nil {
 				log.Warn(err)
+				wasError = true
 			}
 		}
+	}
+
+	if wasError {
+		return fmt.Errorf("failed to tag all paths")
 	}
 
 	return nil

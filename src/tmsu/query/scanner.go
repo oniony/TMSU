@@ -45,6 +45,14 @@ func Type(token Token) string {
 		return "'or'"
 	case EqualOperatorToken:
 		return "="
+	case LessOperatorToken:
+		return "<"
+	case GreaterOperatorToken:
+		return ">"
+	case LessOrEqualOperatorToken:
+		return "<="
+	case GreaterOrEqualOperatorToken:
+		return ">="
 	case EndToken:
 		return "EOF"
 	case nil:
@@ -139,6 +147,10 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return NotOperatorToken{}, nil
 	case r == rune('='):
 		return EqualOperatorToken{}, nil
+	case r == rune('<'):
+		return scanner.readLessOperator()
+	case r == rune('>'):
+		return scanner.readGreaterOperator()
 	case unicode.IsOneOf(symbolChars, r):
 		return scanner.readTextToken(r)
 	default:
@@ -146,6 +158,28 @@ func (scanner *Scanner) readToken() (Token, error) {
 	}
 
 	panic("unreachable")
+}
+
+func (scanner *Scanner) readLessOperator() (Token, error) {
+	r, _, err := scanner.stream.ReadRune()
+	switch r {
+	case '=':
+		return LessOrEqualOperatorToken{}, nil
+	default:
+		scaner.stream.UnreadRune()
+		return LessOperatorToken{}, nil
+	}
+}
+
+func (scanner *Scanner) readGreaterOperator() (Token, error) {
+	r, _, err := scanner.stream.ReadRune()
+	switch r {
+	case '=':
+		return GreaterOrEqualOperatorToken{}, nil
+	default:
+		scaner.stream.UnreadRune()
+		return GreaterOperatorToken{}, nil
+	}
 }
 
 func (scanner *Scanner) readTextToken(r rune) (Token, error) {
@@ -182,7 +216,7 @@ func (scanner *Scanner) readString(r ...rune) (string, error) {
 		}
 
 		switch {
-		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='):
+		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='), r == rune('<'), r == rune('>'):
 			scanner.stream.UnreadRune()
 			return text, nil
 		case unicode.IsOneOf(symbolChars, r):

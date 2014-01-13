@@ -49,9 +49,10 @@ type AndExpression struct {
 	RightOperand Expression
 }
 
-type EqualsExpression struct {
-	Tag   TagExpression
-	Value ValueExpression
+type ComparisonExpression struct {
+	Tag      TagExpression
+	Operator string
+	Value    ValueExpression
 }
 
 type NotExpression struct {
@@ -184,7 +185,7 @@ func (parser Parser) not() (Expression, error) {
 			return nil, fmt.Errorf("unexpected token: %v", Type(token2))
 		}
 	case SymbolToken:
-		operand, err := parser.equals()
+		operand, err := parser.comparison()
 		if err != nil {
 			return nil, err
 		}
@@ -195,7 +196,7 @@ func (parser Parser) not() (Expression, error) {
 	}
 }
 
-func (parser Parser) equals() (Expression, error) {
+func (parser Parser) comparison() (Expression, error) {
 	tag, err := parser.tag()
 	if err != nil {
 		return nil, err
@@ -206,8 +207,8 @@ func (parser Parser) equals() (Expression, error) {
 		return nil, err
 	}
 
-	switch token.(type) {
-	case EqualOperatorToken:
+	switch typedToken := token.(type) {
+	case ComparisonOperatorToken:
 		parser.scanner.Next()
 
 		value, err := parser.value()
@@ -215,7 +216,7 @@ func (parser Parser) equals() (Expression, error) {
 			return nil, err
 		}
 
-		return EqualsExpression{tag, value}, nil
+		return ComparisonExpression{tag, typedToken.operator, value}, nil
 	}
 
 	return tag, nil

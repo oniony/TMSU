@@ -145,6 +145,7 @@ v0.4.0 (in development)
   script to upgrade your saved implications will be provided at this time.
 
   * Added support for tag values, e.g. 'country=uk'.
+  * Added support for querying files based upon tag values, e.g. 'year > 2000'.
   * Bug fixes.
 
 v0.3.0

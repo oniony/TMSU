@@ -59,7 +59,7 @@ func tagNames(expression Expression, names []string) []string {
 	case OrExpression:
 		names = tagNames(exp.LeftOperand, names)
 		names = tagNames(exp.RightOperand, names)
-	case EqualsExpression:
+	case ComparisonExpression:
 		names = tagNames(exp.Tag, names)
 	default:
 		panic("unsupported token type")

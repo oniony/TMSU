@@ -371,15 +371,15 @@ WHERE tag_id = (SELECT id
                 FROM tag
                 WHERE name = '` + exp.Name + `'))
 `)
-	case query.EqualsExpression:
+	case query.ComparisonExpression:
 		builder.AppendSql(`id IN (SELECT file_id
 FROM file_tag
 WHERE tag_id = (SELECT id
                 FROM tag
                 WHERE name = '` + exp.Tag.Name + `')
-AND value_id = (SELECT id
-                FROM value
-                WHERE name = '` + exp.Value.Name + `'))
+AND value_id IN (SELECT id
+                 FROM value
+                 WHERE name ` + exp.Operator + ` '` + exp.Value.Name + `'))
 `)
 	case query.NotExpression:
 		builder.AppendSql("\nNOT\n")

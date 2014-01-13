@@ -90,7 +90,7 @@ func TestSingleTagWithValue(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateEqualOperator(token, test)
+	validateComparisonOperator(token, "=", test)
 
 	token, err = scanner.Next()
 	if err != nil {
@@ -106,7 +106,7 @@ func TestSingleTagWithValue(test *testing.T) {
 }
 
 func TestComplexQuery(test *testing.T) {
-	scanner := NewScanner("not cheese and (peas or sweetcorn) and not beans")
+	scanner := NewScanner("not cheese and (peas or sweetcorn) and not beans and bestbefore=2014")
 
 	token, err := scanner.Next()
 	if err != nil {
@@ -178,6 +178,29 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+	validateAndOperator(token, test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateSymbolToken(token, "bestbefore", test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateComparisonOperator(token, "=", test)
+
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
+	validateSymbolToken(token, "2014", test)
+	token, err = scanner.Next()
+	if err != nil {
+		test.Fatal(err)
+	}
 	validateEnd(token, test)
 }
 
@@ -217,12 +240,14 @@ func validateOrOperator(token Token, test *testing.T) {
 	}
 }
 
-func validateEqualOperator(token Token, test *testing.T) {
-	switch token.(type) {
-	case EqualOperatorToken:
-		return
+func validateComparisonOperator(token Token, operator string, test *testing.T) {
+	switch typedToken := token.(type) {
+	case ComparisonOperatorToken:
+		if typedToken.operator != operator {
+			test.Fatalf("Expected '=' comparison operator but was '%v'", token)
+		}
 	default:
-		test.Fatalf("Expected '=' operator but was '%v'.", token)
+		test.Fatalf("Expected comparison operator but was '%v'.", token)
 	}
 }
 

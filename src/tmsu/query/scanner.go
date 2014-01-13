@@ -30,7 +30,7 @@ type Token interface {
 }
 
 func Type(token Token) string {
-	switch token.(type) {
+	switch typedToken := token.(type) {
 	case SymbolToken:
 		return "symbol"
 	case OpenParenToken:
@@ -43,8 +43,8 @@ func Type(token Token) string {
 		return "'and'"
 	case OrOperatorToken:
 		return "'or'"
-	case EqualOperatorToken:
-		return "="
+	case ComparisonOperatorToken:
+		return typedToken.operator
 	case EndToken:
 		return "EOF"
 	case nil:
@@ -76,7 +76,8 @@ type AndOperatorToken struct {
 type OrOperatorToken struct {
 }
 
-type EqualOperatorToken struct {
+type ComparisonOperatorToken struct {
+	operator string
 }
 
 type Scanner struct {
@@ -137,8 +138,8 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return CloseParenToken{}, nil
 	case r == rune('-'):
 		return NotOperatorToken{}, nil
-	case r == rune('='):
-		return EqualOperatorToken{}, nil
+	case r == rune('='), r == rune('<'), r == rune('>'):
+		return scanner.readComparisonOperatorToken(r)
 	case unicode.IsOneOf(symbolChars, r):
 		return scanner.readTextToken(r)
 	default:
@@ -166,6 +167,28 @@ func (scanner *Scanner) readTextToken(r rune) (Token, error) {
 	return SymbolToken{text}, nil
 }
 
+func (scanner *Scanner) readComparisonOperatorToken(r rune) (Token, error) {
+	switch r {
+	case rune('='):
+		return ComparisonOperatorToken{"="}, nil
+	case rune('<'), rune('>'):
+		r2, _, err := scanner.stream.ReadRune()
+		if err != nil {
+			return nil, err
+		}
+
+		switch r2 {
+		case rune('='):
+			return ComparisonOperatorToken{string(r) + string(r2)}, nil
+		default:
+			scanner.stream.UnreadRune()
+			return ComparisonOperatorToken{string(r)}, nil
+		}
+	default:
+		panic("not a valid operator token: " + string(r))
+	}
+}
+
 func (scanner *Scanner) readString(r ...rune) (string, error) {
 	text := string(r)
 
@@ -182,7 +205,7 @@ func (scanner *Scanner) readString(r ...rune) (string, error) {
 		}
 
 		switch {
-		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='):
+		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='), r == rune('<'), r == rune('>'):
 			scanner.stream.UnreadRune()
 			return text, nil
 		case unicode.IsOneOf(symbolChars, r):

@@ -132,8 +132,8 @@ func validateTagName(tagName string) error {
 			return errors.New("tag names cannot contain parentheses: '(' or ')'.") // used in query language
 		case ',':
 			return errors.New("tag names cannot contain comma: ','.") // reserved for tag delimiter
-		case '=':
-			return errors.New("tag names cannot contain equals: '='.") // reserved for tag values
+		case '=', '<', '>':
+			return errors.New("tag names cannot contain a comparison operator: '=', '<' or '>'.") // reserved for tag values
 		case ' ', '\t':
 			return errors.New("tag names cannot contain space or tab.") // used as tag delimiter
 		case '/':

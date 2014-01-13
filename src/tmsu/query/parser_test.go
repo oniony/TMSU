@@ -36,8 +36,8 @@ func TestTagParsing(test *testing.T) {
 	validateTag(expression, "cheese", test)
 }
 
-func TestTagWithValueParsing(test *testing.T) {
-	scanner := NewScanner("filling=cheese")
+func TestTagEqualValueParsing(test *testing.T) {
+	scanner := NewScanner("year=2000")
 	parser := NewParser(scanner)
 
 	expression, err := parser.Parse()
@@ -47,9 +47,73 @@ func TestTagWithValueParsing(test *testing.T) {
 
 	dump(expression)
 
-	equals := validateEquals(expression)
-	validateTag(equals.Tag, "filling", test)
-	validateValue(equals.Value, "cheese", test)
+	comparison := validateComparison(expression, "=", test)
+	validateTag(comparison.Tag, "year", test)
+	validateValue(comparison.Value, "2000", test)
+}
+
+func TestTagGreaterThanValueParsing(test *testing.T) {
+	scanner := NewScanner("year>2000")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	comparison := validateComparison(expression, ">", test)
+	validateTag(comparison.Tag, "year", test)
+	validateValue(comparison.Value, "2000", test)
+}
+
+func TestTagLessThanValueParsing(test *testing.T) {
+	scanner := NewScanner("year<2000")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	comparison := validateComparison(expression, "<", test)
+	validateTag(comparison.Tag, "year", test)
+	validateValue(comparison.Value, "2000", test)
+}
+
+func TestTagGreaterThanOrEqualValueParsing(test *testing.T) {
+	scanner := NewScanner("year>=2000")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	comparison := validateComparison(expression, ">=", test)
+	validateTag(comparison.Tag, "year", test)
+	validateValue(comparison.Value, "2000", test)
+}
+
+func TestTagLessThanOrEqualValueParsing(test *testing.T) {
+	scanner := NewScanner("year<=2000")
+	parser := NewParser(scanner)
+
+	expression, err := parser.Parse()
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	dump(expression)
+
+	comparison := validateComparison(expression, "<=", test)
+	validateTag(comparison.Tag, "year", test)
+	validateValue(comparison.Value, "2000", test)
 }
 
 func TestNotParsing(test *testing.T) {
@@ -329,8 +393,13 @@ func validateAnd(expression Expression) AndExpression {
 	return expression.(AndExpression)
 }
 
-func validateEquals(expression Expression) EqualsExpression {
-	return expression.(EqualsExpression)
+func validateComparison(expression Expression, operator string, test *testing.T) ComparisonExpression {
+	comparisonExpression := expression.(ComparisonExpression)
+	if comparisonExpression.Operator != operator {
+		test.Fatalf("Expected '%v' comparison operator but was '%v'.", operator, comparisonExpression.Operator)
+	}
+
+	return comparisonExpression
 }
 
 func validateTag(expression Expression, expectedName string, test *testing.T) TagExpression {

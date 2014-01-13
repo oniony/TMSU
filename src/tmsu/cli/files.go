@@ -38,14 +38,15 @@ QUERY may contain:
 
   * Tag names to match
   * The logical operators: 'and', 'or' and 'not'
-  * The comparison operator: '='
+  * The comparison operators: '=', '>', '<', '>=' and '<='
   * Parentheses: '(' and ')'
 
 The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
 interpretted as 'chalk and cheese'.
 
-The comparison operator '=' is used to match on a particular tag value, for
-example, 'country=uk' will only match files with a 'country' value of 'uk'.
+The comparison operators are used to match on the values of tags. For example,
+'country=uk' will only match files tagged 'country=uk' whilst 'year<=2014' will
+match files tagged 'year=2014', 'year=2000', &c.
 
 Examples:
 
@@ -54,7 +55,8 @@ Examples:
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
     $ tmsu files year=2014                # tagged 'year' with a value '2014'
-    $ tmus files year                     # tagged 'year' (any or no value)`,
+    $ tmsu files year<2014                # tagged 'year' with values under '2014'
+    $ tmsu files year                     # tagged 'year' (any or no value)`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},

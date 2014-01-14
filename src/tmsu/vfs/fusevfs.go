@@ -661,7 +661,9 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		for _, tag := range tags {
 			_, has := tagNames[tag.Name]
 			if !has {
-				furtherTagNames = append(furtherTagNames, tag.Name)
+				if !containsName(furtherTagNames, tag.Name) {
+					furtherTagNames = append(furtherTagNames, tag.Name)
+				}
 			}
 		}
 	}
@@ -776,6 +778,16 @@ func atoui(str string) (uint, error) {
 func containsTag(tags entities.Tags, tagName string) bool {
 	for _, tag := range tags {
 		if tag.Name == tagName {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsName(tagNames []string, tagName string) bool {
+	for _, name := range tagNames {
+		if name == tagName {
 			return true
 		}
 	}

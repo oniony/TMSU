@@ -134,7 +134,7 @@ _tmsu_cmd_merge() {
 }
 
 _tmsu_cmd_mount() {
-    _arguments -s -w ''{--options,-o}'[mount options (passed to fusermount)]' \
+    _arguments -s -w ''{--options=,-o}'[mount options (passed to fusermount)]' \
                      ':file:_files' \
 	                 ':mountpoint:_dirs' \
 	&& ret=0
@@ -164,7 +164,7 @@ _tmsu_cmd_status() {
 _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
-	                 ''{--from+,-f}'[copy tags from the specified file]:source:_files' \
+	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
 	                 ''{--create+,-c}'[create a tag withou tagging any files]:source:_files' \
 	                 '*:: :->items' \
 	&& ret=0
@@ -200,7 +200,7 @@ _tmsu_cmd_unmount() {
 
 _tmsu_cmd_untag() {
 	_arguments -s -w ''{--all,-a}'[remove all tags]' \
-	                 ''{--tags,-t}'[remove set of tags from multiple files]' \
+	                 ''{--tags=,-t}'[remove set of tags from multiple files]' \
 	                 ''{--recursive,-r}'[remove tags recursively from contents of directories]' \
 	                 '*:: :->items' \
 	&& ret=0

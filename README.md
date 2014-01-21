@@ -146,6 +146,7 @@ v0.4.0 (in development)
 
   * Added support for tag values, e.g. 'country=uk'.
   * Added support for querying files based upon tag values, e.g. 'year > 2000'.
+  * Massive performance improvements.
   * Bug fixes.
 
 v0.3.0

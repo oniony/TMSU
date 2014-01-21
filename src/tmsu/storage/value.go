@@ -27,6 +27,11 @@ func (storage Storage) ValueCount() (uint, error) {
 	return storage.Db.ValueCount()
 }
 
+// Retrieves the complete set of values.
+func (storage Storage) Values() (entities.Values, error) {
+	return storage.Db.Values()
+}
+
 // Retrieves a specific value.
 func (storage Storage) Value(id uint) (*entities.Value, error) {
 	return storage.Db.Value(id)
@@ -42,7 +47,7 @@ func (storage Storage) ValueByName(name string) (*entities.Value, error) {
 }
 
 // Retrieves the set of values for the specified tag.
-func (storage *Storage) ValuesByTagId(tagId uint) (entities.Values, error) {
+func (storage *Storage) ValuesByTag(tagId uint) (entities.Values, error) {
 	return storage.Db.ValuesByTagId(tagId)
 }
 

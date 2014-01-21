@@ -36,6 +36,21 @@ func (db Database) ValueCount() (uint, error) {
 	return readCount(rows)
 }
 
+// Retrieves the complete set of values.
+func (db *Database) Values() (entities.Values, error) {
+	sql := `SELECT id, name
+            FROM value
+            ORDER BY name`
+
+	rows, err := db.transaction.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readValues(rows, make(entities.Values, 0, 10))
+}
+
 // Retrieves a specific value.
 func (db Database) Value(id uint) (*entities.Value, error) {
 	sql := `SELECT id, name

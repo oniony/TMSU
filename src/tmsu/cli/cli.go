@@ -47,6 +47,7 @@ var commands = map[string]*Command{
 	"tags":    &TagsCommand,
 	"unmount": &UnmountCommand,
 	"untag":   &UntagCommand,
+	"values":  &ValuesCommand,
 	"version": &VersionCommand,
 	"vfs":     &VfsCommand}
 

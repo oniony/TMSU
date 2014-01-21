@@ -7,7 +7,6 @@ ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 # other vars
 VER=0.4.0
 SHELL=/bin/sh
-HGREV=$(shell hg id)
 ARCH=$(shell uname -m)
 DIST_NAME=tmsu-$(ARCH)-$(VER)
 DIST_DIR=$(DIST_NAME)
@@ -25,7 +24,7 @@ clean:
 	rm -f $(DIST_FILE)
 
 generate:
-	echo "package common; var Version = \"$(VER) ($(HGREV))\"" >src/tmsu/common/version.gen.go
+	echo "package common; var Version = \"$(VER)\"" >src/tmsu/common/version.gen.go
 
 compile: generate
 	@mkdir -p bin

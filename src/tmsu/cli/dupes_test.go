@@ -55,6 +55,8 @@ func TestDupesSingle(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := DupesCommand.Exec(Options{}, []string{}); err != nil {
@@ -108,6 +110,8 @@ func TestDupesMultiple(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := DupesCommand.Exec(Options{}, []string{}); err != nil {
@@ -159,6 +163,8 @@ func TestDupesNone(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+
+	store.Commit()
 
 	// test
 
@@ -219,6 +225,8 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := DupesCommand.Exec(Options{}, []string{path}); err != nil {
@@ -278,6 +286,8 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := DupesCommand.Exec(Options{}, []string{path}); err != nil {
@@ -336,6 +346,8 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+
+	store.Commit()
 
 	// test
 

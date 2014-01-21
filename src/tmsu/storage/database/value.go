@@ -28,7 +28,7 @@ func (db Database) ValueCount() (uint, error) {
 	sql := `SELECT count(1)
             FROM value`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.transaction.Query(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -42,7 +42,7 @@ func (db Database) Value(id uint) (*entities.Value, error) {
 	        FROM value
 	        WHERE id = ?`
 
-	rows, err := db.connection.Query(sql, id)
+	rows, err := db.transaction.Query(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -57,7 +57,7 @@ func (db Database) ValueByName(name string) (*entities.Value, error) {
 	        FROM value
 	        WHERE name = ?`
 
-	rows, err := db.connection.Query(sql, name)
+	rows, err := db.transaction.Query(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (db *Database) ValuesByTagId(tagId uint) (entities.Values, error) {
                 WHERE tag_id = ?1)
             ORDER BY name`
 
-	rows, err := db.connection.Query(sql, tagId)
+	rows, err := db.transaction.Query(sql, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -90,7 +90,7 @@ func (db Database) InsertValue(name string) (*entities.Value, error) {
 	sql := `INSERT INTO value (name)
 	        VALUES (?)`
 
-	result, err := db.connection.Exec(sql, name)
+	result, err := db.transaction.Exec(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (db Database) DeleteValue(valueId uint) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
-	result, err := db.connection.Exec(sql, valueId)
+	result, err := db.transaction.Exec(sql, valueId)
 	if err != nil {
 		return err
 	}

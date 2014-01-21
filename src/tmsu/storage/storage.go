@@ -44,6 +44,10 @@ func OpenAt(path string) (*Storage, error) {
 	return &Storage{db}, nil
 }
 
+func (storage *Storage) Commit() error {
+	return storage.Db.Commit()
+}
+
 func (storage *Storage) Close() error {
 	err := storage.Db.Close()
 	if err != nil {

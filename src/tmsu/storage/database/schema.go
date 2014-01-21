@@ -21,7 +21,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-func (db Database) CreateSchema() error {
+func (db *Database) CreateSchema() error {
 	if err := db.CreateTagTable(); err != nil {
 		return err
 	}
@@ -42,30 +42,34 @@ func (db Database) CreateSchema() error {
 		return err
 	}
 
+	if err := db.Commit(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
-func (db Database) CreateTagTable() error {
+func (db *Database) CreateTagTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS tag (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
             )`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
            ON tag(name)`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db Database) CreateFileTable() error {
+func (db *Database) CreateFileTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS file (
                 id INTEGER PRIMARY KEY,
                 directory TEXT NOT NULL,
@@ -77,35 +81,35 @@ func (db Database) CreateFileTable() error {
                 CONSTRAINT con_file_path UNIQUE (directory, name)
             )`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
            ON file(fingerprint)`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db Database) CreateValueTable() error {
+func (db *Database) CreateValueTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS value (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
                 CONSTRAINT con_value_name UNIQUE (name)
             )`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db Database) CreateFileTagTable() error {
+func (db *Database) CreateFileTagTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS file_tag (
                 file_id INTEGER NOT NULL,
                 tag_id INTEGER NOT NULL,
@@ -116,40 +120,40 @@ func (db Database) CreateFileTagTable() error {
                 FOREIGN KEY (value_id) REFERENCES value(id)
             )`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
            ON file_tag(file_id)`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
            ON file_tag(tag_id)`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
            ON file_tag(value_id)`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db Database) CreateQueryTable() error {
+func (db *Database) CreateQueryTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS query (
                 text TEXT PRIMARY KEY
             )`
 
-	if _, err := db.connection.Exec(sql); err != nil {
+	if _, err := db.transaction.Exec(sql); err != nil {
 		return err
 	}
 

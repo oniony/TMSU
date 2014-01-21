@@ -29,7 +29,7 @@ func (db *Database) FileTagExists(fileId, tagId, value_id uint) (bool, error) {
             FROM file_tag
             WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
-	rows, err := db.connection.Query(sql, fileId, tagId, value_id)
+	rows, err := db.transaction.Query(sql, fileId, tagId, value_id)
 	if err != nil {
 		return false, err
 	}
@@ -46,7 +46,7 @@ func (db *Database) FileTagCount() (uint, error) {
 	sql = `SELECT count(1)
 	       FROM file_tag`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.transaction.Query(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -60,7 +60,7 @@ func (db *Database) FileTags() (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id, value_id
 	        FROM file_tag`
 
-	rows, err := db.connection.Query(sql)
+	rows, err := db.transaction.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -77,7 +77,7 @@ func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 	       FROM file_tag
 	       WHERE file_id = ?1`
 
-	rows, err := db.connection.Query(sql, fileId)
+	rows, err := db.transaction.Query(sql, fileId)
 	if err != nil {
 		return 0, err
 	}
@@ -94,7 +94,7 @@ func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
 	       FROM file_tag
 	       WHERE tag_id = ?1`
 
-	rows, err := db.connection.Query(sql, tagId)
+	rows, err := db.transaction.Query(sql, tagId)
 	if err != nil {
 		return 0, err
 	}
@@ -109,7 +109,7 @@ func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 	        FROM file_tag
 	        WHERE tag_id = ?1`
 
-	rows, err := db.connection.Query(sql, tagId)
+	rows, err := db.transaction.Query(sql, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -126,7 +126,7 @@ func (db *Database) FileTagCountByValueId(valueId uint) (uint, error) {
 	       FROM file_tag
 	       WHERE value_id = ?1`
 
-	rows, err := db.connection.Query(sql, valueId)
+	rows, err := db.transaction.Query(sql, valueId)
 	if err != nil {
 		return 0, err
 	}
@@ -141,7 +141,7 @@ func (db *Database) FileTagsByValueId(valueId uint) (entities.FileTags, error) {
 	        FROM file_tag
 	        WHERE value_id = ?1`
 
-	rows, err := db.connection.Query(sql, valueId)
+	rows, err := db.transaction.Query(sql, valueId)
 	if err != nil {
 		return nil, err
 	}
@@ -156,7 +156,7 @@ func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
             FROM file_tag
             WHERE file_id = ?1`
 
-	rows, err := db.connection.Query(sql, fileId)
+	rows, err := db.transaction.Query(sql, fileId)
 	if err != nil {
 		return nil, err
 	}
@@ -170,7 +170,7 @@ func (db *Database) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, 
 	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id, value_id)
             VALUES (?1, ?2, ?3)`
 
-	_, err := db.connection.Exec(sql, fileId, tagId, valueId)
+	_, err := db.transaction.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
 		return nil, err
 	}
@@ -183,7 +183,7 @@ func (db *Database) DeleteFileTag(fileId, tagId, valueId uint) error {
 	sql := `DELETE FROM file_tag
 	        WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
-	result, err := db.connection.Exec(sql, fileId, tagId, valueId)
+	result, err := db.transaction.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
 		return err
 	}
@@ -204,7 +204,7 @@ func (db *Database) DeleteFileTagsByFileId(fileId uint) error {
 	sql := `DELETE FROM file_tag
 	        WHERE file_id = ?`
 
-	_, err := db.connection.Exec(sql, fileId)
+	_, err := db.transaction.Exec(sql, fileId)
 	if err != nil {
 		return err
 	}
@@ -217,7 +217,7 @@ func (db *Database) DeleteFileTagsByTagId(tagId uint) error {
 	sql := `DELETE FROM file_tag
 	        WHERE tag_id = ?`
 
-	_, err := db.connection.Exec(sql, tagId)
+	_, err := db.transaction.Exec(sql, tagId)
 	if err != nil {
 		return err
 	}
@@ -232,7 +232,7 @@ func (db *Database) CopyFileTags(sourceTagId uint, destTagId uint) error {
             FROM file_tag
             WHERE tag_id = ?1`
 
-	_, err := db.connection.Exec(sql, sourceTagId, destTagId)
+	_, err := db.transaction.Exec(sql, sourceTagId, destTagId)
 	if err != nil {
 		return err
 	}

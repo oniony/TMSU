@@ -20,6 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"os/user"
@@ -43,7 +44,8 @@ func init() {
 }
 
 type Database struct {
-	connection *sql.DB
+	connection  *sql.DB
+	transaction *sql.Tx
 }
 
 func Open() (*Database, error) {
@@ -66,17 +68,36 @@ func OpenAt(path string) (*Database, error) {
 
 	connection, err := sql.Open("sqlite3", path)
 	if err != nil {
-		return nil, errors.New("could not open database: " + err.Error())
+		return nil, fmt.Errorf("could not open database: %v", err)
 	}
 
-	database := Database{connection}
-
-	err = database.CreateSchema()
+	transaction, err := connection.Begin()
 	if err != nil {
+		return nil, fmt.Errorf("could not begin transaciton: %v", err)
+	}
+
+	database := &Database{connection, transaction}
+
+	if err := database.CreateSchema(); err != nil {
 		return nil, errors.New("could not create database schema: " + err.Error())
 	}
 
-	return &database, nil
+	return database, nil
+}
+
+func (db *Database) Commit() error {
+	if err := db.transaction.Commit(); err != nil {
+		return fmt.Errorf("could not commit transaction: %v", err)
+	}
+
+	transaction, err := db.connection.Begin()
+	if err != nil {
+		return fmt.Errorf("could not begin new transaction: %v", err)
+	}
+
+	db.transaction = transaction
+
+	return nil
 }
 
 func (db *Database) Close() error {

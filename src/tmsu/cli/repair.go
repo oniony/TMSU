@@ -79,6 +79,7 @@ func repairExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	if len(args) == 0 {
 		return repairDatabase(store, pretend, force)

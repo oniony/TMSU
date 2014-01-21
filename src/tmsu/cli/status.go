@@ -166,6 +166,7 @@ func statusPaths(paths []string, dirOnly bool) (*StatusReport, error) {
 		return nil, fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)

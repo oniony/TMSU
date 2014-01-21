@@ -46,6 +46,7 @@ func renameExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	if len(args) < 2 {
 		return fmt.Errorf("tag to rename and new name must both be specified.")

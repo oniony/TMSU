@@ -62,6 +62,8 @@ func TestSingleUntag(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := UntagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
@@ -118,6 +120,8 @@ func TestMultipleUntag(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+
+	store.Commit()
 
 	// test
 
@@ -181,6 +185,8 @@ func TestUntagMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := UntagCommand.Exec(Options{Option{"--tags", "-t", "", true, "apple"}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
@@ -242,6 +248,8 @@ func TestUntagAll(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+
+	store.Commit()
 
 	// test
 

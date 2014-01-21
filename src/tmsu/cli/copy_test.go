@@ -60,6 +60,8 @@ func TestCopySuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := CopyCommand.Exec(Options{}, []string{"source", "dest"}); err != nil {
@@ -135,6 +137,8 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
+
+	store.Commit()
 
 	// test
 

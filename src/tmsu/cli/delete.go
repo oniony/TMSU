@@ -47,6 +47,7 @@ func deleteExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	for _, tagName := range args {
 		tag, err := store.TagByName(tagName)

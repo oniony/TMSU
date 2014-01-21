@@ -21,6 +21,11 @@ import (
 	"errors"
 )
 
+type TagValuePair struct {
+	TagId   uint
+	ValueId uint
+}
+
 func ValidateTagNames(tagNames []string) error {
 	for _, tagName := range tagNames {
 		if err := ValidateTagName(tagName); err != nil {

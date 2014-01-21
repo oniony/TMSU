@@ -98,6 +98,7 @@ func untagPathsAll(paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	for _, path := range paths {
 		if err := untagPathAll(store, path, recursive); err != nil {
@@ -114,19 +115,20 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
+
+	tagValuePairs := make([]TagValuePair, 0, 10)
 
 	for _, tagArg := range tagArgs {
-		parts := strings.Split(tagArg, "=")
-		tagName := parts[0]
-		var valueName string
+		var tagName, valueName string
+		index := strings.Index(tagArg, "=")
 
-		switch len(parts) {
-		case 1:
-			valueName = ""
-		case 2:
-			valueName = parts[1]
+		switch index {
+		case -1, 0:
+			tagName = tagArg
 		default:
-			return fmt.Errorf("too many '='")
+			tagName = tagArg[0:index]
+			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
 		tag, err := store.TagByName(tagName)
@@ -145,10 +147,12 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 			return fmt.Errorf("no such value '%v'", valueName)
 		}
 
-		for _, path := range paths {
-			if err := untagPath(store, path, tag.Id, value.Id, recursive); err != nil {
-				return err
-			}
+		tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
+	}
+
+	for _, path := range paths {
+		if err := untagPath(store, path, tagValuePairs, recursive); err != nil {
+			return err
 		}
 	}
 
@@ -191,7 +195,7 @@ func untagPathAll(store *storage.Storage, path string, recursive bool) error {
 	return nil
 }
 
-func untagPath(store *storage.Storage, path string, tagId, valueId uint, recursive bool) error {
+func untagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, recursive bool) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -205,10 +209,12 @@ func untagPath(store *storage.Storage, path string, tagId, valueId uint, recursi
 		return fmt.Errorf("%v: file is not tagged.", path)
 	}
 
-	log.Infof(2, "%v: unapplying tag #%v, value #%v.", file.Path(), tagId, valueId)
+	log.Infof(2, "%v: unapplying tags.", file.Path())
 
-	if err := store.DeleteFileTag(file.Id, tagId, valueId); err != nil {
-		return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagId, valueId, err)
+	for _, tagValuePair := range tagValuePairs {
+		if err := store.DeleteFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
+			return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
+		}
 	}
 
 	if recursive {
@@ -218,10 +224,12 @@ func untagPath(store *storage.Storage, path string, tagId, valueId uint, recursi
 		}
 
 		for _, childFile := range childFiles {
-			log.Infof(2, "%v: unapplying tag #%v.", childFile.Path(), tagId)
+			log.Infof(2, "%v: unapplying tags.", childFile.Path())
 
-			if err := store.DeleteFileTag(childFile.Id, tagId, valueId); err != nil {
-				return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", childFile.Path(), tagId, valueId, err)
+			for _, tagValuePair := range tagValuePairs {
+				if err := store.DeleteFileTag(childFile.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
+					return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", childFile.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
+				}
 			}
 		}
 	}

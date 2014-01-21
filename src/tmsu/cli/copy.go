@@ -44,6 +44,7 @@ func copyExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	sourceTagName := args[0]
 	destTagNames := args[1:]

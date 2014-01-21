@@ -40,6 +40,8 @@ func TestSingleTag(test *testing.T) {
 	}
 	defer os.Remove("/tmp/tmsu/a")
 
+	store.Commit()
+
 	// test
 
 	if err := TagCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "apple"}); err != nil {
@@ -101,6 +103,8 @@ func TestMultipleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 	defer os.Remove("/tmp/tmsu/a")
+
+	store.Commit()
 
 	// test
 
@@ -186,6 +190,8 @@ func TestTagMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 	defer os.Remove("/tmp/tmsu/b")
+
+	store.Commit()
 
 	// test
 

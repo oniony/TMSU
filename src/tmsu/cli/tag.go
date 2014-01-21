@@ -122,6 +122,7 @@ func createTags(names []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	tags, err := store.TagsByNames(names)
 	if err != nil {
@@ -148,20 +149,20 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
-	wasError := false
+	tagValuePairs := make([]TagValuePair, 0, 10)
+
 	for _, tagArg := range tagArgs {
-		parts := strings.Split(tagArg, "=")
-		tagName := parts[0]
-		var valueName string
+		var tagName, valueName string
+		index := strings.Index(tagArg, "=")
 
-		switch len(parts) {
-		case 1:
-			valueName = ""
-		case 2:
-			valueName = parts[1]
+		switch index {
+		case -1, 0:
+			tagName = tagArg
 		default:
-			return fmt.Errorf("too many '='")
+			tagName = tagArg[0:index]
+			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
 		tag, err := store.TagByName(tagName)
@@ -169,12 +170,12 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 			return fmt.Errorf("could not look up tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
-			log.Warnf("New tag '%v'.", tagName)
-
 			tag, err = store.AddTag(tagName)
 			if err != nil {
 				return fmt.Errorf("could not create tag '%v': %v", tagName, err)
 			}
+
+			log.Warnf("New tag '%v'.", tagName)
 		}
 
 		value, err := store.ValueByName(valueName)
@@ -188,16 +189,13 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 			}
 		}
 
-		for _, path := range paths {
-			if err := tagPath(store, path, tag.Id, value.Id, recursive); err != nil {
-				log.Warn(err)
-				wasError = true
-			}
-		}
+		tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
 	}
 
-	if wasError {
-		return fmt.Errorf("failed to tag all paths")
+	for _, path := range paths {
+		if err := tagPath(store, path, tagValuePairs, recursive); err != nil {
+			return err
+		}
 	}
 
 	return nil
@@ -209,6 +207,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	file, err := store.FileByPath(fromPath)
 	if err != nil {
@@ -223,24 +222,21 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
 	}
 
-	wasError := false
-	for _, fileTag := range fileTags {
-		for _, path := range paths {
-			if err = tagPath(store, path, fileTag.TagId, fileTag.ValueId, recursive); err != nil {
-				log.Warn(err)
-				wasError = true
-			}
-		}
+	tagValuePairs := make([]TagValuePair, len(fileTags))
+	for index, fileTag := range fileTags {
+		tagValuePairs[index] = TagValuePair{fileTag.TagId, fileTag.ValueId}
 	}
 
-	if wasError {
-		return fmt.Errorf("failed to tag all paths")
+	for _, path := range paths {
+		if err := tagPath(store, path, tagValuePairs, recursive); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
-func tagPath(store *storage.Storage, path string, tagId, valueId uint, recursive bool) error {
+func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, recursive bool) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -271,14 +267,16 @@ func tagPath(store *storage.Storage, path string, tagId, valueId uint, recursive
 		}
 	}
 
-	log.Infof(2, "%v: applying tag.", file.Path(), tagId)
+	log.Infof(2, "%v: applying tags.", file.Path())
 
-	if _, err = store.AddFileTag(file.Id, tagId, valueId); err != nil {
-		return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
+	for _, tagValuePair := range tagValuePairs {
+		if _, err = store.AddFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
+			return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
+		}
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, path, tagId, valueId); err != nil {
+		if err = tagRecursively(store, path, tagValuePairs); err != nil {
 			return err
 		}
 	}
@@ -286,7 +284,7 @@ func tagPath(store *storage.Storage, path string, tagId, valueId uint, recursive
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagId, valueId uint) error {
+func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -301,7 +299,7 @@ func tagRecursively(store *storage.Storage, path string, tagId, valueId uint) er
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = tagPath(store, childPath, tagId, valueId, true); err != nil {
+		if err = tagPath(store, childPath, tagValuePairs, true); err != nil {
 			return err
 		}
 	}
@@ -325,14 +323,4 @@ func addFile(store *storage.Storage, path string, modTime time.Time, size uint, 
 	}
 
 	return file, nil
-}
-
-func containsTag(tagIds []uint, searchTagId uint) bool {
-	for _, tagId := range tagIds {
-		if tagId == searchTagId {
-			return true
-		}
-	}
-
-	return false
 }

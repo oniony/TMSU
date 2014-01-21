@@ -183,9 +183,12 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 	case tagsDir:
 		name := path[1]
 
-		_, err := vfs.store.AddTag(name)
-		if err != nil {
+		if _, err := vfs.store.AddTag(name); err != nil {
 			log.Fatalf("could not create tag '%v': %v", name, err)
+		}
+
+		if err := vfs.store.Commit(); err != nil {
+			log.Fatalf("could not commit transaction: %v", err)
 		}
 
 		return fuse.OK
@@ -298,6 +301,10 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
 	}
 
+	if err := vfs.store.Commit(); err != nil {
+		log.Fatalf("could not commit transaction: %v", err)
+	}
+
 	return fuse.OK
 }
 
@@ -335,6 +342,10 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not delete tag '%v': %v", tagName, err)
 		}
 
+		if err := vfs.store.Commit(); err != nil {
+			log.Fatalf("could not commit transaction: %v", err)
+		}
+
 		return fuse.OK
 	case queriesDir:
 		if len(path) != 2 {
@@ -344,9 +355,12 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 		text := path[1]
 
-		err := vfs.store.DeleteQuery(text)
-		if err != nil {
+		if err := vfs.store.DeleteQuery(text); err != nil {
 			log.Fatalf("could not remove tag '%v': %v", name, err)
+		}
+
+		if err := vfs.store.Commit(); err != nil {
+			log.Fatalf("could not commit transaction: %v", err)
 		}
 
 		return fuse.OK
@@ -420,9 +434,12 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve tag '%v'.", tagName)
 		}
 
-		err = vfs.store.DeleteFileTag(fileId, tag.Id, 0)
-		if err != nil {
+		if err = vfs.store.DeleteFileTag(fileId, tag.Id, 0); err != nil {
 			log.Fatal(err)
+		}
+
+		if err := vfs.store.Commit(); err != nil {
+			log.Fatalf("could not commit transaction: %v", err)
 		}
 
 		return fuse.OK
@@ -598,6 +615,10 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	}
 
 	_, _ = vfs.store.AddQuery(queryText)
+
+	if err := vfs.store.Commit(); err != nil {
+		log.Fatalf("could not commit transaction: %v", err)
+	}
 
 	now := time.Now()
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK

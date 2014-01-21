@@ -77,6 +77,8 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
+	store.Commit()
+
 	// test
 
 	if err := DeleteCommand.Exec(Options{}, []string{"deathrow"}); err != nil {

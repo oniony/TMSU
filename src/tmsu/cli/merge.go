@@ -48,6 +48,7 @@ func mergeExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+	defer store.Commit()
 
 	destTagName := args[len(args)-1]
 	destTag, err := store.TagByName(destTagName)

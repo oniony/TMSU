@@ -20,7 +20,7 @@ _tmsu() {
             db="$words[$i]"
         fi
 
-        if [[ $words[$i] == -database ]];
+        if [[ $words[$i] == -D ]];
         then
             db="--database=$words[$i+1]"
         fi
@@ -81,9 +81,9 @@ _tmsu_query() {
 	do
 		tag_list+=$tag[1]:gs/:/\\:/
 	done
-	tag_list+='AND'
-	tag_list+='OR'
-	tag_list+='NOT'
+	tag_list+='and'
+	tag_list+='or'
+	tag_list+='not'
 
 	_describe -t tags 'tags' tag_list
 }
@@ -171,7 +171,7 @@ _tmsu_cmd_tag() {
 
 	case $state in
         (items)
-            if (( ${+opt_args[--tags]} ))
+            if (( ${+opt_args[--tags]} || ${+opt_args[-t]} ))
             then
                 _wanted files expl 'files' _files
             else
@@ -207,7 +207,7 @@ _tmsu_cmd_untag() {
 
 	case $state in
 		(items)
-			if (( ${+opt_args[--tags]} ))
+			if (( ${+opt_args[--tags]} || ${+opt_args[-t]} ))
 			then
 				if (( CURRENT == 1 ))
 				then
@@ -217,7 +217,7 @@ _tmsu_cmd_untag() {
 					local expl
 					_wanted files expl 'files' _files
 				fi
-			elif (( ${+opt_args[--all]} ))
+			elif (( ${+opt_args[--all]} || ${+opt_args[-a]} ))
 			then
 				local expl
 				_wanted files expl 'files' _files

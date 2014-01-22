@@ -58,7 +58,7 @@ func valuesExec(options Options, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("at least one tag must be specified")
+		return fmt.Errorf("at least one tag must be specified. Use --all to show all values.")
 	}
 
 	return listValues(args, showCount)

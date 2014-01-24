@@ -86,9 +86,13 @@ func (parser *OptionParser) Parse(args []string) (commandName string, options Op
 	for index := 0; index < len(args); index++ {
 		arg := args[index]
 
-		if arg == "--" {
+		switch arg {
+		case "":
+			err = fmt.Errorf("invalid empty argument")
+			return
+		case "--":
 			parseOptions = false
-		} else {
+		default:
 			if parseOptions && arg[0] == '-' {
 				parts := strings.SplitN(arg, "=", 2)
 				optionName := parts[0]

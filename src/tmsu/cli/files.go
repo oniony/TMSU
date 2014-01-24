@@ -48,6 +48,11 @@ The comparison operators are used to match on the values of tags. For example,
 'country=uk' will only match files tagged 'country=uk' whilst 'year<=2014' will
 match files tagged 'year=2014', 'year=2000', &c.
 
+Note: Your shell may try to interpret some of the punctuation, e.g. most shells
+will interpret the '<' and '>' operators as stream redirects. Enclosing the
+query in quotation marks is often sufficient to avoid this but some characters
+may need to be escaped (normally with a backslash).
+
 Examples:
 
     $ tmsu files music mp3                # files with both 'music' and 'mp3'
@@ -55,7 +60,7 @@ Examples:
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
     $ tmsu files year=2014                # tagged 'year' with a value '2014'
-    $ tmsu files year<2014                # tagged 'year' with values under '2014'
+    $ tmsu files "year<2014"              # tagged 'year' with values under '2014'
     $ tmsu files year                     # tagged 'year' (any or no value)`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},

@@ -24,7 +24,7 @@ import (
 	"unicode"
 )
 
-var symbolChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct}
+var symbolChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
 
 type Token interface {
 }

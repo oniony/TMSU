@@ -19,7 +19,11 @@ package cli
 
 import (
 	"errors"
+	"fmt"
+	"unicode"
 )
+
+var validChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
 
 type TagValuePair struct {
 	TagId   uint
@@ -43,25 +47,29 @@ func ValidateTagName(tagName string) error {
 	case ".", "..":
 		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
 	case "and", "or", "not", "AND", "OR", "NOT":
-		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
+		return errors.New("tag name cannot be a logical operator, 'and', 'or' or 'not'.") // used in query language
 	}
 
 	if tagName[0] == '-' {
 		return errors.New("tag name cannot start with a minus: '-'.") // used in query language
 	}
 
-	for _, ch := range tagName {
-		switch ch {
+	for _, r := range tagName {
+		switch r {
 		case '(', ')':
-			return errors.New("tag names cannot contain parentheses: '(' or ')'.") // used in query language
+			return errors.New("tag names cannot contain parentheses, '(' or ')'.") // used in query language
 		case ',':
-			return errors.New("tag names cannot contain comma: ','.") // reserved for tag delimiter
+			return errors.New("tag names cannot contain commas, ','.") // reserved for tag delimiter
 		case '=':
-			return errors.New("tag names cannot contain equals: '='.") // reserved for tag values
+			return errors.New("tag names cannot contain comparison operators, '=', '<' or '>'.") // reserved for tag values
 		case ' ', '\t':
-			return errors.New("tag names cannot contain space or tab.") // used as tag delimiter
+			return errors.New("tag names cannot contain spaces or tabs.") // used as tag delimiter
 		case '/':
-			return errors.New("tag names cannot contain slash: '/'.") // cannot be used in the VFS
+			return errors.New("tag names cannot contain slashes, '/'.") // cannot be used in the VFS
+		}
+
+		if !unicode.IsOneOf(validChars, r) {
+			return fmt.Errorf("tag names cannot contain '%v'.", r)
 		}
 	}
 

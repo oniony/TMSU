@@ -5,7 +5,7 @@ MAN_INSTALL_DIR=/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 # other vars
-VER=0.3.2
+VER=0.3.1
 SHELL=/bin/sh
 HGREV=$(shell hg id)
 ARCH=$(shell uname -m)

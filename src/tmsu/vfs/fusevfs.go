@@ -63,7 +63,7 @@ type FuseVfs struct {
 func MountVfs(databasePath string, mountPath string, options []string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
 	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
-	conn := nodefs.NewFileSystemConnector(pathFs, nil)
+	conn := nodefs.NewFileSystemConnector(pathFs.Root(), nil)
 	mountOptions := &fuse.MountOptions{Options: options}
 
 	server, err := fuse.NewServer(conn.RawFS(), mountPath, mountOptions)

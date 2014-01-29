@@ -84,6 +84,11 @@ _tmsu_query() {
 	tag_list+='and'
 	tag_list+='or'
 	tag_list+='not'
+	tag_list+='='
+	tag_list+='\<'
+	tag_list+='\>'
+	tag_list+='\<='
+	tag_list+='\>='
 
 	_describe -t tags 'tags' tag_list
 }

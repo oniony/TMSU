@@ -88,12 +88,6 @@ func mergeExec(options Options, args []string) error {
 			}
 		}
 
-		log.Infof(2, "untagging files '%v'.", sourceTagName)
-
-		if err := store.DeleteFileTagsByTagId(sourceTag.Id); err != nil {
-			return fmt.Errorf("could not remove all applications of tag '%v': %v", sourceTagName, err)
-		}
-
 		log.Infof(2, "deleting tag '%v'.", sourceTagName)
 
 		err = store.DeleteTag(sourceTag.Id)

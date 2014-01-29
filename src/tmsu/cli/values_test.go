@@ -187,17 +187,17 @@ func TestAllValues(test *testing.T) {
 	}
 	defer store.Close()
 
-	woodValue, err := store.AddValue("wood")
+	_, err = store.AddValue("wood")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	metalValue, err := store.AddValue("metal")
+	_, err = store.AddValue("metal")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	torroidValue, err := store.AddValue("torroid")
+	_, err = store.AddValue("torroid")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -215,5 +215,5 @@ func TestAllValues(test *testing.T) {
 	outFile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(outFile)
-	compareOutput(test, "material: metal wood\nshape: torroid\n", string(bytes))
+	compareOutput(test, "metal\ntorroid\nwood\n", string(bytes))
 }

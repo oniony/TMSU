@@ -77,24 +77,12 @@ func (storage *Storage) DeleteFileTag(fileId, tagId, valueId uint) error {
 		return err
 	}
 
-	count, err := storage.Db.FileTagCountByFileId(fileId)
-	if err != nil {
+	if err := storage.DeleteUntaggedFiles(); err != nil {
 		return err
-	}
-	if count == 0 {
-		if err := storage.Db.DeleteFile(fileId); err != nil {
-			return err
-		}
 	}
 
-	count, err = storage.Db.FileTagCountByValueId(valueId)
-	if err != nil {
+	if err := storage.DeleteUnusedValues(); err != nil {
 		return err
-	}
-	if count == 0 {
-		if err := storage.Db.DeleteValue(valueId); err != nil {
-			return err
-		}
 	}
 
 	return nil
@@ -102,35 +90,16 @@ func (storage *Storage) DeleteFileTag(fileId, tagId, valueId uint) error {
 
 // Deletes all of the file tags for the specified file.
 func (storage *Storage) DeleteFileTagsByFileId(fileId uint) error {
-	fileTags, err := storage.Db.FileTagsByFileId(fileId)
-	if err != nil {
-		return err
-	}
-
 	if err := storage.Db.DeleteFileTagsByFileId(fileId); err != nil {
 		return err
 	}
 
-	count, err := storage.Db.FileTagCountByFileId(fileId)
-	if err != nil {
+	if err := storage.DeleteUntaggedFiles(); err != nil {
 		return err
 	}
-	if count == 0 {
-		if err := storage.Db.DeleteFile(fileId); err != nil {
-			return err
-		}
-	}
 
-	for _, fileTag := range fileTags {
-		count, err := storage.Db.FileTagCountByValueId(fileTag.ValueId)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			if err := storage.Db.DeleteValue(fileTag.ValueId); err != nil {
-				return err
-			}
-		}
+	if err := storage.DeleteUnusedValues(); err != nil {
+		return err
 	}
 
 	return nil
@@ -138,35 +107,16 @@ func (storage *Storage) DeleteFileTagsByFileId(fileId uint) error {
 
 // Deletes all of the file tags for the specified tag.
 func (storage *Storage) DeleteFileTagsByTagId(tagId uint) error {
-	fileTags, err := storage.Db.FileTagsByTagId(tagId)
-	if err != nil {
-		return err
-	}
-
 	if err := storage.Db.DeleteFileTagsByTagId(tagId); err != nil {
 		return err
 	}
 
-	for _, fileTag := range fileTags {
-		count, err := storage.Db.FileTagCountByFileId(fileTag.FileId)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			if err := storage.Db.DeleteFile(fileTag.FileId); err != nil {
-				return err
-			}
-		}
+	if err := storage.DeleteUntaggedFiles(); err != nil {
+		return err
+	}
 
-		count, err = storage.Db.FileTagCountByValueId(fileTag.ValueId)
-		if err != nil {
-			return err
-		}
-		if count == 0 {
-			if err := storage.Db.DeleteValue(fileTag.ValueId); err != nil {
-				return err
-			}
-		}
+	if err := storage.DeleteUnusedValues(); err != nil {
+		return err
 	}
 
 	return nil

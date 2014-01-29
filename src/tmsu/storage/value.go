@@ -23,22 +23,27 @@ import (
 )
 
 // Retrievse the count of values.
-func (storage Storage) ValueCount() (uint, error) {
+func (storage *Storage) ValueCount() (uint, error) {
 	return storage.Db.ValueCount()
 }
 
 // Retrieves the complete set of values.
-func (storage Storage) Values() (entities.Values, error) {
+func (storage *Storage) Values() (entities.Values, error) {
 	return storage.Db.Values()
 }
 
 // Retrieves a specific value.
-func (storage Storage) Value(id uint) (*entities.Value, error) {
+func (storage *Storage) Value(id uint) (*entities.Value, error) {
 	return storage.Db.Value(id)
 }
 
+// Retrievse the set of unused values.
+func (storage *Storage) UnusedValues() (entities.Values, error) {
+	return storage.Db.UnusedValues()
+}
+
 // Retrieves a specific value by name.
-func (storage Storage) ValueByName(name string) (*entities.Value, error) {
+func (storage *Storage) ValueByName(name string) (*entities.Value, error) {
 	if name == "" {
 		return &entities.Value{0, ""}, nil
 	}
@@ -61,9 +66,17 @@ func (storage *Storage) AddValue(name string) (*entities.Value, error) {
 }
 
 // Deletes a value.
-func (storage Storage) DeleteValue(valueId uint) error {
-	//TODO delete filetags that reference the value
-	return storage.Db.DeleteValue(valueId)
+func (storage *Storage) DeleteValue(valueId uint) error {
+	if err := storage.Db.DeleteValue(valueId); err != nil {
+		return err
+	}
+
+	return storage.DeleteUnusedValues()
+}
+
+// Deletes unused values.
+func (storage *Storage) DeleteUnusedValues() error {
+	return storage.Db.DeleteUnusedValues()
 }
 
 // unexported

@@ -24,7 +24,7 @@ import (
 )
 
 // Retrieves the count of values.
-func (db Database) ValueCount() (uint, error) {
+func (db *Database) ValueCount() (uint, error) {
 	sql := `SELECT count(1)
             FROM value`
 
@@ -52,7 +52,7 @@ func (db *Database) Values() (entities.Values, error) {
 }
 
 // Retrieves a specific value.
-func (db Database) Value(id uint) (*entities.Value, error) {
+func (db *Database) Value(id uint) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id = ?`
@@ -66,8 +66,24 @@ func (db Database) Value(id uint) (*entities.Value, error) {
 	return readValue(rows)
 }
 
+// Retrieves the set of unused values.
+func (db *Database) UnusedValues() (entities.Values, error) {
+	sql := `SELECT id, name
+            FROM value
+            WHERE id NOT IN (SELECT distinct(value_id)
+                             FROM file_tag)`
+
+	rows, err := db.transaction.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readValues(rows, make(entities.Values, 0, 10))
+}
+
 // Retrieves a specific value by name.
-func (db Database) ValueByName(name string) (*entities.Value, error) {
+func (db *Database) ValueByName(name string) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE name = ?`
@@ -101,7 +117,7 @@ func (db *Database) ValuesByTagId(tagId uint) (entities.Values, error) {
 }
 
 // Adds a value.
-func (db Database) InsertValue(name string) (*entities.Value, error) {
+func (db *Database) InsertValue(name string) (*entities.Value, error) {
 	sql := `INSERT INTO value (name)
 	        VALUES (?)`
 
@@ -127,7 +143,7 @@ func (db Database) InsertValue(name string) (*entities.Value, error) {
 }
 
 // Deletes a value.
-func (db Database) DeleteValue(valueId uint) error {
+func (db *Database) DeleteValue(valueId uint) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
@@ -142,6 +158,20 @@ func (db Database) DeleteValue(valueId uint) error {
 	}
 	if rowsAffected > 1 {
 		return errors.New("expected only one row to be affected.")
+	}
+
+	return nil
+}
+
+// Deletes all unused values.
+func (db *Database) DeleteUnusedValues() error {
+	sql := `DELETE FROM value
+            WHERE id NOT IN (SELECT distinct(value_id)
+                             FROM file_tag)`
+
+	_, err := db.transaction.Exec(sql)
+	if err != nil {
+		return nil
 	}
 
 	return nil

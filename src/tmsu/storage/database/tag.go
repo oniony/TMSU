@@ -39,7 +39,7 @@ func (db *Database) TagCount() (uint, error) {
 }
 
 // The set of tags.
-func (db Database) Tags() (entities.Tags, error) {
+func (db *Database) Tags() (entities.Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -54,7 +54,7 @@ func (db Database) Tags() (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (db Database) Tag(id uint) (*entities.Tag, error) {
+func (db *Database) Tag(id uint) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
@@ -69,7 +69,7 @@ func (db Database) Tag(id uint) (*entities.Tag, error) {
 }
 
 // Retrieves a specific set of tags.
-func (db Database) TagsByIds(ids []uint) (entities.Tags, error) {
+func (db *Database) TagsByIds(ids []uint) (entities.Tags, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id IN (?`
@@ -96,7 +96,7 @@ func (db Database) TagsByIds(ids []uint) (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (db Database) TagByName(name string) (*entities.Tag, error) {
+func (db *Database) TagByName(name string) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE name = ?`
@@ -111,7 +111,7 @@ func (db Database) TagByName(name string) (*entities.Tag, error) {
 }
 
 // Retrieves the set of named tags.
-func (db Database) TagsByNames(names []string) (entities.Tags, error) {
+func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
 	if len(names) == 0 {
 		return make(entities.Tags, 0), nil
 	}
@@ -141,7 +141,7 @@ func (db Database) TagsByNames(names []string) (entities.Tags, error) {
 }
 
 // Adds a tag.
-func (db Database) InsertTag(name string) (*entities.Tag, error) {
+func (db *Database) InsertTag(name string) (*entities.Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
@@ -167,7 +167,7 @@ func (db Database) InsertTag(name string) (*entities.Tag, error) {
 }
 
 // Renames a tag.
-func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
+func (db *Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
@@ -189,7 +189,7 @@ func (db Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 }
 
 // Deletes a tag.
-func (db Database) DeleteTag(tagId uint) error {
+func (db *Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 

@@ -137,6 +137,22 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (ent
 	return readFiles(rows, make(entities.Files, 0, 1))
 }
 
+// Retrieves the set of untagged files.
+func (db *Database) UntaggedFiles() (entities.Files, error) {
+	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+            FROM file
+            WHERE id NOT IN (SELECT distinct(file_id)
+                             FROM file_tag)`
+
+	rows, err := db.transaction.Query(sql)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	return readFiles(rows, make(entities.Files, 0, 10))
+}
+
 // Retrieves the count of files matching the specified query.
 func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
 	sql := buildCountQuery(expression)
@@ -299,6 +315,20 @@ func (db *Database) DeleteFile(fileId uint) error {
 	}
 	if rowsAffected > 1 {
 		return errors.New("expected only one row to be affected.")
+	}
+
+	return nil
+}
+
+// Deletes all untagged files.
+func (db *Database) DeleteUntaggedFiles() error {
+	sql := `DELETE FROM file
+            WHERE id NOT IN (SELECT distinct(file_id)
+                             FROM file_tag)`
+
+	_, err := db.transaction.Exec(sql)
+	if err != nil {
+		return err
 	}
 
 	return nil

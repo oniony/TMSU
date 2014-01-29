@@ -88,6 +88,11 @@ func (storage *Storage) FileCountWithTags(tagNames []string) (uint, error) {
 	return storage.Db.QueryFileCount(expression)
 }
 
+// Retrieves the set of untagged files.
+func (storage *Storage) UntaggedFiles() (entities.Files, error) {
+	return storage.Db.UntaggedFiles()
+}
+
 // Retrieves the set of files with the specified tags.
 func (storage *Storage) FilesWithTags(tagNames []string) (entities.Files, error) {
 	expression := query.HasAll(tagNames)
@@ -122,4 +127,9 @@ func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerp
 // Deletes a file from the database.
 func (storage *Storage) DeleteFile(fileId uint) error {
 	return storage.Db.DeleteFile(fileId)
+}
+
+// Deletes all untagged files from the database.
+func (storage *Storage) DeleteUntaggedFiles() error {
+	return storage.Db.DeleteUntaggedFiles()
 }

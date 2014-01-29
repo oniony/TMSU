@@ -138,7 +138,7 @@ v0.4.0 (in development)
   database please run the following:
 
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
-    $ sqlite3 -init misc/db-upgrade/0.3_to_0.4.0.sql
+    $ sqlite3 -init misc/db-upgrade/0.3_to_0.4.0.sql ~/.tmsu/default.db .q
 
   Note: This release removes support for tag implications. Implications will be
   replaced with a fuller tag relationship facility in a later version and a
@@ -156,8 +156,8 @@ v0.3.0
   names in your existing databases are still valid, please run the following
   script:
 
-      $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
-      $ sqlite3 -init misc/db-upgrade/clean_tag_names.sql ~/.tmsu/default.db
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
+    $ sqlite3 -init misc/db-upgrade/clean_tag_names.sql ~/.tmsu/default.db
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or
     ketchup)'.

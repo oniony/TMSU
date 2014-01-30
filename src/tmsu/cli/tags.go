@@ -135,9 +135,9 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 		if err != nil {
 			switch {
 			case os.IsPermission(err):
-				log.Warnf("%v: permission denied", path)
+				return fmt.Errorf("%v: permission denied", path)
 			case os.IsNotExist(err):
-				return fmt.Errorf("%v: file not found", path)
+				return fmt.Errorf("%v: no such file", path)
 			default:
 				return fmt.Errorf("%v: could not stat file: %v", path, err)
 			}
@@ -147,7 +147,6 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 	if showCount {
 		fmt.Println(len(tagNames))
 	} else {
-
 		for _, tagName := range tagNames {
 			fmt.Println(tagName)
 		}
@@ -157,6 +156,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 }
 
 func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) error {
+	wereErrors := false
 	for _, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
 
@@ -177,6 +177,22 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 			if err != nil {
 				return err
 			}
+		} else {
+			_, err := os.Stat(path)
+			if err != nil {
+				switch {
+				case os.IsPermission(err):
+					log.Warnf("%v: permission denied", path)
+					wereErrors = true
+					continue
+				case os.IsNotExist(err):
+					log.Warnf("%v: no such file", path)
+					wereErrors = true
+					continue
+				default:
+					return fmt.Errorf("%v: could not stat file: %v", path, err)
+				}
+			}
 		}
 
 		if showCount {
@@ -184,6 +200,10 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 		} else {
 			fmt.Println(path + ": " + strings.Join(tagNames, " "))
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

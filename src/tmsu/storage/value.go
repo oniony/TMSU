@@ -56,6 +56,11 @@ func (storage *Storage) ValuesByTag(tagId uint) (entities.Values, error) {
 	return storage.Db.ValuesByTagId(tagId)
 }
 
+// Retrieves the set of values with the specified names.
+func (storage *Storage) ValuesByNames(names []string) (entities.Values, error) {
+	return storage.Db.ValuesByNames(names)
+}
+
 // Adds a value.
 func (storage *Storage) AddValue(name string) (*entities.Value, error) {
 	if err := validateValueName(name); err != nil {

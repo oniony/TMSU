@@ -134,8 +134,14 @@ func createTags(names []string) error {
 		return fmt.Errorf("could not retrieve tags %v: %v", names, err)
 	}
 
-	if len(tags) > 0 {
-		return fmt.Errorf("tags already exists: %v", tags[0].Name)
+	wereErrors := false
+	for _, tag := range tags {
+		log.Warnf("tag '%v' already exists", tag.Name)
+		wereErrors = true
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	for _, name := range names {
@@ -170,37 +176,37 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
-		tag, err := store.TagByName(tagName)
-		if err != nil {
-			return fmt.Errorf("could not look up tag '%v': %v", tagName, err)
-		}
-		if tag == nil {
-			tag, err = store.AddTag(tagName)
-			if err != nil {
-				return fmt.Errorf("could not create tag '%v': %v", tagName, err)
-			}
-
-			log.Warnf("New tag '%v'.", tagName)
-		}
-
-		value, err := store.ValueByName(valueName)
+		tag, err := getOrCreateTag(store, tagName)
 		if err != nil {
 			return err
 		}
-		if value == nil {
-			value, err = store.AddValue(valueName)
-			if err != nil {
-				return err
-			}
+
+		value, err := getOrCreateValue(store, valueName)
+		if err != nil {
+			return err
 		}
 
 		tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
 	}
 
+	wereErrors := false
 	for _, path := range paths {
 		if err := tagPath(store, path, tagValuePairs, recursive); err != nil {
-			return err
+			switch {
+			case os.IsPermission(err):
+				log.Warnf("%v: permisison denied", path)
+				wereErrors = true
+			case os.IsNotExist(err):
+				log.Warnf("%v: no such file", path)
+				wereErrors = true
+			default:
+				return fmt.Errorf("%v: could not stat file: %v", path, err)
+			}
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil
@@ -232,10 +238,24 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		tagValuePairs[index] = TagValuePair{fileTag.TagId, fileTag.ValueId}
 	}
 
+	wereErrors := false
 	for _, path := range paths {
 		if err := tagPath(store, path, tagValuePairs, recursive); err != nil {
-			return err
+			switch {
+			case os.IsPermission(err):
+				log.Warnf("%v: permisison denied", path)
+				wereErrors = true
+			case os.IsNotExist(err):
+				log.Warnf("%v: no such file", path)
+				wereErrors = true
+			default:
+				return fmt.Errorf("%v: could not stat file: %v", path, err)
+			}
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil
@@ -249,14 +269,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 
 	stat, err := os.Stat(path)
 	if err != nil {
-		switch {
-		case os.IsPermission(err):
-			return fmt.Errorf("%v: permisison denied", path)
-		case os.IsNotExist(err):
-			return fmt.Errorf("%v: no such file", path)
-		default:
-			return fmt.Errorf("%v: could not stat file: %v", path, err)
-		}
+		return err
 	}
 
 	log.Infof(2, "%v: checking if file exists", absPath)
@@ -310,6 +323,39 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValu
 	}
 
 	return nil
+}
+
+func getOrCreateTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
+	tag, err := store.TagByName(tagName)
+	if err != nil {
+		return nil, fmt.Errorf("could not look up tag '%v': %v", tagName, err)
+	}
+
+	if tag == nil {
+		tag, err = store.AddTag(tagName)
+		if err != nil {
+			return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+		}
+
+		log.Warnf("New tag '%v'.", tagName)
+	}
+
+	return tag, nil
+}
+
+func getOrCreateValue(store *storage.Storage, valueName string) (*entities.Value, error) {
+	value, err := store.ValueByName(valueName)
+	if err != nil {
+		return nil, err
+	}
+	if value == nil {
+		value, err = store.AddValue(valueName)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	return value, nil
 }
 
 func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool) (*entities.File, error) {

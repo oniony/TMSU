@@ -176,7 +176,7 @@ _tmsu_cmd_tag() {
 
 	case $state in
         (items)
-            if (( ${+opt_args[--tags]} || ${+opt_args[-t]} ))
+            if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--from]} || ${+opt_args[-f]} ))
             then
                 _wanted files expl 'files' _files
             else
@@ -238,6 +238,13 @@ _tmsu_cmd_untag() {
 			fi
 		;;
 	esac
+}
+
+_tmsu_cmd_values() {
+	_arguments -s -w ''{--all,-a}'[show all values]' \
+	                 ''{--count,-c}'[lists the number of values rather than their names]' \
+	                 '*:tag:_tmsu_tags' \
+	&& ret=0
 }
 
 _tmsu_cmd_version() {

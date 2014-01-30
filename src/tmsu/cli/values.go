@@ -141,13 +141,16 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount bool) er
 }
 
 func listValuesForTags(store *storage.Storage, tagNames []string, showCount bool) error {
+	wereErrors := false
 	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
-			return fmt.Errorf("no such tag, '%v'.", tagName)
+			log.Warnf("no such tag, '%v'.", tagName)
+			wereErrors = true
+			continue
 		}
 
 		log.Infof(2, "retrieving values for tag '%v'.", tagName)
@@ -167,6 +170,10 @@ func listValuesForTags(store *storage.Storage, tagNames []string, showCount bool
 
 			fmt.Printf("%v: %v\n", tagName, strings.Join(valueNames, " "))
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

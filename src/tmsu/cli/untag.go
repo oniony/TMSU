@@ -100,10 +100,45 @@ func untagPathsAll(paths []string, recursive bool) error {
 	defer store.Close()
 	defer store.Commit()
 
+	wereErrors := false
 	for _, path := range paths {
-		if err := untagPathAll(store, path, recursive); err != nil {
-			return err
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
+
+		file, err := store.FileByPath(absPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file == nil {
+			log.Warnf("%v: file is not tagged.", path)
+			wereErrors = true
+			continue
+		}
+
+		log.Infof(2, "%v: removing all tags.", file.Path())
+
+		if err := store.DeleteFileTagsByFileId(file.Id); err != nil {
+			return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
+		}
+
+		if recursive {
+			childFiles, err := store.FilesByDirectory(file.Path())
+			if err != nil {
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+			}
+
+			for _, childFile := range childFiles {
+				if err := store.DeleteFileTagsByFileId(childFile.Id); err != nil {
+					return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err)
+				}
+			}
+		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil
@@ -118,7 +153,7 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 	defer store.Commit()
 
 	tagValuePairs := make([]TagValuePair, 0, 10)
-
+	wereErrors := false
 	for _, tagArg := range tagArgs {
 		var tagName, valueName string
 		index := strings.Index(tagArg, "=")
@@ -136,7 +171,8 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
-			return fmt.Errorf("no such tag '%v'", tagName)
+			log.Warnf("no such tag '%v'", tagName)
+			wereErrors = true
 		}
 
 		value, err := store.ValueByName(valueName)
@@ -144,94 +180,59 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
 		}
 		if value == nil {
-			return fmt.Errorf("no such value '%v'", valueName)
+			log.Warnf("no such value '%v'", valueName)
+			wereErrors = true
 		}
 
-		tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
+		if tag != nil && value != nil {
+			tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
+		}
 	}
 
 	for _, path := range paths {
-		if err := untagPath(store, path, tagValuePairs, recursive); err != nil {
-			return err
-		}
-	}
-
-	return nil
-}
-
-func untagPathAll(store *storage.Storage, path string, recursive bool) error {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
-	}
-
-	file, err := store.FileByPath(absPath)
-	if err != nil {
-		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
-	}
-	if file == nil {
-		return fmt.Errorf("%v: file is not tagged.", path)
-	}
-
-	log.Infof(2, "%v: removing all tags.", file.Path())
-
-	if err := store.DeleteFileTagsByFileId(file.Id); err != nil {
-		return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
-	}
-
-	if recursive {
-		childFiles, err := store.FilesByDirectory(file.Path())
+		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		for _, childFile := range childFiles {
-			if err := store.DeleteFileTagsByFileId(childFile.Id); err != nil {
-				return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err)
+		file, err := store.FileByPath(absPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file == nil {
+			log.Warnf("%v: file is not tagged", path)
+			wereErrors = true
+			continue
+		}
+
+		log.Infof(2, "%v: unapplying tags.", file.Path())
+
+		for _, tagValuePair := range tagValuePairs {
+			if err := store.DeleteFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
+				return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
 			}
 		}
-	}
 
-	return nil
-}
+		if recursive {
+			childFiles, err := store.FilesByDirectory(file.Path())
+			if err != nil {
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+			}
 
-func untagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, recursive bool) error {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
-	}
+			for _, childFile := range childFiles {
+				log.Infof(2, "%v: unapplying tags.", childFile.Path())
 
-	file, err := store.FileByPath(absPath)
-	if err != nil {
-		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
-	}
-	if file == nil {
-		return fmt.Errorf("%v: file is not tagged.", path)
-	}
-
-	log.Infof(2, "%v: unapplying tags.", file.Path())
-
-	for _, tagValuePair := range tagValuePairs {
-		if err := store.DeleteFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
-			return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
-		}
-	}
-
-	if recursive {
-		childFiles, err := store.FilesByDirectory(file.Path())
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
-		}
-
-		for _, childFile := range childFiles {
-			log.Infof(2, "%v: unapplying tags.", childFile.Path())
-
-			for _, tagValuePair := range tagValuePairs {
-				if err := store.DeleteFileTag(childFile.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
-					return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", childFile.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
+				for _, tagValuePair := range tagValuePairs {
+					if err := store.DeleteFileTag(childFile.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
+						return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", childFile.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
+					}
 				}
 			}
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

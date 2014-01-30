@@ -57,13 +57,16 @@ func copyExec(options Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'.", sourceTagName)
 	}
 
+	wereErrors := false
 	for _, destTagName := range destTagNames {
 		destTag, err := store.Db.TagByName(destTagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 		}
 		if destTag != nil {
-			return fmt.Errorf("a tag with name '%v' already exists.", destTagName)
+			log.Warnf("a tag with name '%v' already exists.", destTagName)
+			wereErrors = true
+			continue
 		}
 
 		log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
@@ -71,6 +74,10 @@ func copyExec(options Options, args []string) error {
 		if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
 			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

@@ -59,9 +59,10 @@ func mergeExec(options Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'.", destTagName)
 	}
 
+	wereErrors := false
 	for _, sourceTagName := range args[0 : len(args)-1] {
 		if sourceTagName == destTagName {
-			return fmt.Errorf("source and destination names are the same.")
+			continue
 		}
 
 		sourceTag, err := store.TagByName(sourceTagName)
@@ -69,7 +70,9 @@ func mergeExec(options Options, args []string) error {
 			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 		}
 		if sourceTag == nil {
-			return fmt.Errorf("no such tag '%v'.", sourceTagName)
+			log.Warnf("no such tag '%v'.", sourceTagName)
+			wereErrors = true
+			continue
 		}
 
 		log.Infof(2, "finding files tagged '%v'.", sourceTagName)
@@ -94,6 +97,10 @@ func mergeExec(options Options, args []string) error {
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err)
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

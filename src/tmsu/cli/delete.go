@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"tmsu/common/log"
 	"tmsu/storage"
 )
 
@@ -49,19 +50,26 @@ func deleteExec(options Options, args []string) error {
 	defer store.Close()
 	defer store.Commit()
 
+	wereErrors := false
 	for _, tagName := range args {
 		tag, err := store.TagByName(tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
-			return fmt.Errorf("no such tag '%v'.", tagName)
+			log.Warnf("no such tag '%v'.", tagName)
+			wereErrors = true
+			continue
 		}
 
 		err = store.DeleteTag(tag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	return nil

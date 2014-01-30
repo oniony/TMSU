@@ -20,6 +20,7 @@ package database
 import (
 	"database/sql"
 	"errors"
+	"strings"
 	"tmsu/entities"
 )
 
@@ -95,6 +96,36 @@ func (db *Database) ValueByName(name string) (*entities.Value, error) {
 	defer rows.Close()
 
 	return readValue(rows)
+}
+
+// Retrieves the set of values with the specified names.
+func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
+	if len(names) == 0 {
+		return make(entities.Values, 0), nil
+	}
+
+	sql := `SELECT id, name
+            FROM value
+            WHERE name IN (?`
+	sql += strings.Repeat(",?", len(names)-1)
+	sql += ")"
+
+	params := make([]interface{}, len(names))
+	for index, name := range names {
+		params[index] = name
+	}
+
+	rows, err := db.transaction.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+
+	values, err := readValues(rows, make(entities.Values, 0, len(names)))
+	if err != nil {
+		return nil, err
+	}
+
+	return values, nil
 }
 
 // Retrieves the set of values for the specified tag.

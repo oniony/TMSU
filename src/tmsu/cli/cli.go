@@ -85,6 +85,10 @@ func Run() {
 
 	err = command.Exec(options, arguments)
 	if err != nil {
-		log.Fatal(err.Error())
+		if err != blankError {
+			log.Warn(err.Error())
+		}
+
+		os.Exit(1)
 	}
 }

@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
@@ -98,6 +99,29 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	wereErrors := false
+	for _, path := range paths {
+		_, err := os.Stat(path)
+		if err != nil {
+			switch {
+			case os.IsNotExist(err):
+				log.Warnf("%v: no such file", path)
+				wereErrors = true
+				continue
+			case os.IsPermission(err):
+				log.Warnf("%v: permission denied", path)
+				wereErrors = true
+				continue
+			default:
+				return err
+			}
+		}
+	}
+
+	if wereErrors {
+		return blankError
+	}
 
 	if recursive {
 		p, err := _path.Enumerate(paths)

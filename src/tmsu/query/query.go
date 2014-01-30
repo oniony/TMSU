@@ -24,6 +24,7 @@ func Parse(query string) (Expression, error) {
 	return parser.Parse()
 }
 
+// Creates an AND expression for all the tag names specified
 func HasAll(tagNames []string) Expression {
 	if len(tagNames) == 0 {
 		return EmptyExpression{}
@@ -38,9 +39,18 @@ func HasAll(tagNames []string) Expression {
 	return expression
 }
 
+// Retrieves the set of tag names from an expression
 func TagNames(expression Expression) []string {
 	names := make([]string, 0, 10)
 	names = tagNames(expression, names)
+
+	return names
+}
+
+// Retrieves the set of value names from an expression
+func ValueNames(expression Expression) []string {
+	names := make([]string, 0, 10)
+	names = valueNames(expression, names)
 
 	return names
 }
@@ -60,7 +70,28 @@ func tagNames(expression Expression, names []string) []string {
 		names = tagNames(exp.LeftOperand, names)
 		names = tagNames(exp.RightOperand, names)
 	case ComparisonExpression:
-		names = tagNames(exp.Tag, names)
+		names = append(names, exp.Tag.Name)
+	default:
+		panic("unsupported token type")
+	}
+
+	return names
+}
+
+func valueNames(expression Expression, names []string) []string {
+	switch exp := expression.(type) {
+	case TagExpression:
+		// nowt
+	case NotExpression:
+		names = valueNames(exp.Operand, names)
+	case AndExpression:
+		names = valueNames(exp.LeftOperand, names)
+		names = valueNames(exp.RightOperand, names)
+	case OrExpression:
+		names = valueNames(exp.LeftOperand, names)
+		names = valueNames(exp.RightOperand, names)
+	case ComparisonExpression:
+		names = append(names, exp.Value.Name)
 	default:
 		panic("unsupported token type")
 	}

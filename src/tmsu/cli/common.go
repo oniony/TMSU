@@ -23,6 +23,8 @@ import (
 	"unicode"
 )
 
+var blankError = errors.New("")
+
 var validChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
 
 type TagValuePair struct {

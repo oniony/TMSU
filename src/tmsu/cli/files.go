@@ -129,12 +129,32 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 
 	log.Info(2, "checking tag names")
 
+	wereErrors := false
+
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByNames(tagNames)
 	for _, tagName := range tagNames {
 		if !tags.ContainsName(tagName) {
-			return fmt.Errorf("no such tag '%v'.", tagName)
+			log.Warnf("no such tag '%v'.", tagName)
+			wereErrors = true
+			continue
 		}
+	}
+
+	log.Info(2, "checking value names")
+
+	valueNames := query.ValueNames(expression)
+	values, err := store.ValuesByNames(valueNames)
+	for _, valueName := range valueNames {
+		if !values.ContainsName(valueName) {
+			log.Warnf("no such value '%v'.", valueName)
+			wereErrors = true
+			continue
+		}
+	}
+
+	if wereErrors {
+		return blankError
 	}
 
 	log.Info(2, "querying database")

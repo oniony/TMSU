@@ -40,9 +40,10 @@ tmsu tag [OPTION]... --create TAG...
 Tags the file FILE with the TAGs specified.
 
 Tag names may consist of one or more letter, number, punctuation and symbol
-characters. Tag names may not contain whitespace characters, the comparison
-operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or
-the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
+characters (from the corresponding Unicode categories). Tag names may not
+contain whitespace characters, the comparison operator symbols ('=', '<' and
+'>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In
+addition, the tag names '.' and '..' are not valid.
 
 Optionally tags applied to files may be attributed with a VALUE using the
 TAG=VALUE syntax.

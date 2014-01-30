@@ -141,18 +141,6 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 		}
 	}
 
-	log.Info(2, "checking value names")
-
-	valueNames := query.ValueNames(expression)
-	values, err := store.ValuesByNames(valueNames)
-	for _, valueName := range valueNames {
-		if !values.ContainsName(valueName) {
-			log.Warnf("no such value '%v'.", valueName)
-			wereErrors = true
-			continue
-		}
-	}
-
 	if wereErrors {
 		return blankError
 	}

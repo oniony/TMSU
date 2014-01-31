@@ -29,7 +29,7 @@ func (db *Database) TagCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM tag`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -44,7 +44,7 @@ func (db *Database) Tags() (entities.Tags, error) {
             FROM tag
             ORDER BY name`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -59,7 +59,7 @@ func (db *Database) Tag(id uint) (*entities.Tag, error) {
 	        FROM tag
 	        WHERE id = ?`
 
-	rows, err := db.transaction.Query(sql, id)
+	rows, err := db.ExecQuery(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (db *Database) TagsByIds(ids []uint) (entities.Tags, error) {
 		params[index] = id
 	}
 
-	rows, err := db.transaction.Query(sql, params...)
+	rows, err := db.ExecQuery(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -101,7 +101,7 @@ func (db *Database) TagByName(name string) (*entities.Tag, error) {
 	        FROM tag
 	        WHERE name = ?`
 
-	rows, err := db.transaction.Query(sql, name)
+	rows, err := db.ExecQuery(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +127,7 @@ func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
 		params[index] = name
 	}
 
-	rows, err := db.transaction.Query(sql, params...)
+	rows, err := db.ExecQuery(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +145,7 @@ func (db *Database) InsertTag(name string) (*entities.Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
-	result, err := db.transaction.Exec(sql, name)
+	result, err := db.Exec(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -172,7 +172,7 @@ func (db *Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 	        SET name = ?
 	        WHERE id = ?`
 
-	result, err := db.transaction.Exec(sql, name, tagId)
+	result, err := db.Exec(sql, name, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -193,7 +193,7 @@ func (db *Database) DeleteTag(tagId uint) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
-	result, err := db.transaction.Exec(sql, tagId)
+	result, err := db.Exec(sql, tagId)
 	if err != nil {
 		return err
 	}
@@ -218,7 +218,7 @@ func (db *Database) TopTags(count uint) ([]entities.TagFileCount, error) {
             ORDER BY count(file_id) DESC
             LIMIT ?`
 
-	rows, err := db.transaction.Query(sql, count)
+	rows, err := db.ExecQuery(sql, count)
 	if err != nil {
 		return nil, err
 	}

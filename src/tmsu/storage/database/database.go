@@ -30,24 +30,12 @@ import (
 
 var Path string
 
-func init() {
-	if path := os.Getenv("TMSU_DB"); path != "" {
-		Path = path
-	} else {
-		u, err := user.Current()
-		if err != nil {
-			log.Fatalf("could not identify current user: %v", err)
-		}
-
-		Path = filepath.Join(u.HomeDir, ".tmsu", "default.db")
-	}
-}
-
 type Database struct {
 	connection  *sql.DB
 	transaction *sql.Tx
 }
 
+// Opens the database
 func Open() (*Database, error) {
 	// attempt to create database directory
 	dir := filepath.Dir(Path)
@@ -56,13 +44,16 @@ func Open() (*Database, error) {
 	return OpenAt(Path)
 }
 
+// Opens the database at the specified path
 func OpenAt(path string) (*Database, error) {
+	log.Infof(2, "opening database at '%v'.", path)
+
 	_, err := os.Stat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			log.Warnf("Creating database at '%v'.", path)
+			log.Warnf("creating database at '%v'.", path)
 		} else {
-			log.Warnf("Could not stat database: %v", err)
+			log.Warnf("could not stat database: %v", err)
 		}
 	}
 
@@ -85,10 +76,41 @@ func OpenAt(path string) (*Database, error) {
 	return database, nil
 }
 
+// Executes a SQL query.
+func (db *Database) Exec(sql string, args ...interface{}) (sql.Result, error) {
+	if log.Verbosity >= 3 {
+		log.Infof(3, "executing update\n"+sql)
+
+		for index, arg := range args {
+			log.Info(3, "Arg %v = %v", index, arg)
+		}
+	}
+
+	return db.transaction.Exec(sql, args...)
+}
+
+// Executes a SQL query returning rows.
+func (db *Database) ExecQuery(sql string, args ...interface{}) (*sql.Rows, error) {
+	if log.Verbosity >= 3 {
+		log.Infof(3, "executing query\n"+sql)
+
+		for index, arg := range args {
+			log.Info(3, "Arg %v = %v", index, arg)
+		}
+	}
+
+	return db.transaction.Query(sql, args...)
+}
+
+// Commits the current transaction
 func (db *Database) Commit() error {
+	log.Info(2, "committing transaction")
+
 	if err := db.transaction.Commit(); err != nil {
 		return fmt.Errorf("could not commit transaction: %v", err)
 	}
+
+	log.Info(2, "beginning new transaction")
 
 	transaction, err := db.connection.Begin()
 	if err != nil {
@@ -100,8 +122,27 @@ func (db *Database) Commit() error {
 	return nil
 }
 
+// Closes the database connection
 func (db *Database) Close() error {
+	log.Info(3, "closing database")
+
 	return db.connection.Close()
+}
+
+// unexported
+
+func init() {
+	if path := os.Getenv("TMSU_DB"); path != "" {
+		log.Info(3, "TMSU_DB=", path)
+		Path = path
+	} else {
+		u, err := user.Current()
+		if err != nil {
+			log.Fatalf("could not identify current user: %v", err)
+		}
+
+		Path = filepath.Join(u.HomeDir, ".tmsu", "default.db")
+	}
 }
 
 func readCount(rows *sql.Rows) (uint, error) {

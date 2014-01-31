@@ -29,7 +29,7 @@ func (db *Database) ValueCount() (uint, error) {
 	sql := `SELECT count(1)
             FROM value`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -43,7 +43,7 @@ func (db *Database) Values() (entities.Values, error) {
             FROM value
             ORDER BY name`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (db *Database) Value(id uint) (*entities.Value, error) {
 	        FROM value
 	        WHERE id = ?`
 
-	rows, err := db.transaction.Query(sql, id)
+	rows, err := db.ExecQuery(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -74,7 +74,7 @@ func (db *Database) UnusedValues() (entities.Values, error) {
             WHERE id NOT IN (SELECT distinct(value_id)
                              FROM file_tag)`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -89,7 +89,7 @@ func (db *Database) ValueByName(name string) (*entities.Value, error) {
 	        FROM value
 	        WHERE name = ?`
 
-	rows, err := db.transaction.Query(sql, name)
+	rows, err := db.ExecQuery(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -115,7 +115,7 @@ func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
 		params[index] = name
 	}
 
-	rows, err := db.transaction.Query(sql, params...)
+	rows, err := db.ExecQuery(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -138,7 +138,7 @@ func (db *Database) ValuesByTagId(tagId uint) (entities.Values, error) {
                 WHERE tag_id = ?1)
             ORDER BY name`
 
-	rows, err := db.transaction.Query(sql, tagId)
+	rows, err := db.ExecQuery(sql, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -152,7 +152,7 @@ func (db *Database) InsertValue(name string) (*entities.Value, error) {
 	sql := `INSERT INTO value (name)
 	        VALUES (?)`
 
-	result, err := db.transaction.Exec(sql, name)
+	result, err := db.Exec(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -178,7 +178,7 @@ func (db *Database) DeleteValue(valueId uint) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
-	result, err := db.transaction.Exec(sql, valueId)
+	result, err := db.Exec(sql, valueId)
 	if err != nil {
 		return err
 	}
@@ -200,7 +200,7 @@ func (db *Database) DeleteUnusedValues() error {
             WHERE id NOT IN (SELECT distinct(value_id)
                              FROM file_tag)`
 
-	_, err := db.transaction.Exec(sql)
+	_, err := db.Exec(sql)
 	if err != nil {
 		return nil
 	}

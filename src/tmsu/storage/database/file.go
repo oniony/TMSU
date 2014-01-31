@@ -33,7 +33,7 @@ func (db *Database) FileCount() (uint, error) {
 	sql := `SELECT count(1)
 			FROM file`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -48,7 +48,7 @@ func (db *Database) Files() (entities.Files, error) {
 	        FROM file
 	        ORDER BY directory || '/' || name`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -63,7 +63,7 @@ func (db *Database) File(id uint) (*entities.File, error) {
 	        FROM file
 	        WHERE id = ?`
 
-	rows, err := db.transaction.Query(sql, id)
+	rows, err := db.ExecQuery(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -81,7 +81,7 @@ func (db *Database) FileByPath(path string) (*entities.File, error) {
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
-	rows, err := db.transaction.Query(sql, directory, name)
+	rows, err := db.ExecQuery(sql, directory, name)
 	if err != nil {
 		return nil, err
 	}
@@ -97,7 +97,7 @@ func (db *Database) FilesByDirectory(path string) (entities.Files, error) {
             WHERE directory = ? OR directory LIKE ?
             ORDER BY directory || '/' || name`
 
-	rows, err := db.transaction.Query(sql, path, filepath.Clean(path+"/%"))
+	rows, err := db.ExecQuery(sql, path, filepath.Clean(path+"/%"))
 	if err != nil {
 		return nil, err
 	}
@@ -112,7 +112,7 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
             FROM file
             WHERE fingerprint = ?`
 
-	rows, err := db.transaction.Query(sql, string(fingerprint))
+	rows, err := db.ExecQuery(sql, string(fingerprint))
 	if err != nil {
 		return 0, err
 	}
@@ -128,7 +128,7 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (ent
 	        WHERE fingerprint = ?
 	        ORDER BY directory || '/' || name`
 
-	rows, err := db.transaction.Query(sql, string(fingerprint))
+	rows, err := db.ExecQuery(sql, string(fingerprint))
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (db *Database) UntaggedFiles() (entities.Files, error) {
             WHERE id NOT IN (SELECT distinct(file_id)
                              FROM file_tag)`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -157,7 +157,7 @@ func (db *Database) UntaggedFiles() (entities.Files, error) {
 func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
 	sql := buildCountQuery(expression)
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -169,7 +169,7 @@ func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
 // Retrieves the set of files matching the specified query.
 func (db *Database) QueryFiles(expression query.Expression) (entities.Files, error) {
 	sql := buildQuery(expression)
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -191,7 +191,7 @@ func (db *Database) DuplicateFiles() ([]entities.Files, error) {
             )
             ORDER BY fingerprint, directory || '/' || name`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -245,7 +245,7 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
 	        VALUES (?, ?, ?, ?, ?, ?)`
 
-	result, err := db.transaction.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
+	result, err := db.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
 	if err != nil {
 		return nil, err
 	}
@@ -275,7 +275,7 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?, is_dir = ?
 	        WHERE id = ?`
 
-	result, err := db.transaction.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
+	result, err := db.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
 	if err != nil {
 		return nil, err
 	}
@@ -304,7 +304,7 @@ func (db *Database) DeleteFile(fileId uint) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
-	result, err := db.transaction.Exec(sql, fileId)
+	result, err := db.Exec(sql, fileId)
 	if err != nil {
 		return err
 	}
@@ -326,7 +326,7 @@ func (db *Database) DeleteUntaggedFiles() error {
             WHERE id NOT IN (SELECT distinct(file_id)
                              FROM file_tag)`
 
-	_, err := db.transaction.Exec(sql)
+	_, err := db.Exec(sql)
 	if err != nil {
 		return err
 	}

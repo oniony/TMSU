@@ -29,7 +29,7 @@ func (db *Database) Queries() (entities.Queries, error) {
 	        FROM query
 	        ORDER BY text`
 
-	rows, err := db.transaction.Query(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (db *Database) Query(text string) (*entities.Query, error) {
             FROM query
             WHERE text = ?`
 
-	rows, err := db.transaction.Query(sql, text)
+	rows, err := db.ExecQuery(sql, text)
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +58,7 @@ func (db *Database) InsertQuery(text string) (*entities.Query, error) {
 	sql := `INSERT INTO query (text)
 	        VALUES (?)`
 
-	result, err := db.transaction.Exec(sql, text)
+	result, err := db.Exec(sql, text)
 	if err != nil {
 		return nil, err
 	}
@@ -79,7 +79,7 @@ func (db *Database) DeleteQuery(text string) error {
 	sql := `DELETE FROM query
 	        WHERE text = ?`
 
-	result, err := db.transaction.Exec(sql, text)
+	result, err := db.Exec(sql, text)
 	if err != nil {
 		return err
 	}

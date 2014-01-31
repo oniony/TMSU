@@ -55,14 +55,14 @@ func (db *Database) CreateTagTable() error {
                 name TEXT NOT NULL
             )`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
            ON tag(name)`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -81,14 +81,14 @@ func (db *Database) CreateFileTable() error {
                 CONSTRAINT con_file_path UNIQUE (directory, name)
             )`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
            ON file(fingerprint)`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -102,7 +102,7 @@ func (db *Database) CreateValueTable() error {
                 CONSTRAINT con_value_name UNIQUE (name)
             )`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -120,28 +120,28 @@ func (db *Database) CreateFileTagTable() error {
                 FOREIGN KEY (value_id) REFERENCES value(id)
             )`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
            ON file_tag(file_id)`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
            ON file_tag(tag_id)`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
            ON file_tag(value_id)`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 
@@ -153,7 +153,7 @@ func (db *Database) CreateQueryTable() error {
                 text TEXT PRIMARY KEY
             )`
 
-	if _, err := db.transaction.Exec(sql); err != nil {
+	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
 

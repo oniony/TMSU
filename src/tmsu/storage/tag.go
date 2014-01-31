@@ -21,6 +21,7 @@ import (
 	"errors"
 	"fmt"
 	"tmsu/entities"
+	"unicode"
 )
 
 // The number of tags in the database.
@@ -112,6 +113,8 @@ func (storage Storage) TopTags(count uint) ([]entities.TagFileCount, error) {
 
 // unexported
 
+var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
+
 func validateTagName(tagName string) error {
 	switch tagName {
 	case "":
@@ -139,17 +142,11 @@ func validateTagName(tagName string) error {
 		case '/':
 			return errors.New("tag names cannot contain slash: '/'.") // cannot be used in the VFS
 		}
-	}
 
-	return nil
-}
-
-func containsTagId(items []uint, searchItem uint) bool {
-	for _, item := range items {
-		if item == searchItem {
-			return true
+		if !unicode.IsOneOf(validTagChars, ch) {
+			return fmt.Errorf("tag names cannot contain '%v'.", ch)
 		}
 	}
 
-	return false
+	return nil
 }

@@ -19,7 +19,9 @@ package storage
 
 import (
 	"errors"
+	"fmt"
 	"tmsu/entities"
+	"unicode"
 )
 
 // Retrievse the count of values.
@@ -86,12 +88,36 @@ func (storage *Storage) DeleteUnusedValues() error {
 
 // unexported
 
+var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
+
 func validateValueName(valueName string) error {
-	if valueName == "" {
-		return errors.New("value name cannot be empty.")
+	switch valueName {
+	case "":
+		return errors.New("tag value cannot be empty.")
+	case ".", "..":
+		return errors.New("tag value cannot be '.' or '..'.") // cannot be used in the VFS
+	case "and", "or", "not":
+		return errors.New("tag value cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
 	}
 
-	//TODO validate value names
+	for _, ch := range valueName {
+		switch ch {
+		case '(', ')':
+			return errors.New("tag value cannot contain parentheses: '(' or ')'.") // used in query language
+		case ',':
+			return errors.New("tag value cannot contain comma: ','.") // reserved for tag delimiter
+		case '=', '<', '>':
+			return errors.New("tag value cannot contain a comparison operator: '=', '<' or '>'.") // reserved for tag values
+		case ' ', '\t':
+			return errors.New("tag value cannot contain space or tab.") // used as tag delimiter
+		case '/':
+			return errors.New("tag value cannot contain slash: '/'.") // cannot be used in the VFS
+		}
+
+		if !unicode.IsOneOf(validValueChars, ch) {
+			return fmt.Errorf("tag value cannot contain '%v'.", ch)
+		}
+	}
 
 	return nil
 }

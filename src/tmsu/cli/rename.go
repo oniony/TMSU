@@ -59,10 +59,6 @@ func renameExec(options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	if err := ValidateTagName(destTagName); err != nil {
-		return err
-	}
-
 	sourceTag, err := store.TagByName(sourceTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)

@@ -376,7 +376,7 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 func buildCountQuery(expression query.Expression) string {
 	builder := NewBuilder()
 
-	builder.AppendSql("SELECT count(id) FROM file where 1=1 AND\n")
+	builder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
 	buildQueryBranch(expression, builder)
 
 	return builder.Sql
@@ -402,6 +402,16 @@ WHERE tag_id = (SELECT id
                 WHERE name = '` + exp.Name + `'))
 `)
 	case query.ComparisonExpression:
+		var value, valueExpression string
+		_, err := strconv.ParseFloat(exp.Value.Name, 64)
+		if err == nil {
+			value = exp.Value.Name
+			valueExpression = "CAST(name AS float)"
+		} else {
+			value = "'" + exp.Value.Name + "'"
+			valueExpression = "name"
+		}
+
 		builder.AppendSql(`id IN (SELECT file_id
 FROM file_tag
 WHERE tag_id = (SELECT id
@@ -409,8 +419,7 @@ WHERE tag_id = (SELECT id
                 WHERE name = '` + exp.Tag.Name + `')
 AND value_id IN (SELECT id
                  FROM value
-                 WHERE name ` + exp.Operator + ` '` + exp.Value.Name + `'))
-`)
+                 WHERE ` + valueExpression + ` ` + exp.Operator + ` ` + value + `))`)
 	case query.NotExpression:
 		builder.AppendSql("\nNOT\n")
 		buildQueryBranch(exp.Operand, builder)

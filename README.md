@@ -144,6 +144,9 @@ v0.4.0 (in development)
   replaced with a fuller tag relationship facility in a later version and a
   script to upgrade your saved implications will be provided at this time.
 
+  Note: This release removes support for the legacy not operator '-'. Please
+  use the 'not' operator instead.
+
   * Added support for tag values, e.g. 'country=uk'.
   * Added support for querying files based upon tag values, e.g. 'year > 2000'.
   * Significant performance improvements.

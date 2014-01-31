@@ -136,8 +136,6 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return OpenParenToken{}, nil
 	case r == rune(')'):
 		return CloseParenToken{}, nil
-	case r == rune('-'):
-		return NotOperatorToken{}, nil
 	case r == rune('='), r == rune('<'), r == rune('>'):
 		return scanner.readComparisonOperatorToken(r)
 	case unicode.IsOneOf(symbolChars, r):

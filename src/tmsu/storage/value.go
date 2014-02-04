@@ -115,7 +115,7 @@ func validateValueName(valueName string) error {
 		}
 
 		if !unicode.IsOneOf(validValueChars, ch) {
-			return fmt.Errorf("tag value cannot contain '%v'.", ch)
+			return fmt.Errorf("tag value cannot contain '%c'.", ch)
 		}
 	}
 

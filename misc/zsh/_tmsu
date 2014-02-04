@@ -150,13 +150,6 @@ _tmsu_cmd_help() {
 	&& ret=0
 }
 
-_tmsu_cmd_imply() {
-    _arguments -s -w ''{--delete,-d}'[deletes the tag implication]' \
-                     ''{--list,-l}'[lists the tag implications]' \
-                     '*:tag:_tmsu_tags' \
-    && ret=0
-}
-
 _tmsu_cmd_merge() {
 	_arguments -s -w '*:tag:_tmsu_tags' && ret=0
 }

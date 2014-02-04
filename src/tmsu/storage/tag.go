@@ -144,7 +144,7 @@ func validateTagName(tagName string) error {
 		}
 
 		if !unicode.IsOneOf(validTagChars, ch) {
-			return fmt.Errorf("tag names cannot contain '%v'.", ch)
+			return fmt.Errorf("tag names cannot contain '%c'.", ch)
 		}
 	}
 

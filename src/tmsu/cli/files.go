@@ -45,8 +45,8 @@ The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
 interpretted as 'chalk and cheese'.
 
 The comparison operators are used to match on the values of tags. For example,
-'country=uk' will only match files tagged 'country=uk' whilst 'year<=2014' will
-match files tagged 'year=2014', 'year=2000', &c.
+'country=uk' will only match files tagged 'country=uk' whilst 'year<=2014'
+will match files tagged 'year=2014', 'year=2000', &c.
 
 Note: Your shell may try to interpret some of the punctuation, e.g. most shells
 will interpret the '<' and '>' operators as stream redirects. Enclosing the

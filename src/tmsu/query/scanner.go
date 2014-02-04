@@ -177,7 +177,7 @@ func (scanner *Scanner) readComparisonOperatorToken(r rune) (Token, error) {
 
 		switch r2 {
 		case rune('='):
-			return ComparisonOperatorToken{string(r) + string(r2)}, nil
+			return ComparisonOperatorToken{string(r) + "="}, nil
 		default:
 			scanner.stream.UnreadRune()
 			return ComparisonOperatorToken{string(r)}, nil
@@ -187,11 +187,10 @@ func (scanner *Scanner) readComparisonOperatorToken(r rune) (Token, error) {
 	}
 }
 
-func (scanner *Scanner) readString(r ...rune) (string, error) {
-	text := string(r)
+func (scanner *Scanner) readString(initialRune rune) (string, error) {
+	text := string(initialRune)
 
 	stop := false
-
 	for !stop {
 		r, _, err := scanner.stream.ReadRune()
 

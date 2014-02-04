@@ -285,5 +285,7 @@ func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]strin
 		tagNames = append(tagNames, tagName)
 	}
 
+	sort.Strings(tagNames)
+
 	return tagNames, nil
 }

@@ -61,16 +61,39 @@ _tmsu_commands() {
 	_describe -t commands 'command' command_list "$@"
 }
 
+_tmsu_values() {
+    typeset -a value_list
+    local line
+
+    local tagName=${PREFIX%%=*}
+    _call_program tmsu tmsu $db values $tagName | \
+    while read -A line
+    do
+        value_list+=$tagName=$line[1]
+    done
+
+    _describe -t values 'values' value_list
+}
+
 _tmsu_tags() {
-	typeset -a tag_list
-	local tag
+    typeset -a tag_list
+    local tag
 
-	_call_program tmsu tmsu $db tags --all | while read -A tag
-	do
-		tag_list+=$tag[1]:gs/:/\\:/
-	done
+    _call_program tmsu tmsu $db tags --all | while read -A tag
+    do
+        tag_list+=$tag[1]:gs/:/\\:/
+    done
 
-	_describe -t tags 'tags' tag_list
+    _describe -t tags 'tags' tag_list
+}
+
+_tmsu_tags_with_values() {
+    if [[ -prefix *= ]] 
+    then
+        _tmsu_values
+    else
+        _tmsu_tags
+    fi
 }
 
 _tmsu_query() {
@@ -167,7 +190,7 @@ _tmsu_cmd_status() {
 }
 
 _tmsu_cmd_tag() {
-	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags' \
+	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags_with_values' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
 	                 ''{--create+,-c}'[create a tag withou tagging any files]:source:_files' \
@@ -184,7 +207,7 @@ _tmsu_cmd_tag() {
                 then
                     _wanted files expl 'file' _files
                 else
-                    _wanted tags expl 'tags' _tmsu_tags
+                    _wanted tags expl 'tags' _tmsu_tags_with_values
                 fi
             fi
     esac
@@ -205,38 +228,24 @@ _tmsu_cmd_unmount() {
 
 _tmsu_cmd_untag() {
 	_arguments -s -w ''{--all,-a}'[remove all tags]' \
-	                 ''{--tags=,-t}'[remove set of tags from multiple files]' \
+	                 ''{--tags=,-t}'[remove set of tags from multiple files]:tags_tmsu_tags_with_values' \
 	                 ''{--recursive,-r}'[remove tags recursively from contents of directories]' \
 	                 '*:: :->items' \
 	&& ret=0
 
 	case $state in
 		(items)
-			if (( ${+opt_args[--tags]} || ${+opt_args[-t]} ))
+			if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--all]} || ${+opt_args[-a]} ))
 			then
-				if (( CURRENT == 1 ))
-				then
-					local expl
-					_wanted tags expl 'tags' _tmsu_tags
-				else
-					local expl
-					_wanted files expl 'files' _files
-				fi
-			elif (( ${+opt_args[--all]} || ${+opt_args[-a]} ))
-			then
-				local expl
-				_wanted files expl 'files' _files
+                _wanted files expl 'files' _files
 			else
 				if (( CURRENT == 1 ))
 				then
-					local expl
 					_wanted files expl 'files' _files
 				else
-					local expl
-					_wanted tags expl 'tags' _tmsu_tags
+					_wanted tags expl 'tags' _tmsu_tags_with_values
 				fi
 			fi
-		;;
 	esac
 }
 

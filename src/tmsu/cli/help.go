@@ -85,8 +85,6 @@ func summary() {
 	for _, option := range globalOptions {
 		fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 	}
-
-	fmt.Println()
 }
 
 func listCommands() {
@@ -126,6 +124,4 @@ func describeCommand(commandName string) {
 			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
 		}
 	}
-
-	fmt.Println()
 }

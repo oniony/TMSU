@@ -100,6 +100,11 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 	}
 	defer store.Close()
 
+	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
+	if err != nil {
+		return fmt.Errorf("could not retrieve fingerprint algorithm: %v", err)
+	}
+
 	wereErrors := false
 	for _, path := range paths {
 		_, err := os.Stat(path)
@@ -139,7 +144,7 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 	for _, path := range paths {
 		log.Infof(2, "%v: identifying duplicate files.", path)
 
-		fp, err := fingerprint.Create(path)
+		fp, err := fingerprint.Create(path, fingerprintAlgorithmSetting.Value)
 		if err != nil {
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}

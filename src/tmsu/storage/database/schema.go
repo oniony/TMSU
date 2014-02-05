@@ -42,6 +42,10 @@ func (db *Database) CreateSchema() error {
 		return err
 	}
 
+	if err := db.CreateSettingTable(); err != nil {
+		return err
+	}
+
 	if err := db.Commit(); err != nil {
 		return err
 	}
@@ -151,6 +155,19 @@ func (db *Database) CreateFileTagTable() error {
 func (db *Database) CreateQueryTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS query (
                 text TEXT PRIMARY KEY
+            )`
+
+	if _, err := db.Exec(sql); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) CreateSettingTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS setting (
+                name TEXT PRIMARY KEY,
+                value TEXT NOT NULL
             )`
 
 	if _, err := db.Exec(sql); err != nil {

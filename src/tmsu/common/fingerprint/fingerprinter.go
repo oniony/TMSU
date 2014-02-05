@@ -18,16 +18,37 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package fingerprint
 
 import (
+	"crypto/md5"
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"hash"
 	"os"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
-func Create(path string) (Fingerprint, error) {
+// Create a fingerprint using the specified algorithm.
+func Create(path, fingerprintAlgorithm string) (Fingerprint, error) {
+	switch fingerprintAlgorithm {
+	case "dynamic:SHA256", "":
+		return DynamicSHA256(path)
+	case "SHA256":
+		return SHA256(path)
+	case "dynamic:MD5":
+		return DynamicMD5(path)
+	case "MD5":
+		return MD5(path)
+	case "symlinkTargetName":
+		return SymlinkTargetName(path)
+	default:
+		return "", fmt.Errorf("unsupported fingerprint algorithm '%v'.", fingerprintAlgorithm)
+	}
+}
+
+// Creates a SHA256 fingerprint but using only parts of larger files for performance
+func DynamicSHA256(path string) (Fingerprint, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
 		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
@@ -39,13 +60,80 @@ func Create(path string) (Fingerprint, error) {
 	fileSize := stat.Size()
 
 	if fileSize > sparseFingerprintThreshold {
-		return createSparseFingerprint(path, fileSize)
+		return createSparseFingerprint(path, fileSize, sha256.New())
 	}
 
-	return createFullFingerprint(path)
+	return createFingerprint(path, sha256.New())
 }
 
-func createSparseFingerprint(path string, fileSize int64) (Fingerprint, error) {
+// Creates a SHA256 fingerprint
+func SHA256(path string) (Fingerprint, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
+	}
+	if stat.IsDir() {
+		return EMPTY, nil
+	}
+
+	return createFingerprint(path, sha256.New())
+}
+
+// Creates a MD5 fingerprint but using only parts of larger files for performance
+func DynamicMD5(path string) (Fingerprint, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
+	}
+	if stat.IsDir() {
+		return EMPTY, nil
+	}
+
+	fileSize := stat.Size()
+
+	if fileSize > sparseFingerprintThreshold {
+		return createSparseFingerprint(path, fileSize, md5.New())
+	}
+
+	return createFingerprint(path, md5.New())
+}
+
+// Creates an MD5 fingerprint
+func MD5(path string) (Fingerprint, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
+	}
+	if stat.IsDir() {
+		return EMPTY, nil
+	}
+
+	return createFingerprint(path, md5.New())
+}
+
+// Uses the symoblic target's filename as the fingerprint
+func SymlinkTargetName(path string) (Fingerprint, error) {
+	stat, err := os.Lstat(path)
+	if err != nil {
+		return EMPTY, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
+	}
+
+	if stat.Mode()&os.ModeSymlink != os.ModeSymlink {
+		// for other files, use the base name
+		return Fingerprint(stat.Name()), nil
+	}
+
+	target, err := os.Readlink(path)
+	if err != nil {
+		return "", fmt.Errorf("'%v': could not determine targe of symbolic link: %v", path, err)
+	}
+
+	return Fingerprint(target), nil
+}
+
+// unexported
+
+func createSparseFingerprint(path string, fileSize int64, h hash.Hash) (Fingerprint, error) {
 	buffer := make([]byte, sparseFingerprintSize)
 	hash := sha256.New()
 
@@ -92,9 +180,7 @@ func createSparseFingerprint(path string, fileSize int64) (Fingerprint, error) {
 	return Fingerprint(fingerprint), nil
 }
 
-func createFullFingerprint(path string) (Fingerprint, error) {
-	hash := sha256.New()
-
+func createFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 	file, err := os.Open(path)
 	if err != nil {
 		return EMPTY, err
@@ -103,10 +189,10 @@ func createFullFingerprint(path string) (Fingerprint, error) {
 
 	buffer := make([]byte, 1024)
 	for count := 0; err == nil; count, err = file.Read(buffer) {
-		hash.Write(buffer[:count])
+		h.Write(buffer[:count])
 	}
 
-	sum := hash.Sum(make([]byte, 0, 64))
+	sum := h.Sum(make([]byte, 0, 64))
 	fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil

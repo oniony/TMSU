@@ -81,16 +81,21 @@ func repairExec(options Options, args []string) error {
 	defer store.Close()
 	defer store.Commit()
 
-	if len(args) == 0 {
-		return repairDatabase(store, pretend, force)
+	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
+	if err != nil {
+		return err
 	}
 
-	return repairPaths(store, args, pretend, force)
+	if len(args) == 0 {
+		return repairDatabase(store, pretend, force, fingerprintAlgorithmSetting.Value)
+	}
+
+	return repairPaths(store, args, pretend, force, fingerprintAlgorithmSetting.Value)
 }
 
 //- unexported
 
-func repairDatabase(store *storage.Storage, pretend, force bool) error {
+func repairDatabase(store *storage.Storage, pretend, force bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "retrieving all files from the database.")
 
 	files, err := store.Files()
@@ -103,7 +108,7 @@ func repairDatabase(store *storage.Storage, pretend, force bool) error {
 		paths[index] = files[index].Path()
 	}
 
-	err = repairFiles(store, paths, pretend, force)
+	err = repairFiles(store, paths, pretend, force, fingerprintAlgorithm)
 	if err != nil {
 		return err
 	}
@@ -111,7 +116,7 @@ func repairDatabase(store *storage.Storage, pretend, force bool) error {
 	return nil
 }
 
-func repairPaths(store *storage.Storage, paths []string, pretend, force bool) error {
+func repairPaths(store *storage.Storage, paths []string, pretend, force bool, fingerprintAlgorithm string) error {
 	absPaths := make([]string, len(paths))
 
 	for index, path := range paths {
@@ -125,7 +130,7 @@ func repairPaths(store *storage.Storage, paths []string, pretend, force bool) er
 
 	log.Infof(2, "identifying top-level paths.")
 
-	err := repairFiles(store, absPaths, pretend, force)
+	err := repairFiles(store, absPaths, pretend, force, fingerprintAlgorithm)
 	if err != nil {
 		return err
 	}
@@ -133,7 +138,7 @@ func repairPaths(store *storage.Storage, paths []string, pretend, force bool) er
 	return nil
 }
 
-func repairFiles(store *storage.Storage, paths []string, pretend, force bool) error {
+func repairFiles(store *storage.Storage, paths []string, pretend, force bool, fingerprintAlgorithm string) error {
 	tree := _path.NewTree()
 	for _, path := range paths {
 		tree.Add(path, false)
@@ -152,11 +157,11 @@ func repairFiles(store *storage.Storage, paths []string, pretend, force bool) er
 
 	_, untagged, modified, missing := determineStatuses(fsPaths, dbPaths)
 
-	if err = repairModified(store, modified, pretend); err != nil {
+	if err = repairModified(store, modified, pretend, fingerprintAlgorithm); err != nil {
 		return err
 	}
 
-	if err = repairMoved(store, missing, untagged, pretend); err != nil {
+	if err = repairMoved(store, missing, untagged, pretend, fingerprintAlgorithm); err != nil {
 		return err
 	}
 
@@ -213,7 +218,7 @@ func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged dat
 	return tagged, untagged, modified, missing
 }
 
-func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool) error {
+func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "repairing modified files")
 
 	for path, fileIdAndStat := range modified {
@@ -222,7 +227,7 @@ func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend b
 
 		log.Infof(1, "%v: modified", path)
 
-		fingerprint, err := fingerprint.Create(path)
+		fingerprint, err := fingerprint.Create(path, fingerprintAlgorithm)
 		if err != nil {
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}
@@ -239,17 +244,16 @@ func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend b
 	return nil
 }
 
-func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap, pretend bool) error {
+func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap, pretend bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "repairing moved files")
 
 	moved := make([]string, 0, 10)
-
 	for path, dbFile := range missing {
 		log.Infof(2, "%v: searching for new location", path)
 
 		for candidatePath, stat := range untagged {
 			if stat.Size() == dbFile.Size {
-				fingerprint, err := fingerprint.Create(candidatePath)
+				fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
 				if err != nil {
 					return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 				}

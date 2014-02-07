@@ -25,6 +25,8 @@ import (
 	"fmt"
 	"hash"
 	"os"
+	"path/filepath"
+	"strings"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
@@ -46,7 +48,9 @@ func Create(path, fingerprintAlgorithm string) (Fingerprint, error) {
 	case "MD5":
 		return regularFingerprint(path, md5.New())
 	case "symlinkTargetName":
-		return symlinkTargetName(path)
+		return symlinkTargetName(path, true)
+	case "symlinkTargetNameNoExt":
+		return symlinkTargetName(path, false)
 	default:
 		return "", fmt.Errorf("unsupported fingerprint algorithm '%v'.", fingerprintAlgorithm)
 	}
@@ -85,7 +89,7 @@ func dynamicFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 }
 
 // Uses the symoblic target's filename as the fingerprint
-func symlinkTargetName(path string) (Fingerprint, error) {
+func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) {
 	stat, err := os.Lstat(path)
 	if err != nil {
 		return EMPTY, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
@@ -101,7 +105,16 @@ func symlinkTargetName(path string) (Fingerprint, error) {
 		return "", fmt.Errorf("'%v': could not determine targe of symbolic link: %v", path, err)
 	}
 
-	return Fingerprint(target), nil
+	fingerprint := filepath.Base(target)
+
+	if !includeExtension {
+		pos := strings.LastIndex(fingerprint, ".")
+		if pos > -1 {
+			fingerprint = fingerprint[0:pos]
+		}
+	}
+
+	return Fingerprint(fingerprint), nil
 }
 
 func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Fingerprint, error) {

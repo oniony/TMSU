@@ -37,7 +37,7 @@ func TestRegularGeneration(test *testing.T) {
 		test.Fatal(err.Error())
 	}
 
-	fingerprint, err := Create(tempFilePath)
+	fingerprint, err := Create(tempFilePath, "")
 	if err != nil {
 		test.Fatal(err.Error())
 	}

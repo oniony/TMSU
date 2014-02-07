@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/common/format"
 	"tmsu/common/log"
 	"tmsu/storage"
 )
@@ -46,25 +47,27 @@ Examples:
     $ tmsu values --count year
     3`,
 	Options: Options{{"--all", "-a", "lists all of the values used by any tag", false, ""},
-		{"--count", "-c", "lists the number of values rather than their names", false, ""}},
+		{"--count", "-c", "lists the number of values rather than their names", false, ""},
+		{"", "-1", "list one value per line", false, ""}},
 	Exec: valuesExec,
 }
 
 func valuesExec(options Options, args []string) error {
 	showCount := options.HasOption("--count")
+	onePerLine := options.HasOption("-1")
 
 	if options.HasOption("--all") {
-		return listAllValues(showCount)
+		return listAllValues(showCount, onePerLine)
 	}
 
 	if len(args) == 0 {
 		return fmt.Errorf("at least one tag must be specified. Use --all to show all values.")
 	}
 
-	return listValues(args, showCount)
+	return listValues(args, showCount, onePerLine)
 }
 
-func listAllValues(showCount bool) error {
+func listAllValues(showCount, onePerLine bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -86,15 +89,24 @@ func listAllValues(showCount bool) error {
 			return fmt.Errorf("could not retrieve values: %v", err)
 		}
 
-		for _, value := range values {
-			fmt.Println(value.Name)
+		if onePerLine {
+			for _, value := range values {
+				fmt.Println(value.Name)
+			}
+		} else {
+			valueNames := make([]string, len(values))
+			for index, value := range values {
+				valueNames[index] = value.Name
+			}
+
+			format.Columns(valueNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listValues(tagNames []string, showCount bool) error {
+func listValues(tagNames []string, showCount, onePerLine bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -103,17 +115,17 @@ func listValues(tagNames []string, showCount bool) error {
 
 	switch len(tagNames) {
 	case 0:
-		//TODO what to do?
+		return fmt.Errorf("at least one tag must be specified")
 	case 1:
-		return listValuesForTag(store, tagNames[0], showCount)
+		return listValuesForTag(store, tagNames[0], showCount, onePerLine)
 	default:
-		return listValuesForTags(store, tagNames, showCount)
+		return listValuesForTags(store, tagNames, showCount, onePerLine)
 	}
 
 	return nil
 }
 
-func listValuesForTag(store *storage.Storage, tagName string, showCount bool) error {
+func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerLine bool) error {
 	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -132,15 +144,24 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount bool) er
 	if showCount {
 		fmt.Println(len(values))
 	} else {
-		for _, value := range values {
-			fmt.Println(value.Name)
+		if onePerLine {
+			for _, value := range values {
+				fmt.Println(value.Name)
+			}
+		} else {
+			valueNames := make([]string, len(values))
+			for index, value := range values {
+				valueNames[index] = value.Name
+			}
+
+			format.Columns(valueNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listValuesForTags(store *storage.Storage, tagNames []string, showCount bool) error {
+func listValuesForTags(store *storage.Storage, tagNames []string, showCount, onePerLine bool) error {
 	wereErrors := false
 	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tagName)
@@ -163,12 +184,20 @@ func listValuesForTags(store *storage.Storage, tagNames []string, showCount bool
 		if showCount {
 			fmt.Printf("%v: %v\n", tagName, len(values))
 		} else {
-			valueNames := make([]string, len(values))
-			for index, value := range values {
-				valueNames[index] = value.Name
-			}
+			if onePerLine {
+				fmt.Println(tagName)
+				for _, value := range values {
+					fmt.Println(value.Name)
+				}
+				fmt.Println()
+			} else {
+				valueNames := make([]string, len(values))
+				for index, value := range values {
+					valueNames[index] = value.Name
+				}
 
-			fmt.Printf("%v: %v\n", tagName, strings.Join(valueNames, " "))
+				fmt.Printf("%v: %v\n", tagName, strings.Join(valueNames, " "))
+			}
 		}
 	}
 

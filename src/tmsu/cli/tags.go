@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"tmsu/common/format"
 	"tmsu/common/log"
 	"tmsu/entities"
 	"tmsu/storage"
@@ -48,21 +49,24 @@ Examples:
     $ tmsu tags --count tralala.mp3
     3`,
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
-		{"--count", "-c", "lists the number of tags rather than their names", false, ""}},
+		{"--count", "-c", "lists the number of tags rather than their names", false, ""},
+		{"", "-1", "list one tag per line", false, ""}},
 	Exec: tagsExec,
 }
 
 func tagsExec(options Options, args []string) error {
 	showCount := options.HasOption("--count")
 
+	onePerLine := options.HasOption("-1")
+
 	if options.HasOption("--all") {
-		return listAllTags(showCount)
+		return listAllTags(showCount, onePerLine)
 	}
 
-	return listTags(args, showCount)
+	return listTags(args, showCount, onePerLine)
 }
 
-func listAllTags(showCount bool) error {
+func listAllTags(showCount, onePerLine bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -84,15 +88,24 @@ func listAllTags(showCount bool) error {
 			return fmt.Errorf("could not retrieve tags: %v", err)
 		}
 
-		for _, tag := range tags {
-			fmt.Println(tag.Name)
+		if onePerLine {
+			for _, tag := range tags {
+				fmt.Println(tag.Name)
+			}
+		} else {
+			tagNames := make([]string, len(tags))
+			for index, tag := range tags {
+				tagNames[index] = tag.Name
+			}
+
+			format.Columns(tagNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listTags(paths []string, showCount bool) error {
+func listTags(paths []string, showCount, onePerLine bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -101,17 +114,17 @@ func listTags(paths []string, showCount bool) error {
 
 	switch len(paths) {
 	case 0:
-		return listTagsForWorkingDirectory(store, showCount)
+		return listTagsForWorkingDirectory(store, showCount, onePerLine)
 	case 1:
-		return listTagsForPath(store, paths[0], showCount)
+		return listTagsForPath(store, paths[0], showCount, onePerLine)
 	default:
-		return listTagsForPaths(store, paths, showCount)
+		return listTagsForPaths(store, paths, showCount, onePerLine)
 	}
 
 	return nil
 }
 
-func listTagsForPath(store *storage.Storage, path string, showCount bool) error {
+func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine bool) error {
 	log.Infof(2, "%v: retrieving tags.", path)
 
 	file, err := store.FileByPath(path)
@@ -147,15 +160,19 @@ func listTagsForPath(store *storage.Storage, path string, showCount bool) error 
 	if showCount {
 		fmt.Println(len(tagNames))
 	} else {
-		for _, tagName := range tagNames {
-			fmt.Println(tagName)
+		if onePerLine {
+			for _, tagName := range tagNames {
+				fmt.Println(tagName)
+			}
+		} else {
+			format.Columns(tagNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) error {
+func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine bool) error {
 	wereErrors := false
 	for _, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
@@ -198,7 +215,15 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 		if showCount {
 			fmt.Println(path + ": " + strconv.Itoa(len(tagNames)))
 		} else {
-			fmt.Println(path + ": " + strings.Join(tagNames, " "))
+			if onePerLine {
+				fmt.Println(path)
+				for _, tagName := range tagNames {
+					fmt.Println(tagName)
+				}
+				fmt.Println()
+			} else {
+				fmt.Println(path + ": " + strings.Join(tagNames, " "))
+			}
 		}
 	}
 
@@ -209,7 +234,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount bool) er
 	return nil
 }
 
-func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
+func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine bool) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return fmt.Errorf("could not open working directory: %v", err)
@@ -248,7 +273,15 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount bool) error {
 		if showCount {
 			fmt.Println(dirName + ": " + strconv.Itoa(len(tagNames)))
 		} else {
-			fmt.Println(dirName + ": " + strings.Join(tagNames, " "))
+			if onePerLine {
+				fmt.Println(dirName)
+				for _, tagName := range tagNames {
+					fmt.Println(tagName)
+				}
+				fmt.Println()
+			} else {
+				fmt.Println(dirName + ": " + strings.Join(tagNames, " "))
+			}
 		}
 	}
 

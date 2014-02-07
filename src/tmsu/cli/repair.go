@@ -292,10 +292,6 @@ func repairMissing(store *storage.Storage, missing databaseFileMap, pretend, for
 				return fmt.Errorf("%v: could not delete file-tags: %v", path, err)
 			}
 
-			if err := store.DeleteFile(dbFile.Id); err != nil {
-				return fmt.Errorf("%v: could not delete file: %v", path, err)
-			}
-
 			log.Infof(1, "%v: removed", path)
 		} else {
 			log.Infof(1, "%v: missing", path)

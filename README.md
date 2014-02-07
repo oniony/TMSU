@@ -149,6 +149,9 @@ v0.4.0 (in development)
 
   * Added support for tag values, e.g. 'country=uk'.
   * Added support for querying files based upon tag values, e.g. 'year > 2000'.
+  * Added ability to configure which fingerprint algorithm to use.
+  * 'tags', 'files' and 'values' commands now format into columns unless
+  overriden with the -1 option.
   * Significant performance improvements.
   * Bug fixes.
 

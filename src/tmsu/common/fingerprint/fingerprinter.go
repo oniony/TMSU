@@ -108,7 +108,7 @@ func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) 
 	fingerprint := filepath.Base(target)
 
 	if !includeExtension {
-		pos := strings.LastIndex(fingerprint, ".")
+		pos := strings.Index(fingerprint, ".")
 		if pos > -1 {
 			fingerprint = fingerprint[0:pos]
 		}

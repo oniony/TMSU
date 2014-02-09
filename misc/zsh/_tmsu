@@ -209,6 +209,7 @@ _tmsu_cmd_tag() {
 _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
 	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
+	                 ''{-1}'[list one tag per line]' \
 	                 '*:file:_files' \
 	&& ret=0
 }
@@ -245,6 +246,7 @@ _tmsu_cmd_untag() {
 _tmsu_cmd_values() {
 	_arguments -s -w ''{--all,-a}'[show all values]' \
 	                 ''{--count,-c}'[lists the number of values rather than their names]' \
+	                 ''{-1}'[lists on value per line]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0
 }

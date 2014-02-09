@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"sort"
 	"strings"
-	"tmsu/common/format"
 	"tmsu/common/log"
 	"tmsu/common/path"
 	"tmsu/entities"
@@ -71,8 +70,7 @@ Examples:
 		{"--leaf", "-l", "list only the leaf items (files and empty directories)", false, ""},
 		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
-		{"--count", "-c", "lists the number of files rather than their names", false, ""},
-		{"", "-1", "list one file per line", false, ""}},
+		{"--count", "-c", "lists the number of files rather than their names", false, ""}},
 	Exec: filesExec,
 }
 
@@ -84,19 +82,18 @@ func filesExec(options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
-	onePerLine := options.HasOption("-1")
 
 	if options.HasOption("--all") {
-		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine)
+		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine)
+	return listFilesForQuery(queryText, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
 // unexported
 
-func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine bool) error {
+func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -110,10 +107,10 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showC
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine)
+	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
-func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine bool) error {
+func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	if queryText == "" {
 		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
@@ -156,14 +153,14 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 		return fmt.Errorf("could not query files: %v", err)
 	}
 
-	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine); err != nil {
+	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount, onePerLine bool) error {
+func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	tree := path.NewTree()
 	for _, file := range files {
 		tree.Add(file.Path(), file.IsDir)
@@ -207,16 +204,12 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 		}
 		sort.Strings(relPaths)
 
-		if onePerLine || print0 {
-			for _, relPath := range relPaths {
-				if print0 {
-					fmt.Printf("%v\000", relPath)
-				} else {
-					fmt.Println(relPath)
-				}
+		for _, relPath := range relPaths {
+			if print0 {
+				fmt.Printf("%v\000", relPath)
+			} else {
+				fmt.Println(relPath)
 			}
-		} else {
-			format.Columns(relPaths, terminalWidth())
 		}
 	}
 

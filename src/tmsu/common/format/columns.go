@@ -47,12 +47,16 @@ func Columns(items []string, width int) {
 		// add a row if necessary
 		if len(items)%cols != 0 {
 			rows++
+		}
 
-			// avoid empty columns
-			//if len(items)/rows < cols {
-			//    fmt.Println("empty columns")
-			//		continue
-			//	}
+		minimumColumns := len(items) / rows
+		if len(items)%rows > 0 {
+			minimumColumns++
+		}
+
+		if minimumColumns < cols {
+			cols = minimumColumns + 1
+			continue
 		}
 
 		for index, item := range items {

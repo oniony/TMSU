@@ -43,6 +43,7 @@ Where no PATHS are specified all files in the database are checked.
     Moved files                             yes      yes
     Missing files                           yes      no
     Untagged files                          yes      no
+    Unmodified files                        no       no
 
 Modified files are identified by a change to the file's modification time or
 file size. These files are repaired by updating the modification time, size and
@@ -66,13 +67,15 @@ Examples:
     $ tmsu repair .
     $ tmsu repair --force`,
 	Options: Options{{"--pretend", "-p", "do not make any changes", false, ""},
-		{"--force", "-f", "remove missing files from the database", false, ""}},
+		{"--remove", "-R", "remove missing files from the database", false, ""},
+		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},
 	Exec: repairExec,
 }
 
 func repairExec(options Options, args []string) error {
 	pretend := options.HasOption("--pretend")
-	force := options.HasOption("--force")
+	removeMissing := options.HasOption("--remove")
+	recalcUnmodified := options.HasOption("--unmodified")
 
 	store, err := storage.Open()
 	if err != nil {
@@ -87,15 +90,15 @@ func repairExec(options Options, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return repairDatabase(store, pretend, force, fingerprintAlgorithmSetting.Value)
+		return repairDatabase(store, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithmSetting.Value)
 	}
 
-	return repairPaths(store, args, pretend, force, fingerprintAlgorithmSetting.Value)
+	return repairPaths(store, args, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithmSetting.Value)
 }
 
 //- unexported
 
-func repairDatabase(store *storage.Storage, pretend, force bool, fingerprintAlgorithm string) error {
+func repairDatabase(store *storage.Storage, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "retrieving all files from the database.")
 
 	files, err := store.Files()
@@ -108,7 +111,7 @@ func repairDatabase(store *storage.Storage, pretend, force bool, fingerprintAlgo
 		paths[index] = files[index].Path()
 	}
 
-	err = repairFiles(store, paths, pretend, force, fingerprintAlgorithm)
+	err = repairFiles(store, paths, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
 	if err != nil {
 		return err
 	}
@@ -116,7 +119,7 @@ func repairDatabase(store *storage.Storage, pretend, force bool, fingerprintAlgo
 	return nil
 }
 
-func repairPaths(store *storage.Storage, paths []string, pretend, force bool, fingerprintAlgorithm string) error {
+func repairPaths(store *storage.Storage, paths []string, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
 	absPaths := make([]string, len(paths))
 
 	for index, path := range paths {
@@ -130,7 +133,7 @@ func repairPaths(store *storage.Storage, paths []string, pretend, force bool, fi
 
 	log.Infof(2, "identifying top-level paths.")
 
-	err := repairFiles(store, absPaths, pretend, force, fingerprintAlgorithm)
+	err := repairFiles(store, absPaths, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
 	if err != nil {
 		return err
 	}
@@ -138,7 +141,7 @@ func repairPaths(store *storage.Storage, paths []string, pretend, force bool, fi
 	return nil
 }
 
-func repairFiles(store *storage.Storage, paths []string, pretend, force bool, fingerprintAlgorithm string) error {
+func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
 	tree := _path.NewTree()
 	for _, path := range paths {
 		tree.Add(path, false)
@@ -155,7 +158,13 @@ func repairFiles(store *storage.Storage, paths []string, pretend, force bool, fi
 		return err
 	}
 
-	_, untagged, modified, missing := determineStatuses(fsPaths, dbPaths)
+	unmodfied, untagged, modified, missing := determineStatuses(fsPaths, dbPaths)
+
+	if recalcUnmodified {
+		if err = repairUnmodified(store, unmodfied, pretend, fingerprintAlgorithm); err != nil {
+			return err
+		}
+	}
 
 	if err = repairModified(store, modified, pretend, fingerprintAlgorithm); err != nil {
 		return err
@@ -165,7 +174,7 @@ func repairFiles(store *storage.Storage, paths []string, pretend, force bool, fi
 		return err
 	}
 
-	if err = repairMissing(store, missing, pretend, force); err != nil {
+	if err = repairMissing(store, missing, pretend, removeMissing); err != nil {
 		return err
 	}
 
@@ -186,23 +195,25 @@ type fileIdAndInfoMap map[string]struct {
 }
 type databaseFileMap map[string]entities.File
 
-func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged databaseFileMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
+func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (unmodified fileIdAndInfoMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
 	log.Infof(2, "determining file statuses")
 
-	tagged = make(databaseFileMap, 100)
+	unmodified = make(fileIdAndInfoMap, 100)
 	untagged = make(fileInfoMap, 100)
 	modified = make(fileIdAndInfoMap, 100)
 	missing = make(databaseFileMap, 100)
 
 	for path, stat := range fsPaths {
 		if dbFile, isTagged := dbPaths[path]; isTagged {
+			dbFileAndStat := struct {
+				fileId uint
+				stat   os.FileInfo
+			}{dbFile.Id, stat}
+
 			if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
-				tagged[path] = dbFile
+				unmodified[path] = dbFileAndStat
 			} else {
-				modified[path] = struct {
-					fileId uint
-					stat   os.FileInfo
-				}{dbFile.Id, stat}
+				modified[path] = dbFileAndStat
 			}
 		} else {
 			untagged[path] = stat
@@ -215,7 +226,33 @@ func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (tagged dat
 		}
 	}
 
-	return tagged, untagged, modified, missing
+	return
+}
+
+func repairUnmodified(store *storage.Storage, unmodified fileIdAndInfoMap, pretend bool, fingerprintAlgorithm string) error {
+	log.Infof(2, "recalculating fingerprints for unmodified files")
+
+	for path, fileIdAndStat := range unmodified {
+		fileId := fileIdAndStat.fileId
+		stat := fileIdAndStat.stat
+
+		log.Infof(1, "%v: unmodified", path)
+
+		fingerprint, err := fingerprint.Create(path, fingerprintAlgorithm)
+		if err != nil {
+			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+		}
+
+		if !pretend {
+			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
+			if err != nil {
+				return fmt.Errorf("%v: could not update file in database: %v", path, err)
+			}
+		}
+
+	}
+
+	return nil
 }
 
 func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool, fingerprintAlgorithm string) error {

@@ -1,4 +1,5 @@
 /*
+
 Copyright 2011-2014 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
@@ -28,11 +29,9 @@ func main() {
 }
 
 func Columns(items []string, width int) {
-	// 1. calculate
-
 	padding := 2 // minimum column padding
 
-	cols := width / 5 // take a conservative punt
+	cols := width / 5 // assume column width is at least five characters
 	if cols < 1 {
 		cols = 1
 	}
@@ -50,9 +49,10 @@ func Columns(items []string, width int) {
 			rows++
 
 			// avoid empty columns
-			if len(items)/rows < cols {
-				continue
-			}
+			//if len(items)/rows < cols {
+			//    fmt.Println("empty columns")
+			//		continue
+			//	}
 		}
 
 		for index, item := range items {
@@ -79,8 +79,6 @@ func Columns(items []string, width int) {
 			padding = 2
 		}
 	}
-
-	// 2. render
 
 	for rowIndex := 0; rowIndex < rows; rowIndex += 1 {
 		for columnIndex := 0; columnIndex < cols; columnIndex++ {

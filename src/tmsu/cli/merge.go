@@ -64,6 +64,7 @@ func mergeExec(options Options, args []string) error {
 		if sourceTagName == destTagName {
 			log.Warnf("cannot merge tag '%v' into itself.", sourceTagName)
 			wereErrors = true
+			continue
 		}
 
 		sourceTag, err := store.TagByName(sourceTagName)

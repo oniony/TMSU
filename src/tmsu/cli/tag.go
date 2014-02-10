@@ -163,9 +163,19 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	defer store.Close()
 	defer store.Commit()
 
-	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
+	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
 	if err != nil {
-		return fmt.Errorf("could not retrieve fingerprint algorithm: %v", err)
+		return err
+	}
+
+	autoCreateTags, err := store.SettingAsBool("autoCreateTags")
+	if err != nil {
+		return err
+	}
+
+	autoCreateValues, err := store.SettingAsBool("autoCreateValues")
+	if err != nil {
+		return err
 	}
 
 	tagValuePairs := make([]TagValuePair, 0, 10)
@@ -181,12 +191,12 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
-		tag, err := getOrCreateTag(store, tagName)
+		tag, err := getTag(store, tagName, autoCreateTags)
 		if err != nil {
 			return err
 		}
 
-		value, err := getOrCreateValue(store, valueName)
+		value, err := getValue(store, valueName, autoCreateValues)
 		if err != nil {
 			return err
 		}
@@ -196,7 +206,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 
 	wereErrors := false
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, recursive, fingerprintAlgorithmSetting.Value); err != nil {
+		if err := tagPath(store, path, tagValuePairs, recursive, fingerprintAlgorithm); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -342,33 +352,43 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValu
 	return nil
 }
 
-func getOrCreateTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
+func getTag(store *storage.Storage, tagName string, autoCreate bool) (*entities.Tag, error) {
 	tag, err := store.TagByName(tagName)
 	if err != nil {
 		return nil, fmt.Errorf("could not look up tag '%v': %v", tagName, err)
 	}
 
 	if tag == nil {
-		tag, err = store.AddTag(tagName)
-		if err != nil {
-			return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
-		}
+		if autoCreate {
+			tag, err = store.AddTag(tagName)
+			if err != nil {
+				return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+			}
 
-		log.Warnf("New tag '%v'.", tagName)
+			log.Warnf("New tag '%v'.", tagName)
+		} else {
+			return nil, fmt.Errorf("no such tag '%v'.", tagName)
+		}
 	}
 
 	return tag, nil
 }
 
-func getOrCreateValue(store *storage.Storage, valueName string) (*entities.Value, error) {
+func getValue(store *storage.Storage, valueName string, autoCreate bool) (*entities.Value, error) {
 	value, err := store.ValueByName(valueName)
 	if err != nil {
 		return nil, err
 	}
 	if value == nil {
-		value, err = store.AddValue(valueName)
-		if err != nil {
-			return nil, err
+		if autoCreate {
+			value, err = store.AddValue(valueName)
+			if err != nil {
+				return nil, err
+			}
+
+			log.Warnf("New value '%v'.", valueName)
+		} else {
+			return nil, fmt.Errorf("no such value '%v'.", valueName)
 		}
 	}
 

@@ -84,16 +84,16 @@ func repairExec(options Options, args []string) error {
 	defer store.Close()
 	defer store.Commit()
 
-	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
+	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
 	if err != nil {
 		return err
 	}
 
 	if len(args) == 0 {
-		return repairDatabase(store, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithmSetting.Value)
+		return repairDatabase(store, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
 	}
 
-	return repairPaths(store, args, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithmSetting.Value)
+	return repairPaths(store, args, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
 }
 
 //- unexported

@@ -150,8 +150,13 @@ v0.4.0 (in development)
   * Added support for tag values, e.g. 'country=uk'.
   * Added support for querying files based upon tag values, e.g. 'year > 2000'.
   * Added ability to configure which fingerprint algorithm to use.
-  * 'tags' and 'values' commands now format into columns, by default, when run
+  * 'tags' and 'values' commands now tabulate output, by default, when run
     from terminal.
+  * Added ability to configure whether new tags and values are automatically
+    created or not.
+  * Added --unmodified option to 'repair' command to force the recalculation
+    of fingerprints of unmodified files.
+  * Renamed --force option of 'repair' command to --remove.
   * Significant performance improvements.
   * Bug fixes.
 

@@ -82,10 +82,10 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 	return storage.Db.FilesByFingerprint(fingerprint)
 }
 
-// Retrieves the count of files with the specified tags.
-func (storage *Storage) FileCountWithTags(tagNames []string) (uint, error) {
+// Retrieves the count of files with the specified tags and matching the specified path.
+func (storage *Storage) FileCountWithTags(tagNames []string, path string) (uint, error) {
 	expression := query.HasAll(tagNames)
-	return storage.Db.QueryFileCount(expression)
+	return storage.Db.QueryFileCount(expression, path)
 }
 
 // Retrieves the set of untagged files.
@@ -93,20 +93,20 @@ func (storage *Storage) UntaggedFiles() (entities.Files, error) {
 	return storage.Db.UntaggedFiles()
 }
 
-// Retrieves the set of files with the specified tags.
-func (storage *Storage) FilesWithTags(tagNames []string) (entities.Files, error) {
+// Retrieves the set of files with the specified tags and matching the specified path.
+func (storage *Storage) FilesWithTags(tagNames []string, path string) (entities.Files, error) {
 	expression := query.HasAll(tagNames)
-	return storage.Db.QueryFiles(expression)
+	return storage.Db.QueryFiles(expression, path)
 }
 
-// Retrieves the count of files that match the specified query.
-func (storage *Storage) QueryFileCount(expression query.Expression) (uint, error) {
-	return storage.Db.QueryFileCount(expression)
+// Retrieves the count of files that match the specified query and matching the specified path.
+func (storage *Storage) QueryFileCount(expression query.Expression, path string) (uint, error) {
+	return storage.Db.QueryFileCount(expression, path)
 }
 
 // Retrieves the set of files that match the specified query.
-func (storage *Storage) QueryFiles(expression query.Expression) (entities.Files, error) {
-	return storage.Db.QueryFiles(expression)
+func (storage *Storage) QueryFiles(expression query.Expression, path string) (entities.Files, error) {
+	return storage.Db.QueryFiles(expression, path)
 }
 
 // Retrieves the sets of duplicate files within the database.

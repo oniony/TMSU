@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"path/filepath"
 	"sort"
 	"strings"
 	"tmsu/common/log"
@@ -46,7 +47,7 @@ The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
 interpretted as 'chalk and cheese'.
 
 The comparison operators are used to match on the values of tags. For example,
-'country=uk' will only match files tagged 'country=uk' whilst 'year<=2014'
+'country = uk' will only match files tagged 'country=uk' whilst 'year <= 2014'
 will match files tagged 'year=2014', 'year=2000', &c.
 
 Note: Your shell may try to interpret some of the punctuation, e.g. most shells
@@ -70,11 +71,23 @@ Examples:
 		{"--leaf", "-l", "list only the leaf items (files and empty directories)", false, ""},
 		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
-		{"--count", "-c", "lists the number of files rather than their names", false, ""}},
+		{"--count", "-c", "lists the number of files rather than their names", false, ""},
+		{"--path", "-p", "list only items under PATH", true, ""}},
 	Exec: filesExec,
 }
 
 func filesExec(options Options, args []string) error {
+	absPath := ""
+	if options.HasOption("--path") {
+		pth := options.Get("--path").Argument
+
+		var err error
+		absPath, err = filepath.Abs(pth)
+		if err != nil {
+			fmt.Println("could not get absolute path of '%v': %v'", pth, err)
+		}
+	}
+
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	topOnly := options.HasOption("--top")
@@ -88,7 +101,7 @@ func filesExec(options Options, args []string) error {
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
+	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
 // unexported
@@ -110,7 +123,7 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showC
 	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
 }
 
-func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
+func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
 	if queryText == "" {
 		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
@@ -148,7 +161,7 @@ func listFilesForQuery(queryText string, dirOnly, fileOnly, topOnly, leafOnly, r
 
 	log.Info(2, "querying database")
 
-	files, err := store.QueryFiles(expression)
+	files, err := store.QueryFiles(expression, path)
 	if err != nil {
 		return fmt.Errorf("could not query files: %v", err)
 	}

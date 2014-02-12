@@ -20,7 +20,6 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"tmsu/common/format"
 	"tmsu/common/log"
 	"tmsu/storage"
 )
@@ -99,7 +98,7 @@ func listAllValues(showCount, onePerLine bool) error {
 				valueNames[index] = value.Name
 			}
 
-			format.Columns(valueNames, terminalWidth())
+			columns(valueNames, terminalWidth())
 		}
 	}
 
@@ -154,7 +153,7 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 				valueNames[index] = value.Name
 			}
 
-			format.Columns(valueNames, terminalWidth())
+			columns(valueNames, terminalWidth())
 		}
 	}
 

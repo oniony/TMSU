@@ -16,19 +16,14 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package format
+package cli
 
 import (
 	"fmt"
 	"strings"
 )
 
-func main() {
-	items := []string{"apple", "banana", "biscuit", "cucumber", "dandelion", "egg", "flump", "gherkin", "ham", "jam", "kale", "lettuce", "melon", "orange", "pomegranite", "rice", "salad", "tomato", "turnip", "whisky"}
-	Columns(items, 80)
-}
-
-func Columns(items []string, width int) {
+func columns(items []string, width int) {
 	padding := 2 // minimum column padding
 
 	cols := width / 5 // assume column width is at least five characters

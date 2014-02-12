@@ -153,9 +153,9 @@ func (db *Database) UntaggedFiles() (entities.Files, error) {
 	return readFiles(rows, make(entities.Files, 0, 10))
 }
 
-// Retrieves the count of files matching the specified query.
-func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
-	sql := buildCountQuery(expression)
+// Retrieves the count of files matching the specified query and matching the specified path.
+func (db *Database) QueryFileCount(expression query.Expression, path string) (uint, error) {
+	sql := buildCountQuery(expression, path)
 
 	rows, err := db.ExecQuery(sql)
 	if err != nil {
@@ -166,9 +166,9 @@ func (db *Database) QueryFileCount(expression query.Expression) (uint, error) {
 	return readCount(rows)
 }
 
-// Retrieves the set of files matching the specified query.
-func (db *Database) QueryFiles(expression query.Expression) (entities.Files, error) {
-	sql := buildQuery(expression)
+// Retrieves the set of files matching the specified query and matching the specified path.
+func (db *Database) QueryFiles(expression query.Expression, path string) (entities.Files, error) {
+	sql := buildQuery(expression, path)
 	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
@@ -373,20 +373,23 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
-func buildCountQuery(expression query.Expression) string {
+func buildCountQuery(expression query.Expression, path string) string {
 	builder := NewBuilder()
 
 	builder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
 	buildQueryBranch(expression, builder)
+	buildPathClause(path, builder)
 
 	return builder.Sql
 }
 
-func buildQuery(expression query.Expression) string {
+func buildQuery(expression query.Expression, path string) string {
 	builder := NewBuilder()
 
 	builder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
 	buildQueryBranch(expression, builder)
+	buildPathClause(path, builder)
+
 	builder.AppendSql("ORDER BY directory || '/' || name")
 
 	return builder.Sql
@@ -437,5 +440,16 @@ AND value_id IN (SELECT id
 		builder.AppendSql("1 == 1\n")
 	default:
 		panic("Unsupported expression type.")
+	}
+}
+
+func buildPathClause(path string, builder *SqlBuilder) {
+	path = filepath.Clean(path)
+
+	dir, name := filepath.Split(path)
+	dir = filepath.Clean(dir)
+
+	if path != "" {
+		builder.AppendSql("AND (directory = '" + path + "' OR directory LIKE '" + filepath.Join(path, "%") + "' OR (directory = '" + dir + "' AND name = '" + name + "'))\n")
 	}
 }

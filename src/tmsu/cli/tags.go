@@ -23,7 +23,6 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"tmsu/common/format"
 	"tmsu/common/log"
 	"tmsu/entities"
 	"tmsu/storage"
@@ -98,7 +97,7 @@ func listAllTags(showCount, onePerLine bool) error {
 				tagNames[index] = tag.Name
 			}
 
-			format.Columns(tagNames, terminalWidth())
+			columns(tagNames, terminalWidth())
 		}
 	}
 
@@ -165,7 +164,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine 
 				fmt.Println(tagName)
 			}
 		} else {
-			format.Columns(tagNames, terminalWidth())
+			columns(tagNames, terminalWidth())
 		}
 	}
 

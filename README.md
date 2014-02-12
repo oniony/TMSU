@@ -147,13 +147,15 @@ v0.4.0 (in development)
   Note: This release removes support for the legacy not operator: '-'. Please
   use the 'not' operator instead.
 
-  * Added support for tag values, e.g. 'country=uk'.
-  * Added support for querying files based upon tag values, e.g. 'year > 2000'.
+  * Added support for tag values, e.g. 'tmsu tag song.mp3 country=uk' and the
+    querying of files based upon these values, e.g. 'year > 2000'.
   * Added ability to configure which fingerprint algorithm to use.
   * 'tags' and 'values' commands now tabulate output, by default, when run
     from terminal.
+  * Added --path option to 'files' command to retrieve just those files matching
+    or under the path specified.
   * Added ability to configure whether new tags and values are automatically
-    created or not.
+    created or not or a per-database basis.
   * Added --unmodified option to 'repair' command to force the recalculation
     of fingerprints of unmodified files.
   * Renamed --force option of 'repair' command to --remove.

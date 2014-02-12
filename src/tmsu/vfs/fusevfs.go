@@ -651,7 +651,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
 	expression := query.HasAll(path)
-	files, err := vfs.store.QueryFiles(expression)
+	files, err := vfs.store.QueryFiles(expression, "")
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
@@ -719,7 +719,7 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 		}
 	}
 
-	files, err := vfs.store.QueryFiles(expression)
+	files, err := vfs.store.QueryFiles(expression, "")
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}

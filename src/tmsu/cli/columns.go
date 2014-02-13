@@ -26,7 +26,8 @@ import (
 func columns(items []string, width int) {
 	padding := 2 // minimum column padding
 
-	cols := width / 5 // assume column width is at least five characters
+	// calculate number of columns to start with
+	cols := width / 5
 	if cols < 1 {
 		cols = 1
 	}
@@ -34,40 +35,33 @@ func columns(items []string, width int) {
 	var rows int
 	var colWidths []int
 	var totalWidth int
+
+	// reduce number of columns until everything fits
 	for totalWidth = width + 1; totalWidth > width && cols > 0; cols-- {
-		colWidths = make([]int, cols)
-
+		// calculate number of rows for this many columns
 		rows = len(items) / cols
-
-		// add a row if necessary
 		if len(items)%cols != 0 {
 			rows++
 		}
 
-		minimumColumns := len(items) / rows
+		// calculated number of columns for this many rows
+		// as a row increase above may have changed the picture
+		cols = len(items) / rows
 		if len(items)%rows > 0 {
-			minimumColumns++
+			cols++
 		}
 
-		if minimumColumns < cols {
-			cols = minimumColumns + 1
-			continue
-		}
-
+		// calculate column widths and total width
+		colWidths = make([]int, cols)
+		totalWidth = cols * padding
 		for index, item := range items {
 			columnIndex := index / rows
 
 			if len(item) > colWidths[columnIndex] {
+				totalWidth += -colWidths[columnIndex] + len(item)
 				colWidths[columnIndex] = len(item)
 			}
 		}
-
-		totalWidth = 0
-		for _, colWidth := range colWidths {
-			totalWidth += colWidth
-			totalWidth += padding
-		}
-		totalWidth -= padding
 	}
 	cols++
 

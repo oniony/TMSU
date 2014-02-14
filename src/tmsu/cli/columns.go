@@ -42,13 +42,11 @@ func columns(items []string, width int) {
 		rows = len(items) / cols
 		if len(items)%cols != 0 {
 			rows++
-		}
 
-		// calculated number of columns for this many rows
-		// as a row increase above may have changed the picture
-		cols = len(items) / rows
-		if len(items)%rows > 0 {
-			cols++
+			cols = len(items) / rows
+			if len(items)%rows > 0 {
+				cols++
+			}
 		}
 
 		// calculate column widths and total width

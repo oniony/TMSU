@@ -97,7 +97,7 @@ func listAllTags(showCount, onePerLine bool) error {
 				tagNames[index] = tag.Name
 			}
 
-			columns(tagNames, terminalWidth())
+			formatColumns(tagNames, terminalWidth())
 		}
 	}
 
@@ -164,7 +164,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine 
 				fmt.Println(tagName)
 			}
 		} else {
-			columns(tagNames, terminalWidth())
+			formatColumns(tagNames, terminalWidth())
 		}
 	}
 

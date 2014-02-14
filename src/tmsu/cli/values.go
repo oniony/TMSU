@@ -98,7 +98,7 @@ func listAllValues(showCount, onePerLine bool) error {
 				valueNames[index] = value.Name
 			}
 
-			columns(valueNames, terminalWidth())
+			formatColumns(valueNames, terminalWidth())
 		}
 	}
 
@@ -153,7 +153,7 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 				valueNames[index] = value.Name
 			}
 
-			columns(valueNames, terminalWidth())
+			formatColumns(valueNames, terminalWidth())
 		}
 	}
 

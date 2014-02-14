@@ -1,5 +1,4 @@
 /*
-
 Copyright 2011-2014 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
@@ -23,54 +22,55 @@ import (
 	"strings"
 )
 
-func columns(items []string, width int) {
+func formatColumns(items []string, width int) {
 	padding := 2 // minimum column padding
 
-	// calculate number of columns to start with
-	cols := width / 5
-	if cols < 1 {
-		cols = 1
-	}
-
-	var rows int
 	var colWidths []int
-	var totalWidth int
+	var calcWidth int
 
-	// reduce number of columns until everything fits
-	for totalWidth = width + 1; totalWidth > width && cols > 0; cols-- {
-		// calculate number of rows for this many columns
-		rows = len(items) / cols
-		if len(items)%cols != 0 {
-			rows++
+	cols := 0
+	rows := 1
 
-			cols = len(items) / rows
-			if len(items)%rows > 0 {
-				cols++
-			}
-		}
+	// add a row until everything fits
+	for calcWidth = width + 1; calcWidth > width && rows < len(items); rows++ {
+		cols = 0
+		colWidths = make([]int, 0, width)
+		calcWidth = -padding // last column has no padding
 
-		// calculate column widths and total width
-		colWidths = make([]int, cols)
-		totalWidth = cols * padding
+		// try to place items into columns
 		for index, item := range items {
-			columnIndex := index / rows
+			col := index / rows
 
-			if len(item) > colWidths[columnIndex] {
-				totalWidth += -colWidths[columnIndex] + len(item)
-				colWidths[columnIndex] = len(item)
+			if col >= len(colWidths) {
+				// add column
+				cols++
+				colWidths = append(colWidths, 0)
+				calcWidth += padding
+			}
+
+			if len(item) > colWidths[col] {
+				// widen column
+				calcWidth += -colWidths[col] + len(item)
+				colWidths[col] = len(item)
+			}
+
+			if calcWidth > width {
+				// exceeded width
+				break
 			}
 		}
 	}
-	cols++
+	rows--
 
 	// apportion any remaining space between the columns
 	if cols > 2 && rows > 1 {
-		padding = (width-totalWidth)/(cols-1) + 2
+		padding = (width-calcWidth)/(cols-1) + 2
 		if padding < 2 {
 			padding = 2
 		}
 	}
 
+	// render
 	for rowIndex := 0; rowIndex < rows; rowIndex += 1 {
 		for columnIndex := 0; columnIndex < cols; columnIndex++ {
 			itemIndex := rows*columnIndex + rowIndex

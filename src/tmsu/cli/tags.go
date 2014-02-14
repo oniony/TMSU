@@ -217,9 +217,8 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 			if onePerLine {
 				fmt.Println(path)
 				for _, tagName := range tagNames {
-					fmt.Println(tagName)
+					fmt.Println("  " + tagName)
 				}
-				fmt.Println()
 			} else {
 				fmt.Println(path + ": " + strings.Join(tagNames, " "))
 			}
@@ -275,9 +274,8 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine b
 			if onePerLine {
 				fmt.Println(dirName)
 				for _, tagName := range tagNames {
-					fmt.Println(tagName)
+					fmt.Println("  " + tagName)
 				}
-				fmt.Println()
 			} else {
 				fmt.Println(dirName + ": " + strings.Join(tagNames, " "))
 			}

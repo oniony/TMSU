@@ -41,7 +41,7 @@ func Rel(path string) string {
 	}
 
 	if strings.HasPrefix(path, workingDirectory+string(filepath.Separator)) {
-		return path[len(workingDirectory)+1:]
+		return "." + string(filepath.Separator) + path[len(workingDirectory)+1:]
 	}
 
 	return path

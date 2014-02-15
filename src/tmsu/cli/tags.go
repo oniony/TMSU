@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
@@ -126,7 +127,12 @@ func listTags(paths []string, showCount, onePerLine bool) error {
 func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine bool) error {
 	log.Infof(2, "%v: retrieving tags.", path)
 
-	file, err := store.FileByPath(path)
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not retrieve absolute path: %v", path, err)
+	}
+
+	file, err := store.FileByPath(absPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
@@ -143,6 +149,8 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine 
 			return err
 		}
 	} else {
+		log.Infof(2, "%v: untagged", path)
+
 		_, err := os.Stat(path)
 		if err != nil {
 			switch {

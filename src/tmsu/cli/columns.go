@@ -28,11 +28,11 @@ func formatColumns(items []string, width int) {
 	var colWidths []int
 	var calcWidth int
 
-	cols := 1
+	cols := 0
 	rows := 1
 
 	// add a row until everything fits or we have every item on its own row
-	for calcWidth = width + 1; calcWidth > width && rows < len(items); rows++ {
+	for calcWidth = width + 1; calcWidth > width && rows <= len(items); rows++ {
 		cols = 0
 		colWidths = make([]int, 0, width)
 		calcWidth = -padding // last column has no padding
@@ -61,10 +61,6 @@ func formatColumns(items []string, width int) {
 		}
 	}
 	rows--
-
-	if rows < len(items) {
-		rows = len(items)
-	}
 
 	// apportion any remaining space between the columns
 	if cols > 2 && rows > 1 {

@@ -130,26 +130,26 @@ func createTags(names []string) error {
 	defer store.Close()
 	defer store.Commit()
 
-	tags, err := store.TagsByNames(names)
-	if err != nil {
-		return fmt.Errorf("could not retrieve tags %v: %v", names, err)
-	}
-
 	wereErrors := false
-	for _, tag := range tags {
-		log.Warnf("tag '%v' already exists", tag.Name)
-		wereErrors = true
+	for _, name := range names {
+		tag, err := store.TagByName(name)
+		if err != nil {
+			return fmt.Errorf("could not check if tag '%v' exists: %v", name, err)
+		}
+
+		if tag == nil {
+			_, err := store.AddTag(name)
+			if err != nil {
+				return fmt.Errorf("could not add tag '%v': %v", name, err)
+			}
+		} else {
+			log.Warnf("tag '%v' already exists", tag.Name)
+			wereErrors = true
+		}
 	}
 
 	if wereErrors {
 		return blankError
-	}
-
-	for _, name := range names {
-		_, err := store.AddTag(name)
-		if err != nil {
-			return fmt.Errorf("could not add tag '%v': %v", name, err)
-		}
 	}
 
 	return nil

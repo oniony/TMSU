@@ -138,9 +138,9 @@ _tmsu_cmd_files() {
                      ''{--file,-f}'[list only items that are files]' \
                      ''{--top,-t}'[list only top-most matching items (excludes the contents of matching direcotries)]' \
                      ''{--leaf,-l}'[list only the bottom-most (leaf) items]' \
-                     ''{--recursive,-r}'[read all files on the file-system under each matching directory, recursively]' \
                      ''{--count,-c}'[lists the number of files rather than their names]' \
                      ''{--path=,-p}'[list only items under PATH]':path:_files \
+                     ''{--untagged,-u}'[combined with --path, lists untagged files under PATH]' \
 	                 '*:tag:_tmsu_query' \
 	&& ret=0
 }

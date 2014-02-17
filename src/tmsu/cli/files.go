@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"os"
 	"path/filepath"
 	"sort"
 	"strings"
@@ -67,16 +68,16 @@ Examples:
     $ tmsu files year                     # tagged 'year' (any or no value)
 
     $ tmsu files --top music              # don't list individual files if directory is tagged
-    $ tmsu files --path . music           # tagged 'music' in the current directory`,
+    $ tmsu files --path=/home/bob music   # tagged 'music' under /home/bob`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (exclude files under matching directories)", false, ""},
 		{"--leaf", "-l", "list only the leaf items (files and directories without tagged contents)", false, ""},
-		{"--recursive", "-r", "read all files on the file-system under each matching directory, recursively", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
-		{"--path", "-p", "list only items under PATH", true, ""}},
+		{"--path", "-p", "list only items under PATH", true, ""},
+		{"--untagged", "-u", "combined with --path, lists untagged files under PATH", false, ""}},
 	Exec: filesExec,
 }
 
@@ -96,21 +97,21 @@ func filesExec(options Options, args []string) error {
 	fileOnly := options.HasOption("--file")
 	topOnly := options.HasOption("--top")
 	leafOnly := options.HasOption("--leaf")
-	recursive := options.HasOption("--recursive")
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
+	untagged := options.HasOption("--untagged")
 
 	if options.HasOption("--all") {
-		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
+		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
+	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged)
 }
 
 // unexported
 
-func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
+func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -124,10 +125,10 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showC
 		return fmt.Errorf("could not retrieve files: %v", err)
 	}
 
-	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount)
+	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 }
 
-func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
+func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged bool) error {
 	if queryText == "" {
 		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
@@ -137,6 +138,14 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	log.Info(2, "temporarily adding untagged files")
+
+	if untagged && path != "" {
+		if err := addUntaggedFiles(store, path); err != nil {
+			return err
+		}
+	}
 
 	log.Info(2, "parsing query")
 
@@ -170,14 +179,14 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 		return fmt.Errorf("could not query files: %v", err)
 	}
 
-	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount); err != nil {
+	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recursive, print0, showCount bool) error {
+func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) error {
 	tree := path.NewTree()
 	for _, file := range files {
 		tree.Add(file.Path(), file.IsDir)
@@ -185,17 +194,6 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 
 	if topOnly {
 		tree = tree.TopLevel()
-	} else {
-		if recursive {
-			fsFiles, err := path.Enumerate(tree.TopLevel().Paths())
-			if err != nil {
-				return err
-			}
-
-			for _, fsFile := range fsFiles {
-				tree.Add(fsFile.Path, fsFile.IsDir)
-			}
-		}
 	}
 
 	if leafOnly {
@@ -227,6 +225,51 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, recur
 			} else {
 				fmt.Println(relPath)
 			}
+		}
+	}
+
+	return nil
+}
+
+func addUntaggedFiles(store *storage.Storage, path string) error {
+	stat, err := os.Stat(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not stat: %v", path, err)
+	}
+	if !stat.IsDir() {
+		return nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not open directory: %v", path, err)
+	}
+
+	entries, err := file.Readdir(0)
+	if err != nil {
+		return fmt.Errorf("%v: could not enumerate directory: %v", path, err)
+	}
+
+	for _, entry := range entries {
+		entryPath := path + string(filepath.Separator) + entry.Name()
+
+		file, err := store.FileByPath(entryPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file != nil {
+			continue // tagged already
+		}
+
+		log.Infof(2, "%v: adding temporarily", entryPath)
+
+		_, err = store.AddFile(entryPath, "", entry.ModTime(), entry.Size(), entry.IsDir())
+		if err != nil {
+			return fmt.Errorf("%v: could not add file: %v", path, err)
+		}
+
+		if err := addUntaggedFiles(store, entryPath); err != nil {
+			return err
 		}
 	}
 

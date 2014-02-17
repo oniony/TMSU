@@ -154,6 +154,10 @@ v0.4.0 (in development)
     from terminal.
   * Added --path option to 'files' command to retrieve just those files matching
     or under the path specified.
+  * Added --untagged option to 'files' command which, when combined with --path,
+    will also include untagged files from the filesystem at the specified path.
+  * Removed the --recursive option from the 'files' command which was flawed:
+    use 'tmsu files query | xargs find' instead.
   * Added ability to configure whether new tags and values are automatically
     created or not or a per-database basis.
   * Added --unmodified option to 'repair' command to force the recalculation

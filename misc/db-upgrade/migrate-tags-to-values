@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# Migrates tags names in the form of tag:value to tag values.
+
+export TMSU_DB=~/.tmsu/default.db
+
+# Change the delimiter here to the one to convert
+delim=:
+
+for tv in `tmsu tags -a | grep $delim`
+do
+    tag=`cut -d $delim -f 1 <<< $tv`
+    value=`cut -d $delim -f 2 <<< $tv`
+
+    echo "Tag is '$tag', value is '$value'."
+
+    tmsu tag --create $tag || true
+
+    IFS=$'\n'
+    for path in `tmsu files -t $tag$delim$value`
+    do
+        echo "  Tagging $path $tag=$value"
+
+        tmsu tag $path $tag=$value
+    done
+
+    tmsu delete $tag:$value
+done

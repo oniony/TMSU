@@ -163,6 +163,9 @@ v0.4.0 (in development)
   * Added --unmodified option to 'repair' command to force the recalculation
     of fingerprints of unmodified files.
   * Renamed --force option of 'repair' command to --remove.
+  * Added support for textual comparison operators: 'eq', 'ne', 'lt', 'gt',
+    'le' and 'ge'. These remove the need for escaping.
+  * Improved Zsh completion with respect to tag values.
   * Significant performance improvements.
   * Bug fixes.
 

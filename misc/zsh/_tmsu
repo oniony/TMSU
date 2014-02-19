@@ -61,7 +61,7 @@ _tmsu_commands() {
 	_describe -t commands 'command' command_list "$@"
 }
 
-_tmsu_values() {
+_tmsu_tag_values() {
     typeset -a value_list
     local line
 
@@ -79,7 +79,8 @@ _tmsu_tags() {
     typeset -a tag_list
     local tag
 
-    _call_program tmsu tmsu $db tags --all | while read -A tag
+    _call_program tmsu tmsu $db tags --all | \
+    while read -A tag
     do
         tag_list+=$tag[1]:gs/:/\\:/
     done
@@ -87,30 +88,69 @@ _tmsu_tags() {
     _describe -t tags 'tags' tag_list
 }
 
+_tmsu_values() {
+    typeset -a value_list
+    local value
+
+    _call_program tmsu tmsu $db values --all | \
+    while read -A value
+    do
+        value_list+=$value[1]:gs/:/\\:/
+    done
+
+    _describe -t values 'values' value_list
+}
+
 _tmsu_tags_with_values() {
     if [[ -prefix *= ]] 
     then
-        _tmsu_values
+        _tmsu_tag_values
     else
         _tmsu_tags
     fi
 }
 
 _tmsu_query() {
-    _tmsu_tags_with_values
+    # can't include 'le' in the regular expression as it causes some kind of dump
+    if [[ $words[$#words-1] =~ '=|!=|<|>|<=|>=' || \
+          $words[$#words-1] =~ 'eq|EQ||ne|NE|lt|LT|gt|GT|ge|GE' || \
+          $words[$#words-1] == 'le' || \
+          $words[$#words-1] == 'LE' ]]
+    then
+        typeset -a value_list
+        local line
 
-	typeset -a operator_list
+        local tagName=$words[$#words-2]
+        _call_program tmsu tmsu $db values $tagName | \
+        while read -A line
+        do
+            value_list+=$line[1]
+        done
 
-	operator_list+='and'
-	operator_list+='or'
-	operator_list+='not'
-	operator_list+='='
-	operator_list+='\<'
-	operator_list+='\>'
-	operator_list+='\<='
-	operator_list+='\>='
+        _describe -t values 'values' value_list
+    else
+        _tmsu_tags
 
-	_describe -t operators 'operators' operator_list
+        typeset -a operator_list
+
+        operator_list+='and'
+        operator_list+='or'
+        operator_list+='not'
+        operator_list+='='
+        operator_list+='\!='
+        operator_list+='\<'
+        operator_list+='\>'
+        operator_list+='\<='
+        operator_list+='\>='
+        operator_list+='eq'
+        operator_list+='ne'
+        operator_list+='lt'
+        operator_list+='gt'
+        operator_list+='ge'
+        operator_list+='le'
+
+        _describe -t operators 'operators' operator_list
+    fi
 }
 
 _tmsu_file_tags() {

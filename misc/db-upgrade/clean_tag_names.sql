@@ -18,6 +18,11 @@ update tag
 set name = '_' || name
 where name in ('and', 'or', 'not', 'AND', 'OR', 'NOT');
 
+-- cannot be comparison operator
+update tag
+set name = '_' || name
+where name in ('eq', 'ne', 'lt', 'gt', 'le', 'ge', 'EQ', 'NE', 'LT', 'GT', 'LE', 'GE');
+
 -- cannot start with '-'
 update tag
 set name = '_' || substr(name, 2)

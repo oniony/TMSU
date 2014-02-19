@@ -136,7 +136,7 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return OpenParenToken{}, nil
 	case r == rune(')'):
 		return CloseParenToken{}, nil
-	case r == rune('='), r == rune('<'), r == rune('>'):
+	case r == rune('!'), r == rune('='), r == rune('<'), r == rune('>'):
 		return scanner.readComparisonOperatorToken(r)
 	case unicode.IsOneOf(symbolChars, r):
 		return scanner.readTextToken(r)
@@ -160,6 +160,18 @@ func (scanner *Scanner) readTextToken(r rune) (Token, error) {
 		return AndOperatorToken{}, nil
 	case "or", "OR":
 		return OrOperatorToken{}, nil
+	case "eq", "EQ":
+		return ComparisonOperatorToken{"="}, nil
+	case "ne", "NE":
+		return ComparisonOperatorToken{"!="}, nil
+	case "lt", "LT":
+		return ComparisonOperatorToken{"<"}, nil
+	case "gt", "GT":
+		return ComparisonOperatorToken{">"}, nil
+	case "le", "LE":
+		return ComparisonOperatorToken{"<="}, nil
+	case "ge", "GE":
+		return ComparisonOperatorToken{">="}, nil
 	}
 
 	return SymbolToken{text}, nil
@@ -167,9 +179,7 @@ func (scanner *Scanner) readTextToken(r rune) (Token, error) {
 
 func (scanner *Scanner) readComparisonOperatorToken(r rune) (Token, error) {
 	switch r {
-	case rune('='):
-		return ComparisonOperatorToken{"="}, nil
-	case rune('<'), rune('>'):
+	case rune('='), rune('!'), rune('<'), rune('>'):
 		r2, _, err := scanner.stream.ReadRune()
 		if err != nil {
 			return nil, err

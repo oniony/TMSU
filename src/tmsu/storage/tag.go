@@ -121,8 +121,10 @@ func validateTagName(tagName string) error {
 		return errors.New("tag name cannot be empty.")
 	case ".", "..":
 		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
-	case "and", "or", "not":
+	case "and", "AND", "or", "OR", "not", "NOT":
 		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
+	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
+		return errors.New("tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'.") // used in query language
 	}
 
 	if tagName[0] == '-' {

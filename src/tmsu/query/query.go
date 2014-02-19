@@ -24,7 +24,7 @@ func Parse(query string) (Expression, error) {
 	return parser.Parse()
 }
 
-// Creates an AND expression for all the tag names specified
+// Creates an 'and' expression for all the tag names specified
 func HasAll(tagNames []string) Expression {
 	if len(tagNames) == 0 {
 		return EmptyExpression{}

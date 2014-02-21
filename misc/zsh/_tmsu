@@ -111,11 +111,7 @@ _tmsu_tags_with_values() {
 }
 
 _tmsu_query() {
-    # can't include 'le' in the regular expression as it causes some kind of dump
-    if [[ $words[$#words-1] =~ '=|!=|<|>|<=|>=' || \
-          $words[$#words-1] =~ 'eq|EQ||ne|NE|lt|LT|gt|GT|ge|GE' || \
-          $words[$#words-1] == 'le' || \
-          $words[$#words-1] == 'LE' ]]
+    if [[ ! $words[$#words-1] =~ '--' && $words[$#words-1] =~ '=|!=|<|>|<=|>=' ]]
     then
         typeset -a value_list
         local line

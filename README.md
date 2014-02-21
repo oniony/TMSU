@@ -144,9 +144,6 @@ v0.4.0 (in development)
   replaced with a fuller tag relationship facility in a later version and a
   script to upgrade your saved implications will be provided at this time.
 
-  Note: This release removes support for the legacy not operator: '-'. Please
-  use the 'not' operator instead.
-
   * Added support for tag values, e.g. 'tmsu tag song.mp3 country=uk' and the
     querying of files based upon these values, e.g. 'year > 2000'.
   * Added ability to configure which fingerprint algorithm to use.
@@ -167,6 +164,7 @@ v0.4.0 (in development)
     'le' and 'ge'. These remove the need for escaping.
   * Improved Zsh completion with respect to tag values.
   * Significant performance improvements.
+  * Removed support for '-' operator: use 'not' instead.
   * Bug fixes.
 
 v0.3.0

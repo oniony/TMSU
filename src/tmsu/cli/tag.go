@@ -35,7 +35,7 @@ var TagCommand = Command{
 	Description: `tmsu tag [OPTION]... FILE TAG[=VALUE]...
 tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
-tmsu tag [OPTION]... --create TAG...
+tmsu tag [OPTION]... --create TAG[=VALUE]...
 
 Tags the file FILE with the TAGs specified.
 
@@ -122,7 +122,7 @@ func tagExec(options Options, args []string) error {
 	return nil
 }
 
-func createTags(names []string) error {
+func createTags(tagNames []string) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -131,19 +131,21 @@ func createTags(names []string) error {
 	defer store.Commit()
 
 	wereErrors := false
-	for _, name := range names {
-		tag, err := store.TagByName(name)
+	for _, tagName := range tagNames {
+		tag, err := store.TagByName(tagName)
 		if err != nil {
-			return fmt.Errorf("could not check if tag '%v' exists: %v", name, err)
+			return fmt.Errorf("could not check if tag '%v' exists: %v", tagName, err)
 		}
 
 		if tag == nil {
-			_, err := store.AddTag(name)
+			log.Infof(2, "adding tag '%v'.", tagName)
+
+			_, err := store.AddTag(tagName)
 			if err != nil {
-				return fmt.Errorf("could not add tag '%v': %v", name, err)
+				return fmt.Errorf("could not add tag '%v': %v", tagName, err)
 			}
 		} else {
-			log.Warnf("tag '%v' already exists", tag.Name)
+			log.Warnf("tag '%v' already exists", tagName)
 			wereErrors = true
 		}
 	}

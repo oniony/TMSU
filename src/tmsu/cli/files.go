@@ -23,6 +23,7 @@ import (
 	"path/filepath"
 	"sort"
 	"strings"
+	"time"
 	"tmsu/common/log"
 	"tmsu/common/path"
 	"tmsu/entities"
@@ -236,39 +237,36 @@ func addUntaggedFiles(store *storage.Storage, path string) error {
 	if err != nil {
 		return fmt.Errorf("%v: could not stat: %v", path, err)
 	}
+
 	if !stat.IsDir() {
 		return nil
 	}
 
+	return addUntaggedFilesRecursive(store, path, stat)
+}
+
+func addUntaggedFilesRecursive(store *storage.Storage, path string, stat os.FileInfo) error {
 	file, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open directory: %v", path, err)
 	}
 
-	entries, err := file.Readdir(0)
+	stats, err := file.Readdir(0)
 	if err != nil {
 		return fmt.Errorf("%v: could not enumerate directory: %v", path, err)
 	}
 
-	for _, entry := range entries {
-		entryPath := path + string(filepath.Separator) + entry.Name()
+	file.Close()
 
-		file, err := store.FileByPath(entryPath)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
-		}
-		if file != nil {
-			continue // tagged already
-		}
+	for _, stat := range stats {
+		entryPath := path + string(filepath.Separator) + stat.Name()
+		_, _ = store.AddFile(entryPath, "", time.Time{}, 0, false)
 
-		log.Infof(2, "%v: adding temporarily", entryPath)
-
-		_, err = store.AddFile(entryPath, "", entry.ModTime(), entry.Size(), entry.IsDir())
-		if err != nil {
-			return fmt.Errorf("%v: could not add file: %v", path, err)
+		if !stat.IsDir() {
+			continue
 		}
 
-		if err := addUntaggedFiles(store, entryPath); err != nil {
+		if err := addUntaggedFilesRecursive(store, entryPath, stat); err != nil {
 			return err
 		}
 	}

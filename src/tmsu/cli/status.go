@@ -199,7 +199,7 @@ func statusPaths(paths []string, dirOnly bool) (*StatusReport, error) {
 			}
 		}
 
-		err = findNewFiles(path, report, dirOnly)
+		err = findNewFiles(absPath, report, dirOnly)
 		if err != nil {
 			return nil, err
 		}

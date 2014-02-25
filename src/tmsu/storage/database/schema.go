@@ -38,6 +38,10 @@ func (db *Database) CreateSchema() error {
 		return err
 	}
 
+	if err := db.CreateImplicationTable(); err != nil {
+		return err
+	}
+
 	if err := db.CreateQueryTable(); err != nil {
 		return err
 	}
@@ -144,6 +148,20 @@ func (db *Database) CreateFileTagTable() error {
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
            ON file_tag(value_id)`
+
+	if _, err := db.Exec(sql); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (db *Database) CreateImplicationTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS implication (
+                tag_id INTEGER NOT NULL,
+                implied_tag_id INTEGER NOT NULL,
+                PRIMARY KEY (tag_id, implied_tag_id)
+            )`
 
 	if _, err := db.Exec(sql); err != nil {
 		return err

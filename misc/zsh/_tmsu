@@ -66,7 +66,7 @@ _tmsu_tag_values() {
     local line
 
     local tagName=${PREFIX%%=*}
-    _call_program tmsu tmsu $db values $tagName | \
+    _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
     while read -A line
     do
         value_list+=$tagName=$line[1]
@@ -193,6 +193,7 @@ _tmsu_cmd_files() {
                      ''{--count,-c}'[lists the number of files rather than their names]' \
                      ''{--path=,-p}'[list only items under PATH]':path:_files \
                      ''{--untagged,-u}'[combined with --path, lists untagged files under PATH]' \
+                     ''{--explicit,-e}'[list only explicitly tagged files]' \
 	                 '*:tag:_tmsu_query' \
 	&& ret=0
 }
@@ -201,6 +202,13 @@ _tmsu_cmd_help() {
 	_arguments -s -w ''{--list,-l}'[list commands]' \
 	                 '1:command:_tmsu_commands' \
 	&& ret=0
+}
+
+_tmsu_cmd_imply() {
+    _arguments -s -w ''{--delete,-d}'[deletes the tag implication]' \
+                     ''{--list,-l}'[lists the tag implications]' \
+                     '*:tag:_tmsu_tags' \
+    && ret=0
 }
 
 _tmsu_cmd_merge() {
@@ -265,6 +273,7 @@ _tmsu_cmd_tags() {
 	_arguments -s -w ''{--all,-a}'[show all tags]' \
 	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '-1[list one tag per line]' \
+	                 ''{--explicit,-e}'[do not show implied tags]' \
 	                 '*:file:_files' \
 	&& ret=0
 }

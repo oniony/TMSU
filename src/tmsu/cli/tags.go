@@ -50,20 +50,21 @@ Examples:
     3`,
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
 		{"--count", "-c", "lists the number of tags rather than their names", false, ""},
-		{"", "-1", "list one tag per line", false, ""}},
+		{"", "-1", "list one tag per line", false, ""},
+		{"--explicit", "-e", "do not show implied tags", false, ""}},
 	Exec: tagsExec,
 }
 
 func tagsExec(options Options, args []string) error {
 	showCount := options.HasOption("--count")
-
 	onePerLine := options.HasOption("-1")
+	explicitOnly := options.HasOption("--explicit")
 
 	if options.HasOption("--all") {
 		return listAllTags(showCount, onePerLine)
 	}
 
-	return listTags(args, showCount, onePerLine)
+	return listTags(args, showCount, onePerLine, explicitOnly)
 }
 
 func listAllTags(showCount, onePerLine bool) error {
@@ -105,7 +106,7 @@ func listAllTags(showCount, onePerLine bool) error {
 	return nil
 }
 
-func listTags(paths []string, showCount, onePerLine bool) error {
+func listTags(paths []string, showCount, onePerLine, explicitOnly bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -114,17 +115,17 @@ func listTags(paths []string, showCount, onePerLine bool) error {
 
 	switch len(paths) {
 	case 0:
-		return listTagsForWorkingDirectory(store, showCount, onePerLine)
+		return listTagsForWorkingDirectory(store, showCount, onePerLine, explicitOnly)
 	case 1:
-		return listTagsForPath(store, paths[0], showCount, onePerLine)
+		return listTagsForPath(store, paths[0], showCount, onePerLine, explicitOnly)
 	default:
-		return listTagsForPaths(store, paths, showCount, onePerLine)
+		return listTagsForPaths(store, paths, showCount, onePerLine, explicitOnly)
 	}
 
 	return nil
 }
 
-func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine bool) error {
+func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine, explicitOnly bool) error {
 	log.Infof(2, "%v: retrieving tags.", path)
 
 	absPath, err := filepath.Abs(path)
@@ -139,12 +140,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine 
 
 	var tagNames []string
 	if file != nil {
-		fileTags, err := store.FileTagsByFileId(file.Id)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file-tags: %v", path, err)
-		}
-
-		tagNames, err = lookupTagNames(store, fileTags)
+		tagNames, err = tagNamesForFile(store, file.Id, explicitOnly)
 		if err != nil {
 			return err
 		}
@@ -179,7 +175,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine 
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine bool) error {
+func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly bool) error {
 	wereErrors := false
 	for _, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
@@ -192,12 +188,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 
 		var tagNames []string
 		if file != nil {
-			fileTags, err := store.FileTagsByFileId(file.Id)
-			if err != nil {
-				return err
-			}
-
-			tagNames, err = lookupTagNames(store, fileTags)
+			tagNames, err = tagNamesForFile(store, file.Id, explicitOnly)
 			if err != nil {
 				return err
 			}
@@ -240,7 +231,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	return nil
 }
 
-func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine bool) error {
+func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, explicitOnly bool) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return fmt.Errorf("could not open working directory: %v", err)
@@ -266,12 +257,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine b
 			continue
 		}
 
-		fileTags, err := store.FileTagsByFileId(file.Id)
-		if err != nil {
-			return fmt.Errorf("could not retrieve file-tags: %v", err)
-		}
-
-		tagNames, err := lookupTagNames(store, fileTags)
+		tagNames, err := tagNamesForFile(store, file.Id, explicitOnly)
 		if err != nil {
 			return err
 		}
@@ -291,6 +277,35 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine b
 	}
 
 	return nil
+}
+
+func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly bool) ([]string, error) {
+	fileTags, err := store.FileTagsByFileId(fileId)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
+	}
+
+	tagNames, err := lookupTagNames(store, fileTags)
+	if err != nil {
+		return nil, err
+	}
+
+	if !explicitOnly {
+		impliedTagNames, err := lookupImpliedTagNames(store, fileTags)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, impliedTagName := range impliedTagNames {
+			if !containsTagName(tagNames, impliedTagName) {
+				tagNames = append(tagNames, impliedTagName)
+			}
+		}
+	}
+
+	sort.Strings(tagNames)
+
+	return tagNames, nil
 }
 
 func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]string, error) {
@@ -323,7 +338,46 @@ func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]strin
 		tagNames = append(tagNames, tagName)
 	}
 
-	sort.Strings(tagNames)
+	return tagNames, nil
+}
+
+func lookupImpliedTagNames(store *storage.Storage, fileTags entities.FileTags) ([]string, error) {
+	tagIds := make([]uint, 0, len(fileTags))
+	for _, fileTag := range fileTags {
+		if !containsTagId(tagIds, fileTag.TagId) {
+			tagIds = append(tagIds, fileTag.TagId)
+		}
+	}
+
+	implications, err := store.ImplicationsForTags(tagIds...)
+	if err != nil {
+		return nil, fmt.Errorf("could not look up tag implications: %v", err)
+	}
+
+	tagNames := make([]string, len(implications))
+	for index, implication := range implications {
+		tagNames[index] = implication.ImpliedTag.Name
+	}
 
 	return tagNames, nil
+}
+
+func containsTagId(tagIds []uint, tagId uint) bool {
+	for index := 0; index < len(tagIds); index++ {
+		if tagIds[index] == tagId {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsTagName(tagNames []string, tagName string) bool {
+	for index := 0; index < len(tagNames); index++ {
+		if tagNames[index] == tagName {
+			return true
+		}
+	}
+
+	return false
 }

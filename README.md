@@ -140,15 +140,16 @@ v0.4.0 (in development)
     $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
     $ sqlite3 -init misc/db-upgrade/0.3_to_0.4.0.sql ~/.tmsu/default.db .q
 
-  Note: This release removes support for tag implications. Implications will be
-  replaced with a fuller tag relationship facility in a later version and a
-  script to upgrade your saved implications will be provided at this time.
-
   * Added support for tag values, e.g. 'tmsu tag song.mp3 country=uk' and the
     querying of files based upon these values, e.g. 'year > 2000'.
-  * Added ability to configure which fingerprint algorithm to use.
   * 'tags' and 'values' commands now tabulate output, by default, when run
     from terminal.
+  * Added ability to configure which fingerprint algorithm to use.
+  * Implied tags now calculated on the fly when the database is queried. This
+    results in a (potentially) smaller database and ability to have update to the
+    implied tags affect previously tagged files.
+  * Added --explicit option to 'files' and 'tags' commands to show only explicit
+    tags: omitting the on-the-fly implied tags.
   * Added --path option to 'files' command to retrieve just those files matching
     or under the path specified.
   * Added --untagged option to 'files' command which, when combined with --path,

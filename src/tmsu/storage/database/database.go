@@ -82,7 +82,7 @@ func (db *Database) Exec(sql string, args ...interface{}) (sql.Result, error) {
 		log.Infof(3, "executing update\n"+sql)
 
 		for index, arg := range args {
-			log.Info(3, "Arg %v = %v", index, arg)
+			log.Infof(3, "Arg %v: %v", index, arg)
 		}
 	}
 
@@ -95,7 +95,7 @@ func (db *Database) ExecQuery(sql string, args ...interface{}) (*sql.Rows, error
 		log.Infof(3, "executing query\n"+sql)
 
 		for index, arg := range args {
-			log.Info(3, "Arg %v = %v", index, arg)
+			log.Infof(3, "Arg %v: %v", index, arg)
 		}
 	}
 

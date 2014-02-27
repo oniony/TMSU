@@ -82,30 +82,64 @@ func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) 
 	return storage.Db.FilesByFingerprint(fingerprint)
 }
 
-// Retrieves the count of files with the specified tags and matching the specified path.
-func (storage *Storage) FileCountWithTags(tagNames []string, path string) (uint, error) {
-	expression := query.HasAll(tagNames)
-	return storage.Db.QueryFileCount(expression, path)
-}
-
 // Retrieves the set of untagged files.
 func (storage *Storage) UntaggedFiles() (entities.Files, error) {
 	return storage.Db.UntaggedFiles()
 }
 
-// Retrieves the set of files with the specified tags and matching the specified path.
-func (storage *Storage) FilesWithTags(tagNames []string, path string) (entities.Files, error) {
+// Retrieves the count of files with the specified tags and matching the specified path.
+func (storage *Storage) FileCountWithTags(tagNames []string, path string, explicitOnly bool) (uint, error) {
 	expression := query.HasAll(tagNames)
+
+	if !explicitOnly {
+		var err error
+		expression, err = storage.addImpliedTags(expression)
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return storage.Db.QueryFileCount(expression, path)
+}
+
+// Retrieves the set of files with the specified tags and matching the specified path.
+func (storage *Storage) FilesWithTags(tagNames []string, path string, explicitOnly bool) (entities.Files, error) {
+	expression := query.HasAll(tagNames)
+
+	if !explicitOnly {
+		var err error
+		expression, err = storage.addImpliedTags(expression)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return storage.Db.QueryFiles(expression, path)
 }
 
 // Retrieves the count of files that match the specified query and matching the specified path.
-func (storage *Storage) QueryFileCount(expression query.Expression, path string) (uint, error) {
+func (storage *Storage) QueryFileCount(expression query.Expression, path string, explicitOnly bool) (uint, error) {
+	if !explicitOnly {
+		var err error
+		expression, err = storage.addImpliedTags(expression)
+		if err != nil {
+			return 0, err
+		}
+	}
+
 	return storage.Db.QueryFileCount(expression, path)
 }
 
 // Retrieves the set of files that match the specified query.
-func (storage *Storage) QueryFiles(expression query.Expression, path string) (entities.Files, error) {
+func (storage *Storage) QueryFiles(expression query.Expression, path string, explicitOnly bool) (entities.Files, error) {
+	if !explicitOnly {
+		var err error
+		expression, err = storage.addImpliedTags(expression)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	return storage.Db.QueryFiles(expression, path)
 }
 
@@ -132,4 +166,80 @@ func (storage *Storage) DeleteFile(fileId uint) error {
 // Deletes all untagged files from the database.
 func (storage *Storage) DeleteUntaggedFiles() error {
 	return storage.Db.DeleteUntaggedFiles()
+}
+
+// unexported
+
+func (storage *Storage) addImpliedTags(expression query.Expression) (query.Expression, error) {
+	implications, err := storage.Implications()
+	if err != nil {
+		fmt.Errorf("could not retrieve tag implications: %v", err)
+	}
+
+	impliersByTag := make(map[string][]string, len(implications))
+	for _, implication := range implications {
+		impliers, ok := impliersByTag[implication.ImpliedTag.Name]
+		if !ok {
+			impliers = make([]string, 0, 1)
+		}
+
+		impliersByTag[implication.ImpliedTag.Name] = append(impliers, implication.ImplyingTag.Name)
+	}
+
+	return addImpliedTagsRecursive(expression, impliersByTag), nil
+}
+
+func addImpliedTagsRecursive(expression query.Expression, impliersByTag map[string][]string) query.Expression {
+	switch typedExpression := expression.(type) {
+	case query.OrExpression:
+		typedExpression.LeftOperand = addImpliedTagsRecursive(typedExpression.LeftOperand, impliersByTag)
+		typedExpression.RightOperand = addImpliedTagsRecursive(typedExpression.RightOperand, impliersByTag)
+		return typedExpression
+	case query.AndExpression:
+		typedExpression.LeftOperand = addImpliedTagsRecursive(typedExpression.LeftOperand, impliersByTag)
+		typedExpression.RightOperand = addImpliedTagsRecursive(typedExpression.RightOperand, impliersByTag)
+		return typedExpression
+	case query.NotExpression:
+		typedExpression.Operand = addImpliedTagsRecursive(typedExpression.Operand, impliersByTag)
+		return typedExpression
+	case query.TagExpression:
+		return applyImplicationsForTag(typedExpression, impliersByTag)
+	case query.ValueExpression, query.EmptyExpression:
+		return expression
+	default:
+		panic(fmt.Sprintf("unsupported expression type '%v'.", typedExpression))
+	}
+}
+
+func applyImplicationsForTag(tagExpression query.TagExpression, impliersByTag map[string][]string) query.Expression {
+	implyingTags, ok := impliersByTag[tagExpression.Name]
+	if !ok {
+		return tagExpression
+	}
+
+	var expression query.Expression = tagExpression
+
+	for index := 0; index < len(implyingTags); index++ {
+		implyingTag := implyingTags[index]
+
+		expression = query.OrExpression{expression, query.TagExpression{implyingTag}}
+
+		for _, furtherImplyingTag := range impliersByTag[implyingTag] {
+			if furtherImplyingTag != tagExpression.Name && !containsTagName(implyingTags, furtherImplyingTag) {
+				implyingTags = append(implyingTags, furtherImplyingTag)
+			}
+		}
+	}
+
+	return expression
+}
+
+func containsTagName(tagNames []string, tagName string) bool {
+	for _, tn := range tagNames {
+		if tn == tagName {
+			return true
+		}
+	}
+
+	return false
 }

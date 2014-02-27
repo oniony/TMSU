@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
+	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -26,6 +27,7 @@ import (
 )
 
 func TestCopySuccessful(test *testing.T) {
+	fmt.Println("1")
 	// set-up
 
 	databasePath := testDatabase()
@@ -59,8 +61,6 @@ func TestCopySuccessful(test *testing.T) {
 	if _, err := store.AddFileTag(fileAB.Id, sourceTag.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 
@@ -137,8 +137,6 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

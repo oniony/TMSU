@@ -69,8 +69,6 @@ func TestTagsForSingleFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a"}); err != nil {
@@ -138,8 +136,6 @@ func TestTagsForMultipleFiles(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
@@ -181,8 +177,6 @@ func TestAllTags(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

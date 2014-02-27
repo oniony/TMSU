@@ -62,15 +62,18 @@ func OpenAt(path string) (*Database, error) {
 		return nil, fmt.Errorf("could not open database: %v", err)
 	}
 
-	transaction, err := connection.Begin()
-	if err != nil {
-		return nil, fmt.Errorf("could not begin transaciton: %v", err)
-	}
+	database := &Database{connection, nil}
 
-	database := &Database{connection, transaction}
+	if err := database.Begin(); err != nil {
+		return nil, err
+	}
 
 	if err := database.CreateSchema(); err != nil {
 		return nil, errors.New("could not create database schema: " + err.Error())
+	}
+
+	if err := database.Commit(); err != nil {
+		return nil, err
 	}
 
 	return database, nil
@@ -86,7 +89,11 @@ func (db *Database) Exec(sql string, args ...interface{}) (sql.Result, error) {
 		}
 	}
 
-	return db.transaction.Exec(sql, args...)
+	if db.transaction != nil {
+		return db.transaction.Exec(sql, args...)
+	}
+
+	return db.connection.Exec(sql, args...)
 }
 
 // Executes a SQL query returning rows.
@@ -99,15 +106,17 @@ func (db *Database) ExecQuery(sql string, args ...interface{}) (*sql.Rows, error
 		}
 	}
 
-	return db.transaction.Query(sql, args...)
+	if db.transaction != nil {
+		return db.transaction.Query(sql, args...)
+	}
+
+	return db.connection.Query(sql, args...)
 }
 
-// Commits the current transaction
-func (db *Database) Commit() error {
-	log.Info(2, "committing transaction")
-
-	if err := db.transaction.Commit(); err != nil {
-		return fmt.Errorf("could not commit transaction: %v", err)
+// Start a transaction
+func (db *Database) Begin() error {
+	if db.transaction != nil {
+		return fmt.Errorf("could not begin transaction: there is already an open transaction")
 	}
 
 	log.Info(2, "beginning new transaction")
@@ -118,6 +127,40 @@ func (db *Database) Commit() error {
 	}
 
 	db.transaction = transaction
+
+	return nil
+}
+
+// Commits the current transaction
+func (db *Database) Commit() error {
+	if db.transaction == nil {
+		return fmt.Errorf("could not commit transaction: there is no open transaciton")
+	}
+
+	log.Info(2, "committing transaction")
+
+	if err := db.transaction.Commit(); err != nil {
+		return fmt.Errorf("could not commit transaction: %v", err)
+	}
+
+	db.transaction = nil
+
+	return nil
+}
+
+// Rolls back the current transaction
+func (db *Database) Rollback() error {
+	if db.transaction == nil {
+		return fmt.Errorf("could not rollback transaction: there is no open transaciton")
+	}
+
+	log.Info(2, "rolling back transaction")
+
+	if err := db.transaction.Rollback(); err != nil {
+		return fmt.Errorf("could not roll back transaction: %v", err)
+	}
+
+	db.transaction = nil
 
 	return nil
 }

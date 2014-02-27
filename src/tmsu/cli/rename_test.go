@@ -60,8 +60,6 @@ func TestRenameSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := RenameCommand.Exec(Options{}, []string{"source", "dest"}); err != nil {
@@ -148,8 +146,6 @@ func TestRenameDestTagAlreadyExists(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

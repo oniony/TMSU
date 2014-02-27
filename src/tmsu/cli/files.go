@@ -102,14 +102,14 @@ func filesExec(options Options, args []string) error {
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
 	untagged := options.HasOption("--untagged")
-	explicit := options.HasOption("--explicit")
+	explicitOnly := options.HasOption("--explicit")
 
 	if options.HasOption("--all") {
 		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicit)
+	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicitOnly)
 }
 
 // unexported
@@ -131,7 +131,7 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) 
 	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 }
 
-func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicit bool) error {
+func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicitOnly bool) error {
 	if queryText == "" {
 		return fmt.Errorf("query must be specified. Use --all to show all files.")
 	}
@@ -144,6 +144,11 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 
 	if untagged && path != "" {
 		log.Info(2, "temporarily adding untagged files")
+
+		if err := store.Begin(); err != nil {
+			return fmt.Errorf("could not begin transaction: %v", err)
+		}
+		defer store.Rollback()
 
 		if err := addUntaggedFiles(store, path); err != nil {
 			return err
@@ -175,19 +180,9 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 		return blankError
 	}
 
-	if !explicit {
-		log.Info(2, "applying tag implications")
-
-		implications, err := store.Implications()
-		if err != nil {
-			return fmt.Errorf("could not load tag implications")
-		}
-		expression = applyImplications(expression, implications)
-	}
-
 	log.Info(2, "querying database")
 
-	files, err := store.QueryFiles(expression, path)
+	files, err := store.QueryFiles(expression, path, explicitOnly)
 	if err != nil {
 		return fmt.Errorf("could not query files: %v", err)
 	}
@@ -284,66 +279,6 @@ func addUntaggedFilesRecursive(store *storage.Storage, path string, stat os.File
 	}
 
 	return nil
-}
-
-func applyImplications(expression query.Expression, implications entities.Implications) query.Expression {
-	impliersByTag := make(map[string][]string, len(implications))
-
-	for _, implication := range implications {
-		impliers, ok := impliersByTag[implication.ImpliedTag.Name]
-		if !ok {
-			impliers = make([]string, 0, 1)
-		}
-
-		impliersByTag[implication.ImpliedTag.Name] = append(impliers, implication.ImplyingTag.Name)
-	}
-
-	return applyImplicationsRecursive(expression, impliersByTag)
-}
-
-func applyImplicationsRecursive(expression query.Expression, impliersByTag map[string][]string) query.Expression {
-	switch typedExpression := expression.(type) {
-	case query.OrExpression:
-		typedExpression.LeftOperand = applyImplicationsRecursive(typedExpression.LeftOperand, impliersByTag)
-		typedExpression.RightOperand = applyImplicationsRecursive(typedExpression.RightOperand, impliersByTag)
-		return typedExpression
-	case query.AndExpression:
-		typedExpression.LeftOperand = applyImplicationsRecursive(typedExpression.LeftOperand, impliersByTag)
-		typedExpression.RightOperand = applyImplicationsRecursive(typedExpression.RightOperand, impliersByTag)
-		return typedExpression
-	case query.NotExpression:
-		typedExpression.Operand = applyImplicationsRecursive(typedExpression.Operand, impliersByTag)
-		return typedExpression
-	case query.TagExpression:
-		return applyImplicationsForTag(typedExpression, impliersByTag)
-	case query.ValueExpression, query.EmptyExpression:
-		return expression
-	default:
-		panic(fmt.Sprintf("unsupported expression type '%v'.", typedExpression))
-	}
-}
-
-func applyImplicationsForTag(tagExpression query.TagExpression, impliersByTag map[string][]string) query.Expression {
-	implyingTags, ok := impliersByTag[tagExpression.Name]
-	if !ok {
-		return tagExpression
-	}
-
-	var expression query.Expression = tagExpression
-
-	for index := 0; index < len(implyingTags); index++ {
-		implyingTag := implyingTags[index]
-
-		expression = query.OrExpression{expression, query.TagExpression{implyingTag}}
-
-		for _, furtherImplyingTag := range impliersByTag[implyingTag] {
-			if furtherImplyingTag != tagExpression.Name && !containsTag(implyingTags, furtherImplyingTag) {
-				implyingTags = append(implyingTags, furtherImplyingTag)
-			}
-		}
-	}
-
-	return expression
 }
 
 func containsTag(tags []string, tag string) bool {

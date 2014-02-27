@@ -128,6 +128,10 @@ func createTags(tagNames []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	if err := store.Begin(); err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
 	defer store.Commit()
 
 	wereErrors := false
@@ -163,6 +167,10 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	if err := store.Begin(); err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
 	defer store.Commit()
 
 	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
@@ -259,6 +267,10 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	if err := store.Begin(); err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
 	defer store.Commit()
 
 	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
@@ -274,7 +286,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 		return fmt.Errorf("%v: path is not tagged")
 	}
 
-	fileTags, err := store.FileTagsByFileId(file.Id)
+	fileTags, err := store.FileTagsByFileId(file.Id, true)
 	if err != nil {
 		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
 	}

@@ -77,8 +77,6 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := DeleteCommand.Exec(Options{}, []string{"deathrow"}); err != nil {
@@ -95,7 +93,7 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal("Deleted tag still exists.")
 	}
 
-	fileTagsD, err := store.FileTagsByFileId(fileD.Id)
+	fileTagsD, err := store.FileTagsByFileId(fileD.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -103,7 +101,7 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal("Expected no file-tags for file 'd'.")
 	}
 
-	fileTagsF, err := store.FileTagsByFileId(fileF.Id)
+	fileTagsF, err := store.FileTagsByFileId(fileF.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -114,7 +112,7 @@ func TestDeleteSuccessful(test *testing.T) {
 		test.Fatal("Expected file-tag for tag 'freeman'.")
 	}
 
-	fileTagsB, err := store.FileTagsByFileId(fileB.Id)
+	fileTagsB, err := store.FileTagsByFileId(fileB.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}

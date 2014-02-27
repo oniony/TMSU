@@ -62,8 +62,33 @@ func (storage *Storage) FileTagsByValueId(valueId uint) (entities.FileTags, erro
 }
 
 // Retrieves the file tags with the specified file ID.
-func (storage *Storage) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
-	return storage.Db.FileTagsByFileId(fileId)
+func (storage *Storage) FileTagsByFileId(fileId uint, explicitOnly bool) (entities.FileTags, error) {
+	fileTags, err := storage.Db.FileTagsByFileId(fileId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !explicitOnly {
+		tagIds := make([]uint, 0, len(fileTags))
+		for _, fileTag := range fileTags {
+			tagIds = append(tagIds, fileTag.TagId)
+		}
+
+		implications, err := storage.ImplicationsForTags(tagIds...)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, implication := range implications {
+			fileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0}
+
+			if !containsFileTag(fileTags, fileTag) {
+				fileTags = append(fileTags, &fileTag)
+			}
+		}
+	}
+
+	return fileTags, nil
 }
 
 // Adds a file tag.
@@ -129,9 +154,9 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId uint) error {
 
 // helpers
 
-func contains(files entities.Files, searchFile *entities.File) bool {
-	for _, file := range files {
-		if file.Path() == searchFile.Path() {
+func containsFileTag(fileTags entities.FileTags, fileTag entities.FileTag) bool {
+	for _, ft := range fileTags {
+		if ft.FileId == fileTag.FileId && ft.TagId == fileTag.TagId && ft.ValueId == fileTag.ValueId {
 			return true
 		}
 	}

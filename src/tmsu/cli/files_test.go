@@ -57,8 +57,6 @@ func TestFilesAll(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := FilesCommand.Exec(Options{Option{"-a", "--all", "", false, ""}}, []string{}); err != nil {
@@ -123,8 +121,6 @@ func TestFilesSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := FilesCommand.Exec(Options{}, []string{"b"}); err != nil {
@@ -187,8 +183,6 @@ func TestFilesNotSingleTag(test *testing.T) {
 	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 
@@ -261,8 +255,6 @@ func TestFilesImplicitAnd(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := FilesCommand.Exec(Options{}, []string{"b", "c"}); err != nil {
@@ -333,8 +325,6 @@ func TestFilesAnd(test *testing.T) {
 	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 
@@ -407,8 +397,6 @@ func TestFilesImplicitAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := FilesCommand.Exec(Options{}, []string{"b", "not", "c"}); err != nil {
@@ -480,8 +468,6 @@ func TestFilesAndNot(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := FilesCommand.Exec(Options{}, []string{"b", "and", "not", "c"}); err != nil {
@@ -552,8 +538,6 @@ func TestFilesOr(test *testing.T) {
 	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

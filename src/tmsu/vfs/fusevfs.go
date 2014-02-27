@@ -187,10 +187,6 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 			log.Fatalf("could not create tag '%v': %v", name, err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
-			log.Fatalf("could not commit transaction: %v", err)
-		}
-
 		return fuse.OK
 	case queriesDir:
 		return fuse.EINVAL
@@ -301,10 +297,6 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
 	}
 
-	if err := vfs.store.Commit(); err != nil {
-		log.Fatalf("could not commit transaction: %v", err)
-	}
-
 	return fuse.OK
 }
 
@@ -342,10 +334,6 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not delete tag '%v': %v", tagName, err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
-			log.Fatalf("could not commit transaction: %v", err)
-		}
-
 		return fuse.OK
 	case queriesDir:
 		if len(path) != 2 {
@@ -357,10 +345,6 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 		if err := vfs.store.DeleteQuery(text); err != nil {
 			log.Fatalf("could not remove tag '%v': %v", name, err)
-		}
-
-		if err := vfs.store.Commit(); err != nil {
-			log.Fatalf("could not commit transaction: %v", err)
 		}
 
 		return fuse.OK
@@ -436,10 +420,6 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 		if err = vfs.store.DeleteFileTag(fileId, tag.Id, 0); err != nil {
 			log.Fatal(err)
-		}
-
-		if err := vfs.store.Commit(); err != nil {
-			log.Fatalf("could not commit transaction: %v", err)
 		}
 
 		return fuse.OK
@@ -613,10 +593,15 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		}
 	}
 
-	_, _ = vfs.store.AddQuery(queryText)
-
-	if err := vfs.store.Commit(); err != nil {
-		log.Fatalf("could not commit transaction: %v", err)
+	q, err := vfs.store.Query(queryText)
+	if err != nil {
+		log.Fatalf("could not retrieve query '%v': %v", queryText, err)
+	}
+	if q == nil {
+		_, err = vfs.store.AddQuery(queryText)
+		if err != nil {
+			log.Fatalf("could not add query '%v': %v", queryText, err)
+		}
 	}
 
 	now := time.Now()
@@ -651,7 +636,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
 	expression := query.HasAll(path)
-	files, err := vfs.store.QueryFiles(expression, "")
+	files, err := vfs.store.QueryFiles(expression, "", false)
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
@@ -663,7 +648,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 
 	furtherTagNames := make([]string, 0, 10)
 	for _, file := range files {
-		fileTags, err := vfs.store.FileTagsByFileId(file.Id)
+		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
 		if err != nil {
 			log.Fatalf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
@@ -719,7 +704,7 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 		}
 	}
 
-	files, err := vfs.store.QueryFiles(expression, "")
+	files, err := vfs.store.QueryFiles(expression, "", false)
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}

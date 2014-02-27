@@ -83,8 +83,6 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err != nil {
@@ -196,8 +194,6 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := MergeCommand.Exec(Options{}, []string{"a", "b", "c"}); err != nil {
@@ -255,8 +251,6 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err == nil {
@@ -281,8 +275,6 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err == nil {
@@ -306,8 +298,6 @@ func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

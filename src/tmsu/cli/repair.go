@@ -82,6 +82,10 @@ func repairExec(options Options, args []string) error {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
+
+	if err := store.Begin(); err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
 	defer store.Commit()
 
 	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")

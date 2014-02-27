@@ -19,9 +19,12 @@ package database
 
 import (
 	_ "github.com/mattn/go-sqlite3"
+	"tmsu/common/log"
 )
 
 func (db *Database) CreateSchema() error {
+	log.Info(2, "creating schema")
+
 	if err := db.CreateTagTable(); err != nil {
 		return err
 	}
@@ -47,10 +50,6 @@ func (db *Database) CreateSchema() error {
 	}
 
 	if err := db.CreateSettingTable(); err != nil {
-		return err
-	}
-
-	if err := db.Commit(); err != nil {
 		return err
 	}
 

@@ -49,8 +49,6 @@ func TestRepairMovedFile(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := RepairCommand.Exec(Options{}, []string{"/tmp/tmsu"}); err != nil {
@@ -97,8 +95,6 @@ func TestRepairModifiedFile(test *testing.T) {
 	if err := createFile("/tmp/tmsu/a", "banana"); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 
@@ -151,8 +147,6 @@ func TestReportsMissingFiles(test *testing.T) {
 	if err := os.Remove("/tmp/tmsu/a"); err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

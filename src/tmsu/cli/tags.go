@@ -280,7 +280,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 }
 
 func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly bool) ([]string, error) {
-	fileTags, err := store.FileTagsByFileId(fileId)
+	fileTags, err := store.FileTagsByFileId(fileId, explicitOnly)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
 	}
@@ -288,19 +288,6 @@ func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly bool) ([]
 	tagNames, err := lookupTagNames(store, fileTags)
 	if err != nil {
 		return nil, err
-	}
-
-	if !explicitOnly {
-		impliedTagNames, err := lookupImpliedTagNames(store, fileTags)
-		if err != nil {
-			return nil, err
-		}
-
-		for _, impliedTagName := range impliedTagNames {
-			if !containsTagName(tagNames, impliedTagName) {
-				tagNames = append(tagNames, impliedTagName)
-			}
-		}
 	}
 
 	sort.Strings(tagNames)
@@ -339,45 +326,4 @@ func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]strin
 	}
 
 	return tagNames, nil
-}
-
-func lookupImpliedTagNames(store *storage.Storage, fileTags entities.FileTags) ([]string, error) {
-	tagIds := make([]uint, 0, len(fileTags))
-	for _, fileTag := range fileTags {
-		if !containsTagId(tagIds, fileTag.TagId) {
-			tagIds = append(tagIds, fileTag.TagId)
-		}
-	}
-
-	implications, err := store.ImplicationsForTags(tagIds...)
-	if err != nil {
-		return nil, fmt.Errorf("could not look up tag implications: %v", err)
-	}
-
-	tagNames := make([]string, len(implications))
-	for index, implication := range implications {
-		tagNames[index] = implication.ImpliedTag.Name
-	}
-
-	return tagNames, nil
-}
-
-func containsTagId(tagIds []uint, tagId uint) bool {
-	for index := 0; index < len(tagIds); index++ {
-		if tagIds[index] == tagId {
-			return true
-		}
-	}
-
-	return false
-}
-
-func containsTagName(tagNames []string, tagName string) bool {
-	for index := 0; index < len(tagNames); index++ {
-		if tagNames[index] == tagName {
-			return true
-		}
-	}
-
-	return false
 }

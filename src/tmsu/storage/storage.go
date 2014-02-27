@@ -44,8 +44,16 @@ func OpenAt(path string) (*Storage, error) {
 	return &Storage{db}, nil
 }
 
+func (storage *Storage) Begin() error {
+	return storage.Db.Begin()
+}
+
 func (storage *Storage) Commit() error {
 	return storage.Db.Commit()
+}
+
+func (storage *Storage) Rollback() error {
+	return storage.Db.Rollback()
 }
 
 func (storage *Storage) Close() error {

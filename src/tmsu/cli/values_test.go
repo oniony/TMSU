@@ -74,8 +74,6 @@ func TestValuesForSingleTag(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := ValuesCommand.Exec(Options{}, []string{"material"}); err != nil {
@@ -153,8 +151,6 @@ func TestValuesForMulitpleTags(test *testing.T) {
 		test.Fatal(err)
 	}
 
-	store.Commit()
-
 	// test
 
 	if err := ValuesCommand.Exec(Options{}, []string{"material", "shape"}); err != nil {
@@ -201,8 +197,6 @@ func TestAllValues(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-
-	store.Commit()
 
 	// test
 

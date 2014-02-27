@@ -24,7 +24,7 @@ import (
 
 var VersionCommand = Command{
 	Name:     "version",
-	Synopsis: "Display version and copyright information",
+	Synopsis: "",
 	Description: `tmsu version
 
 Displays version and copyright information.`,

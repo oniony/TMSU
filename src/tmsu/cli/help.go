@@ -100,9 +100,7 @@ func listCommands() {
 
 	sort.Strings(commandNames)
 
-	for _, commandName := range commandNames {
-		fmt.Println(commandName)
-	}
+	formatColumns(commandNames, terminalWidth())
 }
 
 func describeCommand(commandName string) {

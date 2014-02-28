@@ -155,9 +155,9 @@ func (db *Database) UntaggedFiles() (entities.Files, error) {
 
 // Retrieves the count of files matching the specified query and matching the specified path.
 func (db *Database) QueryFileCount(expression query.Expression, path string) (uint, error) {
-	sql := buildCountQuery(expression, path)
+	builder := buildCountQuery(expression, path)
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := db.ExecQuery(builder.Sql, builder.Params...)
 	if err != nil {
 		return 0, err
 	}
@@ -168,8 +168,8 @@ func (db *Database) QueryFileCount(expression query.Expression, path string) (ui
 
 // Retrieves the set of files matching the specified query and matching the specified path.
 func (db *Database) QueryFiles(expression query.Expression, path string) (entities.Files, error) {
-	sql := buildQuery(expression, path)
-	rows, err := db.ExecQuery(sql)
+	builder := buildQuery(expression, path)
+	rows, err := db.ExecQuery(builder.Sql, builder.Params...)
 	if err != nil {
 		return nil, err
 	}
@@ -373,26 +373,28 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
-func buildCountQuery(expression query.Expression, path string) string {
+func buildCountQuery(expression query.Expression, path string) *SqlBuilder {
 	builder := NewBuilder()
+	pBuilder := &builder
 
-	builder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
-	buildQueryBranch(expression, builder)
-	buildPathClause(path, builder)
+	pBuilder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
+	buildQueryBranch(expression, pBuilder)
+	buildPathClause(path, pBuilder)
 
-	return builder.Sql
+	return pBuilder
 }
 
-func buildQuery(expression query.Expression, path string) string {
+func buildQuery(expression query.Expression, path string) *SqlBuilder {
 	builder := NewBuilder()
+	pBuilder := &builder
 
-	builder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
-	buildQueryBranch(expression, builder)
-	buildPathClause(path, builder)
+	pBuilder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
+	buildQueryBranch(expression, pBuilder)
+	buildPathClause(path, pBuilder)
 
-	builder.AppendSql("ORDER BY directory || '/' || name")
+	pBuilder.AppendSql("ORDER BY directory || '/' || name")
 
-	return builder.Sql
+	return pBuilder
 }
 
 func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
@@ -402,16 +404,15 @@ func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
 FROM file_tag
 WHERE tag_id = (SELECT id
                 FROM tag
-                WHERE name = '` + exp.Name + `'))
-`)
+                WHERE name = `)
+		builder.AppendParam(exp.Name)
+		builder.AppendSql(`))`)
 	case query.ComparisonExpression:
-		var value, valueExpression string
+		var valueExpression string
 		_, err := strconv.ParseFloat(exp.Value.Name, 64)
 		if err == nil {
-			value = exp.Value.Name
 			valueExpression = "CAST(name AS float)"
 		} else {
-			value = "'" + exp.Value.Name + "'"
 			valueExpression = "name"
 		}
 
@@ -419,10 +420,14 @@ WHERE tag_id = (SELECT id
 FROM file_tag
 WHERE tag_id = (SELECT id
                 FROM tag
-                WHERE name = '` + exp.Tag.Name + `')
+                WHERE name = `)
+		builder.AppendParam(exp.Tag.Name)
+		builder.AppendSql(`)
 AND value_id IN (SELECT id
                  FROM value
-                 WHERE ` + valueExpression + ` ` + exp.Operator + ` ` + value + `))`)
+                 WHERE ` + valueExpression + ` ` + exp.Operator + ` `)
+		builder.AppendParam(exp.Value.Name)
+		builder.AppendSql(`))`)
 	case query.NotExpression:
 		builder.AppendSql("\nNOT\n")
 		buildQueryBranch(exp.Operand, builder)

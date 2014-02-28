@@ -163,6 +163,21 @@ func (storage *Storage) DeleteFile(fileId uint) error {
 	return storage.Db.DeleteFile(fileId)
 }
 
+// Deletes a file if it is untagged
+func (storage *Storage) DeleteFileIfUntagged(fileId uint) error {
+	count, err := storage.FileTagCountByFileId(fileId, true)
+	if err != nil {
+		return err
+	}
+	if count == 0 {
+		if err := storage.DeleteFile(fileId); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
 // Deletes all untagged files from the database.
 func (storage *Storage) DeleteUntaggedFiles() error {
 	return storage.Db.DeleteUntaggedFiles()

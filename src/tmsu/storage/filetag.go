@@ -37,17 +37,28 @@ func (storage *Storage) FileTags() (entities.FileTags, error) {
 }
 
 // Retrieves the count of file tags for the specified file.
-func (storage *Storage) FileTagCountByFileId(fileId uint) (uint, error) {
-	return storage.Db.FileTagCountByFileId(fileId)
+func (storage *Storage) FileTagCountByFileId(fileId uint, explicitOnly bool) (uint, error) {
+	if explicitOnly {
+		return storage.Db.FileTagCountByFileId(fileId)
+	}
+
+	fileTags, err := storage.FileTagsByFileId(fileId, false)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(len(fileTags)), err
 }
 
 // Retrieves the count of file tags for the specified tag.
 func (storage *Storage) FileTagCountByTagId(tagId uint) (uint, error) {
+	//TODO add explicit only
 	return storage.Db.FileTagCountByTagId(tagId)
 }
 
 // Retrieves the file tags with the specified tag ID.
 func (storage *Storage) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
+	//TODO add explicit only
 	return storage.Db.FileTagsByTagId(tagId)
 }
 
@@ -102,11 +113,11 @@ func (storage *Storage) DeleteFileTag(fileId, tagId, valueId uint) error {
 		return err
 	}
 
-	if err := storage.DeleteUntaggedFiles(); err != nil {
+	if err := storage.DeleteFileIfUntagged(fileId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteUnusedValues(); err != nil {
+	if err := storage.DeleteValueIfUnused(valueId); err != nil {
 		return err
 	}
 
@@ -119,10 +130,11 @@ func (storage *Storage) DeleteFileTagsByFileId(fileId uint) error {
 		return err
 	}
 
-	if err := storage.DeleteUntaggedFiles(); err != nil {
+	if err := storage.DeleteFileIfUntagged(fileId); err != nil {
 		return err
 	}
 
+	//TODO look only at the values that were in the filetags removed
 	if err := storage.DeleteUnusedValues(); err != nil {
 		return err
 	}
@@ -152,7 +164,7 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId uint) error {
 	return storage.Db.CopyFileTags(sourceTagId, destTagId)
 }
 
-// helpers
+// unexported
 
 func containsFileTag(fileTags entities.FileTags, fileTag entities.FileTag) bool {
 	for _, ft := range fileTags {

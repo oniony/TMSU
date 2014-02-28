@@ -41,21 +41,18 @@ Lists the files that match the QUERY specified.
 QUERY may contain:
 
   * Tag names to match
-  * The logical operators: 'and', 'or' and 'not'
-  * The comparison operators: '=', '>', '<', '>=' and '<='
-  * Parentheses: '(' and ')'
+  * The logical operators: and or not
+  * The comparison operators: =   !=   >   <   >=   <=
+                              eq  ne   gt  lt  ge   le
+  * Parentheses: ( )
 
 The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
 interpretted as 'chalk and cheese'.
 
-The comparison operators are used to match on the values of tags. For example,
-'country = uk' will only match files tagged 'country=uk' whilst 'year <= 2014'
-will match files tagged 'year=2014', 'year=2000', &c.
-
-Note: Your shell may try to interpret some of the punctuation, e.g. most shells
-will interpret the '<' and '>' operators as stream redirects. Enclosing the
-query in quotation marks is often sufficient to avoid this but some characters
-may need to be escaped (normally with a backslash).
+Note: Your shell may interpret some of the punctuation, e.g. most shells will
+interpret the '<' and '>' operators as stream redirects. Either enclose the
+query in quotation marks, escape the problematic characters or use the text
+versions, e.g. 'eq' for '='.
 
 Examples:
 

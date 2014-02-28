@@ -204,10 +204,10 @@ func addImpliedTagsRecursive(expression query.Expression, impliersByTag map[stri
 		return typedExpression
 	case query.TagExpression:
 		return applyImplicationsForTag(typedExpression, impliersByTag)
-	case query.ValueExpression, query.EmptyExpression:
+	case query.ValueExpression, query.EmptyExpression, query.ComparisonExpression:
 		return expression
 	default:
-		panic(fmt.Sprintf("unsupported expression type '%v'.", typedExpression))
+		panic(fmt.Sprintf("unsupported expression type '%T'.", typedExpression))
 	}
 }
 

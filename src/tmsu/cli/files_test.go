@@ -553,4 +553,409 @@ func TestFilesOr(test *testing.T) {
 	compareOutput(test, "/tmp/b\n/tmp/b/a\n", string(bytes))
 }
 
+func TestFilesTagEqualsValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"size", "=", "100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size = 100"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/b\n/tmp/b\n", string(bytes))
+}
+
+func TestFilesTagNotEqualsValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"not", "size", "=", "100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"not size = 100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"not size eq 100"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/a\n/tmp/a\n/tmp/a\n", string(bytes))
+}
+
+func TestFilesTagLessThanValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"size", "<", "100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size < 100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size lt 100"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/a\n/tmp/a\n/tmp/a\n", string(bytes))
+}
+
+func TestFilesTagGreaterThanValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"size", ">", "99"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size > 99"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size gt 99"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/b\n/tmp/b\n/tmp/b\n", string(bytes))
+}
+
+func TestFilesTagLessThanOrEqualToValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"size", "<=", "100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size <= 100"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size le 100"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/a\n/tmp/b\n/tmp/a\n/tmp/b\n/tmp/a\n/tmp/b\n", string(bytes))
+}
+
+func TestFilesTagGreaterThanOrEqualToValue(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagSize, err := store.AddTag("size")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	value99, err := store.AddValue("99")
+	if err != nil {
+		test.Fatal(err)
+	}
+	value100, err := store.AddValue("100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := FilesCommand.Exec(Options{}, []string{"size", ">=", "99"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size >= 99"}); err != nil {
+		test.Fatal(err)
+	}
+	if err := FilesCommand.Exec(Options{}, []string{"size ge 99"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "/tmp/a\n/tmp/b\n/tmp/a\n/tmp/b\n/tmp/a\n/tmp/b\n", string(bytes))
+}
+
 //TODO tests for 'file' and 'directory' options.

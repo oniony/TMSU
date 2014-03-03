@@ -38,21 +38,19 @@ var FilesCommand = Command{
 
 Lists the files that match the QUERY specified.
 
-QUERY may contain:
+QUERY may contain tag names to match, logical operators, comparison operators
+and parentheses.
 
-  * Tag names to match
-  * The logical operators: and or not
-  * The comparison operators: =   !=   >   <   >=   <=
-                              eq  ne   gt  lt  ge   le
-  * Parentheses: ( )
+  * Logical operators: and, or, not
+  * Comparison operators: ==, !=, <,  >,  <=, >=
+                          eq, ne, lt, gt, le, ge
 
 The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
 interpretted as 'chalk and cheese'.
 
-Note: Your shell may interpret some of the punctuation, e.g. most shells will
-interpret the '<' and '>' operators as stream redirects. Either enclose the
-query in quotation marks, escape the problematic characters or use the text
-versions, e.g. 'eq' for '='.
+Note: Your shell may interpret some punctuation, e.g. '<' and '>' as stream
+redirects. Either enclose the query in quotation marks, escape the problematic
+characters or use the equivalent text operators, e.g. 'lt' for '<'.
 
 Examples:
 

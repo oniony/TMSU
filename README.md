@@ -1,14 +1,14 @@
 Overview
 ========
 
-TMSU is a program that allows you to organise your files by associating them
-with tags. It provides a tool for managing these tags and a virtual filesystem
-to allow tag-based access to your files.
+TMSU is a tool for tagging your files. It provides a simple command-line utility
+for applying tags and a virtual filesystem to give you a tag-based view of your
+files from any other program.
 
-TMSU's virtual filesystem does not store your files: it merely provides an
-alternative, tag-based view of your files stored elsewhere in the filesystem.
-That way you have the freedom to choose the most suitable filesystem for
-storage whilst still benefiting from tag-based access.
+TMSU does not alter your files in any way: they remain unchanged on disk, or on
+the network, wherever your put them. TMSU maintains its own database and you
+simply gain an additional view, which you can mount where you like, based upon
+the tags you set up.
 
 Usage
 =====
@@ -18,7 +18,7 @@ integrated help:
 
     $ tmsu help
 
-Full documentation is maintained online on the wiki:
+Documentation is maintained online on the wiki:
 
   * <http://bitbucket.org/oniony/tmsu/wiki>
 
@@ -87,7 +87,8 @@ The following steps are for compiling from source.
         $ hg clone -r release https://bitbucket.org/oniony/tmsu
 
     Active development takes place on the default branch. This branch is subject
-    to build failures and breaking changes:
+    to build failures and breaking changes but will have the latest
+    functionality and improvements:
 
         $ hg clone https://bitbucket.org/oniony/tmsu
 
@@ -104,9 +105,10 @@ The following steps are for compiling from source.
 
     This will install TMSU to '/usr/bin/tmsu'.
 
-    It will also install the Zsh completion to '/usr/share/zsh/site-functions'.
+    It will also install the Zsh completion to '/usr/share/zsh/site-functions'
+    and mount wrapper to '/usr/sbin'.
 
-    To change the paths used override the environment variables in the Makefile.
+    To change the paths used override the variables at the top of the Makefile.
 
 About
 =====
@@ -134,10 +136,10 @@ Release Notes
 v0.4.0 (in development)
 ------
 
-  Note: This release changes the database schema. To upgrade your v0.3.0
-  database please run the following:
+  *Note: This release changes the database schema to facilitate tag values. To
+  upgrade your existing v0.3.0 database please run the following:*
 
-    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.backup
     $ sqlite3 -init misc/db-upgrade/0.3_to_0.4.0.sql ~/.tmsu/default.db .q
 
   * Added support for tag values, e.g. 'tmsu tag song.mp3 country=uk' and the
@@ -145,11 +147,11 @@ v0.4.0 (in development)
   * 'tags' and 'values' commands now tabulate output, by default, when run
     from terminal.
   * Added ability to configure which fingerprint algorithm to use.
-  * Implied tags now calculated on the fly when the database is queried. This
-    results in a (potentially) smaller database and ability to have update to the
+  * Implied tags now calculated on-the-fly when the database is queried. This
+    results in a (potentially) smaller database and ability to have updates to the
     implied tags affect previously tagged files.
-  * Added --explicit option to 'files' and 'tags' commands to show only explicit
-    tags: omitting the on-the-fly implied tags.
+  * Added --explicit option to 'files' and 'tags' commands to show only
+    explicit tags (omitting any implied tags).
   * Added --path option to 'files' command to retrieve just those files matching
     or under the path specified.
   * Added --untagged option to 'files' command which, when combined with --path,
@@ -162,7 +164,7 @@ v0.4.0 (in development)
     of fingerprints of unmodified files.
   * Renamed --force option of 'repair' command to --remove.
   * Added support for textual comparison operators: 'eq', 'ne', 'lt', 'gt',
-    'le' and 'ge'. These remove the need for escaping.
+    'le' and 'ge', which do not need escaping unlike '<', '>', &c.
   * Improved Zsh completion with respect to tag values.
   * Significant performance improvements.
   * Removed support for '-' operator: use 'not' instead.
@@ -171,11 +173,11 @@ v0.4.0 (in development)
 v0.3.0
 ------
 
-  Note: This release changes what tag names are allowed. To ensure the tag
+  *Note: This release changes what tag names are allowed. To ensure the tag
   names in your existing databases are still valid, please run the following
-  script:
+  script:*
 
-    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.bak
+    $ cp ~/.tmsu/default.db ~/.tmsu/default.db.backup
     $ sqlite3 -init misc/db-upgrade/clean_tag_names.sql ~/.tmsu/default.db
 
   * Added support for file queries, e.g. 'fish and chips and (mushy-peas or

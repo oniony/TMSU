@@ -5,7 +5,7 @@ MAN_INSTALL_DIR=/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 # other vars
-VER=0.4.0
+VER=0.4.1
 SHELL=/bin/sh
 ARCH=$(shell uname -m)
 DIST_NAME=tmsu-$(ARCH)-$(VER)

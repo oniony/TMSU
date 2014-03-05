@@ -531,16 +531,22 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	log.Infof(2, "BEGIN getTaggedEntryAttr(%v)", path)
 	defer log.Infof(2, "END getTaggedEntryAttr(%v)", path)
 
-	pathLength := len(path)
-	name := path[pathLength-1]
+	name := path[len(path)-1]
 
 	fileId := vfs.parseFileId(name)
 	if fileId != 0 {
 		return vfs.getFileEntryAttr(fileId)
 	}
 
+	tagNames := make([]string, 0, len(path))
+	for _, pathElement := range path {
+		if pathElement[0] != '=' {
+			tagNames = append(tagNames, pathElement)
+		}
+	}
+
 	// tag directory
-	tagIds, err := vfs.tagNamesToIds(path)
+	tagIds, err := vfs.tagNamesToIds(tagNames)
 	if err != nil {
 		log.Fatalf("could not lookup tag IDs: %v.", err)
 	}
@@ -556,8 +562,7 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	log.Infof(2, "BEGIN getQueryEntryAttr(%v)", path)
 	defer log.Infof(2, "END getQueryEntryAttr(%v)", path)
 
-	pathLength := len(path)
-	name := path[pathLength-1]
+	name := path[len(path)-1]
 
 	if len(path) == 1 && path[0] == queryHelpFilename {
 		now := time.Now()
@@ -635,48 +640,42 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
-	expression := query.HasAll(path)
+	expression := pathToExpression(path)
 	files, err := vfs.store.QueryFiles(expression, "", false)
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
 
-	tagNames := make(map[string]interface{}, len(path))
-	for _, tagName := range path {
-		tagNames[tagName] = nil
+	lastPathElement := path[len(path)-1]
+
+	var valueNames []string
+	if lastPathElement[0] != '=' {
+		tagName := lastPathElement
+
+		valueNames, err = vfs.tagValueNamesForFiles(tagName, files)
+		if err != nil {
+			log.Fatalf("could not retrieve values for '%v': %v", err)
+		}
+	} else {
+		valueNames = []string{}
 	}
 
-	furtherTagNames := make([]string, 0, 10)
-	for _, file := range files {
-		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
-		if err != nil {
-			log.Fatalf("could not retrieve file-tags for file '%v': %v", file.Id, err)
-		}
-
-		tagIds := make([]uint, len(fileTags))
-		for index, fileTag := range fileTags {
-			tagIds[index] = fileTag.TagId
-		}
-
-		tags, err := vfs.store.TagsByIds(tagIds)
-		if err != nil {
-			log.Fatalf("could not retrieve tags: %v", err)
-		}
-
-		for _, tag := range tags {
-			_, has := tagNames[tag.Name]
-			if !has {
-				if !containsName(furtherTagNames, tag.Name) {
-					furtherTagNames = append(furtherTagNames, tag.Name)
-				}
-			}
-		}
+	furtherTagNames, err := vfs.tagNamesForFiles(files)
+	if err != nil {
+		log.Fatalf("could not retrieve further tags: %v", err)
 	}
 
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagNames))
 	for _, tagName := range furtherTagNames {
-		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
+		if !containsString(path, tagName) {
+			entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
+		}
 	}
+
+	for _, valueName := range valueNames {
+		entries = append(entries, fuse.DirEntry{Name: "=" + valueName, Mode: fuse.S_IFDIR | 0755})
+	}
+
 	for _, file := range files {
 		linkName := vfs.getLinkName(file)
 		entries = append(entries, fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK})
@@ -768,7 +767,92 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
 	return tagIds, nil
 }
 
-func (vfs FuseVfs) saveQuery(query string) {
+func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) ([]string, error) {
+	tag, err := vfs.store.TagByName(tagName)
+	if err != nil {
+		log.Fatalf("could not look up tag '%v': %v", tagName, err)
+	}
+	if tag == nil {
+		return []string{}, nil
+	}
+
+	valueNames := make([]string, 0, 10)
+
+	for _, file := range files {
+		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
+		}
+
+		valueIds := make([]uint, len(fileTags))
+		for index, fileTag := range fileTags {
+			if fileTag.TagId == tag.Id {
+				valueIds[index] = fileTag.ValueId
+			}
+		}
+
+		values, err := vfs.store.ValuesByIds(valueIds)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve values: %v", err)
+		}
+
+		for _, value := range values {
+			valueNames = append(valueNames, value.Name)
+		}
+	}
+
+	return valueNames, nil
+}
+
+func (vfs FuseVfs) tagNamesForFiles(files entities.Files) ([]string, error) {
+	tagNames := make([]string, 0, 10)
+
+	for _, file := range files {
+		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
+		}
+
+		tagIds := make([]uint, len(fileTags))
+		for index, fileTag := range fileTags {
+			tagIds[index] = fileTag.TagId
+		}
+
+		tags, err := vfs.store.TagsByIds(tagIds)
+		if err != nil {
+			return nil, fmt.Errorf("could not retrieve tags: %v", err)
+		}
+
+		for _, tag := range tags {
+			if !containsString(tagNames, tag.Name) {
+				tagNames = append(tagNames, tag.Name)
+			}
+		}
+	}
+
+	return tagNames, nil
+}
+
+func pathToExpression(path []string) query.Expression {
+	var expression query.Expression = query.EmptyExpression{}
+
+	for index, stone := range path {
+		var stoneExpression query.Expression
+
+		if stone[0] == '=' {
+			tagName := path[index-1]
+			valueName := stone[1:len(stone)]
+
+			stoneExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
+		} else {
+			tagName := stone
+			stoneExpression = query.TagExpression{tagName}
+		}
+
+		expression = query.AndExpression{expression, stoneExpression}
+	}
+
+	return expression
 }
 
 func uitoa(ui uint) string {
@@ -790,9 +874,9 @@ func containsTag(tags entities.Tags, tagName string) bool {
 	return false
 }
 
-func containsName(tagNames []string, tagName string) bool {
-	for _, name := range tagNames {
-		if name == tagName {
+func containsString(values []string, value string) bool {
+	for _, v := range values {
+		if v == value {
 			return true
 		}
 	}

@@ -136,6 +136,11 @@ Release Notes
 v0.5.0 (in development)
 ------
 
+v0.4.1
+------
+
+  * Tag values are now shown as directories in the virtual filesystem.
+
 v0.4.0
 ------
 

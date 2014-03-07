@@ -39,6 +39,11 @@ func (storage *Storage) Value(id uint) (*entities.Value, error) {
 	return storage.Db.Value(id)
 }
 
+// Retrieves a specific set of values.
+func (storage Storage) ValuesByIds(ids []uint) (entities.Values, error) {
+	return storage.Db.ValuesByIds(ids)
+}
+
 // Retrievse the set of unused values.
 func (storage *Storage) UnusedValues() (entities.Values, error) {
 	return storage.Db.UnusedValues()

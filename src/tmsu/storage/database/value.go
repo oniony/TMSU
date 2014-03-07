@@ -67,6 +67,33 @@ func (db *Database) Value(id uint) (*entities.Value, error) {
 	return readValue(rows)
 }
 
+// Retrieves a specific set of values.
+func (db *Database) ValuesByIds(ids []uint) (entities.Values, error) {
+	sql := `SELECT id, name
+	        FROM value
+	        WHERE id IN (?`
+	sql += strings.Repeat(",?", len(ids)-1)
+	sql += ")"
+
+	params := make([]interface{}, len(ids))
+	for index, id := range ids {
+		params[index] = id
+	}
+
+	rows, err := db.ExecQuery(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tags, err := readValues(rows, make(entities.Values, 0, len(ids)))
+	if err != nil {
+		return nil, err
+	}
+
+	return tags, nil
+}
+
 // Retrieves the set of unused values.
 func (db *Database) UnusedValues() (entities.Values, error) {
 	sql := `SELECT id, name

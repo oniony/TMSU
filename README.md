@@ -133,6 +133,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.4.1
+------
+
+  * Tag values are now shown as directories in the virtual filesystem.
+
 v0.4.0
 ------
 

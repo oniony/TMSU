@@ -81,7 +81,7 @@ func Run() {
 
 	command := commands[commandName]
 	if command == nil {
-		log.Fatalf("Invalid command '%v'.", commandName)
+		log.Fatalf("invalid command '%v'.", commandName)
 	}
 
 	err = command.Exec(options, arguments)

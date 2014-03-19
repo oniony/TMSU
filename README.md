@@ -136,6 +136,8 @@ Release Notes
 v0.5.0 (in development)
 ------
 
+  * Added --untagged option to 'status' command for showing untagged files only.
+
 v0.4.1
 ------
 

@@ -33,7 +33,7 @@ Creates a new tag NEW applied to the same set of files as TAG.
 Examples:
 
     $ tmsu copy cheese wine
-    $ tmsu copy report document`,
+    $ tmsu copy report document text`,
 	Options: Options{},
 	Exec:    copyExec,
 }

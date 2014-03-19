@@ -241,6 +241,7 @@ _tmsu_cmd_stats() {
 
 _tmsu_cmd_status() {
 	_arguments -s -w ''{--directory,-d}'[list directory entries only: do not list contents]' \
+	                 ''{--untagged,-u}'[list untagged entries only]' \
 	                 '*:file:_files' \
 	&& ret=0
 }

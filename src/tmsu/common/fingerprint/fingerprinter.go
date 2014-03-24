@@ -119,7 +119,6 @@ func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) 
 
 func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Fingerprint, error) {
 	buffer := make([]byte, sparseFingerprintSize)
-	hash := sha256.New()
 
 	file, err := os.Open(path)
 	if err != nil {
@@ -132,7 +131,7 @@ func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Finge
 	if err != nil {
 		return EMPTY, err
 	}
-	hash.Write(buffer[:count])
+	h.Write(buffer[:count])
 
 	// middle
 	_, err = file.Seek((fileSize-sparseFingerprintSize)/2, 0)
@@ -144,7 +143,7 @@ func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Finge
 	if err != nil {
 		return EMPTY, err
 	}
-	hash.Write(buffer[:count])
+	h.Write(buffer[:count])
 
 	// end
 	_, err = file.Seek(-sparseFingerprintSize, 2)
@@ -156,9 +155,9 @@ func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Finge
 	if err != nil {
 		return EMPTY, err
 	}
-	hash.Write(buffer[:count])
+	h.Write(buffer[:count])
 
-	sum := hash.Sum(make([]byte, 0, 64))
+	sum := h.Sum(make([]byte, 0, 64))
 	fingerprint := hex.EncodeToString(sum)
 
 	return Fingerprint(fingerprint), nil

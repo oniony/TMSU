@@ -138,6 +138,11 @@ v0.5.0 (in development)
 
   * Added --untagged option to 'status' command for showing untagged files only.
 
+v0.4.2
+------
+
+  * Fixed bug where 'dynamic:MD5' and 'dynamic:SHA1' were using SHA256.
+
 v0.4.1
 ------
 

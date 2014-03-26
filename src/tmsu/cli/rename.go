@@ -53,7 +53,7 @@ func renameExec(options Options, args []string) error {
 	defer store.Commit()
 
 	if len(args) < 2 {
-		return fmt.Errorf("tag to rename and new name must both be specified.")
+		return fmt.Errorf("tag to rename and new name must both be specified")
 	}
 
 	if len(args) > 2 {
@@ -68,7 +68,7 @@ func renameExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
 	if sourceTag == nil {
-		return fmt.Errorf("no such tag '%v'.", sourceTagName)
+		return fmt.Errorf("no such tag '%v'", sourceTagName)
 	}
 
 	destTag, err := store.TagByName(destTagName)
@@ -76,7 +76,7 @@ func renameExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
 	if destTag != nil {
-		return fmt.Errorf("tag '%v' already exists.", destTagName)
+		return fmt.Errorf("tag '%v' already exists", destTagName)
 	}
 
 	log.Infof(2, "renaming tag '%v' to '%v'.", sourceTagName, destTagName)

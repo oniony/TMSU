@@ -24,7 +24,7 @@ import (
 	"unsafe"
 )
 
-var blankError = errors.New("")
+var errBlank = errors.New("")
 
 type TagValuePair struct {
 	TagId   uint

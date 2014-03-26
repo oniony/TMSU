@@ -128,7 +128,7 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) 
 
 func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicitOnly bool) error {
 	if queryText == "" {
-		return fmt.Errorf("query must be specified. Use --all to show all files.")
+		return fmt.Errorf("query must be specified (use --all to show all files)")
 	}
 
 	store, err := storage.Open()

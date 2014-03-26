@@ -40,7 +40,7 @@ Examples:
 
 func deleteExec(options Options, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("no tags to delete specified.")
+		return fmt.Errorf("no tags to delete specified")
 	}
 
 	store, err := storage.Open()

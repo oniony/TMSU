@@ -182,7 +182,7 @@ func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing,
 		return err
 	}
 
-	for path, _ := range untagged {
+	for path := range untagged {
 		log.Infof(1, "%v: untagged", path)
 	}
 

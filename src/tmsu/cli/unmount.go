@@ -42,7 +42,7 @@ func unmountExec(options Options, args []string) error {
 	}
 
 	if len(args) < 1 {
-		return fmt.Errorf("path to unmount not speciified.")
+		return fmt.Errorf("path to unmount not speciified")
 	}
 
 	return unmount(args[0])
@@ -70,7 +70,7 @@ func unmount(path string) error {
 		return fmt.Errorf("error waiting for process to exit: %v", err)
 	}
 	if !processState.Success() {
-		return fmt.Errorf("could not unmount virtual filesystem.")
+		return fmt.Errorf("could not unmount virtual filesystem")
 	}
 
 	return nil

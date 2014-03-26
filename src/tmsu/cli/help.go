@@ -56,7 +56,7 @@ func summary() {
 	fmt.Println("TMSU")
 	fmt.Println()
 
-	var maxWidth int = 0
+	var maxWidth int
 	commandNames := make([]string, 0, len(helpCommands))
 	for _, command := range helpCommands {
 		commandName := command.Name

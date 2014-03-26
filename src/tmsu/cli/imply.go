@@ -59,14 +59,14 @@ func implyExec(options Options, args []string) error {
 		return listImplications(store)
 	case options.HasOption("--delete"):
 		if len(args) < 2 {
-			return fmt.Errorf("Implying and implied tag must be specified.")
+			return fmt.Errorf("implying and implied tag must be specified")
 		}
 
 		return deleteImplications(store, args[0], args[1:])
 	}
 
 	if len(args) < 2 {
-		return fmt.Errorf("Implying and implied tags must be specified.")
+		return fmt.Errorf("implying and implied tags must be specified")
 	}
 
 	return addImplications(store, args[0], args[1:])
@@ -120,21 +120,21 @@ func addImplications(store *storage.Storage, tagName string, impliedTagNames []s
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 	}
 	if tag == nil {
-		return fmt.Errorf("no such tag '%v'.", tagName)
+		return fmt.Errorf("no such tag '%v'", tagName)
 	}
 
 	for _, impliedTagName := range impliedTagNames {
-		log.Infof(2, "looking up tag '%v'.", impliedTagName)
+		log.Infof(2, "looking up tag '%v'", impliedTagName)
 
 		impliedTag, err := store.TagByName(impliedTagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
 		}
 		if impliedTag == nil {
-			return fmt.Errorf("no such tag '%v'.", impliedTagName)
+			return fmt.Errorf("no such tag '%v'", impliedTagName)
 		}
 
-		log.Infof(2, "adding tag implication of '%v' to '%v'.", tagName, impliedTagName)
+		log.Infof(2, "adding tag implication of '%v' to '%v'", tagName, impliedTagName)
 
 		if err = store.AddImplication(tag.Id, impliedTag.Id); err != nil {
 			return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
@@ -152,7 +152,7 @@ func deleteImplications(store *storage.Storage, tagName string, impliedTagNames 
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 	}
 	if tag == nil {
-		return fmt.Errorf("no such tag '%v'.", tagName)
+		return fmt.Errorf("no such tag '%v'", tagName)
 	}
 
 	for _, impliedTagName := range impliedTagNames {
@@ -163,7 +163,7 @@ func deleteImplications(store *storage.Storage, tagName string, impliedTagNames 
 			return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
 		}
 		if impliedTag == nil {
-			return fmt.Errorf("no such tag '%v'.", impliedTagName)
+			return fmt.Errorf("no such tag '%v'", impliedTagName)
 		}
 
 		log.Infof(2, "removing tag implication of '%v' to '%v'.", tagName, impliedTagName)

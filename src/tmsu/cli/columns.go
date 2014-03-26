@@ -71,7 +71,7 @@ func formatColumns(items []string, width int) {
 	}
 
 	// render
-	for rowIndex := 0; rowIndex < rows; rowIndex += 1 {
+	for rowIndex := 0; rowIndex < rows; rowIndex++ {
 		for columnIndex := 0; columnIndex < cols; columnIndex++ {
 			itemIndex := rows*columnIndex + rowIndex
 

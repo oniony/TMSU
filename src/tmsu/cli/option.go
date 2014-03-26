@@ -43,7 +43,7 @@ func (options Options) HasOption(name string) bool {
 }
 
 func (options Options) Count(name string) uint {
-	var count uint = 0
+	var count uint
 
 	for _, option := range options {
 		if option.LongName == name || option.ShortName == name {
@@ -99,7 +99,7 @@ func (parser *OptionParser) Parse(args []string) (commandName string, options Op
 
 				option := lookupOption(possibleOptions, optionName)
 				if option == nil {
-					err = fmt.Errorf("invalid option '%v'.", optionName)
+					err = fmt.Errorf("invalid option '%v'", optionName)
 					return
 				}
 

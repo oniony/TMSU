@@ -90,7 +90,7 @@ func mountExec(options Options, args []string) error {
 			return err
 		}
 	default:
-		return fmt.Errorf("Too many arguments.")
+		return fmt.Errorf("too many arguments")
 	}
 
 	return nil
@@ -133,10 +133,10 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 		return fmt.Errorf("%v: could not stat: %v", mountPath, err)
 	}
 	if stat == nil {
-		return fmt.Errorf("%v: mount point does not exist.", mountPath)
+		return fmt.Errorf("%v: mount point does not exist", mountPath)
 	}
 	if !stat.IsDir() {
-		return fmt.Errorf("%v: mount point is not a directory.", mountPath)
+		return fmt.Errorf("%v: mount point is not a directory", mountPath)
 	}
 
 	stat, err = os.Stat(databasePath)
@@ -144,10 +144,10 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 		return fmt.Errorf("%v: could not stat: %v", databasePath, err)
 	}
 	if stat == nil {
-		return fmt.Errorf("%v: database does not exist.")
+		return fmt.Errorf("%v: database does not exist")
 	}
 
-	log.Infof(2, "spawning daemon to mount VFS for database '%v' at '%v'.", databasePath, mountPath)
+	log.Infof(2, "spawning daemon to mount VFS for database '%v' at '%v'", databasePath, mountPath)
 
 	args := []string{"vfs", databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
@@ -164,8 +164,8 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 
 	log.Info(2, "sleeping.")
 
-	const HALF_SECOND = 500000000
-	time.Sleep(HALF_SECOND)
+	const halfSecond = 500000000
+	time.Sleep(halfSecond)
 
 	log.Info(2, "checking whether daemon started successfully.")
 

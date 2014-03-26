@@ -38,7 +38,7 @@ filesystem. For debug output use the --verbose option.`,
 
 func vfsExec(options Options, args []string) error {
 	if len(args) == 0 {
-		fmt.Errorf("Mountpoint not specified.")
+		fmt.Errorf("mountpoint not specified")
 	}
 
 	mountOptions := []string{}

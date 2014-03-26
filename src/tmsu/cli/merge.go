@@ -40,7 +40,7 @@ Examples:
 
 func mergeExec(options Options, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("too few arguments.")
+		return fmt.Errorf("too few arguments")
 	}
 
 	store, err := storage.Open()
@@ -60,7 +60,7 @@ func mergeExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
 	if destTag == nil {
-		return fmt.Errorf("no such tag '%v'.", destTagName)
+		return fmt.Errorf("no such tag '%v'", destTagName)
 	}
 
 	wereErrors := false

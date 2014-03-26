@@ -60,7 +60,7 @@ func valuesExec(options Options, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return fmt.Errorf("at least one tag must be specified. Use --all to show all values.")
+		return fmt.Errorf("at least one tag must be specified. Use --all to show all values")
 	}
 
 	return listValues(args, showCount, onePerLine)
@@ -130,7 +130,7 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 	}
 	if tag == nil {
-		return fmt.Errorf("no such tag, '%v'.", tagName)
+		return fmt.Errorf("no such tag, '%v'", tagName)
 	}
 
 	log.Infof(2, "retrieving values for tag '%v'.", tagName)

@@ -108,7 +108,7 @@ func tagExec(options Options, args []string) error {
 		}
 	default:
 		if len(args) < 2 {
-			return fmt.Errorf("file to tag and tags to apply must be specified.")
+			return fmt.Errorf("file to tag and tags to apply must be specified")
 		}
 
 		paths := args[0:1]

@@ -47,14 +47,14 @@ Examples:
 
 func untagExec(options Options, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("no arguments specified.")
+		return fmt.Errorf("no arguments specified")
 	}
 
 	recursive := options.HasOption("--recursive")
 
 	if options.HasOption("--all") {
 		if len(args) < 1 {
-			return fmt.Errorf("files to untag must be specified.")
+			return fmt.Errorf("files to untag must be specified")
 		}
 
 		paths := args
@@ -78,7 +78,7 @@ func untagExec(options Options, args []string) error {
 		}
 	} else {
 		if len(args) < 2 {
-			return fmt.Errorf("tags to remove and files to untag must be specified.")
+			return fmt.Errorf("tags to remove and files to untag must be specified")
 		}
 
 		paths := args[0:1]

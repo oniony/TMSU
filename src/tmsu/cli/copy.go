@@ -58,7 +58,7 @@ func copyExec(options Options, args []string) error {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
 	if sourceTag == nil {
-		return fmt.Errorf("no such tag '%v'.", sourceTagName)
+		return fmt.Errorf("no such tag '%v'", sourceTagName)
 	}
 
 	wereErrors := false

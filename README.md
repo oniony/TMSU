@@ -133,6 +133,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.4.2
+------
+
+  * Fixed bug where 'dynamic:MD5' and 'dynamic:SHA1' were using SHA256.
+
 v0.4.1
 ------
 

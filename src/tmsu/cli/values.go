@@ -201,7 +201,7 @@ func listValuesForTags(store *storage.Storage, tagNames []string, showCount, one
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil

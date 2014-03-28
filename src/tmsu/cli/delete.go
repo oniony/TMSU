@@ -73,7 +73,7 @@ func deleteExec(options Options, args []string) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil

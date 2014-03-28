@@ -172,7 +172,7 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	log.Info(2, "querying database")

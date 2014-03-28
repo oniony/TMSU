@@ -155,7 +155,7 @@ func createTags(tagNames []string) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil
@@ -255,7 +255,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil
@@ -313,7 +313,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil

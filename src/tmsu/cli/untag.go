@@ -142,7 +142,7 @@ func untagPathsAll(paths []string, recursive bool) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil
@@ -240,7 +240,7 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil

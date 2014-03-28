@@ -125,7 +125,7 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	if recursive {

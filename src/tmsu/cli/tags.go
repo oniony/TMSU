@@ -225,7 +225,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	}
 
 	if wereErrors {
-		return blankError
+		return errBlank
 	}
 
 	return nil

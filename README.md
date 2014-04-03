@@ -50,11 +50,7 @@ Copy the Zsh completion file to the Zsh site-functions directory:
 Compiling
 =========
 
-The following steps are for compiling from source.
-
-Before you do so, it is advisable to check the current build status:
-
-    [![Build Status](https://drone.io/bitbucket.org/oniony/tmsu/status.png)](https://drone.io/bitbucket.org/oniony/tmsu/latest)
+The following steps are for compiling from source.    
 
 1. Installing Go
 

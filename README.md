@@ -52,6 +52,10 @@ Compiling
 
 The following steps are for compiling from source.
 
+Before you do so, it is advisable to check the current build status:
+
+    [![Build Status](https://drone.io/bitbucket.org/oniony/tmsu/status.png)](https://drone.io/bitbucket.org/oniony/tmsu/latest)
+
 1. Installing Go
 
     TMSU is written in the Go programming language. To compile from source you must

@@ -50,7 +50,7 @@ Copy the Zsh completion file to the Zsh site-functions directory:
 Compiling
 =========
 
-The following steps are for compiling from source.
+The following steps are for compiling from source.    
 
 1. Installing Go
 

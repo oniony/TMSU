@@ -37,7 +37,7 @@ dist: compile
 	@mkdir -p $(DIST_DIR)
 	cp -R bin $(DIST_DIR)
 	cp README.md $(DIST_DIR)
-	cp COPYING $(DIST_DIR)
+	cp COPYING.md $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/bin
 	cp misc/bin/mount.tmsu $(DIST_DIR)/bin/
 	@mkdir -p $(DIST_DIR)/man

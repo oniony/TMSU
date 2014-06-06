@@ -234,7 +234,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 				fmt.Print(path + ": ")
 				for index, tagName := range tagNames {
 					if index != 0 {
-						fmt.Print(", ")
+						fmt.Print(" ")
 					}
 
 					fmt.Print(tagName)
@@ -292,7 +292,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 				fmt.Print(dirName + ": ")
 				for index, tagName := range tagNames {
 					if index != 0 {
-						fmt.Print(", ")
+						fmt.Print(" ")
 					}
 
 					fmt.Print(tagName)

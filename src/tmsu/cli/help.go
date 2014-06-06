@@ -22,6 +22,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"tmsu/cli/ansi"
 )
 
 var HelpCommand = Command{
@@ -83,24 +84,30 @@ func summary() {
 	fmt.Println()
 
 	for _, option := range globalOptions {
-		fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
+		if option.ShortName != "" && option.LongName != "" {
+			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
+		} else if option.ShortName == "" {
+			fmt.Printf("      %v: %v\n", option.LongName, option.Description)
+		} else {
+			fmt.Printf("  %v: %v\n", option.ShortName, option.Description)
+		}
 	}
 }
 
 func listCommands() {
-	commandNames := make([]string, 0, len(helpCommands))
+	commandNames := make(ansi.Strings, 0, len(helpCommands))
 
 	for _, command := range helpCommands {
 		if command.Synopsis == "" {
 			continue
 		}
 
-		commandNames = append(commandNames, command.Name)
+		commandNames = append(commandNames, ansi.String(command.Name))
 	}
 
-	sort.Strings(commandNames)
+	sort.Sort(commandNames)
 
-	formatColumns(commandNames, terminalWidth())
+	renderColumns(commandNames, terminalWidth())
 }
 
 func describeCommand(commandName string) {

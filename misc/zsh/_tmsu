@@ -250,7 +250,7 @@ _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags_with_values' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
-	                 ''{--create+,-c}'[create a tag withou tagging any files]:source:_files' \
+	                 ''{--create+,-c}'[create a tag without tagging any files]:source:_files' \
 	                 '*:: :->items' \
 	&& ret=0
 
@@ -275,6 +275,7 @@ _tmsu_cmd_tags() {
 	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
+                     ''--color='[use color to identify impplied tags]:when:((auto always never))' \
 	                 '*:file:_files' \
 	&& ret=0
 }

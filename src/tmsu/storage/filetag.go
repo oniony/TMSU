@@ -91,7 +91,7 @@ func (storage *Storage) FileTagsByFileId(fileId uint, explicitOnly bool) (entiti
 		}
 
 		for _, implication := range implications {
-			fileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0}
+			fileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0, false}
 
 			if !containsFileTag(fileTags, fileTag) {
 				fileTags = append(fileTags, &fileTag)

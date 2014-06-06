@@ -23,9 +23,8 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"strings"
+	"tmsu/cli/ansi"
 	"tmsu/common/log"
-	"tmsu/entities"
 	"tmsu/storage"
 )
 
@@ -51,7 +50,8 @@ Examples:
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
 		{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
-		{"--explicit", "-e", "do not show implied tags", false, ""}},
+		{"--explicit", "-e", "do not show implied tags", false, ""},
+		{"--color", "", "when to use color to highlight implied tags (auto/always/never)", true, ""}},
 	Exec: tagsExec,
 }
 
@@ -60,14 +60,32 @@ func tagsExec(options Options, args []string) error {
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
 
-	if options.HasOption("--all") {
-		return listAllTags(showCount, onePerLine)
+	var colour bool
+	if options.HasOption("--color") {
+		when := options.Get("--color").Argument
+		switch when {
+		case "auto":
+			colour = terminalWidth() > 0
+		case "":
+		case "always":
+			colour = true
+		case "never":
+			colour = false
+		default:
+			return fmt.Errorf("invalid argument '%v' for '--colour'", when)
+		}
+	} else {
+		colour = terminalWidth() > 0
 	}
 
-	return listTags(args, showCount, onePerLine, explicitOnly)
+	if options.HasOption("--all") {
+		return listAllTags(showCount, onePerLine, colour)
+	}
+
+	return listTags(args, showCount, onePerLine, explicitOnly, colour)
 }
 
-func listAllTags(showCount, onePerLine bool) error {
+func listAllTags(showCount, onePerLine, colour bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -89,24 +107,22 @@ func listAllTags(showCount, onePerLine bool) error {
 			return fmt.Errorf("could not retrieve tags: %v", err)
 		}
 
-		if onePerLine {
-			for _, tag := range tags {
-				fmt.Println(tag.Name)
-			}
-		} else {
-			tagNames := make([]string, len(tags))
-			for index, tag := range tags {
-				tagNames[index] = tag.Name
-			}
+		tagNames := make(ansi.Strings, len(tags))
+		for index, tag := range tags {
+			tagNames[index] = ansi.String(tag.Name)
+		}
 
-			formatColumns(tagNames, terminalWidth())
+		if onePerLine {
+			renderSingleColumn(tagNames, 0)
+		} else {
+			renderColumns(tagNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listTags(paths []string, showCount, onePerLine, explicitOnly bool) error {
+func listTags(paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -115,17 +131,17 @@ func listTags(paths []string, showCount, onePerLine, explicitOnly bool) error {
 
 	switch len(paths) {
 	case 0:
-		return listTagsForWorkingDirectory(store, showCount, onePerLine, explicitOnly)
+		return listTagsForWorkingDirectory(store, showCount, onePerLine, explicitOnly, colour)
 	case 1:
-		return listTagsForPath(store, paths[0], showCount, onePerLine, explicitOnly)
+		return listTagsForPath(store, paths[0], showCount, onePerLine, explicitOnly, colour)
 	default:
-		return listTagsForPaths(store, paths, showCount, onePerLine, explicitOnly)
+		return listTagsForPaths(store, paths, showCount, onePerLine, explicitOnly, colour)
 	}
 
 	return nil
 }
 
-func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine, explicitOnly bool) error {
+func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine, explicitOnly, colour bool) error {
 	log.Infof(2, "%v: retrieving tags.", path)
 
 	absPath, err := filepath.Abs(path)
@@ -138,9 +154,9 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 
-	var tagNames []string
+	var tagNames ansi.Strings
 	if file != nil {
-		tagNames, err = tagNamesForFile(store, file.Id, explicitOnly)
+		tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
 		if err != nil {
 			return err
 		}
@@ -164,18 +180,16 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		fmt.Println(len(tagNames))
 	} else {
 		if onePerLine {
-			for _, tagName := range tagNames {
-				fmt.Println(tagName)
-			}
+			renderSingleColumn(tagNames, 0)
 		} else {
-			formatColumns(tagNames, terminalWidth())
+			renderColumns(tagNames, terminalWidth())
 		}
 	}
 
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly bool) error {
+func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	wereErrors := false
 	for _, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
@@ -186,9 +200,9 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 			continue
 		}
 
-		var tagNames []string
+		var tagNames ansi.Strings
 		if file != nil {
-			tagNames, err = tagNamesForFile(store, file.Id, explicitOnly)
+			tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
 			if err != nil {
 				return err
 			}
@@ -215,11 +229,17 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 		} else {
 			if onePerLine {
 				fmt.Println(path)
-				for _, tagName := range tagNames {
-					fmt.Println("  " + tagName)
-				}
+				renderSingleColumn(tagNames, 2)
 			} else {
-				fmt.Println(path + ": " + strings.Join(tagNames, " "))
+				fmt.Print(path + ": ")
+				for index, tagName := range tagNames {
+					if index != 0 {
+						fmt.Print(", ")
+					}
+
+					fmt.Print(tagName)
+				}
+				fmt.Println()
 			}
 		}
 	}
@@ -231,7 +251,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	return nil
 }
 
-func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, explicitOnly bool) error {
+func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, explicitOnly, colour bool) error {
 	file, err := os.Open(".")
 	if err != nil {
 		return fmt.Errorf("could not open working directory: %v", err)
@@ -257,7 +277,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 			continue
 		}
 
-		tagNames, err := tagNamesForFile(store, file.Id, explicitOnly)
+		tagNames, err := tagNamesForFile(store, file.Id, explicitOnly, colour)
 		if err != nil {
 			return err
 		}
@@ -267,11 +287,17 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 		} else {
 			if onePerLine {
 				fmt.Println(dirName)
-				for _, tagName := range tagNames {
-					fmt.Println("  " + tagName)
-				}
+				renderSingleColumn(tagNames, 2)
 			} else {
-				fmt.Println(dirName + ": " + strings.Join(tagNames, " "))
+				fmt.Print(dirName + ": ")
+				for index, tagName := range tagNames {
+					if index != 0 {
+						fmt.Print(", ")
+					}
+
+					fmt.Print(tagName)
+				}
+				fmt.Println()
 			}
 		}
 	}
@@ -279,26 +305,15 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 	return nil
 }
 
-func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly bool) ([]string, error) {
+func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly, colour bool) (ansi.Strings, error) {
 	fileTags, err := store.FileTagsByFileId(fileId, explicitOnly)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
 	}
 
-	tagNames, err := lookupTagNames(store, fileTags)
-	if err != nil {
-		return nil, err
-	}
+	tagNames := make(ansi.Strings, len(fileTags))
 
-	sort.Strings(tagNames)
-
-	return tagNames, nil
-}
-
-func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]string, error) {
-	tagNames := make([]string, 0, len(fileTags))
-
-	for _, fileTag := range fileTags {
+	for index, fileTag := range fileTags {
 		tag, err := store.Tag(fileTag.TagId)
 		if err != nil {
 			return nil, fmt.Errorf("could not lookup tag: %v", err)
@@ -307,9 +322,9 @@ func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]strin
 			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
 		}
 
-		var tagName string
+		var tagName ansi.String
 		if fileTag.ValueId == 0 {
-			tagName = tag.Name
+			tagName = ansi.String(tag.Name)
 		} else {
 			value, err := store.Value(fileTag.ValueId)
 			if err != nil {
@@ -319,10 +334,14 @@ func lookupTagNames(store *storage.Storage, fileTags entities.FileTags) ([]strin
 				return nil, fmt.Errorf("value '%v' does not exist", fileTag.ValueId)
 			}
 
-			tagName = tag.Name + "=" + value.Name
+			tagName = ansi.String(tag.Name + "=" + value.Name)
 		}
 
-		tagNames = append(tagNames, tagName)
+		if !fileTag.Explicit && colour {
+			tagName = ansi.String(ansi.Cyan + tagName + ansi.Reset)
+		}
+
+		tagNames[index] = tagName
 	}
 
 	return tagNames, nil

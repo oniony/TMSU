@@ -18,9 +18,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package entities
 
 type FileTag struct {
-	FileId  uint
-	TagId   uint
-	ValueId uint
+	FileId   uint
+	TagId    uint
+	ValueId  uint
+	Explicit bool
 }
 
 type FileTags []*FileTag

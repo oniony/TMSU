@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/cli/ansi"
 	"tmsu/common/log"
 	"tmsu/storage"
 )
@@ -93,12 +94,12 @@ func listAllValues(showCount, onePerLine bool) error {
 				fmt.Println(value.Name)
 			}
 		} else {
-			valueNames := make([]string, len(values))
+			valueNames := make(ansi.Strings, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = ansi.String(value.Name)
 			}
 
-			formatColumns(valueNames, terminalWidth())
+			renderColumns(valueNames, terminalWidth())
 		}
 	}
 
@@ -148,12 +149,12 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 				fmt.Println(value.Name)
 			}
 		} else {
-			valueNames := make([]string, len(values))
+			valueNames := make(ansi.Strings, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = ansi.String(value.Name)
 			}
 
-			formatColumns(valueNames, terminalWidth())
+			renderColumns(valueNames, terminalWidth())
 		}
 	}
 

@@ -20,9 +20,22 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/cli/ansi"
 )
 
-func formatColumns(items []string, width int) {
+func renderSingleColumn(items []ansi.String, indent int) {
+	//TODO sort items (ANSI sensitive)
+
+	var padding = strings.Repeat(" ", indent)
+
+	for _, item := range items {
+		fmt.Println(padding + string(item))
+	}
+}
+
+func renderColumns(items []ansi.String, width int) {
+	//TODO sort items (ANSI sensitive)
+
 	padding := 2 // minimum column padding
 
 	var colWidths []int
@@ -48,10 +61,11 @@ func formatColumns(items []string, width int) {
 				calcWidth += padding
 			}
 
-			if len(item) > colWidths[col] {
+			var itemLength = ansi.Length(item)
+			if itemLength > colWidths[col] {
 				// widen column
-				calcWidth += -colWidths[col] + len(item)
-				colWidths[col] = len(item)
+				calcWidth += -colWidths[col] + itemLength
+				colWidths[col] = itemLength
 			}
 
 			if calcWidth > width {
@@ -84,7 +98,7 @@ func formatColumns(items []string, width int) {
 			fmt.Print(item)
 
 			if columnIndex < cols-1 {
-				padding := (colWidths[columnIndex] + padding) - len(item)
+				padding := (colWidths[columnIndex] + padding) - ansi.Length(item)
 				fmt.Print(strings.Repeat(" ", padding))
 			}
 		}

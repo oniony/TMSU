@@ -56,7 +56,7 @@ var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", f
 	Option{"--help", "-h", "show help and exit", false, ""},
 	Option{"--version", "-V", "show version information and exit", false, ""},
 	Option{"--database", "-D", "use the specified database", true, ""},
-	//    Option{"--color", "", "colorize the output: auto/always/never.", true, ""}
+	Option{"--color", "", "use color to show implied tags (auto/always/never)", true, ""},
 }
 
 func Run() {

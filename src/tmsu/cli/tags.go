@@ -50,8 +50,7 @@ Examples:
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
 		{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
-		{"--explicit", "-e", "do not show implied tags", false, ""},
-		{"--color", "", "when to use color to highlight implied tags (auto/always/never)", true, ""}},
+		{"--explicit", "-e", "do not show implied tags", false, ""}},
 	Exec: tagsExec,
 }
 

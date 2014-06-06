@@ -32,6 +32,7 @@ _tmsu() {
 	    {--verbose,-v}'[show verbose messages]' \
 	    {--version,-V}'[show version information and exit]' \
 	    {--database=,-D}'[use the specified database]:file:_files' \
+        --color='[colorize the output]:when:((auto always never))' \
 	    {--help,-h}'[show help and exit]' \
 		': :_tmsu_commands' \
 		'*::arg:->args' \
@@ -275,7 +276,6 @@ _tmsu_cmd_tags() {
 	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
-                     ''--color='[use color to identify impplied tags]:when:((auto always never))' \
 	                 '*:file:_files' \
 	&& ret=0
 }

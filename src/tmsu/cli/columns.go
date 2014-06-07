@@ -19,12 +19,13 @@ package cli
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 	"tmsu/cli/ansi"
 )
 
-func renderSingleColumn(items []ansi.String, indent int) {
-	//TODO sort items (ANSI sensitive)
+func renderSingleColumn(items ansi.Strings, indent int) {
+	sort.Sort(items)
 
 	var padding = strings.Repeat(" ", indent)
 
@@ -33,8 +34,8 @@ func renderSingleColumn(items []ansi.String, indent int) {
 	}
 }
 
-func renderColumns(items []ansi.String, width int) {
-	//TODO sort items (ANSI sensitive)
+func renderColumns(items ansi.Strings, width int) {
+	sort.Sort(items)
 
 	padding := 2 // minimum column padding
 

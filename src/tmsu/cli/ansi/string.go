@@ -15,14 +15,39 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package entities
+package ansi
 
-type FileTag struct {
-	FileId   uint
-	TagId    uint
-	ValueId  uint
-	Explicit bool
-	Implicit bool
+import (
+	"regexp"
+)
+
+type String string
+type Strings []String
+
+func (items Strings) Len() int {
+	return len(items)
 }
 
-type FileTags []*FileTag
+func (items Strings) Less(i, j int) bool {
+	return Plain(items[i]) < Plain(items[j])
+}
+
+func (items Strings) Swap(i, j int) {
+	items[j], items[i] = items[i], items[j]
+}
+
+func Length(item String) int {
+	return len(formatting.ReplaceAllLiteralString(string(item), ""))
+}
+
+func Sort(items Strings) {
+	//TODO
+}
+
+func Plain(item String) string {
+	return formatting.ReplaceAllLiteralString(string(item), "")
+}
+
+// unexported
+
+var formatting = regexp.MustCompile(`\x1b\[[0-9]*(;[0-9]*)*m`)

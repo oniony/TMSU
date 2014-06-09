@@ -175,7 +175,7 @@ func (db *Database) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, 
 		return nil, err
 	}
 
-	return &entities.FileTag{fileId, tagId, valueId, true}, nil
+	return &entities.FileTag{fileId, tagId, valueId, true, false}, nil
 }
 
 // Removes a file tag.
@@ -254,7 +254,7 @@ func readFileTags(rows *sql.Rows, fileTags entities.FileTags) (entities.FileTags
 			return nil, err
 		}
 
-		fileTags = append(fileTags, &entities.FileTag{fileId, tagId, valueId, true})
+		fileTags = append(fileTags, &entities.FileTag{fileId, tagId, valueId, true, false})
 	}
 
 	return fileTags, nil

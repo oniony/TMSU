@@ -37,14 +37,18 @@ Lists the tags applied to FILEs.
 
 When run with no arguments, tags for the current working directory are listed.
 
+When color is turned on, tags that are included by way of tag implications
+(see the 'imply' command) are shown in a different colour:
+
+    * An implied tag is shown in cyan
+    * An implied tag for which there is also an explict tag is shown in yellow
+
 Examples:
 
     $ tmsu tags
     tralala.mp3: mp3 music opera 
     $ tmsu tags tralala.mp3
-    mp3
-    music
-    opera
+    mp3  music  opera
     $ tmsu tags --count tralala.mp3
     3`,
 	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
@@ -336,8 +340,14 @@ func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly, colour b
 			tagName = ansi.String(tag.Name + "=" + value.Name)
 		}
 
-		if !fileTag.Explicit && colour {
-			tagName = ansi.String(ansi.Cyan + tagName + ansi.Reset)
+		if colour {
+			if fileTag.Implicit {
+				if fileTag.Explicit {
+					tagName = ansi.String(ansi.Yellow + tagName + ansi.Reset)
+				} else {
+					tagName = ansi.String(ansi.Cyan + tagName + ansi.Reset)
+				}
+			}
 		}
 
 		tagNames[index] = tagName

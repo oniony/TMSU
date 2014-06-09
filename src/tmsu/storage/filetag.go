@@ -91,10 +91,12 @@ func (storage *Storage) FileTagsByFileId(fileId uint, explicitOnly bool) (entiti
 		}
 
 		for _, implication := range implications {
-			fileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0, false}
-
-			if !containsFileTag(fileTags, fileTag) {
-				fileTags = append(fileTags, &fileTag)
+			fileTag := findFileTag(fileTags, implication.ImpliedTag.Id)
+			if fileTag != nil {
+				fileTag.Implicit = true
+			} else {
+				impliedFileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0, false, true}
+				fileTags = append(fileTags, &impliedFileTag)
 			}
 		}
 	}
@@ -166,12 +168,12 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId uint) error {
 
 // unexported
 
-func containsFileTag(fileTags entities.FileTags, fileTag entities.FileTag) bool {
-	for _, ft := range fileTags {
-		if ft.FileId == fileTag.FileId && ft.TagId == fileTag.TagId && ft.ValueId == fileTag.ValueId {
-			return true
+func findFileTag(fileTags entities.FileTags, tagId uint) *entities.FileTag {
+	for _, fileTag := range fileTags {
+		if fileTag.TagId == tagId {
+			return fileTag
 		}
 	}
 
-	return false
+	return nil
 }

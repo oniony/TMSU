@@ -17,40 +17,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package ansi
 
-import (
-	"regexp"
-)
-
 var Reset String = "\x1b[0m"
+var Bold String = "\x1b[1m"
+var Italic String = "\x1b[3m"
+var Underline String = "\x1b[4m"
+var Red String = "\x1b[31m"
+var Green String = "\x1b[32m"
+var Yellow String = "\x1b[33m"
+var Blue String = "\x1b[34m"
+var Magenta String = "\x1b[35m"
 var Cyan String = "\x1b[36m"
-
-type String string
-type Strings []String
-
-func (items Strings) Len() int {
-	return len(items)
-}
-
-func (items Strings) Less(i, j int) bool {
-	return Plain(items[i]) < Plain(items[j])
-}
-
-func (items Strings) Swap(i, j int) {
-	items[j], items[i] = items[i], items[j]
-}
-
-func Length(item String) int {
-	return len(formatting.ReplaceAllLiteralString(string(item), ""))
-}
-
-func Sort(items Strings) {
-	//TODO
-}
-
-func Plain(item String) string {
-	return formatting.ReplaceAllLiteralString(string(item), "")
-}
-
-// unexported
-
-var formatting = regexp.MustCompile(`\x1b\[[0-9]*(;[0-9]*)*m`)

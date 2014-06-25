@@ -37,11 +37,13 @@ Lists the tags applied to FILEs.
 
 When run with no arguments, tags for the current working directory are listed.
 
-When color is turned on, tags that are included by way of tag implications
-(see the 'imply' command) are shown in a different colour:
+When color is turned on, tags are shown in the following colors:
 
-    * An implied tag is shown in cyan
-    * An implied tag for which there is also an explict tag is shown in yellow
+     White  An explicitly applied (regular) tag
+      Cyan  Tag implied by other tag(s)
+    Yellow  Tag is both explicitly applied and implied by other tag(s)
+
+See the 'imply' command for more information on implied tags.
 
 Examples:
 

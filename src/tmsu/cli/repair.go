@@ -42,30 +42,26 @@ Where no PATHS are specified all files in the database are checked.
     Modified files                          yes      yes
     Moved files                             yes      yes
     Missing files                           yes      no
-    Untagged files                          yes      no
-    Unmodified files                        no       no
+    Untagged files                          yes
+    Unmodified files                        no       
 
 Modified files are identified by a change to the file's modification time or
 file size. These files are repaired by updating the modification time, size and
 fingerprint in the database.
 
 Moved files will only be repaired if a file with the same fingerprint can be
-found under PATHs: this means files that are simultaneously moved and modified
-will not be identified. Where no PATHs are specified, moved files will only be
-identified if moved to a tagged directory.
+found under PATHs. Files that have been both moved and modified will not be
+identified.
 
 Missing files are reported but are not, by default, removed from the database
-as this would destroy the tagging information associated with them. If you do
-wish to clear missing files from the database and destroying the associated
-tagging information then use the --force option.
-
-Untagged files are reported but not added to the database.
+as this would destroy the tagging information associated with them. To remove
+these files use the --remove option.
 
 Examples:
 
     $ tmsu repair
-    $ tmsu repair .
-    $ tmsu repair --force`,
+    $ tmsu repair /some/path /new/path
+    $ tmsu repair --remove`,
 	Options: Options{{"--pretend", "-p", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},
 		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},

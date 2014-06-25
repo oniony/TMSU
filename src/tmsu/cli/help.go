@@ -117,7 +117,7 @@ func describeCommand(commandName string) {
 		return
 	}
 
-	fmt.Println(command.Description)
+	fmt.Println(string(command.Description))
 
 	if len(command.Options) > 0 {
 		fmt.Println()

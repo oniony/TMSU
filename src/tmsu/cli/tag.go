@@ -57,12 +57,14 @@ Examples:
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the specified file", true, ""},
-		{"--create", "-c", "create a tag without tagging any files", false, ""}},
+		{"--create", "-c", "create a tag without tagging any files", false, ""},
+		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""}},
 	Exec: tagExec,
 }
 
 func tagExec(options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
+	explicit := options.HasOption("--explicit")
 
 	switch {
 	case options.HasOption("--create"):
@@ -88,7 +90,7 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("at least one file to tag must be specified")
 		}
 
-		if err := tagPaths(tagArgs, paths, recursive); err != nil {
+		if err := tagPaths(tagArgs, paths, explicit, recursive); err != nil {
 			return err
 		}
 	case options.HasOption("--from"):
@@ -103,7 +105,7 @@ func tagExec(options Options, args []string) error {
 
 		paths := args
 
-		if err := tagFrom(fromPath, paths, recursive); err != nil {
+		if err := tagFrom(fromPath, paths, explicit, recursive); err != nil {
 			return err
 		}
 	default:
@@ -114,7 +116,7 @@ func tagExec(options Options, args []string) error {
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := tagPaths(tagArgs, paths, recursive); err != nil {
+		if err := tagPaths(tagArgs, paths, explicit, recursive); err != nil {
 			return err
 		}
 	}
@@ -161,7 +163,7 @@ func createTags(tagNames []string) error {
 	return nil
 }
 
-func tagPaths(tagArgs, paths []string, recursive bool) error {
+func tagPaths(tagArgs, paths []string, explicit, recursive bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -240,7 +242,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, recursive, fingerprintAlgorithm); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, fingerprintAlgorithm); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -261,7 +263,7 @@ func tagPaths(tagArgs, paths []string, recursive bool) error {
 	return nil
 }
 
-func tagFrom(fromPath string, paths []string, recursive bool) error {
+func tagFrom(fromPath string, paths []string, explicit, recursive bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -298,7 +300,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 
 	wereErrors := false
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, recursive, fingerprintAlgorithmSetting.Value); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, fingerprintAlgorithmSetting.Value); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -319,7 +321,7 @@ func tagFrom(fromPath string, paths []string, recursive bool) error {
 	return nil
 }
 
-func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, recursive bool, fingerprintAlgorithm string) error {
+func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit, recursive bool, fingerprintAlgorithm string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -337,7 +339,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 		}
 	}
 
-	log.Infof(2, "%v: checking if file exists", absPath)
+	log.Infof(2, "%v: checking if file exists", path)
 
 	file, err := store.FileByPath(absPath)
 	if err != nil {
@@ -350,7 +352,14 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 		}
 	}
 
-	log.Infof(2, "%v: applying tags.", file.Path())
+	if !explicit {
+		tagValuePairs, err = removeAppliedTagValuePairs(store, tagValuePairs, file)
+		if err != nil {
+			return fmt.Errorf("%v: could not remove applied tags: %v", path, err)
+		}
+	}
+
+	log.Infof(2, "%v: applying tags.", path)
 
 	for _, tagValuePair := range tagValuePairs {
 		if _, err = store.AddFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
@@ -359,7 +368,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, path, tagValuePairs, fingerprintAlgorithm); err != nil {
+		if err = tagRecursively(store, path, tagValuePairs, explicit, fingerprintAlgorithm); err != nil {
 			return err
 		}
 	}
@@ -367,7 +376,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair, fingerprintAlgorithm string) error {
+func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit bool, fingerprintAlgorithm string) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -382,7 +391,7 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValu
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = tagPath(store, childPath, tagValuePairs, true, fingerprintAlgorithm); err != nil {
+		if err = tagPath(store, childPath, tagValuePairs, explicit, true, fingerprintAlgorithm); err != nil {
 			return err
 		}
 	}
@@ -446,4 +455,42 @@ func addFile(store *storage.Storage, path string, modTime time.Time, size uint, 
 	}
 
 	return file, nil
+}
+
+func removeAppliedTagValuePairs(store *storage.Storage, tagValuePairs []TagValuePair, file *entities.File) ([]TagValuePair, error) {
+	log.Infof(2, "%v: determining existing file-tags", file.Path())
+
+	existingFileTags, err := store.FileTagsByFileId(file.Id, false)
+	if err != nil {
+		return nil, fmt.Errorf("%v: could not determine file's tags: %v", file.Path(), err)
+	}
+
+	log.Infof(2, "%v: determining implied tags", file.Path())
+
+	tagIds := make([]uint, len(tagValuePairs))
+	for index, tagValuePair := range tagValuePairs {
+		tagIds[index] = tagValuePair.TagId
+	}
+
+	newlyImpliedTags, err := store.ImplicationsForTags(tagIds...)
+	if err != nil {
+		return nil, fmt.Errorf("%v: could not determine implied tags: %v", file.Path(), err)
+	}
+
+	log.Infof(2, "%v: revising set of tags to apply", file.Path())
+
+	revisedTagValuePairs := make([]TagValuePair, 0, len(tagValuePairs))
+	for _, tagValuePair := range tagValuePairs {
+		if existingFileTags.Contains(tagValuePair.TagId, tagValuePair.ValueId) {
+			continue
+		}
+
+		if tagValuePair.ValueId == 0 && newlyImpliedTags.Implies(tagValuePair.TagId) {
+			continue
+		}
+
+		revisedTagValuePairs = append(revisedTagValuePairs, tagValuePair)
+	}
+
+	return revisedTagValuePairs, nil
 }

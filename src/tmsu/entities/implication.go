@@ -23,3 +23,13 @@ type Implication struct {
 }
 
 type Implications []*Implication
+
+func (implications Implications) Implies(tagId uint) bool {
+	for _, implication := range implications {
+		if implication.ImpliedTag.Id == tagId {
+			return true
+		}
+	}
+
+	return false
+}

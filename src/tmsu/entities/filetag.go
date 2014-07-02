@@ -26,3 +26,13 @@ type FileTag struct {
 }
 
 type FileTags []*FileTag
+
+func (fileTags FileTags) Contains(tagId, valueId uint) bool {
+	for _, fileTag := range fileTags {
+		if fileTag.TagId == tagId && fileTag.ValueId == valueId {
+			return true
+		}
+	}
+
+	return false
+}

@@ -249,6 +249,7 @@ _tmsu_cmd_status() {
 _tmsu_cmd_tag() {
 	_arguments -s -w ''{--tags=,-t}'[apply set of tags to multiple files]:tags:_tmsu_tags_with_values' \
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
+	                 ''{--explicit,-e}'[explicitly apply tags even if they are already implied]' \
 	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
 	                 ''{--create+,-c}'[create a tag without tagging any files]:source:_files' \
 	                 '*:: :->items' \

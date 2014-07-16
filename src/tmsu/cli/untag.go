@@ -213,9 +213,33 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 			continue
 		}
 
+		//TODO URHERE
+
 		log.Infof(2, "%v: unapplying tags.", file.Path())
 
 		for _, tagValuePair := range tagValuePairs {
+			exists, err := store.FileTagExists(file.Id, tagValuePair.TagId, tagValuePair.ValueId)
+			if err != nil {
+				return fmt.Errorf("%v could not check if tag #%v, value #%v is applied to file: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
+			}
+			if !exists {
+				tag, err := store.Tag(tagValuePair.TagId)
+				if err != nil {
+					return fmt.Errorf("%v: could not look up tag #%v: %v", file.Path(), tagValuePair.TagId, err)
+				}
+				if tagValuePair.ValueId != 0 {
+					value, err := store.Value(tagValuePair.ValueId)
+					if err != nil {
+						return fmt.Errorf("%v: could not look up value #%v: %v", file.Path(), tagValuePair.ValueId, err)
+					}
+					log.Warnf("%v: file is not tagged '%v=%v'.", file.Path(), tag.Name, value.Name)
+				} else {
+					log.Warnf("%v: file is not tagged '%v'.", file.Path(), tag.Name)
+				}
+
+				wereErrors = true
+			}
+
 			if err := store.DeleteFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
 				return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
 			}

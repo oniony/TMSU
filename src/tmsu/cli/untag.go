@@ -22,6 +22,7 @@ import (
 	"path/filepath"
 	"strings"
 	"tmsu/common/log"
+	"tmsu/entities"
 	"tmsu/storage"
 )
 
@@ -160,8 +161,37 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 	}
 	defer store.Commit()
 
-	tagValuePairs := make([]TagValuePair, 0, 10)
 	wereErrors := false
+
+	files := make(entities.Files, 0, len(paths))
+	for _, path := range paths {
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
+		}
+
+		file, err := store.FileByPath(absPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file == nil {
+			log.Warnf("%v: file is not tagged", path)
+			wereErrors = true
+			continue
+		}
+
+		files = append(files, file)
+
+		if recursive {
+			childFiles, err := store.FilesByDirectory(file.Path())
+			if err != nil {
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+			}
+
+			files = append(files, childFiles...)
+		}
+	}
+
 	for _, tagArg := range tagArgs {
 		var tagName, valueName string
 		index := strings.Index(tagArg, "=")
@@ -192,72 +222,17 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 			wereErrors = true
 		}
 
-		if tag != nil && value != nil {
-			tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
-		}
-	}
-
-	for _, path := range paths {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
-		}
-
-		file, err := store.FileByPath(absPath)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
-		}
-		if file == nil {
-			log.Warnf("%v: file is not tagged", path)
-			wereErrors = true
-			continue
-		}
-
-		//TODO URHERE
-
-		log.Infof(2, "%v: unapplying tags.", file.Path())
-
-		for _, tagValuePair := range tagValuePairs {
-			exists, err := store.FileTagExists(file.Id, tagValuePair.TagId, tagValuePair.ValueId)
-			if err != nil {
-				return fmt.Errorf("%v could not check if tag #%v, value #%v is applied to file: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
-			}
-			if !exists {
-				tag, err := store.Tag(tagValuePair.TagId)
-				if err != nil {
-					return fmt.Errorf("%v: could not look up tag #%v: %v", file.Path(), tagValuePair.TagId, err)
-				}
-				if tagValuePair.ValueId != 0 {
-					value, err := store.Value(tagValuePair.ValueId)
-					if err != nil {
-						return fmt.Errorf("%v: could not look up value #%v: %v", file.Path(), tagValuePair.ValueId, err)
+		for _, file := range files {
+			if err := store.DeleteFileTag(file.Id, tag.Id, value.Id); err != nil {
+				if err == storage.FileTagDoesNotExist {
+					if value.Id != 0 {
+						log.Warnf("%v: file is not tagged '%v=%v'.", file.Path(), tag.Name, value.Name)
+					} else {
+						log.Warnf("%v: file is not tagged '%v'.", file.Path(), tag.Name)
 					}
-					log.Warnf("%v: file is not tagged '%v=%v'.", file.Path(), tag.Name, value.Name)
+					wereErrors = true
 				} else {
-					log.Warnf("%v: file is not tagged '%v'.", file.Path(), tag.Name)
-				}
-
-				wereErrors = true
-			}
-
-			if err := store.DeleteFileTag(file.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
-				return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", file.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
-			}
-		}
-
-		if recursive {
-			childFiles, err := store.FilesByDirectory(file.Path())
-			if err != nil {
-				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
-			}
-
-			for _, childFile := range childFiles {
-				log.Infof(2, "%v: unapplying tags.", childFile.Path())
-
-				for _, tagValuePair := range tagValuePairs {
-					if err := store.DeleteFileTag(childFile.Id, tagValuePair.TagId, tagValuePair.ValueId); err != nil {
-						return fmt.Errorf("%v: could not remove tag #%v, value #%v: %v", childFile.Path(), tagValuePair.TagId, tagValuePair.ValueId, err)
-					}
+					return fmt.Errorf("%v: could not remove tag '%v', value '%v': %v", file.Path(), tag.Name, value.Name, err)
 				}
 			}
 		}

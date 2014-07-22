@@ -111,6 +111,14 @@ func (storage *Storage) AddFileTag(fileId, tagId, valueId uint) (*entities.FileT
 
 // Delete file tag.
 func (storage *Storage) DeleteFileTag(fileId, tagId, valueId uint) error {
+	exists, err := storage.FileTagExists(fileId, tagId, valueId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return FileTagDoesNotExist
+	}
+
 	if err := storage.Db.DeleteFileTag(fileId, tagId, valueId); err != nil {
 		return err
 	}

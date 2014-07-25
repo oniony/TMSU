@@ -125,7 +125,7 @@ func (storage *Storage) DeleteFileTag(fileId, tagId, valueId uint) error {
 		return err
 	}
 	if !exists {
-		return FileTagDoesNotExist
+		return FileTagDoesNotExist{fileId, tagId, valueId}
 	}
 
 	if err := storage.Db.DeleteFileTag(fileId, tagId, valueId); err != nil {

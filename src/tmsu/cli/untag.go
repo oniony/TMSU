@@ -224,7 +224,8 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 
 		for _, file := range files {
 			if err := store.DeleteFileTag(file.Id, tag.Id, value.Id); err != nil {
-				if err == storage.FileTagDoesNotExist {
+				switch err.(type) {
+				case storage.FileTagDoesNotExist:
 					exists, err := store.FileTagExists(file.Id, tag.Id, value.Id, false)
 					if err != nil {
 						return fmt.Errorf("could not check if tag exists: %v", err)
@@ -232,9 +233,9 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 
 					if exists {
 						if value.Id != 0 {
-							log.Warnf("%v: cannot remove implied tag '%v=%v'.", file.Path(), tag.Name, value.Name)
+							log.Warnf("%v: cannot remove '%v=%v': implied tags cannot be removed.", file.Path(), tag.Name, value.Name)
 						} else {
-							log.Warnf("%v: cannot remove implied tag '%v'.", file.Path(), tag.Name)
+							log.Warnf("%v: cannot remove '%v': implied tags cannot be removed.", file.Path(), tag.Name)
 						}
 					} else {
 						if value.Id != 0 {
@@ -245,7 +246,7 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 					}
 
 					wereErrors = true
-				} else {
+				default:
 					return fmt.Errorf("%v: could not remove tag '%v', value '%v': %v", file.Path(), tag.Name, value.Name, err)
 				}
 			}

@@ -24,6 +24,20 @@ import (
 	"tmsu/cli/ansi"
 )
 
+func renderSingleLine(items ansi.Strings) {
+	sort.Sort(items)
+
+	for index, item := range items {
+		if index > 0 {
+			fmt.Print(" ")
+		}
+
+		fmt.Print(item)
+	}
+
+	fmt.Println()
+}
+
 func renderSingleColumn(items ansi.Strings, indent int) {
 	sort.Sort(items)
 

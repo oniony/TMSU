@@ -237,14 +237,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 				renderSingleColumn(tagNames, 2)
 			} else {
 				fmt.Print(path + ": ")
-				for index, tagName := range tagNames {
-					if index != 0 {
-						fmt.Print(" ")
-					}
-
-					fmt.Print(tagName)
-				}
-				fmt.Println()
+				renderSingleLine(tagNames)
 			}
 		}
 	}
@@ -295,14 +288,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 				renderSingleColumn(tagNames, 2)
 			} else {
 				fmt.Print(dirName + ": ")
-				for index, tagName := range tagNames {
-					if index != 0 {
-						fmt.Print(" ")
-					}
-
-					fmt.Print(tagName)
-				}
-				fmt.Println()
+				renderSingleLine(tagNames)
 			}
 		}
 	}

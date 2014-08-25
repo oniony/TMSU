@@ -36,17 +36,22 @@ var FilesCommand = Command{
 	Synopsis: "List files with particular tags",
 	Description: `tmsu files [OPTION]... QUERY 
 
-Lists the files that match the QUERY specified.
+Lists the files in the database that match the QUERY specified.
 
 QUERY may contain tag names to match, logical operators, comparison operators
-and parentheses.
+and parentheses:
 
   * Logical operators: and, or, not
   * Comparison operators: ==, !=, <,  >,  <=, >=
                           eq, ne, lt, gt, le, ge
 
-The 'and' operator may be omitted for brevity, e.g. 'chalk cheese' is
-interpretted as 'chalk and cheese'.
+The 'and' operator may be omitted for brevity, e.g. 'big red bus' is
+interpretted as 'big and red and bus'.
+
+Queries are run against the database so the results may not reflect the current
+state of the filesystem. For negative queries (e.g. 'not photo') that specify a
+path with --path it is possible to include untagged files from the filesystem
+using the --untagged option.
 
 Note: Your shell may interpret some punctuation, e.g. '<' and '>' as stream
 redirects. Either enclose the query in quotation marks, escape the problematic
@@ -54,17 +59,17 @@ characters or use the equivalent text operators, e.g. 'lt' for '<'.
 
 Examples:
 
-    $ tmsu files music mp3                # files with both 'music' and 'mp3'
-    $ tmsu files music and mp3            # same query but with explicit 'and'
+    $ tmsu files music mp3              # files with both 'music' and 'mp3'
+    $ tmsu files music and mp3          # same query but with explicit 'and'
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
 
-    $ tmsu files year = 2014              # tagged 'year' with a value '2014'
-    $ tmsu files "year < 2014"            # tagged 'year' with values under '2014'
-    $ tmsu files year                     # tagged 'year' (any or no value)
+    $ tmsu files year = 2014            # tagged 'year' with a value '2014'
+    $ tmsu files "year < 2014"          # tagged 'year' with values under '2014'
+    $ tmsu files year                   # tagged 'year' (any or no value)
 
-    $ tmsu files --top music              # don't list individual files if directory is tagged
-    $ tmsu files --path=/home/bob music   # tagged 'music' under /home/bob`,
+    $ tmsu files --top music            # don't list individual files if directory is tagged
+    $ tmsu files --path=/home/bob music # tagged 'music' under /home/bob`,
 	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
 		{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
@@ -73,33 +78,43 @@ Examples:
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
-		{"--untagged", "-u", "combined with --path, lists untagged files under PATH", false, ""},
+		{"--untagged", "-u", "include untagged files in negative queries", false, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""}},
 	Exec: filesExec,
 }
 
 func filesExec(options Options, args []string) error {
-	absPath := ""
-	if options.HasOption("--path") {
-		pth := options.Get("--path").Argument
-
-		var err error
-		absPath, err = filepath.Abs(pth)
-		if err != nil {
-			fmt.Println("could not get absolute path of '%v': %v'", pth, err)
-		}
-	}
-
+	all := options.HasOption("--all")
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	topOnly := options.HasOption("--top")
 	leafOnly := options.HasOption("--leaf")
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
+	hasPath := options.HasOption("--path")
 	untagged := options.HasOption("--untagged")
 	explicitOnly := options.HasOption("--explicit")
 
-	if options.HasOption("--all") {
+	if untagged && !hasPath {
+		fmt.Errorf("--untagged must be combined with --path")
+	}
+
+	if untagged && all {
+		fmt.Errorf("--untagged cannot be combined with --all")
+	}
+
+	absPath := ""
+	if hasPath {
+		relPath := options.Get("--path").Argument
+
+		var err error
+		absPath, err = filepath.Abs(relPath)
+		if err != nil {
+			fmt.Println("could not get absolute path of '%v': %v'", relPath, err)
+		}
+	}
+
+	if all {
 		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 	}
 

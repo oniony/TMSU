@@ -19,9 +19,6 @@ package cli
 
 import (
 	"errors"
-	"os"
-	"syscall"
-	"unsafe"
 )
 
 var errBlank = errors.New("")
@@ -29,19 +26,4 @@ var errBlank = errors.New("")
 type TagValuePair struct {
 	TagId   uint
 	ValueId uint
-}
-
-func terminalWidth() int {
-	var s winsize
-
-	_, _, _ = syscall.Syscall(syscall.SYS_IOCTL, os.Stdout.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&s)))
-
-	return int(s.cols)
-}
-
-type winsize struct {
-	rows     uint16
-	cols     uint16
-	pxWidth  uint16
-	pxHeight uint16
 }

@@ -23,35 +23,6 @@ import (
 	"tmsu/storage/database"
 )
 
-type Command struct {
-	Name        string
-	Synopsis    string
-	Description string
-	Options     Options
-	Exec        func(options Options, args []string) error
-}
-
-var commands = map[string]*Command{
-	"copy":    &CopyCommand,
-	"delete":  &DeleteCommand,
-	"dupes":   &DupesCommand,
-	"files":   &FilesCommand,
-	"help":    &HelpCommand,
-	"imply":   &ImplyCommand,
-	"merge":   &MergeCommand,
-	"mount":   &MountCommand,
-	"rename":  &RenameCommand,
-	"repair":  &RepairCommand,
-	"stats":   &StatsCommand,
-	"status":  &StatusCommand,
-	"tag":     &TagCommand,
-	"tags":    &TagsCommand,
-	"unmount": &UnmountCommand,
-	"untag":   &UntagCommand,
-	"values":  &ValuesCommand,
-	"version": &VersionCommand,
-	"vfs":     &VfsCommand}
-
 var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", false, ""},
 	Option{"--help", "-h", "show help and exit", false, ""},
 	Option{"--version", "-V", "show version information and exit", false, ""},

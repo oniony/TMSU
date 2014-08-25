@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"tmsu/cli/ansi"
+	"tmsu/cli/terminal"
 )
 
 var HelpCommand = Command{
@@ -107,7 +108,7 @@ func listCommands() {
 
 	sort.Sort(commandNames)
 
-	renderColumns(commandNames, terminalWidth())
+	renderColumns(commandNames, terminal.Width())
 }
 
 func describeCommand(commandName string) {

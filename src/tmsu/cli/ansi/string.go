@@ -40,10 +40,6 @@ func Length(item String) int {
 	return len(formatting.ReplaceAllLiteralString(string(item), ""))
 }
 
-func Sort(items Strings) {
-	//TODO
-}
-
 func Plain(item String) string {
 	return formatting.ReplaceAllLiteralString(string(item), "")
 }

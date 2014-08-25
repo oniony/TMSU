@@ -24,6 +24,7 @@ import (
 	"sort"
 	"strconv"
 	"tmsu/cli/ansi"
+	"tmsu/cli/terminal"
 	"tmsu/common/log"
 	"tmsu/storage"
 )
@@ -70,17 +71,17 @@ func tagsExec(options Options, args []string) error {
 		when := options.Get("--color").Argument
 		switch when {
 		case "auto":
-			colour = terminalWidth() > 0
+			colour = terminal.Colour() && terminal.Width() > 0
 		case "":
 		case "always":
 			colour = true
 		case "never":
 			colour = false
 		default:
-			return fmt.Errorf("invalid argument '%v' for '--colour'", when)
+			return fmt.Errorf("invalid argument '%v' for '--color'", when)
 		}
 	} else {
-		colour = terminalWidth() > 0
+		colour = terminal.Colour() && terminal.Width() > 0
 	}
 
 	if options.HasOption("--all") {
@@ -120,7 +121,7 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 		if onePerLine {
 			renderSingleColumn(tagNames, 0)
 		} else {
-			renderColumns(tagNames, terminalWidth())
+			renderColumns(tagNames, terminal.Width())
 		}
 	}
 
@@ -187,7 +188,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		if onePerLine {
 			renderSingleColumn(tagNames, 0)
 		} else {
-			renderColumns(tagNames, terminalWidth())
+			renderColumns(tagNames, terminal.Width())
 		}
 	}
 

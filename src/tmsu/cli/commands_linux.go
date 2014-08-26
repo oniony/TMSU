@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package cli
 
-init() {
+func init() {
 	commands["mount"] = &MountCommand
 	commands["unmount"] = &UnmountCommand
 	commands["vfs"] = &VfsCommand

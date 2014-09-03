@@ -140,6 +140,7 @@ v0.5.0 (in development)
   * Added --colour option to the 'tags' command to highlight implied tags.
   * 'tag' command will, by default, no longer explicitly apply tags that are
     already implied unless the new --explicit option is specified.
+  * Rudimentary Microsoft Windows support (no virtual filesystem yet).
 
 v0.4.2
 ------

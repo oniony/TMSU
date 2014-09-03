@@ -93,6 +93,10 @@ func summary() {
 			fmt.Printf("  %v: %v\n", option.ShortName, option.Description)
 		}
 	}
+
+	fmt.Println()
+	fmt.Println("Specify command name for detailed help on a particular command")
+	fmt.Println("E.g. tmsu help files")
 }
 
 func listCommands() {

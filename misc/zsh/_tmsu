@@ -112,12 +112,13 @@ _tmsu_tags_with_values() {
 }
 
 _tmsu_query() {
-    if [[ ! $words[$#words-1] =~ '--' && $words[$#words-1] =~ '=|!=|<|>|<=|>=' ]]
+    if [[ $words[$#words-1] =~ '^(=|!=|<|>|<=|>=|eq|ne|lt|gt|le|ge)$' ]]
     then
         typeset -a value_list
         local line
 
         local tagName=$words[$#words-2]
+
         _call_program tmsu tmsu $db values $tagName | \
         while read -A line
         do

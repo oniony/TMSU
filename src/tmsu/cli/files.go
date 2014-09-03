@@ -38,24 +38,17 @@ var FilesCommand = Command{
 
 Lists the files in the database that match the QUERY specified.
 
-QUERY may contain tag names to match, logical operators, comparison operators
-and parentheses:
-
-  * Logical operators: and, or, not
-  * Comparison operators: ==, !=, <,  >,  <=, >=
-                          eq, ne, lt, gt, le, ge
-
-The 'and' operator may be omitted for brevity, e.g. 'big red bus' is
-interpretted as 'big and red and bus'.
+QUERY may contain tag names to match, operators and parentheses. Operators
+are: and or not == != < > <= >=.
 
 Queries are run against the database so the results may not reflect the current
 state of the filesystem. For negative queries (e.g. 'not photo') that specify a
 path with --path it is possible to include untagged files from the filesystem
 using the --untagged option.
 
-Note: Your shell may interpret some punctuation, e.g. '<' and '>' as stream
-redirects. Either enclose the query in quotation marks, escape the problematic
-characters or use the equivalent text operators, e.g. 'lt' for '<'.
+Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.
+Either enclose the query in quotation marks, escape the problematic characters
+or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.
 
 Examples:
 
@@ -64,8 +57,9 @@ Examples:
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
 
-    $ tmsu files year = 2014            # tagged 'year' with a value '2014'
+    $ tmsu files year == 2014           # tagged 'year' with a value '2014'
     $ tmsu files "year < 2014"          # tagged 'year' with values under '2014'
+    $ tmsu files year lt 2014           # same query but using textual operator
     $ tmsu files year                   # tagged 'year' (any or no value)
 
     $ tmsu files --top music            # don't list individual files if directory is tagged

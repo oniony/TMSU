@@ -93,7 +93,7 @@ func (scanner *Scanner) LookAhead() (Token, error) {
 	if scanner.lookAhead == nil {
 		token, err := scanner.readToken()
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("could not look ahead: %v", err)
 		}
 		scanner.lookAhead = token
 	}
@@ -109,7 +109,7 @@ func (scanner *Scanner) Next() (Token, error) {
 
 	lookAhead, err := scanner.readToken()
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("could not read next token: %v", err)
 	}
 	scanner.lookAhead = lookAhead
 
@@ -212,7 +212,7 @@ func (scanner *Scanner) readString(initialRune rune) (string, error) {
 		}
 
 		switch {
-		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='), r == rune('<'), r == rune('>'):
+		case unicode.IsSpace(r), r == rune(')'), r == rune('('), r == rune('='), r == rune('!'), r == rune('<'), r == rune('>'):
 			scanner.stream.UnreadRune()
 			return text, nil
 		case unicode.IsOneOf(symbolChars, r):

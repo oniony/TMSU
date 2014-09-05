@@ -163,7 +163,7 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 
 	expression, err := query.Parse(queryText)
 	if err != nil {
-		return err
+		return fmt.Errorf("could not parse query: %v", err)
 	}
 
 	log.Info(2, "checking tag names")

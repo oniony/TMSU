@@ -136,11 +136,16 @@ Release Notes
 v0.5.0 (in development)
 ------
 
+  *Note: This release prohibts the inclusion of the exclamation mark (!)
+  character within tag and value names. Please use 'tmsu rename' to change the
+  names of any existing tags that include this character.*
+
   * Added --untagged option to 'status' command for showing untagged files only.
   * Added --colour option to the 'tags' command to highlight implied tags.
   * 'tag' command will, by default, no longer explicitly apply tags that are
     already implied unless the new --explicit option is specified.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
+  * Disallowed use of '!' within tag and value names.
 
 v0.4.2
 ------

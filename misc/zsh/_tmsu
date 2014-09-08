@@ -112,7 +112,7 @@ _tmsu_tags_with_values() {
 }
 
 _tmsu_query() {
-    if [[ $words[$#words-1] =~ '^(=|!=|<|>|<=|>=|eq|ne|lt|gt|le|ge)$' ]]
+    if [[ $words[$#words-1] =~ '^(=|==|!=|<|>|<=|>=|eq|ne|lt|gt|le|ge)$' ]]
     then
         typeset -a value_list
         local line

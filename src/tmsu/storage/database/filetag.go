@@ -19,7 +19,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"tmsu/entities"
 )
 
@@ -192,8 +191,11 @@ func (db *Database) DeleteFileTag(fileId, tagId, valueId uint) error {
 	if err != nil {
 		return err
 	}
+	if rowsAffected == 0 {
+		return NoSuchFileTagError{fileId, tagId, valueId}
+	}
 	if rowsAffected > 1 {
-		return errors.New("expected only one row to be affected.")
+		panic("expected only one row to be affected.")
 	}
 
 	return nil

@@ -19,7 +19,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"tmsu/entities"
 )
 
@@ -68,7 +67,7 @@ func (db *Database) InsertQuery(text string) (*entities.Query, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.Query{text}, nil
@@ -89,16 +88,16 @@ func (db *Database) DeleteQuery(text string) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		return errors.New("no such query '" + text + "'.")
+		return NoSuchQueryError{text}
 	}
 	if rowsAffected != 1 {
-		return errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return nil
 }
 
-//
+// unexported
 
 func readQuery(rows *sql.Rows) (*entities.Query, error) {
 	if !rows.Next() {

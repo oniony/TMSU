@@ -434,7 +434,7 @@ func (vfs FuseVfs) Utimens(name string, Atime *time.Time, Mtime *time.Time, cont
 	return fuse.ENOSYS
 }
 
-// non-exported
+// unexported
 
 func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))

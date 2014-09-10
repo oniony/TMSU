@@ -21,6 +21,15 @@ import (
 	"fmt"
 )
 
+type AbsolutePathResolutionError struct {
+	Path   string
+	Reason error
+}
+
+func (err AbsolutePathResolutionError) Error() string {
+	return fmt.Sprintf("Cannot resolve absolute path '%v': %v", err.Path, err.Reason)
+}
+
 type FileTagDoesNotExist struct {
 	FileId  uint
 	TagId   uint

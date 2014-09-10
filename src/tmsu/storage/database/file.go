@@ -19,7 +19,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"path/filepath"
 	"strconv"
 	"time"
@@ -260,7 +259,7 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.File{uint(id), directory, name, fingerprint, modTime, size, isDir}, nil
@@ -285,7 +284,7 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.File{uint(fileId), directory, name, fingerprint, modTime, size, isDir}, nil
@@ -293,14 +292,6 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 
 // Removes a file from the database.
 func (db *Database) DeleteFile(fileId uint) error {
-	file, err := db.File(fileId)
-	if err != nil {
-		return err
-	}
-	if file == nil {
-		return errors.New("no such file '" + strconv.Itoa(int(fileId)) + "'.")
-	}
-
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
@@ -313,8 +304,11 @@ func (db *Database) DeleteFile(fileId uint) error {
 	if err != nil {
 		return err
 	}
+	if rowsAffected == 0 {
+		return NoSuchFileError{fileId}
+	}
 	if rowsAffected > 1 {
-		return errors.New("expected only one row to be affected.")
+		panic("expected only one row to be affected.")
 	}
 
 	return nil

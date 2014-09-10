@@ -19,7 +19,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 	"tmsu/entities"
 )
@@ -160,7 +159,7 @@ func (db *Database) InsertTag(name string) (*entities.Tag, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.Tag{uint(id), name}, nil
@@ -182,7 +181,7 @@ func (db *Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.Tag{tagId, name}, nil
@@ -203,7 +202,7 @@ func (db *Database) DeleteTag(tagId uint) error {
 		return err
 	}
 	if rowsAffected > 1 {
-		return errors.New("expected only one row to be affected.")
+		panic("expected only one row to be affected.")
 	}
 
 	return nil

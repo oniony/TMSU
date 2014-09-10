@@ -45,7 +45,7 @@ func (storage *Storage) File(id uint) (*entities.File, error) {
 func (storage *Storage) FileByPath(path string) (*entities.File, error) {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
-		return nil, fmt.Errorf("%v: could not retrieve absolute path: %v", path, err)
+		return nil, AbsolutePathResolutionError{path, err}
 	}
 
 	return storage.Db.FileByPath(absPath)

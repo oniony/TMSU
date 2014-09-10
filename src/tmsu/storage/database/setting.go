@@ -51,7 +51,7 @@ func (db *Database) Setting(name string) (*entities.Setting, error) {
 	return readSetting(rows)
 }
 
-//
+// unexported
 
 func readSetting(rows *sql.Rows) (*entities.Setting, error) {
 	if !rows.Next() {

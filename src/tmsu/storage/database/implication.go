@@ -124,9 +124,21 @@ func (db Database) DeleteImplication(tagId, impliedTagId uint) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 AND implied_tag_id = ?2`
 
-	_, err := db.Exec(sql, tagId, impliedTagId)
+	result, err := db.Exec(sql, tagId, impliedTagId)
 	if err != nil {
 		return err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if rowsAffected == 0 {
+		return NoSuchImplicationError{tagId, impliedTagId}
+	}
+	if rowsAffected > 1 {
+		panic("expected exactly one row to be affected")
 	}
 
 	return nil

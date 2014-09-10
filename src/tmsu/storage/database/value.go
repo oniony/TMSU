@@ -19,7 +19,6 @@ package database
 
 import (
 	"database/sql"
-	"errors"
 	"strings"
 	"tmsu/entities"
 )
@@ -194,7 +193,7 @@ func (db *Database) InsertValue(name string) (*entities.Value, error) {
 		return nil, err
 	}
 	if rowsAffected != 1 {
-		return nil, errors.New("expected exactly one row to be affected.")
+		panic("expected exactly one row to be affected.")
 	}
 
 	return &entities.Value{uint(id), name}, nil
@@ -214,8 +213,11 @@ func (db *Database) DeleteValue(valueId uint) error {
 	if err != nil {
 		return err
 	}
+	if rowsAffected == 0 {
+		return NoSuchValueError{valueId}
+	}
 	if rowsAffected > 1 {
-		return errors.New("expected only one row to be affected.")
+		panic("expected only one row to be affected.")
 	}
 
 	return nil

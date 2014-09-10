@@ -178,7 +178,7 @@ func deleteImplications(store *storage.Storage, tagName string, impliedTagNames 
 		log.Infof(2, "removing tag implication of '%v' to '%v'.", tagName, impliedTagName)
 
 		if err = store.RemoveImplication(tag.Id, impliedTag.Id); err != nil {
-			return fmt.Errorf("could not add delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
+			return fmt.Errorf("could not delete tag implication of '%v' to '%v': %v", tagName, impliedTagName, err)
 		}
 	}
 

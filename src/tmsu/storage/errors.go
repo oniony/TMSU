@@ -19,6 +19,7 @@ package storage
 
 import (
 	"fmt"
+	"tmsu/entities"
 )
 
 type AbsolutePathResolutionError struct {
@@ -31,9 +32,9 @@ func (err AbsolutePathResolutionError) Error() string {
 }
 
 type FileTagDoesNotExist struct {
-	FileId  uint
-	TagId   uint
-	ValueId uint
+	FileId  entities.FileId
+	TagId   entities.TagId
+	ValueId entities.ValueId
 }
 
 func (err FileTagDoesNotExist) Error() string {

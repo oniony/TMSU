@@ -52,7 +52,7 @@ func (db *Database) Values() (entities.Values, error) {
 }
 
 // Retrieves a specific value.
-func (db *Database) Value(id uint) (*entities.Value, error) {
+func (db *Database) Value(id entities.ValueId) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id = ?`
@@ -67,7 +67,7 @@ func (db *Database) Value(id uint) (*entities.Value, error) {
 }
 
 // Retrieves a specific set of values.
-func (db *Database) ValuesByIds(ids []uint) (entities.Values, error) {
+func (db *Database) ValuesByIds(ids entities.ValueIds) (entities.Values, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id IN (?`
@@ -155,7 +155,7 @@ func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
 }
 
 // Retrieves the set of values for the specified tag.
-func (db *Database) ValuesByTagId(tagId uint) (entities.Values, error) {
+func (db *Database) ValuesByTagId(tagId entities.TagId) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             WHERE id IN (
@@ -196,11 +196,11 @@ func (db *Database) InsertValue(name string) (*entities.Value, error) {
 		panic("expected exactly one row to be affected.")
 	}
 
-	return &entities.Value{uint(id), name}, nil
+	return &entities.Value{entities.ValueId(id), name}, nil
 }
 
 // Deletes a value.
-func (db *Database) DeleteValue(valueId uint) error {
+func (db *Database) DeleteValue(valueId entities.ValueId) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
@@ -247,7 +247,7 @@ func readValue(rows *sql.Rows) (*entities.Value, error) {
 		return nil, rows.Err()
 	}
 
-	var id uint
+	var id entities.ValueId
 	var name string
 	err := rows.Scan(&id, &name)
 	if err != nil {

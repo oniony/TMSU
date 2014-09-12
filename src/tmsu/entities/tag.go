@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package entities
 
+type TagId uint
+type TagIds []TagId
+
 type Tag struct {
-	Id   uint
+	Id   TagId
 	Name string
 }
 
@@ -67,7 +70,7 @@ func (tags Tags) Any(predicate func(*Tag) bool) bool {
 }
 
 type TagFileCount struct {
-	Id        uint
+	Id        TagId
 	Name      string
 	FileCount uint
 }

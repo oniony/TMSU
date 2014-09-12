@@ -18,16 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package entities
 
 type FileTag struct {
-	FileId   uint
-	TagId    uint
-	ValueId  uint
+	FileId   FileId
+	TagId    TagId
+	ValueId  ValueId
 	Explicit bool
 	Implicit bool
 }
 
 type FileTags []*FileTag
 
-func (fileTags FileTags) Contains(tagId, valueId uint) bool {
+func (fileTags FileTags) Contains(tagId TagId, valueId ValueId) bool {
 	for _, fileTag := range fileTags {
 		if fileTag.TagId == tagId && fileTag.ValueId == valueId {
 			return true

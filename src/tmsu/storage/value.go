@@ -35,12 +35,12 @@ func (storage *Storage) Values() (entities.Values, error) {
 }
 
 // Retrieves a specific value.
-func (storage *Storage) Value(id uint) (*entities.Value, error) {
+func (storage *Storage) Value(id entities.ValueId) (*entities.Value, error) {
 	return storage.Db.Value(id)
 }
 
 // Retrieves a specific set of values.
-func (storage Storage) ValuesByIds(ids []uint) (entities.Values, error) {
+func (storage Storage) ValuesByIds(ids entities.ValueIds) (entities.Values, error) {
 	return storage.Db.ValuesByIds(ids)
 }
 
@@ -59,7 +59,7 @@ func (storage *Storage) ValueByName(name string) (*entities.Value, error) {
 }
 
 // Retrieves the set of values for the specified tag.
-func (storage *Storage) ValuesByTag(tagId uint) (entities.Values, error) {
+func (storage *Storage) ValuesByTag(tagId entities.TagId) (entities.Values, error) {
 	return storage.Db.ValuesByTagId(tagId)
 }
 
@@ -78,14 +78,14 @@ func (storage *Storage) AddValue(name string) (*entities.Value, error) {
 }
 
 // Deletes a value.
-func (storage *Storage) DeleteValue(valueId uint) error {
+func (storage *Storage) DeleteValue(valueId entities.ValueId) error {
 	//TODO delete file tags that use the value
 
 	return storage.Db.DeleteValue(valueId)
 }
 
 // Deletes the value if it is unused.
-func (storage *Storage) DeleteValueIfUnused(valueId uint) error {
+func (storage *Storage) DeleteValueIfUnused(valueId entities.ValueId) error {
 	if valueId == 0 {
 		return nil
 	}

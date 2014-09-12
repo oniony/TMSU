@@ -53,7 +53,7 @@ func (db *Database) Tags() (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (db *Database) Tag(id uint) (*entities.Tag, error) {
+func (db *Database) Tag(id entities.TagId) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
@@ -68,7 +68,7 @@ func (db *Database) Tag(id uint) (*entities.Tag, error) {
 }
 
 // Retrieves a specific set of tags.
-func (db *Database) TagsByIds(ids []uint) (entities.Tags, error) {
+func (db *Database) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id IN (?`
@@ -162,11 +162,11 @@ func (db *Database) InsertTag(name string) (*entities.Tag, error) {
 		panic("expected exactly one row to be affected.")
 	}
 
-	return &entities.Tag{uint(id), name}, nil
+	return &entities.Tag{entities.TagId(id), name}, nil
 }
 
 // Renames a tag.
-func (db *Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
+func (db *Database) RenameTag(tagId entities.TagId, name string) (*entities.Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
@@ -188,7 +188,7 @@ func (db *Database) RenameTag(tagId uint, name string) (*entities.Tag, error) {
 }
 
 // Deletes a tag.
-func (db *Database) DeleteTag(tagId uint) error {
+func (db *Database) DeleteTag(tagId entities.TagId) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
@@ -232,7 +232,7 @@ func (db *Database) TopTags(count uint) ([]entities.TagFileCount, error) {
 			return nil, rows.Err()
 		}
 
-		var tagId uint
+		var tagId entities.TagId
 		var name string
 		var count uint
 		err := rows.Scan(&tagId, &name, &count)
@@ -256,7 +256,7 @@ func readTag(rows *sql.Rows) (*entities.Tag, error) {
 		return nil, rows.Err()
 	}
 
-	var id uint
+	var id entities.TagId
 	var name string
 	err := rows.Scan(&id, &name)
 	if err != nil {

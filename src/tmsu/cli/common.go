@@ -19,11 +19,12 @@ package cli
 
 import (
 	"errors"
+	"tmsu/entities"
 )
 
 var errBlank = errors.New("")
 
 type TagValuePair struct {
-	TagId   uint
-	ValueId uint
+	TagId   entities.TagId
+	ValueId entities.ValueId
 }

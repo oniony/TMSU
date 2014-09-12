@@ -37,7 +37,7 @@ func (storage *Storage) Files() (entities.Files, error) {
 }
 
 // Retrieves a specific file.
-func (storage *Storage) File(id uint) (*entities.File, error) {
+func (storage *Storage) File(id entities.FileId) (*entities.File, error) {
 	return storage.Db.File(id)
 }
 
@@ -154,17 +154,17 @@ func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint
 }
 
 // Updates a file in the database.
-func (storage *Storage) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func (storage *Storage) UpdateFile(fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size, isDir)
 }
 
 // Deletes a file from the database.
-func (storage *Storage) DeleteFile(fileId uint) error {
+func (storage *Storage) DeleteFile(fileId entities.FileId) error {
 	return storage.Db.DeleteFile(fileId)
 }
 
 // Deletes a file if it is untagged
-func (storage *Storage) DeleteFileIfUntagged(fileId uint) error {
+func (storage *Storage) DeleteFileIfUntagged(fileId entities.FileId) error {
 	count, err := storage.FileTagCountByFileId(fileId, true)
 	if err != nil {
 		return err

@@ -27,10 +27,10 @@ func (storage *Storage) Implications() (entities.Implications, error) {
 }
 
 // Retrieves the set of implications for the specified tags.
-func (storage *Storage) ImplicationsForTags(tagIds ...uint) (entities.Implications, error) {
+func (storage *Storage) ImplicationsForTags(tagIds ...entities.TagId) (entities.Implications, error) {
 	resultantImplications := make(entities.Implications, 0)
 
-	impliedTagIds := make([]uint, len(tagIds))
+	impliedTagIds := make(entities.TagIds, len(tagIds))
 	copy(impliedTagIds, tagIds)
 
 	for len(impliedTagIds) > 0 {
@@ -39,7 +39,7 @@ func (storage *Storage) ImplicationsForTags(tagIds ...uint) (entities.Implicatio
 			return nil, err
 		}
 
-		impliedTagIds = make([]uint, 0)
+		impliedTagIds = make(entities.TagIds, 0)
 		for _, implication := range implications {
 			if !containsImplication(resultantImplications, implication) {
 				resultantImplications = append(resultantImplications, implication)
@@ -52,22 +52,22 @@ func (storage *Storage) ImplicationsForTags(tagIds ...uint) (entities.Implicatio
 }
 
 // Adds the specified implication.
-func (storage Storage) AddImplication(tagId, impliedTagId uint) error {
+func (storage Storage) AddImplication(tagId, impliedTagId entities.TagId) error {
 	return storage.Db.AddImplication(tagId, impliedTagId)
 }
 
 // Updates implications featuring the specified tag.
-func (storage Storage) UpdateImplicationsForTagId(tagId, impliedTagId uint) error {
+func (storage Storage) UpdateImplicationsForTagId(tagId, impliedTagId entities.TagId) error {
 	return storage.Db.UpdateImplicationsForTagId(tagId, impliedTagId)
 }
 
 // Removes the specified implication
-func (storage Storage) RemoveImplication(tagId, impliedTagId uint) error {
+func (storage Storage) RemoveImplication(tagId, impliedTagId entities.TagId) error {
 	return storage.Db.DeleteImplication(tagId, impliedTagId)
 }
 
 // Removes implications featuring the specified tag.
-func (storage Storage) RemoveImplicationsForTagId(tagId uint) error {
+func (storage Storage) RemoveImplicationsForTagId(tagId entities.TagId) error {
 	return storage.Db.DeleteImplicationsForTagId(tagId)
 }
 

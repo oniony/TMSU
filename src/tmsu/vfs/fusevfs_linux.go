@@ -440,7 +440,7 @@ func (vfs FuseVfs) splitPath(path string) []string {
 	return strings.Split(path, string(filepath.Separator))
 }
 
-func (vfs FuseVfs) parseFileId(name string) uint {
+func (vfs FuseVfs) parseFileId(name string) entities.FileId {
 	parts := strings.Split(name, ".")
 	count := len(parts)
 
@@ -448,15 +448,15 @@ func (vfs FuseVfs) parseFileId(name string) uint {
 		return 0
 	}
 
-	id, err := atoui(parts[count-2])
+	id, err := asciiToFileId(parts[count-2])
 	if err != nil {
-		id, err = atoui(parts[count-1])
+		id, err = asciiToFileId(parts[count-1])
 		if err != nil {
 			return 0
 		}
 	}
 
-	return id
+	return entities.FileId(id)
 }
 
 func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
@@ -613,7 +613,7 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
-func (vfs FuseVfs) getFileEntryAttr(fileId uint) (*fuse.Attr, fuse.Status) {
+func (vfs FuseVfs) getFileEntryAttr(fileId entities.FileId) (*fuse.Attr, fuse.Status) {
 	file, err := vfs.store.File(fileId)
 	if err != nil {
 		log.Fatalf("could not retrieve file #%v: %v", fileId, err)
@@ -740,7 +740,7 @@ func (vfs FuseVfs) getLinkName(file *entities.File) string {
 	extension := filepath.Ext(file.Path())
 	fileName := filepath.Base(file.Path())
 	linkName := fileName[0 : len(fileName)-len(extension)]
-	suffix := "." + uitoa(file.Id) + extension
+	suffix := "." + fileIdToAscii(file.Id) + extension
 
 	if len(linkName)+len(suffix) > 255 {
 		linkName = linkName[0 : 255-len(suffix)]
@@ -749,8 +749,8 @@ func (vfs FuseVfs) getLinkName(file *entities.File) string {
 	return linkName + suffix
 }
 
-func (vfs FuseVfs) tagNamesToIds(tagNames []string) ([]uint, error) {
-	tagIds := make([]uint, len(tagNames))
+func (vfs FuseVfs) tagNamesToIds(tagNames []string) (entities.TagIds, error) {
+	tagIds := make(entities.TagIds, len(tagNames))
 
 	for index, tagName := range tagNames {
 		tag, err := vfs.store.TagByName(tagName)
@@ -784,7 +784,7 @@ func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) (
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
 
-		valueIds := make([]uint, len(fileTags))
+		valueIds := make(entities.ValueIds, len(fileTags))
 		for index, fileTag := range fileTags {
 			if fileTag.TagId == tag.Id {
 				valueIds[index] = fileTag.ValueId
@@ -813,7 +813,7 @@ func (vfs FuseVfs) tagNamesForFiles(files entities.Files) ([]string, error) {
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
 
-		tagIds := make([]uint, len(fileTags))
+		tagIds := make(entities.TagIds, len(fileTags))
 		for index, fileTag := range fileTags {
 			tagIds[index] = fileTag.TagId
 		}
@@ -855,13 +855,13 @@ func pathToExpression(path []string) query.Expression {
 	return expression
 }
 
-func uitoa(ui uint) string {
-	return strconv.FormatUint(uint64(ui), 10)
+func fileIdToAscii(fileId entities.FileId) string {
+	return strconv.FormatUint(uint64(fileId), 10)
 }
 
-func atoui(str string) (uint, error) {
+func asciiToFileId(str string) (entities.FileId, error) {
 	ui64, err := strconv.ParseUint(str, 10, 0)
-	return uint(ui64), err
+	return entities.FileId(ui64), err
 }
 
 func containsTag(tags entities.Tags, tagName string) bool {

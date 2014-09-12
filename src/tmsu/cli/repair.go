@@ -190,7 +190,7 @@ func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing,
 
 type fileInfoMap map[string]os.FileInfo
 type fileIdAndInfoMap map[string]struct {
-	fileId uint
+	fileId entities.FileId
 	stat   os.FileInfo
 }
 type databaseFileMap map[string]entities.File
@@ -206,7 +206,7 @@ func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (unmodified
 	for path, stat := range fsPaths {
 		if dbFile, isTagged := dbPaths[path]; isTagged {
 			dbFileAndStat := struct {
-				fileId uint
+				fileId entities.FileId
 				stat   os.FileInfo
 			}{dbFile.Id, stat}
 

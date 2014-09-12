@@ -26,6 +26,7 @@ import (
 	"tmsu/cli/ansi"
 	"tmsu/cli/terminal"
 	"tmsu/common/log"
+	"tmsu/entities"
 	"tmsu/storage"
 )
 
@@ -297,7 +298,7 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 	return nil
 }
 
-func tagNamesForFile(store *storage.Storage, fileId uint, explicitOnly, colour bool) (ansi.Strings, error) {
+func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnly, colour bool) (ansi.Strings, error) {
 	fileTags, err := store.FileTagsByFileId(fileId, explicitOnly)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)

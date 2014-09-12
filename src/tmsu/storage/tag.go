@@ -35,12 +35,12 @@ func (storage *Storage) Tags() (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (storage Storage) Tag(id uint) (*entities.Tag, error) {
+func (storage Storage) Tag(id entities.TagId) (*entities.Tag, error) {
 	return storage.Db.Tag(id)
 }
 
 // Retrieves a specific set of tags.
-func (storage Storage) TagsByIds(ids []uint) (entities.Tags, error) {
+func (storage Storage) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
 	return storage.Db.TagsByIds(ids)
 }
 
@@ -64,7 +64,7 @@ func (storage *Storage) AddTag(name string) (*entities.Tag, error) {
 }
 
 // Renames a tag.
-func (storage Storage) RenameTag(tagId uint, name string) (*entities.Tag, error) {
+func (storage Storage) RenameTag(tagId entities.TagId, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (storage Storage) RenameTag(tagId uint, name string) (*entities.Tag, error)
 }
 
 // Copies a tag.
-func (storage Storage) CopyTag(sourceTagId uint, name string) (*entities.Tag, error) {
+func (storage Storage) CopyTag(sourceTagId entities.TagId, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
@@ -92,7 +92,7 @@ func (storage Storage) CopyTag(sourceTagId uint, name string) (*entities.Tag, er
 }
 
 // Deletes a tag.
-func (storage Storage) DeleteTag(tagId uint) error {
+func (storage Storage) DeleteTag(tagId entities.TagId) error {
 	err := storage.DeleteFileTagsByTagId(tagId)
 	if err != nil {
 		return err

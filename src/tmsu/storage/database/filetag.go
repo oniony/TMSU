@@ -23,7 +23,7 @@ import (
 )
 
 // Determines whether the specified file has the specified tag applied.
-func (db *Database) FileTagExists(fileId, tagId, value_id uint) (bool, error) {
+func (db *Database) FileTagExists(fileId entities.FileId, tagId entities.TagId, value_id entities.ValueId) (bool, error) {
 	sql := `SELECT count(1)
             FROM file_tag
             WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
@@ -69,7 +69,7 @@ func (db *Database) FileTags() (entities.FileTags, error) {
 }
 
 // Retrieves the count of file tags for the specified file.
-func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
+func (db *Database) FileTagCountByFileId(fileId entities.FileId) (uint, error) {
 	var sql string
 
 	sql = `SELECT count(1)
@@ -86,7 +86,7 @@ func (db *Database) FileTagCountByFileId(fileId uint) (uint, error) {
 }
 
 // Retrieves the count of file tags for the specified tag.
-func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
+func (db *Database) FileTagCountByTagId(tagId entities.TagId) (uint, error) {
 	var sql string
 
 	sql = `SELECT count(1)
@@ -103,7 +103,7 @@ func (db *Database) FileTagCountByTagId(tagId uint) (uint, error) {
 }
 
 // Retrieves the set of file tags with the specified tag ID.
-func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
+func (db *Database) FileTagsByTagId(tagId entities.TagId) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id, value_id
 	        FROM file_tag
 	        WHERE tag_id = ?1`
@@ -118,7 +118,7 @@ func (db *Database) FileTagsByTagId(tagId uint) (entities.FileTags, error) {
 }
 
 // Retrieves the count of file tags for the specified value.
-func (db *Database) FileTagCountByValueId(valueId uint) (uint, error) {
+func (db *Database) FileTagCountByValueId(valueId entities.ValueId) (uint, error) {
 	var sql string
 
 	sql = `SELECT count(1)
@@ -135,7 +135,7 @@ func (db *Database) FileTagCountByValueId(valueId uint) (uint, error) {
 }
 
 // Retrieves the set of file tags with the specified value ID.
-func (db *Database) FileTagsByValueId(valueId uint) (entities.FileTags, error) {
+func (db *Database) FileTagsByValueId(valueId entities.ValueId) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id, value_id
 	        FROM file_tag
 	        WHERE value_id = ?1`
@@ -150,7 +150,7 @@ func (db *Database) FileTagsByValueId(valueId uint) (entities.FileTags, error) {
 }
 
 // Retrieves the set of file tags for the specified file.
-func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
+func (db *Database) FileTagsByFileId(fileId entities.FileId) (entities.FileTags, error) {
 	sql := `SELECT file_id, tag_id, value_id
             FROM file_tag
             WHERE file_id = ?1`
@@ -165,7 +165,7 @@ func (db *Database) FileTagsByFileId(fileId uint) (entities.FileTags, error) {
 }
 
 // Adds a file tag.
-func (db *Database) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, error) {
+func (db *Database) AddFileTag(fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) (*entities.FileTag, error) {
 	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id, value_id)
             VALUES (?1, ?2, ?3)`
 
@@ -178,7 +178,7 @@ func (db *Database) AddFileTag(fileId, tagId, valueId uint) (*entities.FileTag, 
 }
 
 // Removes a file tag.
-func (db *Database) DeleteFileTag(fileId, tagId, valueId uint) error {
+func (db *Database) DeleteFileTag(fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) error {
 	sql := `DELETE FROM file_tag
 	        WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
@@ -202,7 +202,7 @@ func (db *Database) DeleteFileTag(fileId, tagId, valueId uint) error {
 }
 
 // Removes all of the file tags for the specified file.
-func (db *Database) DeleteFileTagsByFileId(fileId uint) error {
+func (db *Database) DeleteFileTagsByFileId(fileId entities.FileId) error {
 	sql := `DELETE FROM file_tag
 	        WHERE file_id = ?`
 
@@ -215,7 +215,7 @@ func (db *Database) DeleteFileTagsByFileId(fileId uint) error {
 }
 
 // Removes all of the file tags for the specified tag.
-func (db *Database) DeleteFileTagsByTagId(tagId uint) error {
+func (db *Database) DeleteFileTagsByTagId(tagId entities.TagId) error {
 	sql := `DELETE FROM file_tag
 	        WHERE tag_id = ?`
 
@@ -228,7 +228,7 @@ func (db *Database) DeleteFileTagsByTagId(tagId uint) error {
 }
 
 // Copies file tags from one tag to another.
-func (db *Database) CopyFileTags(sourceTagId uint, destTagId uint) error {
+func (db *Database) CopyFileTags(sourceTagId entities.TagId, destTagId entities.TagId) error {
 	sql := `INSERT INTO file_tag (file_id, tag_id, value_id)
             SELECT file_id, ?2, value_id
             FROM file_tag
@@ -250,13 +250,15 @@ func readFileTags(rows *sql.Rows, fileTags entities.FileTags) (entities.FileTags
 			return nil, rows.Err()
 		}
 
-		var fileId, tagId, valueId uint
+		var fileId entities.FileId
+		var tagId entities.TagId
+		var valueId entities.ValueId
 		err := rows.Scan(&fileId, &tagId, &valueId)
 		if err != nil {
 			return nil, err
 		}
 
-		fileTags = append(fileTags, &entities.FileTag{fileId, tagId, valueId, true, false})
+		fileTags = append(fileTags, &entities.FileTag{entities.FileId(fileId), tagId, valueId, true, false})
 	}
 
 	return fileTags, nil

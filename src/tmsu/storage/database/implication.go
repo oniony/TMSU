@@ -45,7 +45,7 @@ func (db *Database) Implications() (entities.Implications, error) {
 }
 
 // Retrieves the set of tags implied by the specified tags.
-func (db *Database) ImplicationsForTags(tagIds []uint) (entities.Implications, error) {
+func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id IN (?`
@@ -73,7 +73,7 @@ func (db *Database) ImplicationsForTags(tagIds []uint) (entities.Implications, e
 }
 
 // Updates implications featuring the specified tag.
-func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId uint) error {
+func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId entities.TagId) error {
 	// prevent a tag implying itself
 
 	sql := `DELETE from implication
@@ -107,7 +107,7 @@ func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId uint) 
 }
 
 // Adds the specified implications
-func (db Database) AddImplication(tagId, impliedTagId uint) error {
+func (db Database) AddImplication(tagId, impliedTagId entities.TagId) error {
 	sql := `INSERT OR IGNORE INTO implication (tag_id, implied_tag_id)
 	        VALUES (?1, ?2)`
 
@@ -120,7 +120,7 @@ func (db Database) AddImplication(tagId, impliedTagId uint) error {
 }
 
 // Deletes the specified implications
-func (db Database) DeleteImplication(tagId, impliedTagId uint) error {
+func (db Database) DeleteImplication(tagId, impliedTagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 AND implied_tag_id = ?2`
 
@@ -145,7 +145,7 @@ func (db Database) DeleteImplication(tagId, impliedTagId uint) error {
 }
 
 // Deletes implications featuring the specified tag.
-func (db Database) DeleteImplicationsForTagId(tagId uint) error {
+func (db Database) DeleteImplicationsForTagId(tagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 OR implied_tag_id = ?1`
 
@@ -167,9 +167,9 @@ func readImplication(rows *sql.Rows) (*entities.Implication, error) {
 		return nil, rows.Err()
 	}
 
-	var implyingTagId uint
+	var implyingTagId entities.TagId
 	var implyingTagName string
-	var impliedTagId uint
+	var impliedTagId entities.TagId
 	var impliedTagName string
 	err := rows.Scan(&implyingTagId, &implyingTagName, &impliedTagId, &impliedTagName)
 	if err != nil {

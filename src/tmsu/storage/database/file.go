@@ -57,7 +57,7 @@ func (db *Database) Files() (entities.Files, error) {
 }
 
 // Retrieves a specific file.
-func (db *Database) File(id uint) (*entities.File, error) {
+func (db *Database) File(id entities.FileId) (*entities.File, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE id = ?`
@@ -205,7 +205,7 @@ func (db *Database) DuplicateFiles() ([]entities.Files, error) {
 			return nil, err
 		}
 
-		var fileId uint
+		var fileId entities.FileId
 		var directory, name, fp string
 		var modTime time.Time
 		var size int64
@@ -262,11 +262,11 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 		panic("expected exactly one row to be affected.")
 	}
 
-	return &entities.File{uint(id), directory, name, fingerprint, modTime, size, isDir}, nil
+	return &entities.File{entities.FileId(id), directory, name, fingerprint, modTime, size, isDir}, nil
 }
 
 // Updates a file in the database.
-func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func (db *Database) UpdateFile(fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -287,11 +287,11 @@ func (db *Database) UpdateFile(fileId uint, path string, fingerprint fingerprint
 		panic("expected exactly one row to be affected.")
 	}
 
-	return &entities.File{uint(fileId), directory, name, fingerprint, modTime, size, isDir}, nil
+	return &entities.File{entities.FileId(fileId), directory, name, fingerprint, modTime, size, isDir}, nil
 }
 
 // Removes a file from the database.
-func (db *Database) DeleteFile(fileId uint) error {
+func (db *Database) DeleteFile(fileId entities.FileId) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
@@ -338,7 +338,7 @@ func readFile(rows *sql.Rows) (*entities.File, error) {
 		return nil, rows.Err()
 	}
 
-	var fileId uint
+	var fileId entities.FileId
 	var directory, name, fp string
 	var modTime time.Time
 	var size int64

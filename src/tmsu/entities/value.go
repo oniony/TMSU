@@ -17,8 +17,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package entities
 
+type ValueId uint
+type ValueIds []ValueId
+
 type Value struct {
-	Id   uint
+	Id   ValueId
 	Name string
 }
 

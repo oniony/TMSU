@@ -467,7 +467,7 @@ func removeAppliedTagValuePairs(store *storage.Storage, tagValuePairs []TagValue
 
 	log.Infof(2, "%v: determining implied tags", file.Path())
 
-	tagIds := make([]uint, len(tagValuePairs))
+	tagIds := make(entities.TagIds, len(tagValuePairs))
 	for index, tagValuePair := range tagValuePairs {
 		tagIds[index] = tagValuePair.TagId
 	}

@@ -23,8 +23,11 @@ import (
 	"tmsu/common/fingerprint"
 )
 
+type FileId uint
+type FileIds []FileId
+
 type File struct {
-	Id          uint
+	Id          FileId
 	Directory   string
 	Name        string
 	Fingerprint fingerprint.Fingerprint
@@ -52,7 +55,7 @@ func (files Files) Where(predicate func(*File) bool) Files {
 }
 
 type FileTagCount struct {
-	FileId    uint
+	FileId    FileId
 	Directory string
 	Name      string
 	TagCount  uint

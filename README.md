@@ -146,6 +146,8 @@ v0.5.0 (in development)
     already implied (unless the new --explicit option is specified).
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * Disallowed use of '!' within tag and value names.
+  * Broken symbolic links can now be tagged with a warning will be printed to
+    stderr.
 
 v0.4.2
 ------

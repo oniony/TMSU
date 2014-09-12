@@ -61,6 +61,10 @@ func Create(path, fingerprintAlgorithm string) (Fingerprint, error) {
 func regularFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return EMPTY, nil
+		}
+
 		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
 	}
 	if stat.IsDir() {
@@ -73,6 +77,10 @@ func regularFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 func dynamicFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return EMPTY, nil
+		}
+
 		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
 	}
 	if stat.IsDir() {
@@ -92,6 +100,10 @@ func dynamicFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) {
 	stat, err := os.Lstat(path)
 	if err != nil {
+		if os.IsNotExist(err) {
+			return EMPTY, nil
+		}
+
 		return EMPTY, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
 	}
 

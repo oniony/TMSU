@@ -334,6 +334,8 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 			if err != nil {
 				return err
 			}
+
+			log.Warnf("%v: tagging broken symbolic link", path)
 		} else {
 			return err
 		}
@@ -353,7 +355,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	}
 
 	if !explicit {
-		tagValuePairs, err = removeAppliedTagValuePairs(store, tagValuePairs, file)
+		tagValuePairs, err = removeAlreadyAppliedTagValuePairs(store, tagValuePairs, file)
 		if err != nil {
 			return fmt.Errorf("%v: could not remove applied tags: %v", path, err)
 		}
@@ -457,7 +459,7 @@ func addFile(store *storage.Storage, path string, modTime time.Time, size uint, 
 	return file, nil
 }
 
-func removeAppliedTagValuePairs(store *storage.Storage, tagValuePairs []TagValuePair, file *entities.File) ([]TagValuePair, error) {
+func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tagValuePairs []TagValuePair, file *entities.File) ([]TagValuePair, error) {
 	log.Infof(2, "%v: determining existing file-tags", file.Path())
 
 	existingFileTags, err := store.FileTagsByFileId(file.Id, false)

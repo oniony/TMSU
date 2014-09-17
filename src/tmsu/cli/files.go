@@ -19,11 +19,9 @@ package cli
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"sort"
 	"strings"
-	"time"
 	"tmsu/common/log"
 	"tmsu/common/path"
 	"tmsu/entities"
@@ -42,9 +40,9 @@ QUERY may contain tag names to match, operators and parentheses. Operators
 are: and or not == != < > <= >=.
 
 Queries are run against the database so the results may not reflect the current
-state of the filesystem. For negative queries (e.g. 'not photo') that specify a
-path with --path it is possible to include untagged files from the filesystem
-using the --untagged option.
+state of the filesystem. To compare the state of the filesystem with the
+database use the 'status' subcommand instead. To query for untagged files use
+the 'untagged' subcommand.
 
 Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.
 Either enclose the query in quotation marks, escape the problematic characters
@@ -57,22 +55,20 @@ Examples:
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
 
-    $ tmsu files year == 2014           # tagged 'year' with a value '2014'
+    $ tmsu files "year == 2014"         # tagged 'year' with a value '2014'
     $ tmsu files "year < 2014"          # tagged 'year' with values under '2014'
     $ tmsu files year lt 2014           # same query but using textual operator
     $ tmsu files year                   # tagged 'year' (any or no value)
 
     $ tmsu files --top music            # don't list individual files if directory is tagged
     $ tmsu files --path=/home/bob music # tagged 'music' under /home/bob`,
-	Options: Options{{"--all", "-a", "list the complete set of tagged files", false, ""},
-		{"--directory", "-d", "list only items that are directories", false, ""},
+	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (exclude files under matching directories)", false, ""},
 		{"--leaf", "-l", "list only the leaf items (files and directories without tagged contents)", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
-		{"--untagged", "-u", "include untagged files in negative queries", false, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""}},
 	Exec: filesExec,
 }
@@ -86,16 +82,7 @@ func filesExec(options Options, args []string) error {
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
 	hasPath := options.HasOption("--path")
-	untagged := options.HasOption("--untagged")
 	explicitOnly := options.HasOption("--explicit")
-
-	if untagged && !hasPath {
-		fmt.Errorf("--untagged must be combined with --path")
-	}
-
-	if untagged && all {
-		fmt.Errorf("--untagged cannot be combined with --all")
-	}
 
 	absPath := ""
 	if hasPath {
@@ -113,7 +100,7 @@ func filesExec(options Options, args []string) error {
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicitOnly)
+	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)
 }
 
 // unexported
@@ -135,7 +122,7 @@ func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) 
 	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 }
 
-func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, untagged, explicitOnly bool) error {
+func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly bool) error {
 	if queryText == "" {
 		return fmt.Errorf("query must be specified (use --all to show all files)")
 	}
@@ -145,19 +132,6 @@ func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafO
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
-
-	if untagged && path != "" {
-		log.Info(2, "temporarily adding untagged files")
-
-		if err := store.Begin(); err != nil {
-			return fmt.Errorf("could not begin transaction: %v", err)
-		}
-		defer store.Rollback()
-
-		if err := addUntaggedFiles(store, path); err != nil {
-			return err
-		}
-	}
 
 	log.Info(2, "parsing query")
 
@@ -237,48 +211,6 @@ func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, print
 			} else {
 				fmt.Println(relPath)
 			}
-		}
-	}
-
-	return nil
-}
-
-func addUntaggedFiles(store *storage.Storage, path string) error {
-	stat, err := os.Stat(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not stat: %v", path, err)
-	}
-
-	if !stat.IsDir() {
-		return nil
-	}
-
-	return addUntaggedFilesRecursive(store, path, stat)
-}
-
-func addUntaggedFilesRecursive(store *storage.Storage, path string, stat os.FileInfo) error {
-	file, err := os.Open(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not open directory: %v", path, err)
-	}
-
-	stats, err := file.Readdir(0)
-	if err != nil {
-		return fmt.Errorf("%v: could not enumerate directory: %v", path, err)
-	}
-
-	file.Close()
-
-	for _, stat := range stats {
-		entryPath := path + string(filepath.Separator) + stat.Name()
-		_, _ = store.AddFile(entryPath, "", time.Time{}, 0, false)
-
-		if !stat.IsDir() {
-			continue
-		}
-
-		if err := addUntaggedFilesRecursive(store, entryPath, stat); err != nil {
-			return err
 		}
 	}
 

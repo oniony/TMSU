@@ -41,5 +41,6 @@ var commands = map[string]*Command{
 	"tag":      &TagCommand,
 	"tags":     &TagsCommand,
 	"untag":    &UntagCommand,
+	"untagged": &UntaggedCommand,
 	"values":   &ValuesCommand,
 	"version":  &VersionCommand}

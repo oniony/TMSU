@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"tmsu/common/filesystem"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
 	_path "tmsu/common/path"
@@ -129,7 +130,7 @@ func findDuplicatesOf(paths []string, recursive bool) error {
 	}
 
 	if recursive {
-		p, err := _path.Enumerate(paths)
+		p, err := filesystem.Enumerate(paths...)
 		if err != nil {
 			return fmt.Errorf("could not enumerate paths: %v", err)
 		}

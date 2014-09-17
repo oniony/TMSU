@@ -54,11 +54,9 @@ Examples:
 
     $ tmsu status
     $ tmsu status .
-    $ tmsu status --directory *
-    $ tmsu status --untagged`,
-	Options: Options{Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""},
-		{"--untagged", "-u", "list only untagged files", false, ""}},
-	Exec: statusExec,
+    $ tmsu status --directory *`,
+	Options: Options{Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""}},
+	Exec:    statusExec,
 }
 
 type Status byte
@@ -99,17 +97,11 @@ func NewReport() *StatusReport {
 
 func statusExec(options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
-	untaggedOnly := options.HasOption("--untagged")
 
 	var report *StatusReport
 	var err error
 
 	if len(args) == 0 {
-		if untaggedOnly {
-			// untagged files are not retained in the database
-			return nil
-		}
-
 		report, err = statusDatabase(dirOnly)
 		if err != nil {
 			return err
@@ -121,7 +113,7 @@ func statusExec(options Options, args []string) error {
 		}
 	}
 
-	printReport(report, untaggedOnly)
+	printReport(report)
 
 	return nil
 }
@@ -312,13 +304,10 @@ func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
 	return nil
 }
 
-func printReport(report *StatusReport, untaggedOnly bool) {
-	if !untaggedOnly {
-		printRows(report.Rows, TAGGED)
-		printRows(report.Rows, MODIFIED)
-		printRows(report.Rows, MISSING)
-	}
-
+func printReport(report *StatusReport) {
+	printRows(report.Rows, TAGGED)
+	printRows(report.Rows, MODIFIED)
+	printRows(report.Rows, MISSING)
 	printRows(report.Rows, UNTAGGED)
 }
 

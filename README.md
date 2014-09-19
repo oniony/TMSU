@@ -13,7 +13,7 @@ the tags you set up.
 Usage
 =====
 
-A command overview and details on how to use each command are available via the
+A subcommand overview and detail on how to use each subcommand is available via the
 integrated help:
 
     $ tmsu help
@@ -143,11 +143,11 @@ v0.5.0 (in development)
   character within tag and value names. Please use 'tmsu rename' to change the
   names of any existing tags that include this character.*
 
-  * Added 'untagged' command for listing untagged files. This replaces the
+  * Added 'untagged' subcommand for listing untagged files. This replaces the
     --untagged option on 'files' and 'status' and should be significantly more
     performant.
-  * Added --colour option to the 'tags' command to highlight implied tags.
-  * 'tag' command will, by default, no longer explicitly apply tags that are
+  * Added --colour option to the 'tags' subcommand to highlight implied tags.
+  * 'tag' subcommand will, by default, no longer explicitly apply tags that are
     already implied (unless the new --explicit option is specified).
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * Disallowed use of '!' within tag and value names.
@@ -177,25 +177,26 @@ v0.4.0
 
   * Added support for tag values, e.g. 'tmsu tag song.mp3 country=uk' and the
     querying of files based upon these values, e.g. 'year > 2000'.
-  * 'tags' and 'values' commands now tabulate output, by default, when run
+  * 'tags' and 'values' subcommands now tabulate output, by default, when run
     from terminal.
   * Added ability to configure which fingerprint algorithm to use.
   * Implied tags now calculated on-the-fly when the database is queried. This
-    results in a (potentially) smaller database and ability to have updates to the
-    implied tags affect previously tagged files.
-  * Added --explicit option to 'files' and 'tags' commands to show only
+    results in a (potentially) smaller database and ability to have updates to
+    the implied tags affect previously tagged files.
+  * Added --explicit option to 'files' and 'tags' subcommands to show only
     explicit tags (omitting any implied tags).
-  * Added --path option to 'files' command to retrieve just those files matching
-    or under the path specified.
-  * Added --untagged option to 'files' command which, when combined with --path,
-    will also include untagged files from the filesystem at the specified path.
-  * Removed the --recursive option from the 'files' command which was flawed:
+  * Added --path option to 'files' subcommand to retrieve just those files
+    matching or under the path specified.
+  * Added --untagged option to 'files' subcommand which, when combined with
+    --path, will also include untagged files from the filesystem at the
+    specified path.
+  * Removed the --recursive option from the 'files' subcommand which was flawed:
     use 'tmsu files query | xargs find' instead.
   * Added ability to configure whether new tags and values are automatically
     created or not or a per-database basis.
-  * Added --unmodified option to 'repair' command to force the recalculation
+  * Added --unmodified option to 'repair' subcommand to force the recalculation
     of fingerprints of unmodified files.
-  * Renamed --force option of 'repair' command to --remove.
+  * Renamed --force option of 'repair' subcommand to --remove.
   * Added support for textual comparison operators: 'eq', 'ne', 'lt', 'gt',
     'le' and 'ge', which do not need escaping unlike '<', '>', &c.
   * Improved Zsh completion with respect to tag values.
@@ -218,12 +219,12 @@ v0.3.0
   * Added support for file query directories in the virtual filesystem.
   * Added global option --database for specifying database location.
   * Added ability to rename and delete tags via the virtual filesystem.
-  * 'tag' command now allows tags to be created up front.
-  * 'copy' and 'imply' commands now support multiple destination tags.
-  * Improved 'stats' command.
+  * 'tag' subcommand now allows tags to be created up front.
+  * 'copy' and 'imply' subcommands now support multiple destination tags.
+  * Improved 'stats' subcommand.
   * Added man page.
   * Added script to allow the virtual filesystem to be mounted via the
-    system mount command or on startup via the fstab.
+    system 'mount' command or on startup via the fstab.
   * Bug fixes.
 
 v0.2.2
@@ -241,16 +242,16 @@ v0.2.0
 ------
 
   * Added support for tag implications, e.g. tag 'a' implies 'b'. New 'imply'
-    command for managing these.
-  * Added --force option to 'repair' command to remove missing files (and
+    subcommand for managing these.
+  * Added --force option to 'repair' subcommand to remove missing files (and
     associated taggings) from the database.
-  * Added --from option to 'tag' command to allow tags to copied from one file
-    to another. e.g. 'tmsu tag -f a b' will apply file b's tags to file a.
+  * Added --from option to 'tag' subcommand to allow tags to copied from one
+    file to another. e.g. 'tmsu tag -f a b' will apply file b's tags to file a.
     ('tag -r -f a a' will recursively retag a directory's contents.)
-  * Added --directory option to 'status' command to stop it recursively
+  * Added --directory option to 'status' subcommand to stop it recursively
     processing directory contents.
-  * Added --print0 option to 'files' command to allow use with xargs.
-  * Added --count option to 'tags' and 'files' command to list tag/file count
+  * Added --print0 option to 'files' subcommand to allow use with xargs.
+  * Added --count option to 'tags' and 'files' subcommand to list tag/file count
     rather than names.
   * Bug fixes and unit-test improvements.
 

@@ -28,7 +28,7 @@ import (
 
 var UntaggedCommand = Command{
 	Name:     "untagged",
-	Synopsis: "List untagged files in the filesystem",
+	Synopsis: "List untagged files",
 	Description: `tmsu untagged [PATH]...
 
 Identify untagged files in the filesystem.  

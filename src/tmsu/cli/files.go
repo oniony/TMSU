@@ -40,9 +40,8 @@ QUERY may contain tag names to match, operators and parentheses. Operators
 are: and or not == != < > <= >=.
 
 Queries are run against the database so the results may not reflect the current
-state of the filesystem. To compare the state of the filesystem with the
-database use the 'status' subcommand instead. To query for untagged files use
-the 'untagged' subcommand.
+state of the filesystem. Only tagged files are matched: to identify untagged
+files use the 'untagged' subcommand.
 
 Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.
 Either enclose the query in quotation marks, escape the problematic characters

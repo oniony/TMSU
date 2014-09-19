@@ -136,11 +136,16 @@ Release Notes
 v0.5.0 (in development)
 ------
 
+  *Note: This release removes the --untagged option on the 'files' subcommand.
+  Use the new 'untagged' subcommand instead.*
+
   *Note: This release prohibts the inclusion of the exclamation mark (!)
   character within tag and value names. Please use 'tmsu rename' to change the
   names of any existing tags that include this character.*
 
-  * Added --untagged option to 'status' command for showing untagged files only.
+  * Added 'untagged' command for listing untagged files. This replaces the
+    --untagged option on 'files' and 'status' and should be significantly more
+    performant.
   * Added --colour option to the 'tags' command to highlight implied tags.
   * 'tag' command will, by default, no longer explicitly apply tags that are
     already implied (unless the new --explicit option is specified).
@@ -148,6 +153,7 @@ v0.5.0 (in development)
   * Disallowed use of '!' within tag and value names.
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
+  * TMSU can now be built without the Makefile.
 
 v0.4.2
 ------

@@ -40,12 +40,12 @@ Examples:
 
     $ tmsu untagged
     $ tmsu untagged /home/fred/drawings`,
-	Options: Options{Option{"--recursive", "-r", "recursively identify untagged items within directories", false, ""}},
+	Options: Options{Option{"--directory", "-r", "do not examine directory contents (non-recursive)", false, ""}},
 	Exec:    untaggedExec,
 }
 
 func untaggedExec(options Options, args []string) error {
-	recursive := options.HasOption("--recursive")
+	recursive := !options.HasOption("--directory")
 
 	paths := args
 	if len(paths) == 0 {

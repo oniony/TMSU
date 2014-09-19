@@ -55,7 +55,7 @@ Examples:
     $ tmsu status
     $ tmsu status .
     $ tmsu status --directory *`,
-	Options: Options{Option{"--directory", "-d", "list directory entries only: do not list contents", false, ""}},
+	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
 	Exec:    statusExec,
 }
 

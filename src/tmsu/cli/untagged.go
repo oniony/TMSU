@@ -34,19 +34,19 @@ var UntaggedCommand = Command{
 
 Identify untagged files in the filesystem.  
 
-Where PATHs are not specified, untagged files under the current path
-are shown.
+Where PATHs are not specified, untagged items under the current working
+directory are shown.
 
 Examples:
 
     $ tmsu untagged
     $ tmsu untagged /home/fred/drawings`,
-	Options: Options{Option{"--directory", "-d", "list directory entries only (non-recursive)", false, ""}},
+	Options: Options{Option{"--recursive", "-r", "recursively identify untagged items within directories", false, ""}},
 	Exec:    untaggedExec,
 }
 
 func untaggedExec(options Options, args []string) error {
-	dirOnly := options.HasOption("--directory")
+	recursive := options.HasOption("--recursive")
 
 	paths := args
 	if len(paths) == 0 {
@@ -57,7 +57,7 @@ func untaggedExec(options Options, args []string) error {
 		}
 	}
 
-	if !dirOnly {
+	if recursive {
 		var err error
 		paths, err = filesystem.EnumeratePaths(paths...)
 		if err != nil {

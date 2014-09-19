@@ -5,7 +5,7 @@ MAN_INSTALL_DIR=/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
 
 # other vars
-VER=0.5.0
+VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" src/tmsu/version/version.go)
 SHELL=/bin/sh
 ARCH=$(shell uname -m)
 DIST_NAME=tmsu-$(ARCH)-$(VER)
@@ -14,19 +14,15 @@ DIST_FILE=$(DIST_NAME).tgz
 
 export GOPATH:=$(GOPATH):$(PWD)
 
-all: clean generate compile dist test
+all: clean compile dist test
 
 clean:
 	go clean tmsu
-	rm -f src/tmsu/common/version.gen.go
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
-generate:
-	echo "package common; var Version = \"$(VER)\"" >src/tmsu/common/version.gen.go
-
-compile: generate
+compile:
 	@mkdir -p bin
 	go build -o bin/tmsu tmsu
 

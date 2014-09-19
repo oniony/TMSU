@@ -15,31 +15,6 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package cli
+package version
 
-import (
-	"fmt"
-	"tmsu/version"
-)
-
-var VersionCommand = Command{
-	Name:     "version",
-	Synopsis: "",
-	Description: `tmsu version
-
-Displays version and copyright information.`,
-	Options: Options{},
-	Exec:    versionExec,
-}
-
-func versionExec(options Options, args []string) error {
-	fmt.Println("TMSU", version.Version)
-	fmt.Println()
-	fmt.Println(`Copyright © 2011-2014 Paul Ruane.
-
-This program comes with ABSOLUTELY NO WARRANTY.
-This is free software, and you are welcome to redistribute it under certain conditions.
-See the accompanying COPYING file for further details.`)
-
-	return nil
-}
+var Version = "0.5.0"

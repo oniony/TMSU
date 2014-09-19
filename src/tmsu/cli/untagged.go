@@ -21,8 +21,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"sort"
-	"tmsu/common/filesystem"
+	"tmsu/common/log"
 	_path "tmsu/common/path"
 	"tmsu/storage"
 )
@@ -51,77 +50,89 @@ func untaggedExec(options Options, args []string) error {
 	paths := args
 	if len(paths) == 0 {
 		var err error
-		paths, err = workingDirectoryEntries()
+		paths, err = directoryEntries(".")
 		if err != nil {
 			return err
 		}
 	}
 
-	if recursive {
-		var err error
-		paths, err = filesystem.EnumeratePaths(paths...)
-		if err != nil {
-			return fmt.Errorf("could not enumerate paths: %v", err)
-		}
-	}
-
-	untaggedAbsPaths, err := findUntagged(paths)
+	store, err := storage.Open()
 	if err != nil {
+		return fmt.Errorf("could not open storage: %v", err)
+	}
+	defer store.Close()
+
+	if err := findUntagged(store, paths, recursive); err != nil {
 		return err
-	}
-
-	untaggedRelPaths := make([]string, len(untaggedAbsPaths))
-	for index, untaggedAbsPath := range untaggedAbsPaths {
-		untaggedRelPaths[index] = _path.Rel(untaggedAbsPath)
-	}
-
-	sort.Strings(untaggedRelPaths)
-
-	for _, untaggedRelPath := range untaggedRelPaths {
-		fmt.Println(untaggedRelPath)
 	}
 
 	return nil
 }
 
-func findUntagged(paths []string) ([]string, error) {
-	untaggedPaths := make([]string, 0, 10)
-
-	store, err := storage.Open()
-	if err != nil {
-		return nil, fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func findUntagged(store *storage.Storage, paths []string, recursive bool) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
+		//TODO PERF no need to retrieve file: we merely need to know it exists
 		file, err := store.FileByPath(absPath)
 		if err != nil {
-			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
 		if file == nil {
-			untaggedPaths = append(untaggedPaths, absPath)
+			relPath := _path.Rel(absPath)
+			fmt.Println(relPath)
+		}
+
+		if recursive {
+			entries, err := directoryEntries(path)
+			if err != nil {
+				return err
+			}
+
+			findUntagged(store, entries, true)
 		}
 	}
 
-	return untaggedPaths, nil
+	return nil
 }
 
-func workingDirectoryEntries() ([]string, error) {
-	wd, err := os.Open(".")
+func directoryEntries(path string) ([]string, error) {
+	stat, err := os.Stat(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not open working directory", err)
+		switch {
+		case os.IsNotExist(err):
+			log.Warnf("%v: does not exist", path)
+			return []string{}, nil
+		case os.IsPermission(err):
+			log.Warnf("%v: permission denied", path)
+			return []string{}, nil
+		default:
+			return nil, fmt.Errorf("%v: could not stat", path, err)
+		}
 	}
 
-	names, err := wd.Readdirnames(0)
-	wd.Close()
-	if err != nil {
-		return nil, fmt.Errorf("could not read working directory entries", err)
+	if !stat.IsDir() {
+		return []string{}, nil
 	}
 
-	return names, nil
+	dir, err := os.Open(path)
+	if err != nil {
+		return nil, fmt.Errorf("%v could not open directory", path, err)
+	}
+
+	names, err := dir.Readdirnames(0)
+	dir.Close()
+	if err != nil {
+		return nil, fmt.Errorf("%v: could not read directory entries", path, err)
+	}
+
+	entries := make([]string, len(names))
+	for index, name := range names {
+		entries[index] = filepath.Join(path, name)
+	}
+
+	return entries, nil
 }

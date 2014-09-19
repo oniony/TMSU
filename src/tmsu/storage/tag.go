@@ -106,9 +106,9 @@ func (storage Storage) DeleteTag(tagId entities.TagId) error {
 	return nil
 }
 
-// Retrieves the most popular tags.
-func (storage Storage) TopTags(count uint) ([]entities.TagFileCount, error) {
-	return storage.Db.TopTags(count)
+// Retrieves the tag usage.
+func (storage Storage) TagUsage() ([]entities.TagFileCount, error) {
+	return storage.Db.TagUsage()
 }
 
 // unexported

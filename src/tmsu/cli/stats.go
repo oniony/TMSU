@@ -29,11 +29,13 @@ var StatsCommand = Command{
 	Description: `tmsu stats
 
 Shows the database statistics.`,
-	Options: Options{},
+	Options: Options{Option{"--usage", "-u", "show tag usage breakdown", false, ""}},
 	Exec:    statsExec,
 }
 
 func statsExec(options Options, args []string) error {
+	usage := options.HasOption("--usage")
+
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -84,28 +86,30 @@ func statsExec(options Options, args []string) error {
 	fmt.Printf("  Files per tag:  %1.2f\n", averageFilesPerTag)
 	fmt.Println()
 
-	topTags, err := store.TopTags(10)
-	if err != nil {
-		return fmt.Errorf("could not retrieve top tags: %v", err)
-	}
+	if usage {
+		tagUsages, err := store.TagUsage()
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag usage: %v", err)
+		}
 
-	fmt.Println("TOP TAGS")
-	fmt.Println()
-	maxLength := 0
-	maxCountWidth := 0
-	for _, tag := range topTags {
-		countWidth := int(math.Log(float64(tag.FileCount)))
-		if countWidth > maxCountWidth {
-			maxCountWidth = countWidth
+		fmt.Println("TAG USAGE")
+		fmt.Println()
+		maxLength := 0
+		maxCountWidth := 0
+		for _, tagUsage := range tagUsages {
+			countWidth := int(math.Log(float64(tagUsage.FileCount)))
+			if countWidth > maxCountWidth {
+				maxCountWidth = countWidth
+			}
+			if len(tagUsage.Name) > maxLength {
+				maxLength = len(tagUsage.Name)
+			}
 		}
-		if len(tag.Name) > maxLength {
-			maxLength = len(tag.Name)
+		for _, tagUsage := range tagUsages {
+			fmt.Printf("  %*s %*v\n", -maxLength, tagUsage.Name, maxCountWidth, tagUsage.FileCount)
 		}
+		fmt.Println()
 	}
-	for _, tag := range topTags {
-		fmt.Printf("  %*v %*s\n", maxCountWidth, tag.FileCount, -maxLength, tag.Name)
-	}
-	fmt.Println()
 
 	return nil
 }

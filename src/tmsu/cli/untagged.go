@@ -40,7 +40,7 @@ Examples:
 
     $ tmsu untagged
     $ tmsu untagged /home/fred/drawings`,
-	Options: Options{Option{"--directory", "-r", "do not examine directory contents (non-recursive)", false, ""}},
+	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
 	Exec:    untaggedExec,
 }
 

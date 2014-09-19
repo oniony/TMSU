@@ -236,7 +236,8 @@ _tmsu_cmd_repair() {
 }
 
 _tmsu_cmd_stats() {
-    # no arguments
+    _arguments -s -w ''{--usage,-u}'[show tag usage breakdown]' \
+    && ret=0
 }
 
 _tmsu_cmd_status() {

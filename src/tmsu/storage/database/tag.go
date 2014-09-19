@@ -208,16 +208,15 @@ func (db *Database) DeleteTag(tagId entities.TagId) error {
 	return nil
 }
 
-// Retrieves the most popular tags.
-func (db *Database) TopTags(count uint) ([]entities.TagFileCount, error) {
+// Retrieves the usage of each tag
+func (db *Database) TagUsage() ([]entities.TagFileCount, error) {
 	sql := `SELECT t.id, t.name, count(file_id)
             FROM file_tag ft, tag t
             WHERE ft.tag_id = t.id
-            GROUP BY ft.tag_id
-            ORDER BY count(file_id) DESC
-            LIMIT ?`
+            GROUP BY t.id
+            ORDER BY t.name`
 
-	rows, err := db.ExecQuery(sql, count)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}

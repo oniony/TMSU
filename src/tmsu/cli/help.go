@@ -28,7 +28,7 @@ import (
 
 var HelpCommand = Command{
 	Name:     "help",
-	Synopsis: "List commands or show help for a particular subcommand",
+	Synopsis: "List subcommands or show help for a particular subcommand",
 	Description: `tmsu help [OPTION]... [SUBCOMMAND]
 
 Shows help summary or, where SUBCOMMAND is specified, help for SUBCOMMAND.`,

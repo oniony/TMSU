@@ -45,7 +45,7 @@ When color is turned on, tags are shown in the following colors:
       Cyan  Tag implied by other tag(s)
     Yellow  Tag is both explicitly applied and implied by other tag(s)
 
-See the 'imply' command for more information on implied tags.
+See the 'imply' subcommand for more information on implied tags.
 
 Examples:
 

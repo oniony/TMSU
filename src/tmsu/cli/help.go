@@ -28,10 +28,10 @@ import (
 
 var HelpCommand = Command{
 	Name:     "help",
-	Synopsis: "List commands or show help for a particular command",
-	Description: `tmsu help [OPTION]... [COMMAND]
+	Synopsis: "List commands or show help for a particular subcommand",
+	Description: `tmsu help [OPTION]... [SUBCOMMAND]
 
-Shows help summary or, where COMMAND is specified, help for COMMAND.`,
+Shows help summary or, where SUBCOMMAND is specified, help for SUBCOMMAND.`,
 	Options: Options{{"--list", "-l", "list commands", false, ""}},
 	Exec:    helpExec,
 }
@@ -95,7 +95,7 @@ func summary() {
 	}
 
 	fmt.Println()
-	fmt.Println("Specify command name for detailed help on a particular command")
+	fmt.Println("Specify subcommand name for detailed help on a particular subcommand")
 	fmt.Println("E.g. tmsu help files")
 }
 

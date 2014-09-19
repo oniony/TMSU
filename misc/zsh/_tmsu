@@ -240,7 +240,7 @@ _tmsu_cmd_stats() {
 }
 
 _tmsu_cmd_status() {
-	_arguments -s -w ''{--directory,-d}'[list directory entries only: do not list contents]' \
+    _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
 	                 '*:file:_files' \
 	&& ret=0
 }
@@ -309,7 +309,7 @@ _tmsu_cmd_untag() {
 }
 
 _tmsu_cmd_untagged() {
-    _arguments -s -w ''{--recursive,-r}'[recurvisely identify untagged items in directories]' \
+    _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
                      '*:file:_files' \
     && ret=0
 }

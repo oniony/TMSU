@@ -26,14 +26,14 @@ type Command struct {
 }
 
 var commands = map[string]*Command{
-	"copy":     &CopyCommand,
-	"delete":   &DeleteCommand,
-	"dupes":    &DupesCommand,
-	"files":    &FilesCommand,
-	"help":     &HelpCommand,
-	"imply":    &ImplyCommand,
-	"merge":    &MergeCommand,
-	"relocate": &RelocateCommand,
+	"copy":   &CopyCommand,
+	"delete": &DeleteCommand,
+	"dupes":  &DupesCommand,
+	"files":  &FilesCommand,
+	"help":   &HelpCommand,
+	"imply":  &ImplyCommand,
+	"merge":  &MergeCommand,
+	//	"relocate": &RelocateCommand,
 	"rename":   &RenameCommand,
 	"repair":   &RepairCommand,
 	"stats":    &StatsCommand,

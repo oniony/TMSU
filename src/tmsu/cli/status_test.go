@@ -70,7 +70,7 @@ func TestStatusReport(test *testing.T) {
 	if err := os.Remove("/tmp/tmsu/b"); err != nil {
 		test.Fatal(err)
 	}
-	if err := createFile("/tmp/tmsu/b", "b"); err != nil {
+	if err := createFile("/tmp/tmsu/b", "b2"); err != nil {
 		test.Fatalf("Could not create file: %v", err)
 	}
 

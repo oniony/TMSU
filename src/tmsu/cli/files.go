@@ -94,38 +94,13 @@ func filesExec(options Options, args []string) error {
 		}
 	}
 
-	if len(args) == 0 {
-		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
-	}
-
 	queryText := strings.Join(args, " ")
 	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)
 }
 
 // unexported
 
-func listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	log.Info(2, "retrieving all files from database.")
-
-	files, err := store.Files()
-	if err != nil {
-		return fmt.Errorf("could not retrieve files: %v", err)
-	}
-
-	return listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
-}
-
 func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly bool) error {
-	if queryText == "" {
-		return fmt.Errorf("query must be specified (use --all to show all files)")
-	}
-
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

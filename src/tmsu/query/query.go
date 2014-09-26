@@ -59,6 +59,8 @@ func ValueNames(expression Expression) []string {
 
 func tagNames(expression Expression, names []string) []string {
 	switch exp := expression.(type) {
+	case EmptyExpression:
+		// nowt
 	case TagExpression:
 		names = append(names, exp.Name)
 	case NotExpression:
@@ -80,6 +82,8 @@ func tagNames(expression Expression, names []string) []string {
 
 func valueNames(expression Expression, names []string) []string {
 	switch exp := expression.(type) {
+	case EmptyExpression:
+		// nowt
 	case TagExpression:
 		// nowt
 	case NotExpression:

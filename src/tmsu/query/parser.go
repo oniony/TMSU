@@ -70,12 +70,22 @@ type ValueExpression struct {
 // unexported
 
 func (parser Parser) expression() (Expression, error) {
+	token, err := parser.scanner.LookAhead()
+	if err != nil {
+		return nil, err
+	}
+
+	switch token.(type) {
+	case EndToken:
+		return EmptyExpression{}, nil
+	}
+
 	expression, err := parser.or()
 	if err != nil {
 		return nil, err
 	}
 
-	token, err := parser.scanner.LookAhead()
+	token, err = parser.scanner.LookAhead()
 	switch token.(type) {
 	case EndToken:
 		return expression, nil

@@ -31,7 +31,7 @@ var ValuesCommand = Command{
 	Synopsis: "List values",
 	Description: `tmsu values [OPTION]... [TAG]...
 
-Lists the values for TAGs.
+Lists the values for TAGs. If no TAG is specified then all tags are listed.
 
 Examples:
 
@@ -39,7 +39,7 @@ Examples:
     2000
     2001
     2014
-    $ tmsu values --all
+    $ tmsu values
     2000
     2001
     2014
@@ -47,8 +47,7 @@ Examples:
     opera
     $ tmsu values --count year
     3`,
-	Options: Options{{"--all", "-a", "lists all of the values used by any tag", false, ""},
-		{"--count", "-c", "lists the number of values rather than their names", false, ""},
+	Options: Options{{"--count", "-c", "lists the number of values rather than their names", false, ""},
 		{"", "-1", "list one value per line", false, ""}},
 	Exec: valuesExec,
 }
@@ -57,12 +56,8 @@ func valuesExec(options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
-	if options.HasOption("--all") {
-		return listAllValues(showCount, onePerLine)
-	}
-
 	if len(args) == 0 {
-		return fmt.Errorf("at least one tag must be specified. Use --all to show all values")
+		return listAllValues(showCount, onePerLine)
 	}
 
 	return listValues(args, showCount, onePerLine)

@@ -80,7 +80,7 @@ _tmsu_tags() {
     typeset -a tag_list
     local tag
 
-    _call_program tmsu tmsu $db tags --all | \
+    _call_program tmsu tmsu $db tags | \
     while read -A tag
     do
         tag_list+=$tag[1]:gs/:/\\:/
@@ -93,7 +93,7 @@ _tmsu_values() {
     typeset -a value_list
     local value
 
-    _call_program tmsu tmsu $db values --all | \
+    _call_program tmsu tmsu $db values | \
     while read -A value
     do
         value_list+=$value[1]:gs/:/\\:/
@@ -187,8 +187,7 @@ _tmsu_cmd_dupes() {
 }
 
 _tmsu_cmd_files() {
-	_arguments -s -w ''{--all,-a}'[list the complete set of tagged files]' \
-	                 ''{--directory,-d}'[list only items that are directories]' \
+	_arguments -s -w ''{--directory,-d}'[list only items that are directories]' \
                      ''{--file,-f}'[list only items that are files]' \
                      ''{--top,-t}'[list only top-most matching items (excludes the contents of matching direcotries)]' \
                      ''{--leaf,-l}'[list only the bottom-most (leaf) items]' \
@@ -272,8 +271,7 @@ _tmsu_cmd_tag() {
 }
 
 _tmsu_cmd_tags() {
-	_arguments -s -w ''{--all,-a}'[show all tags]' \
-	                 ''{--count,-c}'[lists the number of tags rather than their names]' \
+	_arguments -s -w ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
 	                 '*:file:_files' \
@@ -316,8 +314,7 @@ _tmsu_cmd_untagged() {
 }
 
 _tmsu_cmd_values() {
-	_arguments -s -w ''{--all,-a}'[show all values]' \
-	                 ''{--count,-c}'[lists the number of values rather than their names]' \
+	_arguments -s -w ''{--count,-c}'[lists the number of values rather than their names]' \
 	                 '-1[lists on value per line]' \
 	                 '*:tag:_tmsu_tags' \
 	&& ret=0

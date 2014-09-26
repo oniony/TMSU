@@ -59,7 +59,7 @@ func TestFilesAll(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{Option{"-a", "--all", "", false, ""}}, []string{}); err != nil {
+	if err := FilesCommand.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

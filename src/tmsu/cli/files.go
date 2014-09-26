@@ -32,9 +32,10 @@ import (
 var FilesCommand = Command{
 	Name:     "files",
 	Synopsis: "List files with particular tags",
-	Description: `tmsu files [OPTION]... QUERY 
+	Description: `tmsu files [OPTION]... [QUERY]
 
-Lists the files in the database that match the QUERY specified.
+Lists the files in the database that match the QUERY specified. If no
+query is specified, all files in the database are listed.
 
 QUERY may contain tag names to match, operators and parentheses. Operators
 are: and or not == != < > <= >=.
@@ -73,7 +74,6 @@ Examples:
 }
 
 func filesExec(options Options, args []string) error {
-	all := options.HasOption("--all")
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	topOnly := options.HasOption("--top")
@@ -94,7 +94,7 @@ func filesExec(options Options, args []string) error {
 		}
 	}
 
-	if all {
+	if len(args) == 0 {
 		return listAllFiles(dirOnly, fileOnly, topOnly, leafOnly, print0, showCount)
 	}
 

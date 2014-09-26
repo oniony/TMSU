@@ -136,16 +136,20 @@ Release Notes
 v0.5.0 (in development)
 ------
 
-  *Note: This release removes the --untagged option on the 'files' subcommand.
-  Use the new 'untagged' subcommand instead.*
+  *Note: This release changes the behaviour of some of the subcommands. Please
+  read the following release notes carefully.*
 
-  *Note: This release prohibts the inclusion of the exclamation mark (!)
-  character within tag and value names. Please use 'tmsu rename' to change the
-  names of any existing tags that include this character.*
-
-  * Added 'untagged' subcommand for listing untagged files. This replaces the
-    --untagged option on 'files' and 'status' and should be significantly more
-    performant.
+  * The --untagged option on the 'files' and 'status' subcommands has been
+    replaced by a new 'untagged' subcommand. This approach is more intuitive,
+    simpler and more performant than the previous options.
+  * The --all option on the 'files', 'tags' and 'values' command has been
+    removed. These commands now list the full set of files/tags/values when run
+    without arguments. For the 'tags' subcommand this replaces the previous
+    behaviour of listing tags for the files in the working directory: use 'tmsu
+    tags *' for approximately the previous behaviour.
+  * The exclamation mark character (!) is no longer permitted within a tag or
+    value name. Please rename tags using the 'rename' command. Value names will
+    have to be updated using the Sqlite3 tooling.
   * Added --colour option to the 'tags' subcommand to highlight implied tags.
   * 'tag' subcommand will, by default, no longer explicitly apply tags that are
     already implied (unless the new --explicit option is specified).
@@ -158,7 +162,7 @@ v0.5.0 (in development)
 v0.4.2
 ------
 
-  * Fixed bug where 'dynamic:MD5' and 'dynamic:SHA1' fingerprint algorrithms
+  * Fixed bug where 'dynamic:MD5' and 'dynamic:SHA1' fingerprint algorithms
     were actually using SHA256.
 
 v0.4.1

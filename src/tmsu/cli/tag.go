@@ -37,7 +37,8 @@ tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
 tmsu tag [OPTION]... --create TAG[=VALUE]...
 
-Tags the file FILE with the TAGs specified.
+Tags the file FILE with the TAGs specified. If no TAG is specified then all tags
+are listed.
 
 Tag names may consist of one or more letter, number, punctuation and symbol
 characters (from the corresponding Unicode categories). Tag names may not

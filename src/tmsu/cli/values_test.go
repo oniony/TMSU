@@ -200,7 +200,7 @@ func TestAllValues(test *testing.T) {
 
 	// test
 
-	if err := ValuesCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{}); err != nil {
+	if err := ValuesCommand.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

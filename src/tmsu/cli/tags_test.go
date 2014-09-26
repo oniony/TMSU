@@ -180,7 +180,7 @@ func TestAllTags(test *testing.T) {
 
 	// test
 
-	if err := TagsCommand.Exec(Options{Option{"--all", "-a", "", false, ""}}, []string{}); err != nil {
+	if err := TagsCommand.Exec(Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

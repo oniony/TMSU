@@ -35,14 +35,13 @@ var TagsCommand = Command{
 	Synopsis: "List tags",
 	Description: `tmsu tags [OPTION]... [FILE]...
 
-Lists the tags applied to FILEs.
-
-When run with no arguments, tags for the current working directory are listed.
+Lists the tags applied to FILEs. If no FILE is specified then all files in the
+database are listed.
 
 When color is turned on, tags are shown in the following colors:
 
-     White  An explicitly applied (regular) tag
-      Cyan  Tag implied by other tag(s)
+    White   An explicitly applied (regular) tag
+    Cyan    Tag implied by other tag(s)
     Yellow  Tag is both explicitly applied and implied by other tag(s)
 
 See the 'imply' subcommand for more information on implied tags.
@@ -50,13 +49,15 @@ See the 'imply' subcommand for more information on implied tags.
 Examples:
 
     $ tmsu tags
-    tralala.mp3: mp3 music opera 
+    mp3  music  opera 
     $ tmsu tags tralala.mp3
     mp3  music  opera
+    $ tmsu tags tralala.mp3 boom.mp3
+    ./tralala.mp3: mp3 music opera
+    ./boom.mp3: mp3 music drum-n-bass
     $ tmsu tags --count tralala.mp3
     3`,
-	Options: Options{{"--all", "-a", "lists all of the tags defined", false, ""},
-		{"--count", "-c", "lists the number of tags rather than their names", false, ""},
+	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""}},
 	Exec: tagsExec,
@@ -85,7 +86,7 @@ func tagsExec(options Options, args []string) error {
 		colour = terminal.Colour() && terminal.Width() > 0
 	}
 
-	if options.HasOption("--all") {
+	if len(args) == 0 {
 		return listAllTags(showCount, onePerLine, colour)
 	}
 

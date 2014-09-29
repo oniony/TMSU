@@ -211,6 +211,7 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 		if tag == nil {
 			log.Warnf("no such tag '%v'", tagName)
 			wereErrors = true
+			continue
 		}
 
 		value, err := store.ValueByName(valueName)
@@ -220,6 +221,7 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 		if value == nil {
 			log.Warnf("no such value '%v'", valueName)
 			wereErrors = true
+			continue
 		}
 
 		for _, file := range files {

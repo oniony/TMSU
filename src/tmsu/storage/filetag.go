@@ -153,7 +153,7 @@ func (storage *Storage) DeleteFileTagsByFileId(fileId entities.FileId) error {
 		return err
 	}
 
-	//TODO look only at the values that were in the filetags removed
+	//TODO look only at the values that were in the file removed
 	if err := storage.DeleteUnusedValues(); err != nil {
 		return err
 	}
@@ -171,6 +171,7 @@ func (storage *Storage) DeleteFileTagsByTagId(tagId entities.TagId) error {
 		return err
 	}
 
+	//TODO look only at the value that were in the tag removed
 	if err := storage.DeleteUnusedValues(); err != nil {
 		return err
 	}

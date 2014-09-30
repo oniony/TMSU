@@ -55,8 +55,7 @@ Examples:
     $ tmsu tags tralala.mp3 boom.mp3
     ./tralala.mp3: mp3 music opera
     ./boom.mp3: mp3 music drum-n-bass
-    $ tmsu tags --count tralala.mp3
-    3`,
+    $ tmsu tags --count tralala.mp3`,
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""}},

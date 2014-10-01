@@ -147,6 +147,8 @@ v0.5.0 (in development)
     without arguments. For the 'tags' subcommand this replaces the previous
     behaviour of listing tags for the files in the working directory: use 'tmsu
     tags *' for approximately the previous behaviour.
+  * The 'repair' subcommand --pretend short option has changed from -p to -P so
+    that -p can be later recycled for --path.
   * The exclamation mark character (!) is no longer permitted within a tag or
     value name. Please rename tags using the 'rename' command. Value names will
     have to be updated using the Sqlite3 tooling.

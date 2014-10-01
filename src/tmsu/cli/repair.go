@@ -62,7 +62,7 @@ Examples:
     $ tmsu repair
     $ tmsu repair /some/path /new/path
     $ tmsu repair --remove`,
-	Options: Options{{"--pretend", "-p", "do not make any changes", false, ""},
+	Options: Options{{"--pretend", "-P", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},
 		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},
 	Exec: repairExec,

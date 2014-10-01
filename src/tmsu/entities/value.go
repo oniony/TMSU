@@ -17,8 +17,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package entities
 
+import (
+	"sort"
+)
+
 type ValueId uint
+
 type ValueIds []ValueId
+
+func (valueIds ValueIds) Len() int {
+	return len(valueIds)
+}
+
+func (valueIds ValueIds) Less(i, j int) bool {
+	return valueIds[i] < valueIds[j]
+}
+
+func (valueIds ValueIds) Swap(i, j int) {
+	valueIds[i], valueIds[j] = valueIds[j], valueIds[i]
+}
+
+func (valueIds ValueIds) Uniq() ValueIds {
+	if len(valueIds) == 0 {
+		return valueIds
+	}
+
+	sort.Sort(valueIds)
+	uniq := ValueIds{valueIds[0]}
+	previous := valueIds[0]
+
+	for _, valueId := range valueIds[1:len(valueIds)] {
+		if valueId != previous {
+			uniq = append(uniq, valueId)
+			previous = valueId
+		}
+	}
+
+	return uniq
+}
 
 type Value struct {
 	Id   ValueId

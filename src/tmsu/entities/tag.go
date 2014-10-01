@@ -17,8 +17,44 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package entities
 
+import (
+	"sort"
+)
+
 type TagId uint
+
 type TagIds []TagId
+
+func (tagIds TagIds) Len() int {
+	return len(tagIds)
+}
+
+func (tagIds TagIds) Less(i, j int) bool {
+	return tagIds[i] < tagIds[j]
+}
+
+func (tagIds TagIds) Swap(i, j int) {
+	tagIds[i], tagIds[j] = tagIds[j], tagIds[i]
+}
+
+func (tagIds TagIds) Uniq() TagIds {
+	if len(tagIds) == 0 {
+		return tagIds
+	}
+
+	sort.Sort(tagIds)
+	uniq := TagIds{tagIds[0]}
+	previous := tagIds[0]
+
+	for _, tagId := range tagIds[1:len(tagIds)] {
+		if tagId != previous {
+			uniq = append(uniq, tagId)
+			previous = tagId
+		}
+	}
+
+	return uniq
+}
 
 type Tag struct {
 	Id   TagId

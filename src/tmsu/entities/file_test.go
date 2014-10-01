@@ -15,12 +15,24 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package common
+package entities
 
 import (
-	"os"
+	"testing"
 )
 
-func IsRegular(fileInfo os.FileInfo) bool {
-	return fileInfo.Mode()&os.ModeType == 0
+func TestUniqueFileIds(test *testing.T) {
+	// set-up
+
+	fileIds := FileIds{1, 2, 3, 2, 1, 4, 4, 1}
+
+	// test
+
+	uniq := fileIds.Uniq()
+
+	// validate
+
+	if len(uniq) != 4 || uniq[0] != FileId(1) || uniq[1] != FileId(2) || uniq[2] != FileId(3) || uniq[3] != FileId(4) {
+		test.Fatalf("Unexpected unique set: %v", uniq)
+	}
 }

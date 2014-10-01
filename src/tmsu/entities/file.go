@@ -19,12 +19,45 @@ package entities
 
 import (
 	"path/filepath"
+	"sort"
 	"time"
 	"tmsu/common/fingerprint"
 )
 
 type FileId uint
+
 type FileIds []FileId
+
+func (fileIds FileIds) Len() int {
+	return len(fileIds)
+}
+
+func (fileIds FileIds) Less(i, j int) bool {
+	return fileIds[i] < fileIds[j]
+}
+
+func (fileIds FileIds) Swap(i, j int) {
+	fileIds[i], fileIds[j] = fileIds[j], fileIds[i]
+}
+
+func (fileIds FileIds) Uniq() FileIds {
+	if len(fileIds) == 0 {
+		return fileIds
+	}
+
+	sort.Sort(fileIds)
+	uniq := FileIds{fileIds[0]}
+	previous := fileIds[0]
+
+	for _, fileId := range fileIds[1:len(fileIds)] {
+		if fileId != previous {
+			uniq = append(uniq, fileId)
+			previous = fileId
+		}
+	}
+
+	return uniq
+}
 
 type File struct {
 	Id          FileId

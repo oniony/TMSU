@@ -43,9 +43,7 @@ func (fileTags FileTags) FileIds() FileIds {
 		fileIds[index] = fileTag.FileId
 	}
 
-	//TODO uniq
-
-	return fileIds
+	return fileIds.Uniq()
 }
 
 func (fileTags FileTags) TagIds() TagIds {
@@ -54,9 +52,7 @@ func (fileTags FileTags) TagIds() TagIds {
 		tagIds[index] = fileTag.TagId
 	}
 
-	//TODO uniq
-
-	return tagIds
+	return tagIds.Uniq()
 }
 
 func (fileTags FileTags) ValueIds() ValueIds {
@@ -65,7 +61,5 @@ func (fileTags FileTags) ValueIds() ValueIds {
 		valueIds[index] = fileTag.ValueId
 	}
 
-	//TODO uniq
-
-	return valueIds
+	return valueIds.Uniq()
 }

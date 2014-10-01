@@ -18,7 +18,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
-	"fmt"
 	"os"
 	"testing"
 	"time"
@@ -27,7 +26,6 @@ import (
 )
 
 func TestCopySuccessful(test *testing.T) {
-	fmt.Println("1")
 	// set-up
 
 	databasePath := testDatabase()

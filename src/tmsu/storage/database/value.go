@@ -224,12 +224,24 @@ func (db *Database) DeleteValue(valueId entities.ValueId) error {
 }
 
 // Deletes all unused values.
-func (db *Database) DeleteUnusedValues() error {
+func (db *Database) DeleteUnusedValues(valueIds entities.ValueIds) error {
 	sql := `DELETE FROM value
-            WHERE id NOT IN (SELECT distinct(value_id)
-                             FROM file_tag)`
+            WHERE id IN (?`
+	sql += strings.Repeat(",?", len(valueIds)-1)
+	sql += `)
+            AND id NOT IN (SELECT distinct(value_id)
+                           FROM file_tag
+                           WHERE id IN (?`
+	sql += strings.Repeat(",?", len(valueIds)-1)
+	sql += "))"
 
-	_, err := db.Exec(sql)
+	params := make([]interface{}, len(valueIds)*2)
+	for index, valueId := range valueIds {
+		params[index] = valueId
+		params[len(valueIds)+index] = valueId
+	}
+
+	_, err := db.Exec(sql, params...)
 	if err != nil {
 		return nil
 	}

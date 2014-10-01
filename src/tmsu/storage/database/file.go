@@ -21,6 +21,7 @@ import (
 	"database/sql"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 	"tmsu/common/fingerprint"
 	"tmsu/entities"
@@ -315,12 +316,24 @@ func (db *Database) DeleteFile(fileId entities.FileId) error {
 }
 
 // Deletes all untagged files.
-func (db *Database) DeleteUntaggedFiles() error {
+func (db *Database) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 	sql := `DELETE FROM file
-            WHERE id NOT IN (SELECT distinct(file_id)
-                             FROM file_tag)`
+            WHERE id IN (?`
+	sql += strings.Repeat(",?", len(fileIds)-1)
+	sql += `)
+            AND id NOT IN (SELECT distinct(file_id)
+                           FROM file_tag
+                           WHERE id IN (?`
+	sql += strings.Repeat(",?", len(fileIds)-1)
+	sql += "))"
 
-	_, err := db.Exec(sql)
+	params := make([]interface{}, len(fileIds)*2)
+	for index, fileId := range fileIds {
+		params[index] = fileId
+		params[len(fileIds)+index] = fileId
+	}
+
+	_, err := db.Exec(sql, params...)
 	if err != nil {
 		return err
 	}

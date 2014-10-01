@@ -104,8 +104,8 @@ func (storage *Storage) DeleteValueIfUnused(valueId entities.ValueId) error {
 }
 
 // Deletes unused values.
-func (storage *Storage) DeleteUnusedValues() error {
-	return storage.Db.DeleteUnusedValues()
+func (storage *Storage) DeleteUnusedValues(valueIds entities.ValueIds) error {
+	return storage.Db.DeleteUnusedValues(valueIds)
 }
 
 // unexported

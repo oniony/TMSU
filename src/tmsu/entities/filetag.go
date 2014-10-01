@@ -36,3 +36,36 @@ func (fileTags FileTags) Contains(tagId TagId, valueId ValueId) bool {
 
 	return false
 }
+
+func (fileTags FileTags) FileIds() FileIds {
+	fileIds := make(FileIds, len(fileTags))
+	for index, fileTag := range fileTags {
+		fileIds[index] = fileTag.FileId
+	}
+
+	//TODO uniq
+
+	return fileIds
+}
+
+func (fileTags FileTags) TagIds() TagIds {
+	tagIds := make(TagIds, len(fileTags))
+	for index, fileTag := range fileTags {
+		tagIds[index] = fileTag.TagId
+	}
+
+	//TODO uniq
+
+	return tagIds
+}
+
+func (fileTags FileTags) ValueIds() ValueIds {
+	valueIds := make(ValueIds, len(fileTags))
+	for index, fileTag := range fileTags {
+		valueIds[index] = fileTag.ValueId
+	}
+
+	//TODO uniq
+
+	return valueIds
+}

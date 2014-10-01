@@ -40,8 +40,8 @@ const queryHelpFilename = "README.md"
 const queryDirHelp = `Query Directories
 -----------------
 
-Navigate to any directory that is a valid query to see a view of the files that
-match the query:
+Change to any directory that is a valid query to see a view of the files that
+match the query. (It is not necessary to create the directory first.)
 
     $ ls
     README.md
@@ -52,7 +52,11 @@ match the query:
     $ ls
     cheese and (tomato or mushroom)  cheese and wine 
 
-Query directories are saved automatically and can be removed with ` + "`rmdir`."
+You can even create new queries by typing the query into the file chooser of a
+graphical program.
+
+Use ` + "`rmdir`" + ` to remove any query directory you no longer need. Do not use ` + "`rm -r`" + ` 
+as this will untag the contained files.`
 
 type FuseVfs struct {
 	store     *storage.Storage

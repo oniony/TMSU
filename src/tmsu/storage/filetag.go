@@ -60,15 +60,38 @@ func (storage *Storage) FileTagCountByFileId(fileId entities.FileId, explicitOnl
 }
 
 // Retrieves the count of file tags for the specified tag.
-func (storage *Storage) FileTagCountByTagId(tagId entities.TagId) (uint, error) {
-	//TODO add explicit only
-	return storage.Db.FileTagCountByTagId(tagId)
+func (storage *Storage) FileTagCountByTagId(tagId entities.TagId, explicitOnly bool) (uint, error) {
+	if explicitOnly {
+		return storage.Db.FileTagCountByTagId(tagId)
+	}
+
+	fileTags, err := storage.FileTagsByTagId(tagId, false)
+	if err != nil {
+		return 0, err
+	}
+
+	return uint(len(fileTags)), err
 }
 
 // Retrieves the file tags with the specified tag ID.
-func (storage *Storage) FileTagsByTagId(tagId entities.TagId) (entities.FileTags, error) {
-	//TODO add explicit only
-	return storage.Db.FileTagsByTagId(tagId)
+func (storage *Storage) FileTagsByTagId(tagId entities.TagId, explicitOnly bool) (entities.FileTags, error) {
+	fileTags, err := storage.Db.FileTagsByTagId(tagId)
+	if err != nil {
+		return nil, err
+	}
+
+	if !explicitOnly {
+		impliedFileTags, err := storage.impliedFileTags(fileTags)
+		if err != nil {
+			return nil, err
+		}
+
+		for _, fileTag := range impliedFileTags {
+			fileTags = append(fileTags, fileTag)
+		}
+	}
+
+	return fileTags, nil
 }
 
 // Retrieves the count of file tags for the specified value.
@@ -89,24 +112,13 @@ func (storage *Storage) FileTagsByFileId(fileId entities.FileId, explicitOnly bo
 	}
 
 	if !explicitOnly {
-		tagIds := make(entities.TagIds, 0, len(fileTags))
-		for _, fileTag := range fileTags {
-			tagIds = append(tagIds, fileTag.TagId)
-		}
-
-		implications, err := storage.ImplicationsForTags(tagIds...)
+		impliedFileTags, err := storage.impliedFileTags(fileTags)
 		if err != nil {
 			return nil, err
 		}
 
-		for _, implication := range implications {
-			fileTag := findFileTag(fileTags, implication.ImpliedTag.Id)
-			if fileTag != nil {
-				fileTag.Implicit = true
-			} else {
-				impliedFileTag := entities.FileTag{fileId, implication.ImpliedTag.Id, 0, false, true}
-				fileTags = append(fileTags, &impliedFileTag)
-			}
+		for _, fileTag := range impliedFileTags {
+			fileTags = append(fileTags, fileTag)
 		}
 	}
 
@@ -194,12 +206,32 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId entities.TagId) erro
 
 // unexported
 
-func findFileTag(fileTags entities.FileTags, tagId entities.TagId) *entities.FileTag {
+func (storage *Storage) impliedFileTags(fileTags entities.FileTags) (entities.FileTags, error) {
+	tagIds := make(entities.TagIds, 0, len(fileTags))
 	for _, fileTag := range fileTags {
-		if fileTag.TagId == tagId {
-			return fileTag
+		tagIds = append(tagIds, fileTag.TagId)
+	}
+
+	implications, err := storage.ImplicationsForTags(tagIds...)
+	if err != nil {
+		return nil, err
+	}
+
+	impliedFileTags := make(entities.FileTags, 0, 10)
+	for _, fileTag := range fileTags {
+		for _, implication := range implications {
+			if implication.ImplyingTag.Id == fileTag.TagId {
+				//TODO consider values in implied tags
+				impliedFileTag := fileTags.Find(fileTag.FileId, implication.ImpliedTag.Id, 0)
+				if impliedFileTag != nil {
+					impliedFileTag.Implicit = true
+				} else {
+					impliedFileTag := entities.FileTag{fileTag.FileId, implication.ImpliedTag.Id, 0, false, true}
+					impliedFileTags = append(impliedFileTags, &impliedFileTag)
+				}
+			}
 		}
 	}
 
-	return nil
+	return impliedFileTags, nil
 }

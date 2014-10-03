@@ -83,7 +83,7 @@ func mergeExec(options Options, args []string) error {
 
 		log.Infof(2, "finding files tagged '%v'.", sourceTagName)
 
-		fileTags, err := store.FileTagsByTagId(sourceTag.Id)
+		fileTags, err := store.FileTagsByTagId(sourceTag.Id, true)
 		if err != nil {
 			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
 		}

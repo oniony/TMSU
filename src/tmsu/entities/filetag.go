@@ -63,3 +63,13 @@ func (fileTags FileTags) ValueIds() ValueIds {
 
 	return valueIds.Uniq()
 }
+
+func (fileTags FileTags) Find(fileId FileId, tagId TagId, valueId ValueId) *FileTag {
+	for _, fileTag := range fileTags {
+		if fileTag.FileId == fileId && fileTag.TagId == tagId && fileTag.ValueId == valueId {
+			return fileTag
+		}
+	}
+
+	return nil
+}

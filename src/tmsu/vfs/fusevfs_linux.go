@@ -326,7 +326,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			return fuse.ENOENT
 		}
 
-		count, err := vfs.store.FileTagCountByTagId(tag.Id)
+		count, err := vfs.store.FileTagCountByTagId(tag.Id, false)
 		if err != nil {
 			log.Fatalf("could not retrieve file-tag count for tag '%v': %v", tagName, err)
 		}

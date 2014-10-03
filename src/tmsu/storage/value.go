@@ -79,7 +79,16 @@ func (storage *Storage) AddValue(name string) (*entities.Value, error) {
 
 // Deletes a value.
 func (storage *Storage) DeleteValue(valueId entities.ValueId) error {
-	//TODO delete file tags that use the value
+	fileTags, err := storage.FileTagsByValueId(valueId)
+	if err != nil {
+		return err
+	}
+
+	for _, fileTag := range fileTags {
+		if err := storage.Db.DeleteFileTag(fileTag.FileId, fileTag.TagId, fileTag.ValueId); err != nil {
+			return err
+		}
+	}
 
 	return storage.Db.DeleteValue(valueId)
 }
@@ -95,7 +104,7 @@ func (storage *Storage) DeleteValueIfUnused(valueId entities.ValueId) error {
 		return err
 	}
 	if count == 0 {
-		if err := storage.DeleteValue(valueId); err != nil {
+		if err := storage.Db.DeleteValue(valueId); err != nil {
 			return err
 		}
 	}

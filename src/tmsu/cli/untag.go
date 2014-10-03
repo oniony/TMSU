@@ -235,9 +235,9 @@ func untagPaths(paths, tagArgs []string, recursive bool) error {
 
 					if exists {
 						if value.Id != 0 {
-							log.Warnf("%v: cannot remove '%v=%v': implied tags cannot be removed.", file.Path(), tag.Name, value.Name)
+							log.Warnf("%v: cannot remove '%v=%v': delete implication  to remove this tag.", file.Path(), tag.Name, value.Name)
 						} else {
-							log.Warnf("%v: cannot remove '%v': implied tags cannot be removed.", file.Path(), tag.Name)
+							log.Warnf("%v: cannot remove '%v': delete implication to remove this tag.", file.Path(), tag.Name)
 						}
 					} else {
 						if value.Id != 0 {

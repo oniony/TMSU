@@ -81,13 +81,10 @@ func (storage *Storage) FileTagsByTagId(tagId entities.TagId, explicitOnly bool)
 	}
 
 	if !explicitOnly {
-		impliedFileTags, err := storage.impliedFileTags(fileTags)
+		var err error
+		fileTags, err = storage.addImpliedFileTags(fileTags)
 		if err != nil {
 			return nil, err
-		}
-
-		for _, fileTag := range impliedFileTags {
-			fileTags = append(fileTags, fileTag)
 		}
 	}
 
@@ -112,13 +109,10 @@ func (storage *Storage) FileTagsByFileId(fileId entities.FileId, explicitOnly bo
 	}
 
 	if !explicitOnly {
-		impliedFileTags, err := storage.impliedFileTags(fileTags)
+		var err error
+		fileTags, err = storage.addImpliedFileTags(fileTags)
 		if err != nil {
 			return nil, err
-		}
-
-		for _, fileTag := range impliedFileTags {
-			fileTags = append(fileTags, fileTag)
 		}
 	}
 
@@ -206,7 +200,7 @@ func (storage *Storage) CopyFileTags(sourceTagId, destTagId entities.TagId) erro
 
 // unexported
 
-func (storage *Storage) impliedFileTags(fileTags entities.FileTags) (entities.FileTags, error) {
+func (storage *Storage) addImpliedFileTags(fileTags entities.FileTags) (entities.FileTags, error) {
 	tagIds := make(entities.TagIds, 0, len(fileTags))
 	for _, fileTag := range fileTags {
 		tagIds = append(tagIds, fileTag.TagId)
@@ -217,8 +211,9 @@ func (storage *Storage) impliedFileTags(fileTags entities.FileTags) (entities.Fi
 		return nil, err
 	}
 
-	impliedFileTags := make(entities.FileTags, 0, 10)
-	for _, fileTag := range fileTags {
+	for index := 0; index < len(fileTags); index++ {
+		fileTag := fileTags[index]
+
 		for _, implication := range implications {
 			if implication.ImplyingTag.Id == fileTag.TagId {
 				//TODO consider values in implied tags
@@ -227,11 +222,11 @@ func (storage *Storage) impliedFileTags(fileTags entities.FileTags) (entities.Fi
 					impliedFileTag.Implicit = true
 				} else {
 					impliedFileTag := entities.FileTag{fileTag.FileId, implication.ImpliedTag.Id, 0, false, true}
-					impliedFileTags = append(impliedFileTags, &impliedFileTag)
+					fileTags = append(fileTags, &impliedFileTag)
 				}
 			}
 		}
 	}
 
-	return impliedFileTags, nil
+	return fileTags, nil
 }

@@ -156,7 +156,7 @@ v0.5.0 (in development)
   * 'tag' subcommand will, by default, no longer explicitly apply tags that are
     already implied (unless the new --explicit option is specified).
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
-  * Disallowed use of '!' within tag and value names.
+  * Added subcommand aliases.
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
   * TMSU can now be built without the Makefile.

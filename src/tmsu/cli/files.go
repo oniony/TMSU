@@ -31,6 +31,7 @@ import (
 
 var FilesCommand = Command{
 	Name:     "files",
+	Aliases:  []string{"query"},
 	Synopsis: "List files with particular tags",
 	Description: `tmsu files [OPTION]... [QUERY]
 

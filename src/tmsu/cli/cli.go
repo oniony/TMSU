@@ -52,7 +52,7 @@ func Run() {
 		database.Path = dbOption.Argument
 	}
 
-	command := commands[commandName]
+	command := findCommand(commands, commandName)
 	if command == nil {
 		log.Fatalf("invalid command '%v'.", commandName)
 	}
@@ -65,4 +65,27 @@ func Run() {
 
 		os.Exit(1)
 	}
+}
+
+// unexported
+
+func findCommand(commands map[string]*Command, commandName string) *Command {
+	command := commands[commandName]
+	if command != nil {
+		return command
+	}
+
+	for _, command := range commands {
+		if command.Aliases == nil {
+			continue
+		}
+
+		for _, alias := range command.Aliases {
+			if alias == commandName {
+				return command
+			}
+		}
+	}
+
+	return nil
 }

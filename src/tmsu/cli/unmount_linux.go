@@ -27,6 +27,7 @@ import (
 
 var UnmountCommand = Command{
 	Name:     "unmount",
+	Aliases:  []string{"umount"},
 	Synopsis: "Unmount the virtual filesystem",
 	Description: `tmsu unmount MOUNTPOINT
 tmsu unmount --all

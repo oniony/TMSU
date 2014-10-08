@@ -25,6 +25,7 @@ import (
 
 var DeleteCommand = Command{
 	Name:     "delete",
+	Aliases:  []string{"del", "rm"},
 	Synopsis: "Delete one or more tags",
 	Description: `tmsu delete TAG...
 

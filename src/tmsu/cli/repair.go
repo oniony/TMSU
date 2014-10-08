@@ -30,6 +30,7 @@ import (
 
 var RepairCommand = Command{
 	Name:     "repair",
+	Aliases:  []string{"fix"},
 	Synopsis: "Repair the database",
 	Description: `tmsu [OPTION]... repair [PATH]...
 

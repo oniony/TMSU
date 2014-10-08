@@ -25,6 +25,7 @@ import (
 
 var CopyCommand = Command{
 	Name:     "copy",
+	Aliases:  []string{"cp"},
 	Synopsis: "Create a copy of a tag",
 	Description: `tmsu copy TAG NEW...
 

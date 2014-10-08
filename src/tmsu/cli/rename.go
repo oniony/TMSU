@@ -25,6 +25,7 @@ import (
 
 var RenameCommand = Command{
 	Name:     "rename",
+	Aliases:  []string{"mv"},
 	Synopsis: "Rename a tag",
 	Description: `tmsu rename OLD NEW
 

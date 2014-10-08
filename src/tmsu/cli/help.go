@@ -116,13 +116,27 @@ func listCommands() {
 }
 
 func describeCommand(commandName string) {
-	command := helpCommands[commandName]
+	command := findCommand(helpCommands, commandName)
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)
 		return
 	}
 
 	fmt.Println(string(command.Description))
+
+	if command.Aliases != nil && len(command.Aliases) > 0 {
+		fmt.Println()
+
+		if command.Aliases != nil {
+			fmt.Print("Aliases:")
+
+			for _, alias := range command.Aliases {
+				fmt.Print(" " + alias)
+			}
+		}
+
+		fmt.Println()
+	}
 
 	if len(command.Options) > 0 {
 		fmt.Println()

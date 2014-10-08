@@ -19,6 +19,7 @@ package cli
 
 type Command struct {
 	Name        string
+	Aliases     []string
 	Synopsis    string
 	Description string
 	Options     Options

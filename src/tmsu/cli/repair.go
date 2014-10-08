@@ -20,10 +20,8 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
-	_path "tmsu/common/path"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -37,13 +35,10 @@ var RepairCommand = Command{
 Fixes broken paths and stale fingerprints in the database caused by file
 modifications and moves.
 
-Where no PATHS are specified all files in the database are checked.
-
                                           Reported Repaired
     Modified files                          yes      yes
     Moved files                             yes      yes
     Missing files                           yes      no
-    Untagged files                          yes
     Unmodified files                        no       
 
 Modified files are identified by a change to the file's modification time or
@@ -73,6 +68,7 @@ func repairExec(options Options, args []string) error {
 	pretend := options.HasOption("--pretend")
 	removeMissing := options.HasOption("--remove")
 	recalcUnmodified := options.HasOption("--unmodified")
+	searchPaths := args
 
 	store, err := storage.Open()
 	if err != nil {
@@ -90,76 +86,16 @@ func repairExec(options Options, args []string) error {
 		return err
 	}
 
-	if len(args) == 0 {
-		return repairDatabase(store, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
-	}
-
-	return repairPaths(store, args, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
-}
-
-//- unexported
-
-func repairDatabase(store *storage.Storage, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "retrieving all files from the database.")
 
-	files, err := store.Files()
+	//TODO limit to path if specified
+
+	dbFiles, err := store.Files()
 	if err != nil {
 		return fmt.Errorf("could not retrieve paths from storage: %v", err)
 	}
 
-	paths := make([]string, len(files))
-	for index := 0; index < len(files); index++ {
-		paths[index] = files[index].Path()
-	}
-
-	err = repairFiles(store, paths, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func repairPaths(store *storage.Storage, paths []string, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
-	absPaths := make([]string, len(paths))
-
-	for index, path := range paths {
-		absPath, err := filepath.Abs(path)
-		if err != nil {
-			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
-		}
-
-		absPaths[index] = absPath
-	}
-
-	log.Infof(2, "identifying top-level paths.")
-
-	err := repairFiles(store, absPaths, pretend, removeMissing, recalcUnmodified, fingerprintAlgorithm)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
-func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing, recalcUnmodified bool, fingerprintAlgorithm string) error {
-	tree := _path.NewTree()
-	for _, path := range paths {
-		tree.Add(path, false)
-	}
-	paths = tree.TopLevel().Paths()
-
-	fsPaths, err := enumerateFileSystemPaths(paths)
-	if err != nil {
-		return err
-	}
-
-	dbPaths, err := enumerateDatabasePaths(store, paths)
-	if err != nil {
-		return err
-	}
-
-	unmodfied, untagged, modified, missing := determineStatuses(fsPaths, dbPaths)
+	unmodfied, modified, missing := determineStatuses(dbFiles)
 
 	if recalcUnmodified {
 		if err = repairUnmodified(store, unmodfied, pretend, fingerprintAlgorithm); err != nil {
@@ -171,16 +107,12 @@ func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing,
 		return err
 	}
 
-	if err = repairMoved(store, missing, untagged, pretend, fingerprintAlgorithm); err != nil {
+	if err = repairMoved(store, missing, searchPaths, pretend, fingerprintAlgorithm); err != nil {
 		return err
 	}
 
 	if err = repairMissing(store, missing, pretend, removeMissing); err != nil {
 		return err
-	}
-
-	for path := range untagged {
-		log.Infof(1, "%v: untagged", path)
 	}
 
 	//TODO cleanup: any files that have no tags: remove
@@ -189,226 +121,169 @@ func repairFiles(store *storage.Storage, paths []string, pretend, removeMissing,
 	return nil
 }
 
-type fileInfoMap map[string]os.FileInfo
-type fileIdAndInfoMap map[string]struct {
-	fileId entities.FileId
-	stat   os.FileInfo
-}
-type databaseFileMap map[string]entities.File
+// unexported
 
-func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (unmodified fileIdAndInfoMap, untagged fileInfoMap, modified fileIdAndInfoMap, missing databaseFileMap) {
+func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing entities.Files) {
 	log.Infof(2, "determining file statuses")
 
-	unmodified = make(fileIdAndInfoMap, 100)
-	untagged = make(fileInfoMap, 100)
-	modified = make(fileIdAndInfoMap, 100)
-	missing = make(databaseFileMap, 100)
+	unmodified = make(entities.Files, 0, 10)
+	modified = make(entities.Files, 0, 10)
+	missing = make(entities.Files, 0, 10)
 
-	for path, stat := range fsPaths {
-		if dbFile, isTagged := dbPaths[path]; isTagged {
-			dbFileAndStat := struct {
-				fileId entities.FileId
-				stat   os.FileInfo
-			}{dbFile.Id, stat}
-
-			if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
-				unmodified[path] = dbFileAndStat
-			} else {
-				modified[path] = dbFileAndStat
+	for _, dbFile := range dbFiles {
+		stat, err := os.Stat(dbFile.Path())
+		if err != nil {
+			switch {
+			case os.IsPermission(err):
+				log.Warnf("%v: permission denied", dbFile.Path())
+				continue
+			case os.IsNotExist(err):
+				missing = append(missing, dbFile.Path())
+				continue
 			}
-		} else {
-			untagged[path] = stat
 		}
-	}
 
-	for path, dbFile := range dbPaths {
-		if _, found := fsPaths[path]; !found {
-			missing[path] = dbFile
+		if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
+			unmodified = append(unmodified, dbFile)
+		} else {
+			modified = append(modified, dbFile)
 		}
 	}
 
 	return
 }
 
-func repairUnmodified(store *storage.Storage, unmodified fileIdAndInfoMap, pretend bool, fingerprintAlgorithm string) error {
+func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "recalculating fingerprints for unmodified files")
 
-	for path, fileIdAndStat := range unmodified {
-		fileId := fileIdAndStat.fileId
-		stat := fileIdAndStat.stat
-
-		log.Infof(1, "%v: unmodified", path)
-
-		fingerprint, err := fingerprint.Create(path, fingerprintAlgorithm)
+	for _, dbFile := range unmodified {
+		stat, err := os.Stat(dbFile.Path())
 		if err != nil {
-			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+			return err
+		}
+
+		fingerprint, err := fingerprint.Create(dbFile.Path(), fingerprintAlgorithm)
+		if err != nil {
+			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
+			continue
 		}
 
 		if !pretend {
-			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
+			_, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
-				return fmt.Errorf("%v: could not update file in database: %v", path, err)
+				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
-		}
 
+			log.Infof(1, "%v: unmodified [FIXED]", dbFile.Path())
+		} else {
+			log.Infof(1, "%v: unmodified", dbFile.Path())
+		}
 	}
 
 	return nil
 }
 
-func repairModified(store *storage.Storage, modified fileIdAndInfoMap, pretend bool, fingerprintAlgorithm string) error {
+func repairModified(store *storage.Storage, modified entities.Files, pretend bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "repairing modified files")
 
-	for path, fileIdAndStat := range modified {
-		fileId := fileIdAndStat.fileId
-		stat := fileIdAndStat.stat
-
-		log.Infof(1, "%v: modified", path)
-
-		fingerprint, err := fingerprint.Create(path, fingerprintAlgorithm)
+	for _, dbFile := range modified {
+		stat, err := os.Stat(dbFile.Path())
 		if err != nil {
-			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+			return err
+		}
+
+		fingerprint, err := fingerprint.Create(dbFile.Path(), fingerprintAlgorithm)
+		if err != nil {
+			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
+			continue
 		}
 
 		if !pretend {
-			_, err := store.UpdateFile(fileId, path, fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
+			_, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
-				return fmt.Errorf("%v: could not update file in database: %v", path, err)
+				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
-		}
 
+			log.Infof(1, "%v: modified [FIXED]", dbFile.Path())
+		} else {
+			log.Infof(1, "%v: modified", dbFile.Path())
+		}
 	}
 
 	return nil
 }
 
-func repairMoved(store *storage.Storage, missing databaseFileMap, untagged fileInfoMap, pretend bool, fingerprintAlgorithm string) error {
+func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []string, pretend bool, fingerprintAlgorithm string) error {
 	log.Infof(2, "repairing moved files")
 
-	moved := make([]string, 0, 10)
-	for path, dbFile := range missing {
-		log.Infof(2, "%v: searching for new location", path)
+	if len(missing) == 0 || len(searchPaths) == 0 {
+		// don't bother enumerating filesystem if nothing to do
+		return nil
+	}
 
-		for candidatePath, stat := range untagged {
-			if stat.Size() == dbFile.Size {
-				fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
-				if err != nil {
-					return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-				}
+	pathsBySize := make(map[uint][]string, 10)
 
-				if fingerprint == dbFile.Fingerprint {
-					log.Infof(1, "%v: moved to %v", path, candidatePath)
+	//TODO enumerate search paths and build map of size -> list of paths
 
-					moved = append(moved, path)
+	//TODO for each missing
+	//TODO find set with same size
+	//TODO confirm match with fingerprint comparison
+	//TODO nil entry in missing
 
-					if !pretend {
-						_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
-						if err != nil {
-							return fmt.Errorf("%v: could not update file in database: %v", path, err)
-						}
+	/*
+		moved := make([]string, 0, 10)
+		for path, dbFile := range missing {
+			log.Infof(2, "%v: searching for new location", path)
+
+			for candidatePath, stat := range untagged {
+				if stat.Size() == dbFile.Size {
+					fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
+					if err != nil {
+						return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 					}
 
-					delete(untagged, candidatePath)
+					if fingerprint == dbFile.Fingerprint {
+						moved = append(moved, path)
 
-					break
+						if !pretend {
+	                        log.Infof(1, "%v: moved to %v [FIXED]", path, candidatePath)
+
+							_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
+							if err != nil {
+								return fmt.Errorf("%v: could not update file in database: %v", path, err)
+							}
+						} else {
+	                        log.Infof(1, "%v: moved to %v", path, candidatePath)
+	                    }
+
+						delete(untagged, candidatePath)
+
+						break
+					}
 				}
 			}
 		}
-	}
 
-	for _, path := range moved {
-		delete(missing, path)
-	}
+		for _, path := range moved {
+			delete(missing, path)
+		}
+	*/
 
 	return nil
 }
 
-func repairMissing(store *storage.Storage, missing databaseFileMap, pretend, force bool) error {
-	for path, dbFile := range missing {
+func repairMissing(store *storage.Storage, missing entities.Files, pretend, force bool) error {
+	for _, dbFile := range missing {
 		if force && !pretend {
 			if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
-				return fmt.Errorf("%v: could not delete file-tags: %v", path, err)
+				return fmt.Errorf("%v: could not delete file-tags: %v", dbFile.Path(), err)
 			}
 
-			log.Infof(1, "%v: removed", path)
+			log.Infof(1, "%v: missing [FIXED]", dbFile.Path())
 		} else {
-			log.Infof(1, "%v: missing", path)
+			log.Infof(1, "%v: missing", dbFile.Path())
 		}
 	}
 
 	return nil
-}
-
-func enumerateFileSystemPaths(paths []string) (fileInfoMap, error) {
-	files := make(fileInfoMap, 100)
-
-	for _, path := range paths {
-		if err := enumerateFileSystemPath(files, path); err != nil {
-			return nil, err
-		}
-	}
-
-	return files, nil
-}
-
-func enumerateFileSystemPath(files fileInfoMap, path string) error {
-	stat, err := os.Stat(path)
-	if err != nil {
-		switch {
-		case os.IsPermission(err):
-			log.Warnf("%v: permission denied", path)
-			return nil
-		case os.IsNotExist(err):
-			return nil
-		default:
-			return fmt.Errorf("%v: could not stat file: %v", path, err)
-		}
-	}
-
-	files[path] = stat
-
-	if stat.IsDir() {
-		file, err := os.Open(path)
-		if err != nil {
-			return fmt.Errorf("%v: could not open file: %v", path, err)
-		}
-
-		childFilenames, err := file.Readdirnames(0)
-		file.Close()
-		if err != nil {
-			return fmt.Errorf("%v: could not read directory: %v", file.Name(), err)
-		}
-
-		for _, childFilename := range childFilenames {
-			childPath := filepath.Join(path, childFilename)
-			enumerateFileSystemPath(files, childPath)
-		}
-	}
-
-	return nil
-}
-
-func enumerateDatabasePaths(store *storage.Storage, paths []string) (databaseFileMap, error) {
-	dbFiles := make(databaseFileMap, 100)
-
-	for _, path := range paths {
-		file, err := store.FileByPath(path)
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not retrieve file from database: %v", path, err)
-		}
-		if file != nil {
-			dbFiles[file.Path()] = *file
-		}
-
-		files, err := store.FilesByDirectory(path)
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not retrieve files from database: %v", path, err)
-		}
-
-		for _, file = range files {
-			dbFiles[file.Path()] = *file
-		}
-	}
-
-	return dbFiles, nil
 }

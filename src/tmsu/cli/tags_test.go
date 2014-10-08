@@ -191,3 +191,68 @@ func TestAllTags(test *testing.T) {
 	bytes, err := ioutil.ReadAll(outFile)
 	compareOutput(test, "apple\nbanana\n", string(bytes))
 }
+
+func TestImpliedTags(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	err := redirectStreams()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer restoreStreams()
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	appleTag, err := store.AddTag("apple")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	fruitTag, err := store.AddTag("fruit")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	foodTag, err := store.AddTag("food")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := store.AddImplication(appleTag.Id, fruitTag.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := store.AddImplication(fruitTag.Id, foodTag.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// verify
+
+	outFile.Seek(0, 0)
+
+	bytes, err := ioutil.ReadAll(outFile)
+	compareOutput(test, "apple\nfood\nfruit\n", string(bytes))
+}

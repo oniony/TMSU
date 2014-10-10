@@ -138,7 +138,7 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 				log.Warnf("%v: permission denied", dbFile.Path())
 				continue
 			case os.IsNotExist(err):
-				missing = append(missing, dbFile.Path())
+				missing = append(missing, dbFile)
 				continue
 			}
 		}
@@ -221,7 +221,7 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 		return nil
 	}
 
-	pathsBySize := make(map[uint][]string, 10)
+	//pathsBySize := make(map[uint][]string, 10)
 
 	//TODO enumerate search paths and build map of size -> list of paths
 

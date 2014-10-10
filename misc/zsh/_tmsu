@@ -227,7 +227,8 @@ _tmsu_cmd_rename() {
 }
 
 _tmsu_cmd_repair() {
-	_arguments -s -w ''{--remove,-R}'[remove missing files from the database]' \
+	_arguments -s -w ''{--path,-P}'[limit repair to files under a path]' \
+                     ''{--remove,-R}'[remove missing files from the database]' \
 	                 ''{--unmodified,-u}'[recalculate fingerprints for unmodified files]' \
 	                 ''{--pretend,-P}'[do not make any changes]' \
 	                 '*:file:_files' \

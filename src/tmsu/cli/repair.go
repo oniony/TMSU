@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
 	"tmsu/entities"
@@ -56,15 +57,21 @@ these files use the --remove option.
 Examples:
 
     $ tmsu repair
-    $ tmsu repair /some/path /new/path
+    $ tmsu repair /new/path
+    $ tmsu repair --path /old/path /new/path
     $ tmsu repair --remove`,
-	Options: Options{{"--pretend", "-P", "do not make any changes", false, ""},
+	Options: Options{{"--path", "-p", "limit repair to files under a path", true, ""},
+		{"--pretend", "-P", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},
 		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},
 	Exec: repairExec,
 }
 
 func repairExec(options Options, args []string) error {
+	limitPath := "/" //TODO Windows
+	if options.HasOption("--path") {
+		limitPath = options.Get("--path").Argument
+	}
 	pretend := options.HasOption("--pretend")
 	removeMissing := options.HasOption("--remove")
 	recalcUnmodified := options.HasOption("--unmodified")
@@ -86,11 +93,9 @@ func repairExec(options Options, args []string) error {
 		return err
 	}
 
-	log.Infof(2, "retrieving all files from the database.")
+	log.Infof(2, "retrieving all files from the database")
 
-	//TODO limit to path if specified
-
-	dbFiles, err := store.Files()
+	dbFiles, err := store.FilesByDirectory(limitPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve paths from storage: %v", err)
 	}
@@ -174,7 +179,7 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
 
-			log.Infof(1, "%v: unmodified [FIXED]", dbFile.Path())
+			log.Infof(1, "%v: unmodified FIXED", dbFile.Path())
 		} else {
 			log.Infof(1, "%v: unmodified", dbFile.Path())
 		}
@@ -204,7 +209,7 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
 
-			log.Infof(1, "%v: modified [FIXED]", dbFile.Path())
+			log.Infof(1, "%v: modified FIXED", dbFile.Path())
 		} else {
 			log.Infof(1, "%v: modified", dbFile.Path())
 		}
@@ -221,67 +226,139 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 		return nil
 	}
 
-	//pathsBySize := make(map[uint][]string, 10)
+	pathsBySize, err := buildPathBySizeMap(searchPaths)
+	if err != nil {
+		return err
+	}
 
-	//TODO enumerate search paths and build map of size -> list of paths
+	for index, dbFile := range missing {
+		log.Infof(2, "%v: searching for new location", dbFile.Path())
 
-	//TODO for each missing
-	//TODO find set with same size
-	//TODO confirm match with fingerprint comparison
-	//TODO nil entry in missing
+		pathsOfSize := pathsBySize[dbFile.Size]
+		log.Infof(2, "%v: file is of size %v, identified %v files of this size", dbFile.Path(), dbFile.Size, len(pathsOfSize))
 
-	/*
-			moved := make([]string, 0, 10)
-			for path, dbFile := range missing {
-				log.Infof(2, "%v: searching for new location", path)
+		for _, candidatePath := range pathsOfSize {
+			candidateFile, err := store.FileByPath(candidatePath)
+			if err != nil {
+				return err
+			}
+			if candidateFile != nil {
+				// file is already tagged
+				continue
+			}
 
-				for candidatePath, stat := range untagged {
-					if stat.Size() == dbFile.Size {
-						fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
-						if err != nil {
-							return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-						}
+			stat, err := os.Stat(candidatePath)
+			if err != nil {
+				return fmt.Errorf("%v: could not stat file: %v", candidatePath, err)
+			}
 
-						if fingerprint == dbFile.Fingerprint {
-							moved = append(moved, path)
+			fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
+			if err != nil {
+				return fmt.Errorf("%v: could not create fingerprint: %v", candidatePath, err)
+			}
 
-							if !pretend {
-		                        log.Infof(1, "%v: moved to %v [FIXED]", path, candidatePath)
+			if fingerprint == dbFile.Fingerprint {
+				if !pretend {
+					log.Infof(1, "%v: moved to %v FIXED", dbFile.Path(), candidatePath)
 
-								_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
-								if err != nil {
-									return fmt.Errorf("%v: could not update file in database: %v", path, err)
-								}
-							} else {
-		                        log.Infof(1, "%v: moved to %v", path, candidatePath)
-		                    }
-
-							delete(untagged, candidatePath)
-
-							break
-						}
+					_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
+					if err != nil {
+						return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 					}
+				} else {
+					log.Infof(1, "%v: moved to %v", dbFile.Path(), candidatePath)
 				}
-			}
 
-			for _, path := range moved {
-				delete(missing, path)
+				missing[index] = nil
+
+				break
 			}
-	*/
+		}
+	}
 
 	return nil
 }
 
 func repairMissing(store *storage.Storage, missing entities.Files, pretend, force bool) error {
 	for _, dbFile := range missing {
+		if dbFile == nil {
+			continue
+		}
+
 		if force && !pretend {
 			if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
 				return fmt.Errorf("%v: could not delete file-tags: %v", dbFile.Path(), err)
 			}
 
-			log.Infof(1, "%v: missing [FIXED]", dbFile.Path())
+			log.Infof(1, "%v: missing FIXED", dbFile.Path())
 		} else {
 			log.Infof(1, "%v: missing", dbFile.Path())
+		}
+	}
+
+	return nil
+}
+
+func buildPathBySizeMap(paths []string) (map[int64][]string, error) {
+	log.Infof(2, "building map of paths by size")
+
+	pathsBySize := make(map[int64][]string, 10)
+
+	for _, path := range paths {
+		if err := buildPathBySizeMapRecursive(path, pathsBySize); err != nil {
+			return nil, err
+		}
+	}
+
+	log.Infof(2, "path by size map has %v sizes", len(pathsBySize))
+
+	return pathsBySize, nil
+}
+
+func buildPathBySizeMapRecursive(path string, pathBySizeMap map[int64][]string) error {
+	absPath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("%v: could not get absolute path", path)
+	}
+
+	stat, err := os.Stat(absPath)
+	if err != nil {
+		switch {
+		case os.IsPermission(err):
+			log.Warnf("%v: permission denied", path)
+		default:
+			return err
+		}
+	}
+
+	if stat.IsDir() {
+		log.Infof(3, "%v: examining directory contents", absPath)
+
+		dir, err := os.Open(absPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not open directory: %v", path, err)
+		}
+
+		names, err := dir.Readdirnames(0)
+		dir.Close()
+		if err != nil {
+			return fmt.Errorf("%v: could not read directory entries: %v", path, err)
+		}
+
+		for _, name := range names {
+			childPath := filepath.Join(path, name)
+			if err := buildPathBySizeMapRecursive(childPath, pathBySizeMap); err != nil {
+				return err
+			}
+		}
+	} else {
+		log.Infof(3, "%v: file is of size %v", absPath, stat.Size())
+
+		filesOfSize, ok := pathBySizeMap[stat.Size()]
+		if ok {
+			pathBySizeMap[stat.Size()] = append(filesOfSize, absPath)
+		} else {
+			pathBySizeMap[stat.Size()] = []string{absPath}
 		}
 	}
 

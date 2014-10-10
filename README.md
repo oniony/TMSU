@@ -149,6 +149,9 @@ v0.5.0 (in development)
     tags *' for approximately the previous behaviour.
   * The 'repair' subcommand --pretend short option has changed from -p to -P so
     that -p can be later recycled for --path.
+  * The 'repair' subcommand's argument now specify paths to search for moved
+    files and no longer limit how much of the database is repaired. A new --path
+    argument is provided for reducing the repair to a portion of the database.
   * The exclamation mark character (!) is no longer permitted within a tag or
     value name. Please rename tags using the 'rename' command. Value names will
     have to be updated using the Sqlite3 tooling.

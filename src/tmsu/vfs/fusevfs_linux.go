@@ -411,8 +411,16 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 	switch path[0] {
 	case tagsDir:
-		tagName := path[len(path)-2]
-		//TODO value name
+		dirName := path[len(path)-2]
+
+		var tagName, valueName string
+		if dirName[0] == '=' {
+			tagName = path[len(path)-3]
+			valueName = dirName[1:len(dirName)]
+		} else {
+			tagName = dirName
+			valueName = ""
+		}
 
 		tag, err := vfs.store.TagByName(tagName)
 		if err != nil {
@@ -422,7 +430,15 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve tag '%v'.", tagName)
 		}
 
-		if err = vfs.store.DeleteFileTag(fileId, tag.Id, 0); err != nil {
+		value, err := vfs.store.ValueByName(valueName)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if value == nil {
+			log.Fatalf("could not retrieve value '%v'.", valueName)
+		}
+
+		if err = vfs.store.DeleteFileTag(fileId, tag.Id, value.Id); err != nil {
 			log.Fatal(err)
 		}
 

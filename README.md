@@ -160,6 +160,7 @@ v0.5.0 (in development)
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
   * TMSU can now be built without the Makefile.
+  * Issue #82: It is now possible to remove tags with values via the VFS.
 
 v0.4.2
 ------

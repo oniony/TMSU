@@ -231,42 +231,42 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 	//TODO nil entry in missing
 
 	/*
-		moved := make([]string, 0, 10)
-		for path, dbFile := range missing {
-			log.Infof(2, "%v: searching for new location", path)
+			moved := make([]string, 0, 10)
+			for path, dbFile := range missing {
+				log.Infof(2, "%v: searching for new location", path)
 
-			for candidatePath, stat := range untagged {
-				if stat.Size() == dbFile.Size {
-					fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
-					if err != nil {
-						return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
-					}
+				for candidatePath, stat := range untagged {
+					if stat.Size() == dbFile.Size {
+						fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
+						if err != nil {
+							return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+						}
 
-					if fingerprint == dbFile.Fingerprint {
-						moved = append(moved, path)
+						if fingerprint == dbFile.Fingerprint {
+							moved = append(moved, path)
 
-						if !pretend {
-	                        log.Infof(1, "%v: moved to %v [FIXED]", path, candidatePath)
+							if !pretend {
+		                        log.Infof(1, "%v: moved to %v [FIXED]", path, candidatePath)
 
-							_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
-							if err != nil {
-								return fmt.Errorf("%v: could not update file in database: %v", path, err)
-							}
-						} else {
-	                        log.Infof(1, "%v: moved to %v", path, candidatePath)
-	                    }
+								_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
+								if err != nil {
+									return fmt.Errorf("%v: could not update file in database: %v", path, err)
+								}
+							} else {
+		                        log.Infof(1, "%v: moved to %v", path, candidatePath)
+		                    }
 
-						delete(untagged, candidatePath)
+							delete(untagged, candidatePath)
 
-						break
+							break
+						}
 					}
 				}
 			}
-		}
 
-		for _, path := range moved {
-			delete(missing, path)
-		}
+			for _, path := range moved {
+				delete(missing, path)
+			}
 	*/
 
 	return nil

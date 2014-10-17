@@ -159,5 +159,5 @@ func TestReportsMissingFiles(test *testing.T) {
 	outFile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(outFile)
-	compareOutput(test, "tmsu: /tmp/tmsu/a: missing\n", string(bytes))
+	compareOutput(test, "/tmp/tmsu/a: missing\n", string(bytes))
 }

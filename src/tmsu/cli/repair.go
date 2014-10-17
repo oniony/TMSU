@@ -32,51 +32,110 @@ var RepairCommand = Command{
 	Aliases:  []string{"fix"},
 	Synopsis: "Repair the database",
 	Description: `tmsu [OPTION]... repair [PATH]...
+tmsu [OPTION]... repair --manual OLD NEW
 
-Fixes broken paths and stale fingerprints in the database caused by file
+Fixes broken paths, stale fingerprints in the database caused by file
 modifications and moves.
 
-                                          Reported Repaired
-    Modified files                          yes      yes
-    Moved files                             yes      yes
-    Missing files                           yes      no
-    Unmodified files                        no       
-
 Modified files are identified by a change to the file's modification time or
-file size. These files are repaired by updating the modification time, size and
-fingerprint in the database.
+file size. These files are repaired by updating the details in the database.
 
-Moved files will only be repaired if a file with the same fingerprint can be
-found under PATHs. Files that have been both moved and modified will not be
-identified.
+An attempt is made to find missing files under PATHs specified. If a file with
+the same fingerprint is found then the database is updated with the new file's
+details. If no PATHs are specified, or no match can be found, then the file is
+instead reported as missing.
 
-Missing files are reported but are not, by default, removed from the database
-as this would destroy the tagging information associated with them. To remove
-these files use the --remove option.
+Files that have been both moved and modified cannot be repaired and must be
+manually relocated.
+
+When run with the --manual option, any paths that begin with OLD are updated to
+begin with NEW. Any affected files' fingerprints are updated providing the file
+exists at the new location. No further repairs are attempted in this mode.
 
 Examples:
 
-    $ tmsu repair
-    $ tmsu repair /new/path
-    $ tmsu repair --path /old/path /new/path
-    $ tmsu repair --remove`,
-	Options: Options{{"--path", "-p", "limit repair to files under a path", true, ""},
+    $ tmsu repair                                
+    $ tmsu repair /new/path                      # look for missing files here
+    $ tmsu repair --path /home/sally             # repair subset of database
+    $ tmsu repair --manual /home/bob /home/fred  # manually repair paths`,
+	Options: Options{{"--path", "-p", "limit repair to files in database under path", true, ""},
 		{"--pretend", "-P", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},
+		{"--manual", "-m", "manually relocate files", false, ""},
 		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},
 	Exec: repairExec,
 }
 
-func repairExec(options Options, args []string) error {
-	limitPath := "/" //TODO Windows
-	if options.HasOption("--path") {
-		limitPath = options.Get("--path").Argument
-	}
-	pretend := options.HasOption("--pretend")
-	removeMissing := options.HasOption("--remove")
-	recalcUnmodified := options.HasOption("--unmodified")
-	searchPaths := args
+// unexported
 
+func repairExec(options Options, args []string) error {
+	pretend := options.HasOption("--pretend")
+
+	if options.HasOption("--manual") {
+		fromPath := args[0]
+		toPath := args[1]
+
+		if err := manualRepair(fromPath, toPath, pretend); err != nil {
+			return err
+		}
+	} else {
+		searchPaths := args
+		limitPath := "/" //TODO Windows
+		removeMissing := options.HasOption("--remove")
+		recalcUnmodified := options.HasOption("--unmodified")
+		if options.HasOption("--path") {
+			limitPath = options.Get("--path").Argument
+		}
+
+		if err := fullRepair(searchPaths, limitPath, removeMissing, recalcUnmodified, pretend); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func manualRepair(fromPath, toPath string, pretend bool) error {
+	store, err := storage.Open()
+	if err != nil {
+		return fmt.Errorf("could not open storage: %v", err)
+	}
+	defer store.Close()
+
+	if err := store.Begin(); err != nil {
+		return fmt.Errorf("could not begin transaction: %v", err)
+	}
+	defer store.Commit()
+
+	log.Infof(2, "retrieving files under '%v' from the database", fromPath)
+
+	file, err := store.FileByPath(fromPath)
+	if err != nil {
+		return fmt.Errorf("%v: could not retrieve file: %v", fromPath, err)
+	}
+
+	if file != nil {
+		//TODO update path
+		//TODO if file is at destination then update fingerprint, date, size and dir status
+		log.Infof(1, "move file %v to %v", fromPath, toPath)
+	}
+
+	dbFiles, err := store.FilesByDirectory(fromPath)
+	if err != nil {
+		return fmt.Errorf("could not retrieve files from storage: %v", err)
+	}
+
+	for _, dbFile := range dbFiles {
+		//TODO update path
+		//TODO if file is at destination then update fingerprint, date, size and dir status
+
+		fmt.Println(dbFile.Path())
+	}
+
+	return nil
+}
+
+func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, pretend bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -97,8 +156,10 @@ func repairExec(options Options, args []string) error {
 
 	dbFiles, err := store.FilesByDirectory(limitPath)
 	if err != nil {
-		return fmt.Errorf("could not retrieve paths from storage: %v", err)
+		return fmt.Errorf("could not retrieve files from storage: %v", err)
 	}
+
+	log.Infof(2, "retrieved %v files from the database", len(dbFiles))
 
 	unmodfied, modified, missing := determineStatuses(dbFiles)
 
@@ -126,8 +187,6 @@ func repairExec(options Options, args []string) error {
 	return nil
 }
 
-// unexported
-
 func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing entities.Files) {
 	log.Infof(2, "determining file statuses")
 
@@ -143,14 +202,17 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 				log.Warnf("%v: permission denied", dbFile.Path())
 				continue
 			case os.IsNotExist(err):
+				log.Infof(2, "%v: missing", dbFile.Path())
 				missing = append(missing, dbFile)
 				continue
 			}
 		}
 
 		if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
+			log.Infof(2, "%v: unmodified", dbFile.Path())
 			unmodified = append(unmodified, dbFile)
 		} else {
+			log.Infof(2, "%v: modified", dbFile.Path())
 			modified = append(modified, dbFile)
 		}
 	}
@@ -178,11 +240,9 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
-
-			log.Infof(1, "%v: unmodified FIXED", dbFile.Path())
-		} else {
-			log.Infof(1, "%v: unmodified", dbFile.Path())
 		}
+
+		fmt.Printf("%v: recalculated fingerprint\n", dbFile.Path())
 	}
 
 	return nil
@@ -209,10 +269,9 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
 
-			log.Infof(1, "%v: modified FIXED", dbFile.Path())
-		} else {
-			log.Infof(1, "%v: modified", dbFile.Path())
 		}
+
+		fmt.Printf("%v: updated fingerprint\n", dbFile.Path())
 	}
 
 	return nil
@@ -259,15 +318,13 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 
 			if fingerprint == dbFile.Fingerprint {
 				if !pretend {
-					log.Infof(1, "%v: moved to %v FIXED", dbFile.Path(), candidatePath)
-
 					_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
 					if err != nil {
 						return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 					}
-				} else {
-					log.Infof(1, "%v: moved to %v", dbFile.Path(), candidatePath)
 				}
+
+				fmt.Printf("%v: updated path to %v\n", dbFile.Path(), candidatePath)
 
 				missing[index] = nil
 
@@ -285,14 +342,16 @@ func repairMissing(store *storage.Storage, missing entities.Files, pretend, forc
 			continue
 		}
 
-		if force && !pretend {
-			if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
-				return fmt.Errorf("%v: could not delete file-tags: %v", dbFile.Path(), err)
+		if force {
+			if !pretend {
+				if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
+					return fmt.Errorf("%v: could not delete file-tags: %v", dbFile.Path(), err)
+				}
 			}
 
-			log.Infof(1, "%v: missing FIXED", dbFile.Path())
+			fmt.Printf("%v: removed\n", dbFile.Path())
 		} else {
-			log.Infof(1, "%v: missing", dbFile.Path())
+			fmt.Printf("%v: missing\n", dbFile.Path())
 		}
 	}
 

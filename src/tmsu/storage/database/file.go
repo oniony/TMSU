@@ -97,7 +97,9 @@ func (db *Database) FilesByDirectory(path string) (entities.Files, error) {
             WHERE directory = ? OR directory LIKE ?
             ORDER BY directory || '/' || name`
 
-	rows, err := db.ExecQuery(sql, path, filepath.Clean(path+"/%"))
+	path = filepath.Clean(path)
+
+	rows, err := db.ExecQuery(sql, path, filepath.Join(path, "%"))
 	if err != nil {
 		return nil, err
 	}

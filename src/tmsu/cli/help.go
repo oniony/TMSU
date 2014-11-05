@@ -22,6 +22,7 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"tmsu/cli/ansi"
 	"tmsu/cli/terminal"
 )
@@ -39,6 +40,24 @@ Shows help summary or, where SUBCOMMAND is specified, help for SUBCOMMAND.`,
 var helpCommands map[string]*Command
 
 func helpExec(options Options, args []string) error {
+	var colour bool
+	if options.HasOption("--color") {
+		when := options.Get("--color").Argument
+		switch when {
+		case "auto":
+			colour = terminal.Colour() && terminal.Width() > 0
+		case "":
+		case "always":
+			colour = true
+		case "never":
+			colour = false
+		default:
+			return fmt.Errorf("invalid argument '%v' for '--color'", when)
+		}
+	} else {
+		colour = terminal.Colour() && terminal.Width() > 0
+	}
+
 	if options.HasOption("--list") {
 		listCommands()
 	} else {
@@ -47,7 +66,7 @@ func helpExec(options Options, args []string) error {
 			summary()
 		default:
 			commandName := args[0]
-			describeCommand(commandName)
+			describeCommand(commandName, colour)
 		}
 	}
 
@@ -115,14 +134,25 @@ func listCommands() {
 	renderColumns(commandNames, terminal.Width())
 }
 
-func describeCommand(commandName string) {
+func describeCommand(commandName string, colour bool) {
 	command := findCommand(helpCommands, commandName)
 	if command == nil {
 		fmt.Printf("No such command '%v'.\n", commandName)
 		return
 	}
 
-	fmt.Println(string(command.Description))
+	description := command.Description
+	if colour {
+		description = strings.Replace(description, "[WHITE]", string(ansi.White+"●"+ansi.Reset), -1)
+		description = strings.Replace(description, "[CYAN]", string(ansi.Cyan+"●"+ansi.Reset), -1)
+		description = strings.Replace(description, "[YELLOW]", string(ansi.Yellow+"●"+ansi.Reset), -1)
+	} else {
+		description = strings.Replace(description, "[WHITE]", "WHITE ", -1)
+		description = strings.Replace(description, "[CYAN]", "CYAN  ", -1)
+		description = strings.Replace(description, "[YELLOW]", "YELLOW", -1)
+	}
+
+	fmt.Println(description)
 
 	if command.Aliases != nil && len(command.Aliases) > 0 {
 		fmt.Println()

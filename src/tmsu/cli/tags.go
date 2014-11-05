@@ -40,9 +40,9 @@ database are listed.
 
 When color is turned on, tags are shown in the following colors:
 
-    White   An explicitly applied (regular) tag
-    Cyan    Tag implied by other tag(s)
-    Yellow  Tag is both explicitly applied and implied by other tag(s)
+  [WHITE] An explicitly applied (regular) tag
+  [CYAN] Tag implied by other tag(s)
+  [YELLOW] Tag is both explicitly applied and implied by other tag(s)
 
 See the 'imply' subcommand for more information on implied tags.
 

@@ -35,7 +35,7 @@ var TagsCommand = Command{
 	Synopsis: "List tags",
 	Description: `tmsu tags [OPTION]... [FILE]...
 
-Lists the tags applied to FILEs. If no FILE is specified then all files in the
+Lists the tags applied to FILEs. If no FILE is specified then all tags in the
 database are listed.
 
 When color is turned on, tags are shown in the following colors:

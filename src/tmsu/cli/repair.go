@@ -96,6 +96,8 @@ func repairExec(options Options, args []string) error {
 }
 
 func manualRepair(fromPath, toPath string, pretend bool) error {
+	log.Warnf("Manual repairs are not yet implemented.")
+
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

@@ -140,15 +140,14 @@ v0.5.0 (in development)
   read the following release notes carefully.*
 
   * The --untagged option on the 'files' and 'status' subcommands has been
-    replaced by a new 'untagged' subcommand. This approach is more intuitive,
-    simpler and more performant than the previous options.
+    replaced by a new 'untagged' subcommand, which should be more intuitive.
   * The --all option on the 'files', 'tags' and 'values' command has been
     removed. These commands now list the full set of files/tags/values when run
     without arguments. For the 'tags' subcommand this replaces the previous
     behaviour of listing tags for the files in the working directory: use 'tmsu
     tags *' for approximately the previous behaviour.
   * The 'repair' subcommand --pretend short option has changed from -p to -P so
-    that -p can be later recycled for --path.
+    that -p can be recycled for --path.
   * The 'repair' subcommand's argument now specify paths to search for moved
     files and no longer limit how much of the database is repaired. A new --path
     argument is provided for reducing the repair to a portion of the database.
@@ -164,6 +163,7 @@ v0.5.0 (in development)
     will now be reported as a warning.
   * TMSU can now be built without the Makefile.
   * Issue #82: It is now possible to remove tags with values via the VFS.
+  * Bug fixes.
 
 v0.4.2
 ------

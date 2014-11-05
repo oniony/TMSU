@@ -231,6 +231,7 @@ _tmsu_cmd_repair() {
                      ''{--remove,-R}'[remove missing files from the database]' \
 	                 ''{--unmodified,-u}'[recalculate fingerprints for unmodified files]' \
 	                 ''{--pretend,-P}'[do not make any changes]' \
+	                 ''{--manual,-m}'[manually relocate files]' \
 	                 '*:file:_files' \
     && ret=0
 }

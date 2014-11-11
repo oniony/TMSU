@@ -225,6 +225,10 @@ func (db *Database) DeleteValue(valueId entities.ValueId) error {
 
 // Deletes all unused values.
 func (db *Database) DeleteUnusedValues(valueIds entities.ValueIds) error {
+	if len(valueIds) == 0 {
+		return nil
+	}
+
 	sql := `DELETE FROM value
             WHERE id IN (?`
 	sql += strings.Repeat(",?", len(valueIds)-1)

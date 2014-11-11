@@ -319,6 +319,10 @@ func (db *Database) DeleteFile(fileId entities.FileId) error {
 
 // Deletes all untagged files.
 func (db *Database) DeleteUntaggedFiles(fileIds entities.FileIds) error {
+	if len(fileIds) == 0 {
+		return nil
+	}
+
 	sql := `DELETE FROM file
             WHERE id IN (?`
 	sql += strings.Repeat(",?", len(fileIds)-1)

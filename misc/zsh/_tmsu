@@ -151,6 +151,18 @@ _tmsu_query() {
     fi
 }
 
+_tmsu_files() {
+    typeset -a file_list
+    local file
+
+    _call_program tmsu tmsu $db files | while read -A file
+    do
+        file_list+=$file:s/\.\///
+    done
+
+    _describe -t files 'files' file_list
+}
+
 _tmsu_file_tags() {
     file=$words[1]
 
@@ -297,11 +309,11 @@ _tmsu_cmd_untag() {
 		(items)
 			if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--all]} || ${+opt_args[-a]} ))
 			then
-                _wanted files expl 'files' _files
+                _wanted files expl 'files' _tmsu_files
 			else
 				if (( CURRENT == 1 ))
 				then
-					_wanted files expl 'files' _files
+					_wanted files expl 'files' _tmsu_files
 				else
 					_wanted tags expl 'tags' _tmsu_file_tags
 				fi

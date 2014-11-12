@@ -25,7 +25,41 @@ import (
 	"tmsu/storage"
 )
 
-func TestDeleteSuccessful(test *testing.T) {
+func TestDeleteUnappliedTag(test *testing.T) {
+	// set-up
+
+	databasePath := testDatabase()
+	defer os.Remove(databasePath)
+
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	tagBeetroot, err := store.AddTag("beetroot")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	// test
+
+	if err := DeleteCommand.Exec(Options{}, []string{"beetroot"}); err != nil {
+		test.Fatal(err)
+	}
+
+	// validate
+
+	tagBeetroot, err = store.TagByName("beetroot")
+	if err != nil {
+		test.Fatal(err)
+	}
+	if tagBeetroot != nil {
+		test.Fatal("Deleted tag still exists.")
+	}
+}
+
+func TestDeleteAppliedTag(test *testing.T) {
 	// set-up
 
 	databasePath := testDatabase()

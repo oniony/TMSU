@@ -21,8 +21,11 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
+	"time"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
+	_path "tmsu/common/path"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -96,7 +99,15 @@ func repairExec(options Options, args []string) error {
 }
 
 func manualRepair(fromPath, toPath string, pretend bool) error {
-	log.Warnf("Manual repairs are not yet implemented.")
+	absFromPath, err := filepath.Abs(fromPath)
+	if err != nil {
+		return fmt.Errorf("%v: could not determine absolute path", err)
+	}
+
+	absToPath, err := filepath.Abs(toPath)
+	if err != nil {
+		return fmt.Errorf("%v: could not determine absolute path", err)
+	}
 
 	store, err := storage.Open()
 	if err != nil {
@@ -111,30 +122,68 @@ func manualRepair(fromPath, toPath string, pretend bool) error {
 
 	log.Infof(2, "retrieving files under '%v' from the database", fromPath)
 
-	file, err := store.FileByPath(fromPath)
+	dbFile, err := store.FileByPath(absFromPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not retrieve file: %v", fromPath, err)
 	}
 
-	if file != nil {
-		//TODO update path
-		//TODO if file is at destination then update fingerprint, date, size and dir status
-		log.Infof(1, "move file %v to %v", fromPath, toPath)
+	if dbFile != nil {
+		log.Infof(2, "%v: updating to %v", fromPath, toPath)
+
+		if err := manualRepairFile(store, dbFile, absToPath); err != nil {
+			return err
+		}
 	}
 
-	dbFiles, err := store.FilesByDirectory(fromPath)
+	dbFiles, err := store.FilesByDirectory(absFromPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve files from storage: %v", err)
 	}
 
-	for _, dbFile := range dbFiles {
-		//TODO update path
-		//TODO if file is at destination then update fingerprint, date, size and dir status
+	for _, dbFile = range dbFiles {
+		relFileFromPath := _path.Rel(dbFile.Path())
+		absFileToPath := strings.Replace(dbFile.Path(), absFromPath, absToPath, -1)
+		relFileToPath := _path.Rel(absFileToPath)
 
-		fmt.Println(dbFile.Path())
+		log.Infof(2, "%v: updating to %v", relFileFromPath, relFileToPath)
+
+		if err := manualRepairFile(store, dbFile, absFileToPath); err != nil {
+			return err
+		}
 	}
 
 	return nil
+}
+
+func manualRepairFile(store *storage.Storage, file *entities.File, toPath string) error {
+	var fingerprint fingerprint.Fingerprint
+	var modTime time.Time
+	var size int64
+	var isDir bool
+
+	stat, err := os.Stat(toPath)
+	if err != nil {
+		switch {
+		case os.IsPermission(err):
+			return fmt.Errorf("%v: permission denied", toPath)
+		case os.IsNotExist(err):
+			return fmt.Errorf("%v: file not found", toPath)
+		default:
+			return err
+		}
+
+		modTime = file.ModTime
+		size = file.Size
+		isDir = file.IsDir
+	} else {
+		modTime = stat.ModTime()
+		size = stat.Size()
+		isDir = stat.IsDir()
+	}
+
+	_, err = store.UpdateFile(file.Id, toPath, fingerprint, modTime, size, isDir)
+
+	return err
 }
 
 func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, pretend bool) error {

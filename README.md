@@ -151,7 +151,7 @@ v0.5.0 (in development)
   * The 'repair' subcommand's argument now specify paths to search for moved
     files and no longer limit how much of the database is repaired. A new --path
     argument is provided for reducing the repair to a portion of the database.
-  * A new --manual option on the 'repair' command allows targetted repair of
+  * A new --manual option on the 'repair' subcommand allows targetted repair of
     moved files or directories.
   * The exclamation mark character (!) is no longer permitted within a tag or
     value name. Please rename tags using the 'rename' command. Value names will

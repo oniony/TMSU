@@ -178,7 +178,7 @@ func (storage *Storage) DeleteFileIfUntagged(fileId entities.FileId) error {
 	return nil
 }
 
-// Deletes all untagged files from the database.
+// Deletes the specified files if they are untagged
 func (storage *Storage) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 	return storage.Db.DeleteUntaggedFiles(fileIds)
 }

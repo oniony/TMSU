@@ -130,8 +130,10 @@ func manualRepair(fromPath, toPath string, pretend bool) error {
 	if dbFile != nil {
 		log.Infof(2, "%v: updating to %v", fromPath, toPath)
 
-		if err := manualRepairFile(store, dbFile, absToPath); err != nil {
-			return err
+		if !pretend {
+			if err := manualRepairFile(store, dbFile, absToPath); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -142,13 +144,15 @@ func manualRepair(fromPath, toPath string, pretend bool) error {
 
 	for _, dbFile = range dbFiles {
 		relFileFromPath := _path.Rel(dbFile.Path())
-		absFileToPath := strings.Replace(dbFile.Path(), absFromPath, absToPath, -1)
+		absFileToPath := strings.Replace(dbFile.Path(), absFromPath, absToPath, 1)
 		relFileToPath := _path.Rel(absFileToPath)
 
 		log.Infof(2, "%v: updating to %v", relFileFromPath, relFileToPath)
 
-		if err := manualRepairFile(store, dbFile, absFileToPath); err != nil {
-			return err
+		if !pretend {
+			if err := manualRepairFile(store, dbFile, absFileToPath); err != nil {
+				return err
+			}
 		}
 	}
 
@@ -232,10 +236,42 @@ func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnm
 		return err
 	}
 
-	//TODO cleanup: any files that have no tags: remove
-	//TODO cleanup: any tags that do not correspond to a file: remove
+	if err = deleteUntaggedFiles(store, dbFiles); err != nil {
+		return err
+	}
+
+	if err = deleteUnusedValues(store); err != nil {
+		return err
+	}
 
 	return nil
+}
+
+func deleteUntaggedFiles(store *storage.Storage, files entities.Files) error {
+	log.Infof(2, "purging untagged files")
+
+	fileIds := make([]entities.FileId, len(files))
+	for index, file := range files {
+		fileIds[index] = file.Id
+	}
+
+	return store.DeleteUntaggedFiles(fileIds)
+}
+
+func deleteUnusedValues(store *storage.Storage) error {
+	log.Infof(2, "purging unused values")
+
+	values, err := store.Values()
+	if err != nil {
+		return fmt.Errorf("could not retrieve set of values")
+	}
+
+	valueIds := make([]entities.ValueId, len(values))
+	for index, value := range values {
+		valueIds[index] = value.Id
+	}
+
+	return store.DeleteUnusedValues(valueIds)
 }
 
 func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing entities.Files) {

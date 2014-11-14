@@ -317,7 +317,7 @@ func (db *Database) DeleteFile(fileId entities.FileId) error {
 	return nil
 }
 
-// Deletes all untagged files.
+// Deletes the specified files if they are untagged
 func (db *Database) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 	if len(fileIds) == 0 {
 		return nil

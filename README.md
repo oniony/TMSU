@@ -30,6 +30,9 @@ combinations are available:
 
   * <http://bitbucket.org/oniony/tmsu/downloads>
 
+(If you would rather build from the source code then please see COMPILING.md
+ in the root of the repository.)
+
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function. These packages are typically available with your
 operating system's package management system.
@@ -46,69 +49,6 @@ system:
 Copy the Zsh completion file to the Zsh site-functions directory:
 
     $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
-
-Compiling
-=========
-
-The following steps are for compiling from source.    
-
-1. Installing Go
-
-    TMSU is written in the Go programming language. To compile from source you must
-    first install Go and the packages that TMSU depends upon. You can get that from
-    the Go website:
-
-    * <http://www.golang.org/>
-
-    Go can be installed per the instructions on the Go website or it may be
-    available in the package management system that comes with your operating
-    system.
-
-2. Set Up the Go Path
-
-    Go (as of verison 1.1) requires the GOPATH environment variable be set for the
-    'go get' command to function. You will need to set up a path for Go packages to
-    live if you do not already have one:
-
-        $ mkdir $HOME/gopath
-        $ export GOPATH=$HOME/gopath
-
-3. Install the dependent packages.
-
-    These will be installed to your $GOPATH directory.
-
-        $ go get -u github.com/mattn/go-sqlite3
-        $ go get -u github.com/hanwen/go-fuse/fuse
-
-4. Clone the TMSU respository:
-
-    To clone the current stable release branch:
-
-        $ hg clone -r release https://bitbucket.org/oniony/tmsu
-
-    Active development takes place on the default branch. This branch is subject
-    to build failures and breaking changes but will have the latest
-    functionality and improvements:
-
-        $ hg clone https://bitbucket.org/oniony/tmsu
-
-5. Make the project
-
-        $ cd tmsu
-        $ make
-
-    This will compile to 'bin/tmsu' within the working directory.
-
-6. Install the project
-
-        $ sudo make install
-
-    This will install TMSU to '/usr/bin/tmsu'.
-
-    It will also install the Zsh completion to '/usr/share/zsh/site-functions'
-    and mount wrapper to '/usr/sbin'.
-
-    To change the paths used override the variables at the top of the Makefile.
 
 About
 =====

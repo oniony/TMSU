@@ -37,23 +37,15 @@ var RepairCommand = Command{
 	Description: `tmsu [OPTION]... repair [PATH]...
 tmsu [OPTION]... repair --manual OLD NEW
 
-Fixes broken paths, stale fingerprints in the database caused by file
-modifications and moves.
+Fixes broken paths, stale fingerprints in the database caused by file modifications and moves.
 
-Modified files are identified by a change to the file's modification time or
-file size. These files are repaired by updating the details in the database.
+Modified files are identified by a change to the file's modification time or file size. These files are repaired by updating the details in the database.
 
-An attempt is made to find missing files under PATHs specified. If a file with
-the same fingerprint is found then the database is updated with the new file's
-details. If no PATHs are specified, or no match can be found, then the file is
-instead reported as missing.
+An attempt is made to find missing files under PATHs specified. If a file with the same fingerprint is found then the database is updated with the new file's details. If no PATHs are specified, or no match can be found, then the file is instead reported as missing.
 
-Files that have been both moved and modified cannot be repaired and must be
-manually relocated.
+Files that have been both moved and modified cannot be repaired and must be manually relocated.
 
-When run with the --manual option, any paths that begin with OLD are updated to
-begin with NEW. Any affected files' fingerprints are updated providing the file
-exists at the new location. No further repairs are attempted in this mode.
+When run with the --manual option, any paths that begin with OLD are updated to begin with NEW. Any affected files' fingerprints are updated providing the file exists at the new location. No further repairs are attempted in this mode.
 
 Examples:
 

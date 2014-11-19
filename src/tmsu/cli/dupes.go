@@ -34,8 +34,7 @@ var DupesCommand = Command{
 	Synopsis: "Identify duplicate files",
 	Description: `tmsu dupes [FILE]...
 
-Identifies all files in the database that are exact duplicates of FILE. If no
-FILE is specified then identifies duplicates between files in the database.
+Identifies all files in the database that are exact duplicates of FILE. If no FILE is specified then identifies duplicates between files in the database.
 
 Examples:
 

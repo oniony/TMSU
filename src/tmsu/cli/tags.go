@@ -23,9 +23,9 @@ import (
 	"path/filepath"
 	"sort"
 	"strconv"
-	"tmsu/cli/ansi"
-	"tmsu/cli/terminal"
 	"tmsu/common/log"
+	"tmsu/common/terminal"
+	"tmsu/common/terminal/ansi"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -35,8 +35,7 @@ var TagsCommand = Command{
 	Synopsis: "List tags",
 	Description: `tmsu tags [OPTION]... [FILE]...
 
-Lists the tags applied to FILEs. If no FILE is specified then all tags in the
-database are listed.
+Lists the tags applied to FILEs. If no FILE is specified then all tags in the database are listed.
 
 When color is turned on, tags are shown in the following colors:
 
@@ -120,9 +119,9 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 		}
 
 		if onePerLine {
-			renderSingleColumn(tagNames, 0)
+			terminal.PrintList(tagNames, 0)
 		} else {
-			renderColumns(tagNames, terminal.Width())
+			terminal.PrintColumns(tagNames, terminal.Width())
 		}
 	}
 
@@ -187,9 +186,9 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		fmt.Println(len(tagNames))
 	} else {
 		if onePerLine {
-			renderSingleColumn(tagNames, 0)
+			terminal.PrintList(tagNames, 0)
 		} else {
-			renderColumns(tagNames, terminal.Width())
+			terminal.PrintColumns(tagNames, terminal.Width())
 		}
 	}
 
@@ -236,10 +235,10 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 		} else {
 			if onePerLine {
 				fmt.Println(path)
-				renderSingleColumn(tagNames, 2)
+				terminal.PrintList(tagNames, 2)
 			} else {
 				fmt.Print(path + ": ")
-				renderSingleLine(tagNames)
+				terminal.PrintLine(tagNames)
 			}
 		}
 	}
@@ -287,10 +286,10 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 		} else {
 			if onePerLine {
 				fmt.Println(dirName)
-				renderSingleColumn(tagNames, 2)
+				terminal.PrintList(tagNames, 2)
 			} else {
 				fmt.Print(dirName + ": ")
-				renderSingleLine(tagNames)
+				terminal.PrintLine(tagNames)
 			}
 		}
 	}

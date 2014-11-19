@@ -35,21 +35,15 @@ var MountCommand = Command{
 	Description: `tmsu mount
 tmsu mount [OPTION]... [FILE] MOUNTPOINT
 
-Without arguments, lists the currently mounted file-systems, otherwise mounts a
-virtual file-system at the path MOUNTPOINT.
+Without arguments, lists the currently mounted file-systems, otherwise mounts a virtual file-system at the path MOUNTPOINT.
 
 Where FILE is specified, the database at FILE is mounted.
 
-If FILE is not specified but the TMSU_DB environment variable is defined then
-the database at TMSU_DB is mounted.
+If FILE is not specified but the TMSU_DB environment variable is defined then the database at TMSU_DB is mounted.
 
-Where neither FILE is specified nor TMSU_DB defined then the default database
-is mounted.
+Where neither FILE is specified nor TMSU_DB defined then the default database is mounted.
 
-To allow other users access to the mounted filesystem, pass the 'allow_other'
-FUSE option, e.g. 'tmsu mount --option=allow_other mp'. (FUSE only allows the
-root user to use this option unless 'user_allow_other' is present in
-'/etc/fuse.conf'.)
+To allow other users access to the mounted filesystem, pass the 'allow_other' FUSE option, e.g. 'tmsu mount --option=allow_other mp'. (FUSE only allows the root user to use this option unless 'user_allow_other' is present in '/etc/fuse.conf'.)
 
 Examples:
 

@@ -20,9 +20,9 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"tmsu/cli/ansi"
-	"tmsu/cli/terminal"
 	"tmsu/common/log"
+	"tmsu/common/terminal"
+	"tmsu/common/terminal/ansi"
 	"tmsu/storage"
 )
 
@@ -95,7 +95,7 @@ func listAllValues(showCount, onePerLine bool) error {
 				valueNames[index] = ansi.String(value.Name)
 			}
 
-			renderColumns(valueNames, terminal.Width())
+			terminal.PrintColumns(valueNames, terminal.Width())
 		}
 	}
 
@@ -150,7 +150,7 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 				valueNames[index] = ansi.String(value.Name)
 			}
 
-			renderColumns(valueNames, terminal.Width())
+			terminal.PrintColumns(valueNames, terminal.Width())
 		}
 	}
 

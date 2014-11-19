@@ -31,14 +31,9 @@ tmsu imply --list
 
 Creates a tag implication such that whenever TAG is applied, IMPL are automatically applied.
 
-It is possible that a file may end up with the same tag applied explicitly and
-by way of a tag implication, making the explicit tag redundant. The decision on
-whether to keep or remove the redundant explicit tag is with you, but understand
-that the implied tags are more flexible in that the rules of which tags implies
-which others can be changed at any time.
+It is possible that a file may end up with the same tag applied explicitly and by way of a tag implication, making the explicit tag redundant. The decision on whether to keep or remove the redundant explicit tag is with you, but understand that the implied tags are more flexible in that the rules of which tags implies which others can be changed at any time.
 
-The 'tags' subcommand can be used to identify which tags applied to a file are
-implied.
+The 'tags' subcommand can be used to identify which tags applied to a file are implied.
 
 Examples:
 

@@ -23,8 +23,8 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"tmsu/cli/ansi"
-	"tmsu/cli/terminal"
+	"tmsu/common/terminal"
+	"tmsu/common/terminal/ansi"
 )
 
 var HelpCommand = Command{
@@ -131,7 +131,7 @@ func listCommands() {
 
 	sort.Sort(commandNames)
 
-	renderColumns(commandNames, terminal.Width())
+	terminal.PrintList(commandNames, terminal.Width())
 }
 
 func describeCommand(commandName string, colour bool) {
@@ -152,6 +152,7 @@ func describeCommand(commandName string, colour bool) {
 		description = strings.Replace(description, "[YELLOW]", "YELLOW", -1)
 	}
 
+	//TODO print words until no more fit
 	fmt.Println(description)
 
 	if command.Aliases != nil && len(command.Aliases) > 0 {

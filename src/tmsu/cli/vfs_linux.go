@@ -26,12 +26,9 @@ import (
 var VfsCommand = Command{
 	Name:     "vfs",
 	Synopsis: "",
-	Description: `This subcommand is the foreground process which hosts the virtual filesystem.
-It is run automatically when a virtual filesystem is mounted using the 'mount' subcommand
-and terminated when the virtual filesystem is unmounted.
+	Description: `This subcommand is the foreground process which hosts the virtual filesystem. It is run automatically when a virtual filesystem is mounted using the 'mount' subcommand and terminated when the virtual filesystem is unmounted.
 
-It is not normally necessary to issue this subcommand manually unless debugging the virtual
-filesystem. For debug output use the --verbose option.`,
+It is not normally necessary to issue this subcommand manually unless debugging the virtual filesystem. For debug output use the --verbose option.`,
 	Options: Options{{"--options", "-o", "mount options", true, ""}},
 	Exec:    vfsExec,
 }

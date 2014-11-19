@@ -15,16 +15,16 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package cli
+package terminal
 
 import (
 	"fmt"
 	"sort"
 	"strings"
-	"tmsu/cli/ansi"
+	"tmsu/common/terminal/ansi"
 )
 
-func renderSingleLine(items ansi.Strings) {
+func PrintLine(items ansi.Strings) {
 	sort.Sort(items)
 
 	for index, item := range items {
@@ -38,7 +38,7 @@ func renderSingleLine(items ansi.Strings) {
 	fmt.Println()
 }
 
-func renderSingleColumn(items ansi.Strings, indent int) {
+func PrintList(items ansi.Strings, indent int) {
 	sort.Sort(items)
 
 	var padding = strings.Repeat(" ", indent)
@@ -48,7 +48,7 @@ func renderSingleColumn(items ansi.Strings, indent int) {
 	}
 }
 
-func renderColumns(items ansi.Strings, width int) {
+func PrintColumns(items ansi.Strings, width int) {
 	sort.Sort(items)
 
 	padding := 2 // minimum column padding

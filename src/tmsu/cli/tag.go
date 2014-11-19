@@ -37,17 +37,11 @@ tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...
 tmsu tag [OPTION]... --from=FILE FILE...
 tmsu tag [OPTION]... --create TAG[=VALUE]...
 
-Tags the file FILE with the TAGs specified. If no TAG is specified then all tags
-are listed.
+Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
 
-Tag names may consist of one or more letter, number, punctuation and symbol
-characters (from the corresponding Unicode categories). Tag names may not
-contain whitespace characters, the comparison operator symbols ('=', '<' and
-'>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In
-addition, the tag names '.' and '..' are not valid.
+Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names may not contain whitespace characters, the comparison operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
 
-Optionally tags applied to files may be attributed with a VALUE using the
-TAG=VALUE syntax.
+Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
 
 Examples:
 

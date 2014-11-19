@@ -35,19 +35,13 @@ var FilesCommand = Command{
 	Synopsis: "List files with particular tags",
 	Description: `tmsu files [OPTION]... [QUERY]
 
-Lists the files in the database that match the QUERY specified. If no
-query is specified, all files in the database are listed.
+Lists the files in the database that match the QUERY specified. If no query is specified, all files in the database are listed.
 
-QUERY may contain tag names to match, operators and parentheses. Operators
-are: and or not == != < > <= >=.
+QUERY may contain tag names to match, operators and parentheses. Operators are: and or not == != < > <= >=.
 
-Queries are run against the database so the results may not reflect the current
-state of the filesystem. Only tagged files are matched: to identify untagged
-files use the 'untagged' subcommand.
+Queries are run against the database so the results may not reflect the current state of the filesystem. Only tagged files are matched: to identify untagged files use the 'untagged' subcommand.
 
-Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.
-Either enclose the query in quotation marks, escape the problematic characters
-or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.
+Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.  Either enclose the query in quotation marks, escape the problematic characters or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.
 
 Examples:
 

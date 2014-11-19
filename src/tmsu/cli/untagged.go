@@ -33,8 +33,7 @@ var UntaggedCommand = Command{
 
 Identify untagged files in the filesystem.  
 
-Where PATHs are not specified, untagged items under the current working
-directory are shown.
+Where PATHs are not specified, untagged items under the current working directory are shown.
 
 Examples:
 

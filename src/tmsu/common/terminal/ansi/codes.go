@@ -18,9 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package ansi
 
 var Reset String = "\x1b[0m"
+
 var Bold String = "\x1b[1m"
 var Italic String = "\x1b[3m"
 var Underline String = "\x1b[4m"
+
 var Red String = "\x1b[31m"
 var Green String = "\x1b[32m"
 var Yellow String = "\x1b[33m"

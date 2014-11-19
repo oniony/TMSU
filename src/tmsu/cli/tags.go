@@ -33,19 +33,19 @@ import (
 var TagsCommand = Command{
 	Name:     "tags",
 	Synopsis: "List tags",
-	Description: `tmsu tags [OPTION]... [FILE]...
+	Description: `$BOLDtmsu tags [OPTION]... [FILE]...$RESET
 
 Lists the tags applied to FILEs. If no FILE is specified then all tags in the database are listed.
 
 When color is turned on, tags are shown in the following colors:
 
-  [WHITE] An explicitly applied (regular) tag
-  [CYAN] Tag implied by other tag(s)
-  [YELLOW] Tag is both explicitly applied and implied by other tag(s)
+  Normal An explicitly applied (regular) tag
+  $CYANCyan$RESET   Tag implied by other tags
+  $YELLOWYellow$RESET Tag is both explicitly applied and implied by other tags
 
 See the 'imply' subcommand for more information on implied tags.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu tags
     mp3  music  opera 
@@ -119,9 +119,9 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 		}
 
 		if onePerLine {
-			terminal.PrintList(tagNames, 0)
+			terminal.PrintList(tagNames, 0, colour)
 		} else {
-			terminal.PrintColumns(tagNames, terminal.Width())
+			terminal.PrintColumns(tagNames, terminal.Width(), colour)
 		}
 	}
 
@@ -186,9 +186,9 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		fmt.Println(len(tagNames))
 	} else {
 		if onePerLine {
-			terminal.PrintList(tagNames, 0)
+			terminal.PrintList(tagNames, 0, colour)
 		} else {
-			terminal.PrintColumns(tagNames, terminal.Width())
+			terminal.PrintColumns(tagNames, terminal.Width(), colour)
 		}
 	}
 
@@ -235,10 +235,10 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 		} else {
 			if onePerLine {
 				fmt.Println(path)
-				terminal.PrintList(tagNames, 2)
+				terminal.PrintList(tagNames, 2, colour)
 			} else {
 				fmt.Print(path + ": ")
-				terminal.PrintLine(tagNames)
+				terminal.PrintListOnLine(tagNames, colour)
 			}
 		}
 	}
@@ -286,10 +286,10 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 		} else {
 			if onePerLine {
 				fmt.Println(dirName)
-				terminal.PrintList(tagNames, 2)
+				terminal.PrintList(tagNames, 2, colour)
 			} else {
 				fmt.Print(dirName + ": ")
-				terminal.PrintLine(tagNames)
+				terminal.PrintListOnLine(tagNames, colour)
 			}
 		}
 	}

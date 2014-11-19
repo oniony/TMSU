@@ -25,7 +25,7 @@ import (
 var VersionCommand = Command{
 	Name:     "version",
 	Synopsis: "",
-	Description: `tmsu version
+	Description: `$BOLDtmsu version$RESET
 
 Displays version and copyright information.`,
 	Options: Options{},

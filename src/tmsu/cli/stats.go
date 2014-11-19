@@ -26,7 +26,7 @@ import (
 var StatsCommand = Command{
 	Name:     "stats",
 	Synopsis: "Show database statistics",
-	Description: `tmsu stats
+	Description: `$BOLDtmsu stats$RESET
 
 Shows the database statistics.`,
 	Options: Options{Option{"--usage", "-u", "show tag usage breakdown", false, ""}},

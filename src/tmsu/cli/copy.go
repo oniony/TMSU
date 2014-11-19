@@ -27,11 +27,11 @@ var CopyCommand = Command{
 	Name:     "copy",
 	Aliases:  []string{"cp"},
 	Synopsis: "Create a copy of a tag",
-	Description: `tmsu copy TAG NEW...
+	Description: `$BOLDtmsu copy TAG NEW...$RESET
 
 Creates a new tag NEW applied to the same set of files as TAG.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu copy cheese wine
     $ tmsu copy report document text`,

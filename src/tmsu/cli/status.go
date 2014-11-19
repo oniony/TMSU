@@ -31,7 +31,7 @@ import (
 var StatusCommand = Command{
 	Name:     "status",
 	Synopsis: "List the file tagging status",
-	Description: `tmsu status [PATH]...
+	Description: `$BOLDtmsu status [PATH]...$RESET
 
 Shows the status of PATHs.
 
@@ -46,7 +46,7 @@ Status codes of T, M and ! mean that the file has been tagged (and thus is in th
 
 Note: The 'repair' subcommand can be used to fix problems caused by files that have been modified or moved on disk.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu status
     $ tmsu status .

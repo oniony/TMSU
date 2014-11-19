@@ -29,13 +29,13 @@ import (
 var UntagCommand = Command{
 	Name:     "untag",
 	Synopsis: "Remove tags from files",
-	Description: `tmsu untag [OPTION]... FILE TAG[=VALUE]...
-tmsu untag [OPTION]... --all FILE...
-tmsu untag [OPTION]... --tags="TAG[=VALUE]..." FILE...
+	Description: `$BOLDtmsu untag [OPTION]... FILE TAG[=VALUE]...$RESET
+$BOLDtmsu untag [OPTION]... --all FILE...$RESET
+$BOLDtmsu untag [OPTION]... --tags="TAG[=VALUE]..." FILE...$RESET
 
 Disassociates FILE with the TAGs specified.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu untag mountain.jpg hill county=germany
     $ tmsu untag --all mountain-copy.jpg

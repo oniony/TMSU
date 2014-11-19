@@ -26,8 +26,8 @@ import (
 var ImplyCommand = Command{
 	Name:     "imply",
 	Synopsis: "Creates a tag implication",
-	Description: `tmsu [OPTION] imply TAG IMPL...
-tmsu imply --list
+	Description: `$BOLDtmsu [OPTION] imply TAG IMPL...$RESET
+$BOLDtmsu imply --list$RESET
 
 Creates a tag implication such that whenever TAG is applied, IMPL are automatically applied.
 
@@ -35,11 +35,11 @@ It is possible that a file may end up with the same tag applied explicitly and b
 
 The 'tags' subcommand can be used to identify which tags applied to a file are implied.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu imply mp3 music
     $ tmsu imply --list
-    mp3 ⇒ music
+    mp3 => music
     $ tmsu imply --delete mp3 music`,
 	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""},
 		Option{"--list", "-l", "lists the tag implications", false, ""}},

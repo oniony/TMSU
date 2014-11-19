@@ -32,10 +32,10 @@ import (
 var TagCommand = Command{
 	Name:     "tag",
 	Synopsis: "Apply tags to files",
-	Description: `tmsu tag [OPTION]... FILE TAG[=VALUE]...
-tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...
-tmsu tag [OPTION]... --from=FILE FILE...
-tmsu tag [OPTION]... --create TAG[=VALUE]...
+	Description: `$BOLDtmsu tag [OPTION]... FILE TAG[=VALUE]...$RESET
+$BOLDtmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...$RESET
+$BOLDtmsu tag [OPTION]... --from=FILE FILE...$RESET
+$BOLDtmsu tag [OPTION]... --create TAG[=VALUE]...$RESET
 
 Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
 
@@ -43,7 +43,7 @@ Tag names may consist of one or more letter, number, punctuation and symbol char
 
 Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu tag mountain1.jpg photo landscape holiday good country=france
     $ tmsu tag --from=mountain1.jpg mountain2.jpg

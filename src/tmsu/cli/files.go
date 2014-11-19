@@ -33,7 +33,7 @@ var FilesCommand = Command{
 	Name:     "files",
 	Aliases:  []string{"query"},
 	Synopsis: "List files with particular tags",
-	Description: `tmsu files [OPTION]... [QUERY]
+	Description: `$BOLDtmsu files [OPTION]... [QUERY]$RESET
 
 Lists the files in the database that match the QUERY specified. If no query is specified, all files in the database are listed.
 
@@ -43,20 +43,20 @@ Queries are run against the database so the results may not reflect the current 
 
 Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.  Either enclose the query in quotation marks, escape the problematic characters or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.
 
-Examples:
+$BOLDExamples:$RESET
 
-    $ tmsu files music mp3              # files with both 'music' and 'mp3'
-    $ tmsu files music and mp3          # same query but with explicit 'and'
+    $ tmsu files music mp3  $GREEN# files with both 'music' and 'mp3'$RESET
+    $ tmsu files music and mp3  $GREEN# same query but with explicit 'and'$RESET
     $ tmsu files music and not mp3
     $ tmsu files "music and (mp3 or flac)"
 
-    $ tmsu files "year == 2014"         # tagged 'year' with a value '2014'
-    $ tmsu files "year < 2014"          # tagged 'year' with values under '2014'
-    $ tmsu files year lt 2014           # same query but using textual operator
-    $ tmsu files year                   # tagged 'year' (any or no value)
+    $ tmsu files "year == 2014"  $GREEN# tagged 'year' with a value '2014'$RESET
+    $ tmsu files "year < 2014" $GREEN# tagged 'year' with values under '2014'$RESET
+    $ tmsu files year lt 2014  $GREEN# same query but using textual operator$RESET
+    $ tmsu files year  $GREEN# tagged 'year' (any or no value)$RESET
 
-    $ tmsu files --top music            # don't list individual files if directory is tagged
-    $ tmsu files --path=/home/bob music # tagged 'music' under /home/bob`,
+    $ tmsu files --top music  $GREEN# don't list individual files if directory is tagged$RESET
+    $ tmsu files --path=/home/bob music  $GREEN# tagged 'music' under /home/bob$RESET`,
 	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--top", "-t", "list only the top-most matching items (exclude files under matching directories)", false, ""},

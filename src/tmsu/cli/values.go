@@ -29,11 +29,11 @@ import (
 var ValuesCommand = Command{
 	Name:     "values",
 	Synopsis: "List values",
-	Description: `tmsu values [OPTION]... [TAG]...
+	Description: `$BOLDtmsu values [OPTION]... [TAG]...$RESET
 
 Lists the values for TAGs. If no TAG is specified then all tags are listed.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu values year
     2000
@@ -95,7 +95,7 @@ func listAllValues(showCount, onePerLine bool) error {
 				valueNames[index] = ansi.String(value.Name)
 			}
 
-			terminal.PrintColumns(valueNames, terminal.Width())
+			terminal.PrintColumns(valueNames, terminal.Width(), false)
 		}
 	}
 
@@ -150,7 +150,7 @@ func listValuesForTag(store *storage.Storage, tagName string, showCount, onePerL
 				valueNames[index] = ansi.String(value.Name)
 			}
 
-			terminal.PrintColumns(valueNames, terminal.Width())
+			terminal.PrintColumns(valueNames, terminal.Width(), false)
 		}
 	}
 

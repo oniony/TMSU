@@ -27,11 +27,11 @@ var DeleteCommand = Command{
 	Name:     "delete",
 	Aliases:  []string{"del", "rm"},
 	Synopsis: "Delete one or more tags",
-	Description: `tmsu delete TAG...
+	Description: `$BOLDtmsu delete TAG...$RESET
 
 Permanently deletes the TAGs specified.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu delete pineapple
     $ tmsu delete red green blue`,

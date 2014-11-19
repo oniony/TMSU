@@ -34,10 +34,10 @@ var RepairCommand = Command{
 	Name:     "repair",
 	Aliases:  []string{"fix"},
 	Synopsis: "Repair the database",
-	Description: `tmsu [OPTION]... repair [PATH]...
-tmsu [OPTION]... repair --manual OLD NEW
+	Description: `$BOLDtmsu [OPTION]... repair [PATH]...$RESET
+$BOLDtmsu [OPTION]... repair --manual OLD NEW$RESET
 
-Fixes broken paths, stale fingerprints in the database caused by file modifications and moves.
+Fixes broken paths and stale fingerprints in the database caused by file modifications and moves.
 
 Modified files are identified by a change to the file's modification time or file size. These files are repaired by updating the details in the database.
 
@@ -47,12 +47,12 @@ Files that have been both moved and modified cannot be repaired and must be manu
 
 When run with the --manual option, any paths that begin with OLD are updated to begin with NEW. Any affected files' fingerprints are updated providing the file exists at the new location. No further repairs are attempted in this mode.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu repair                                
-    $ tmsu repair /new/path                      # look for missing files here
-    $ tmsu repair --path /home/sally             # repair subset of database
-    $ tmsu repair --manual /home/bob /home/fred  # manually repair paths`,
+    $ tmsu repair /new/path  $GREEN# look for missing files here$RESET
+    $ tmsu repair --path /home/sally  $GREEN# repair subset of database$RESET
+    $ tmsu repair --manual /home/bob /home/fred  $GREEN# manually repair paths$RESET`,
 	Options: Options{{"--path", "-p", "limit repair to files in database under path", true, ""},
 		{"--pretend", "-P", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},

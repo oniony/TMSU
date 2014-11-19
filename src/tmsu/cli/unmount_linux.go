@@ -29,8 +29,8 @@ var UnmountCommand = Command{
 	Name:     "unmount",
 	Aliases:  []string{"umount"},
 	Synopsis: "Unmount the virtual filesystem",
-	Description: `tmsu unmount MOUNTPOINT
-tmsu unmount --all
+	Description: `$BOLDtmsu unmount MOUNTPOINT$RESET
+$BOLDtmsu unmount --all$RESET
 
 Unmounts the virtual file-system at MOUNTPOINT.`,
 	Options: Options{{"--all", "-a", "unmounts all mounted TMSU file-systems", false, ""}},

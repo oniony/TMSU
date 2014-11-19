@@ -27,13 +27,13 @@ var RenameCommand = Command{
 	Name:     "rename",
 	Aliases:  []string{"mv"},
 	Synopsis: "Rename a tag",
-	Description: `tmsu rename OLD NEW
+	Description: `$BOLDtmsu rename OLD NEW$RESET
 
 Renames a tag from OLD to NEW.
 
 Attempting to rename a tag with a new name for which a tag already exists will result in an error. To merge tags use the 'merge' subcommand instead.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu rename montain mountain`,
 	Options: Options{},

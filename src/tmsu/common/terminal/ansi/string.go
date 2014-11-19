@@ -29,19 +29,19 @@ func (items Strings) Len() int {
 }
 
 func (items Strings) Less(i, j int) bool {
-	return Plain(items[i]) < Plain(items[j])
+	return items[i].Plain() < items[j].Plain()
 }
 
 func (items Strings) Swap(i, j int) {
 	items[j], items[i] = items[i], items[j]
 }
 
-func Length(item String) int {
+func (item String) Length() int {
 	return len(formatting.ReplaceAllLiteralString(string(item), ""))
 }
 
-func Plain(item String) string {
-	return formatting.ReplaceAllLiteralString(string(item), "")
+func (item String) Plain() String {
+	return String(formatting.ReplaceAllLiteralString(string(item), ""))
 }
 
 // unexported

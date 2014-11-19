@@ -32,11 +32,11 @@ import (
 var DupesCommand = Command{
 	Name:     "dupes",
 	Synopsis: "Identify duplicate files",
-	Description: `tmsu dupes [FILE]...
+	Description: `$BOLDtmsu dupes [FILE]...$RESET
 
 Identifies all files in the database that are exact duplicates of FILE. If no FILE is specified then identifies duplicates between files in the database.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu dupes
     Set of 2 duplicates:

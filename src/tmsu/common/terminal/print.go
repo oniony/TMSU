@@ -24,7 +24,11 @@ import (
 	"tmsu/common/terminal/ansi"
 )
 
-func PrintLine(items ansi.Strings) {
+func PrintListOnLine(items ansi.Strings, ansi bool) {
+	if !ansi {
+		items = plain(items)
+	}
+
 	sort.Sort(items)
 
 	for index, item := range items {
@@ -38,7 +42,11 @@ func PrintLine(items ansi.Strings) {
 	fmt.Println()
 }
 
-func PrintList(items ansi.Strings, indent int) {
+func PrintList(items ansi.Strings, indent int, ansi bool) {
+	if !ansi {
+		items = plain(items)
+	}
+
 	sort.Sort(items)
 
 	var padding = strings.Repeat(" ", indent)
@@ -48,7 +56,11 @@ func PrintList(items ansi.Strings, indent int) {
 	}
 }
 
-func PrintColumns(items ansi.Strings, width int) {
+func PrintColumns(items ansi.Strings, width int, ansi bool) {
+	if !ansi {
+		items = plain(items)
+	}
+
 	sort.Sort(items)
 
 	padding := 2 // minimum column padding
@@ -76,7 +88,7 @@ func PrintColumns(items ansi.Strings, width int) {
 				calcWidth += padding
 			}
 
-			var itemLength = ansi.Length(item)
+			var itemLength = item.Length()
 			if itemLength > colWidths[col] {
 				// widen column
 				calcWidth += -colWidths[col] + itemLength
@@ -113,11 +125,99 @@ func PrintColumns(items ansi.Strings, width int) {
 			fmt.Print(item)
 
 			if columnIndex < cols-1 {
-				padding := (colWidths[columnIndex] + padding) - ansi.Length(item)
+				padding := (colWidths[columnIndex] + padding) - item.Length()
 				fmt.Print(strings.Repeat(" ", padding))
 			}
 		}
 
 		fmt.Println()
 	}
+}
+
+func Print(text ansi.String, ansi bool) {
+	if !ansi {
+		text = text.Plain()
+	}
+
+	fmt.Print(string(text))
+}
+
+func Println(text ansi.String, ansi bool) {
+	if !ansi {
+		text = text.Plain()
+	}
+
+	fmt.Println(string(text))
+}
+
+func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
+	if !ansi {
+		text = text.Plain()
+	}
+
+	if maxWidth == 0 {
+		fmt.Println(string(text))
+		return
+	}
+
+	word := ""
+	width := 0
+	indent := 0
+	for _, r := range string(text) {
+		if r == ' ' || r == '\n' {
+			if word == "" && r == ' ' {
+				indent += 1
+				continue
+			}
+
+			if width+len(word) >= maxWidth {
+				fmt.Println()
+				width = 0
+			} else {
+				if width > 0 {
+					fmt.Print(" ")
+					width += 1
+				} else {
+					if indent > 0 {
+						fmt.Print(strings.Repeat(" ", indent))
+						width += indent
+					}
+				}
+			}
+
+			fmt.Print(word)
+			width += len(word)
+			word = ""
+
+			if r == '\n' {
+				fmt.Println()
+				width = 0
+				indent = 0
+			}
+		} else {
+			word += string(r)
+		}
+	}
+
+	if width > 0 {
+		fmt.Print(" ")
+	} else {
+		if indent > 0 {
+			fmt.Print(strings.Repeat(" ", indent))
+		}
+	}
+
+	fmt.Println(word)
+}
+
+// unexported
+
+func plain(items []ansi.String) []ansi.String {
+	plain := make([]ansi.String, len(items))
+
+	for index, item := range items {
+		plain[index] = item.Plain()
+	}
+
+	return plain
 }

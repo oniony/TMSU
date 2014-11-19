@@ -26,11 +26,11 @@ import (
 var MergeCommand = Command{
 	Name:     "merge",
 	Synopsis: "Merge tags",
-	Description: `tmsu merge TAG... DEST
+	Description: `$BOLDtmsu merge TAG... DEST$RESET
         
 Merges TAGs into tag DEST resulting in a single tag of name DEST.
 
-Examples:
+$BOLDExamples:$RESET
 
     $ tmsu merge cehese cheese
     $ tmsu merge outdoors outdoor outside`,

@@ -150,6 +150,7 @@ func Println(text ansi.String, ansi bool) {
 	fmt.Println(string(text))
 }
 
+//TODO doesn't calculate correctly when there are ansi codes
 func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 	if !ansi {
 		text = text.Plain()
@@ -165,14 +166,24 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 	indent := 0
 	for _, r := range string(text) {
 		if r == ' ' || r == '\n' {
-			if word == "" && r == ' ' {
+			if width == 0 && word == "" && r == ' ' {
 				indent += 1
 				continue
 			}
 
-			if width+len(word) >= maxWidth {
+			charsNeeded := len(word)
+			if width > 0 {
+				charsNeeded += 1 // space
+			}
+
+			if width+charsNeeded > maxWidth {
 				fmt.Println()
 				width = 0
+
+				if indent > 0 {
+					fmt.Print(strings.Repeat(" ", indent))
+					width += indent
+				}
 			} else {
 				if width > 0 {
 					fmt.Print(" ")

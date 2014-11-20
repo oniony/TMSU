@@ -30,20 +30,12 @@ import (
 )
 
 var DupesCommand = Command{
-	Name:     "dupes",
-	Synopsis: "Identify duplicate files",
-	Description: `$BOLDtmsu dupes [FILE]...$RESET
-
-Identifies all files in the database that are exact duplicates of FILE. If no FILE is specified then identifies duplicates between files in the database.
-
-$BOLDExamples:$RESET
-
-    $ tmsu dupes
-    Set of 2 duplicates:
-      /tmp/song.mp3
-      /tmp/copy of song.mp3
-    $ tmsu dupes /tmp/song.mp3
-    /tmp/copy of song.mp3`,
+	Name:        "dupes",
+	Synopsis:    "Identify duplicate files",
+	Usages:      []string{"tmsu dupes [FILE]..."},
+	Description: `Identifies all files in the database that are exact duplicates of FILE. If no FILE is specified then identifies duplicates between files in the database.`,
+	Examples: []string{"$ tmsu dupes\nSet of 2 duplicates:\n  /tmp/song.mp3\n  /tmp/copy of song.mp3a",
+		"$ tmsu dupes /tmp/song.mp3\n/tmp/copy of song.mp3"},
 	Options: Options{Option{"--recursive", "-r", "recursively check directory contents", false, ""}},
 	Exec:    dupesExec,
 }

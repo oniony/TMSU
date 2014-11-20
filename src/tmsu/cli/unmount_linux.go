@@ -29,12 +29,11 @@ var UnmountCommand = Command{
 	Name:     "unmount",
 	Aliases:  []string{"umount"},
 	Synopsis: "Unmount the virtual filesystem",
-	Description: `$BOLDtmsu unmount MOUNTPOINT$RESET
-$BOLDtmsu unmount --all$RESET
-
-Unmounts the virtual file-system at MOUNTPOINT.`,
-	Options: Options{{"--all", "-a", "unmounts all mounted TMSU file-systems", false, ""}},
-	Exec:    unmountExec,
+	Usages: []string{"tmsu unmount MOUNTPOINT",
+		"tmsu unmount --all"},
+	Description: "Unmounts the virtual file-system at MOUNTPOINT.",
+	Options:     Options{{"--all", "-a", "unmounts all mounted TMSU file-systems", false, ""}},
+	Exec:        unmountExec,
 }
 
 func unmountExec(options Options, args []string) error {

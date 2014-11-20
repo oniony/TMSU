@@ -22,18 +22,18 @@ import (
 	"math"
 	"sort"
 	"strconv"
+	"strings"
 	"tmsu/common/terminal"
 	"tmsu/common/terminal/ansi"
 )
 
 var HelpCommand = Command{
-	Name:     "help",
-	Synopsis: "List subcommands or show help for a particular subcommand",
-	Description: `$BOLDtmsu help [OPTION]... [SUBCOMMAND]$RESET
-
-Shows help summary or, where SUBCOMMAND is specified, help for SUBCOMMAND.`,
-	Options: Options{{"--list", "-l", "list commands", false, ""}},
-	Exec:    helpExec,
+	Name:        "help",
+	Synopsis:    "List subcommands or show help for a particular subcommand",
+	Usages:      []string{"tmsu help [OPTION]... [SUBCOMMAND]"},
+	Description: `Shows help summary or, where SUBCOMMAND is specified, help for SUBCOMMAND.`,
+	Options:     Options{{"--list", "-l", "list commands", false, ""}},
+	Exec:        helpExec,
 }
 
 var helpCommands map[string]*Command
@@ -140,10 +140,34 @@ func describeCommand(commandName string, colour bool) {
 		return
 	}
 
+	// usages
+	for _, usage := range command.Usages {
+		fmt.Print(string(ansi.Bold))
+		terminal.PrintWrapped(ansi.String(usage), terminal.Width(), colour)
+		fmt.Print(string(ansi.Reset))
+	}
+
+	// description
+	fmt.Println()
 	description := ansi.ParseMarkup(command.Description)
+	terminal.PrintWrapped(description, terminal.Width(), colour)
 
-	terminal.PrintWrapped(ansi.String(description), terminal.Width(), colour)
+	// examples
+	if command.Examples != nil && len(command.Examples) > 0 {
+		fmt.Println()
 
+		fmt.Print(string(ansi.Bold))
+		fmt.Print("Examples:")
+		fmt.Println(string(ansi.Reset))
+		fmt.Println()
+
+		for _, example := range command.Examples {
+			example = "  " + strings.Replace(example, "\n", "\n  ", -1)
+			terminal.PrintWrapped(ansi.String(example), terminal.Width(), colour)
+		}
+	}
+
+	// aliases
 	if command.Aliases != nil && len(command.Aliases) > 0 {
 		fmt.Println()
 
@@ -158,7 +182,8 @@ func describeCommand(commandName string, colour bool) {
 		fmt.Println()
 	}
 
-	if len(command.Options) > 0 {
+	// options
+	if command.Options != nil && len(command.Options) > 0 {
 		fmt.Println()
 
 		terminal.Println(ansi.Bold+ansi.String("Options:")+ansi.Reset, colour)

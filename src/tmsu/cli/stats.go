@@ -24,13 +24,12 @@ import (
 )
 
 var StatsCommand = Command{
-	Name:     "stats",
-	Synopsis: "Show database statistics",
-	Description: `$BOLDtmsu stats$RESET
-
-Shows the database statistics.`,
-	Options: Options{Option{"--usage", "-u", "show tag usage breakdown", false, ""}},
-	Exec:    statsExec,
+	Name:        "stats",
+	Synopsis:    "Show database statistics",
+	Usages:      []string{"tmsu stats"},
+	Description: "Shows the database statistics.",
+	Options:     Options{Option{"--usage", "-u", "show tag usage breakdown", false, ""}},
+	Exec:        statsExec,
 }
 
 func statsExec(options Options, args []string) error {

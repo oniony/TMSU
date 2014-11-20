@@ -33,28 +33,20 @@ import (
 var TagsCommand = Command{
 	Name:     "tags",
 	Synopsis: "List tags",
-	Description: `$BOLDtmsu tags [OPTION]... [FILE]...$RESET
-
-Lists the tags applied to FILEs. If no FILE is specified then all tags in the database are listed.
+	Usages:   []string{"tmsu tags [OPTION]... [FILE]..."},
+	Description: `Lists the tags applied to FILEs. If no FILE is specified then all tags in the database are listed.
 
 When color is turned on, tags are shown in the following colors:
 
-  Normal An explicitly applied (regular) tag
-  $CYANCyan$RESET   Tag implied by other tags
-  $YELLOWYellow$RESET Tag is both explicitly applied and implied by other tags
+  Normal  An explicitly applied (regular) tag
+  $CYANCyan$RESET    Tag implied by other tags
+  $YELLOWYellow$RESET  Tag is both explicitly applied and implied by other tags
 
-See the 'imply' subcommand for more information on implied tags.
-
-$BOLDExamples:$RESET
-
-    $ tmsu tags
-    mp3  music  opera 
-    $ tmsu tags tralala.mp3
-    mp3  music  opera
-    $ tmsu tags tralala.mp3 boom.mp3
-    ./tralala.mp3: mp3 music opera
-    ./boom.mp3: mp3 music drum-n-bass
-    $ tmsu tags --count tralala.mp3`,
+See the 'imply' subcommand for more information on implied tags.`,
+	Examples: []string{"$ tmsu tags\nmp3  music  opera",
+		"$ tmsu tags tralala.mp3\nmp3  music  opera",
+		"$ tmsu tags tralala.mp3 boom.mp3\n./tralala.mp3: mp3 music opera\n./boom.mp3: mp3 music drum-n-bass",
+		"$ tmsu tags --count tralala.mp3"},
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""}},

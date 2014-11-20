@@ -29,17 +29,13 @@ import (
 var UntagCommand = Command{
 	Name:     "untag",
 	Synopsis: "Remove tags from files",
-	Description: `$BOLDtmsu untag [OPTION]... FILE TAG[=VALUE]...$RESET
-$BOLDtmsu untag [OPTION]... --all FILE...$RESET
-$BOLDtmsu untag [OPTION]... --tags="TAG[=VALUE]..." FILE...$RESET
-
-Disassociates FILE with the TAGs specified.
-
-$BOLDExamples:$RESET
-
-    $ tmsu untag mountain.jpg hill county=germany
-    $ tmsu untag --all mountain-copy.jpg
-    $ tmsu untag --tags="river underwater year=2014" forest.jpg desert.jpg`,
+	Usages: []string{"tmsu untag [OPTION]... FILE TAG[=VALUE]...",
+		"tmsu untag [OPTION]... --all FILE...",
+		`tmsu untag [OPTION]... --tags="TAG[=VALUE]..." FILE...`},
+	Description: "Disassociates FILE with the TAGs specified.",
+	Examples: []string{"$ tmsu untag mountain.jpg hill county=germany",
+		"$ tmsu untag --all mountain-copy.jpg",
+		`$ tmsu untag --tags="river underwater year=2014" forest.jpg desert.jpg`},
 	Options: Options{{"--all", "-a", "strip each file of all tags", false, ""},
 		{"--tags", "-t", "the set of tags to remove", true, ""},
 		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""}},

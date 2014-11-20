@@ -32,27 +32,23 @@ import (
 var TagCommand = Command{
 	Name:     "tag",
 	Synopsis: "Apply tags to files",
-	Description: `$BOLDtmsu tag [OPTION]... FILE TAG[=VALUE]...$RESET
-$BOLDtmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...$RESET
-$BOLDtmsu tag [OPTION]... --from=FILE FILE...$RESET
-$BOLDtmsu tag [OPTION]... --create TAG[=VALUE]...$RESET
-
-Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
+	Usages: []string{"tmsu tag [OPTION]... FILE TAG[=VALUE]...",
+		`tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...`,
+		"tmsu tag [OPTION]... --from=SOURCE FILE...",
+		"tmsu tag [OPTION]... --create TAG[=VALUE]..."},
+	Description: `Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
 
 Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names may not contain whitespace characters, the comparison operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
 
-Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
-
-$BOLDExamples:$RESET
-
-    $ tmsu tag mountain1.jpg photo landscape holiday good country=france
-    $ tmsu tag --from=mountain1.jpg mountain2.jpg
-    $ tmsu tag --tags="landscape" field1.jpg field2.jpg
-    $ tmsu tag --create bad rubbish awful`,
+Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.`,
+	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
+		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
+		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
+		"$ tmsu tag --create bad rubbish awful"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
-		{"--from", "-f", "copy tags from the specified file", true, ""},
-		{"--create", "-c", "create a tag without tagging any files", false, ""},
+		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
+		{"--create", "-c", "create tags without tagging any files", false, ""},
 		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""}},
 	Exec: tagExec,
 }

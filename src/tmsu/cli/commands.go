@@ -21,7 +21,9 @@ type Command struct {
 	Name        string
 	Aliases     []string
 	Synopsis    string
+	Usages      []string
 	Description string
+	Examples    []string
 	Options     Options
 	Exec        func(options Options, args []string) error
 }

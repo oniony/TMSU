@@ -27,17 +27,13 @@ var RenameCommand = Command{
 	Name:     "rename",
 	Aliases:  []string{"mv"},
 	Synopsis: "Rename a tag",
-	Description: `$BOLDtmsu rename OLD NEW$RESET
+	Usages:   []string{"tmsu rename OLD NEW"},
+	Description: `Renames a tag from OLD to NEW.
 
-Renames a tag from OLD to NEW.
-
-Attempting to rename a tag with a new name for which a tag already exists will result in an error. To merge tags use the 'merge' subcommand instead.
-
-$BOLDExamples:$RESET
-
-    $ tmsu rename montain mountain`,
-	Options: Options{},
-	Exec:    renameExec,
+Attempting to rename a tag with a new name for which a tag already exists will result in an error. To merge tags use the 'merge' subcommand instead.`,
+	Examples: []string{"$ tmsu rename montain mountain"},
+	Options:  Options{},
+	Exec:     renameExec,
 }
 
 func renameExec(options Options, args []string) error {

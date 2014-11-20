@@ -24,16 +24,12 @@ import (
 )
 
 var MergeCommand = Command{
-	Name:     "merge",
-	Synopsis: "Merge tags",
-	Description: `$BOLDtmsu merge TAG... DEST$RESET
-        
-Merges TAGs into tag DEST resulting in a single tag of name DEST.
-
-$BOLDExamples:$RESET
-
-    $ tmsu merge cehese cheese
-    $ tmsu merge outdoors outdoor outside`,
+	Name:        "merge",
+	Synopsis:    "Merge tags",
+	Usages:      []string{"tmsu merge TAG... DEST"},
+	Description: `Merges TAGs into tag DEST resulting in a single tag of name DEST.`,
+	Examples: []string{`$ tmsu merge cehese cheese`,
+		`$ tmsu merge outdoors outdoor outside`},
 	Options: Options{},
 	Exec:    mergeExec,
 }

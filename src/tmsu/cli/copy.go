@@ -24,17 +24,13 @@ import (
 )
 
 var CopyCommand = Command{
-	Name:     "copy",
-	Aliases:  []string{"cp"},
-	Synopsis: "Create a copy of a tag",
-	Description: `$BOLDtmsu copy TAG NEW...$RESET
-
-Creates a new tag NEW applied to the same set of files as TAG.
-
-$BOLDExamples:$RESET
-
-    $ tmsu copy cheese wine
-    $ tmsu copy report document text`,
+	Name:        "copy",
+	Aliases:     []string{"cp"},
+	Synopsis:    "Create a copy of a tag",
+	Usages:      []string{"tmsu copy TAG NEW..."},
+	Description: `Creates a new tag NEW applied to the same set of files as TAG.`,
+	Examples: []string{"$ tmsu copy cheese wine",
+		"$ tmsu copy report document text"},
 	Options: Options{},
 	Exec:    copyExec,
 }

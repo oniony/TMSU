@@ -31,9 +31,8 @@ import (
 var StatusCommand = Command{
 	Name:     "status",
 	Synopsis: "List the file tagging status",
-	Description: `$BOLDtmsu status [PATH]...$RESET
-
-Shows the status of PATHs.
+	Usages:   []string{"tmsu status [PATH]..."},
+	Description: `Shows the status of PATHs.
 
 Where PATHs are not specified the status of the database is shown.
 
@@ -44,13 +43,10 @@ Where PATHs are not specified the status of the database is shown.
 
 Status codes of T, M and ! mean that the file has been tagged (and thus is in the TMSU database). Modified files are those with a different modification time or size to that in the database. Missing files are those in the database but that no longer exist in the file-system.
 
-Note: The 'repair' subcommand can be used to fix problems caused by files that have been modified or moved on disk.
-
-$BOLDExamples:$RESET
-
-    $ tmsu status
-    $ tmsu status .
-    $ tmsu status --directory *`,
+Note: The 'repair' subcommand can be used to fix problems caused by files that have been modified or moved on disk.`,
+	Examples: []string{"$ tmsu status",
+		"$ tmsu status .",
+		"$ tmsu status --directory *"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
 	Exec:    statusExec,
 }

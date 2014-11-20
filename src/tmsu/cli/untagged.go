@@ -29,16 +29,12 @@ import (
 var UntaggedCommand = Command{
 	Name:     "untagged",
 	Synopsis: "List untagged files",
-	Description: `$BOLDtmsu untagged [PATH]...$RESET
+	Usages:   []string{"tmsu untagged [OPTION]... [PATH]..."},
+	Description: `Identify untagged files in the filesystem.  
 
-Identify untagged files in the filesystem.  
-
-Where PATHs are not specified, untagged items under the current working directory are shown.
-
-$BOLDExamples:$RESET
-
-    $ tmsu untagged
-    $ tmsu untagged /home/fred/drawings`,
+Where PATHs are not specified, untagged items under the current working directory are shown.`,
+	Examples: []string{"$ tmsu untagged",
+		"$ tmsu untagged /home/fred/drawings"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
 	Exec:    untaggedExec,
 }

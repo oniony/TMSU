@@ -23,13 +23,12 @@ import (
 )
 
 var VersionCommand = Command{
-	Name:     "version",
-	Synopsis: "",
-	Description: `$BOLDtmsu version$RESET
-
-Displays version and copyright information.`,
-	Options: Options{},
-	Exec:    versionExec,
+	Name:        "version",
+	Synopsis:    "",
+	Usages:      []string{"tmsu version"},
+	Description: "Displays version and copyright information.",
+	Options:     Options{},
+	Exec:        versionExec,
 }
 
 func versionExec(options Options, args []string) error {

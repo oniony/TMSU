@@ -27,26 +27,13 @@ import (
 )
 
 var ValuesCommand = Command{
-	Name:     "values",
-	Synopsis: "List values",
-	Description: `$BOLDtmsu values [OPTION]... [TAG]...$RESET
-
-Lists the values for TAGs. If no TAG is specified then all tags are listed.
-
-$BOLDExamples:$RESET
-
-    $ tmsu values year
-    2000
-    2001
-    2014
-    $ tmsu values
-    2000
-    2001
-    2014
-    cheese
-    opera
-    $ tmsu values --count year
-    3`,
+	Name:        "values",
+	Synopsis:    "List values",
+	Usages:      []string{"tmsu values [OPTION]... [TAG]..."},
+	Description: "Lists the values for TAGs. If no TAG is specified then all tags are listed.",
+	Examples: []string{"$ tmsu values year\n2000\n2001\n2014",
+		"$ tmsu values\n2000\n2001\n2014\ncheese\nopera",
+		"$ tmsu values --count year\n3"},
 	Options: Options{{"--count", "-c", "lists the number of values rather than their names", false, ""},
 		{"", "-1", "list one value per line", false, ""}},
 	Exec: valuesExec,

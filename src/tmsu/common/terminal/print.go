@@ -24,6 +24,8 @@ import (
 	"tmsu/common/terminal/ansi"
 )
 
+const ETX rune = '\003'
+
 func PrintListOnLine(items ansi.Strings, ansi bool) {
 	if !ansi {
 		items = plain(items)
@@ -164,13 +166,13 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 	word := ""
 	width := 0
 	indent := 0
-	for _, r := range string(text) {
-		if r == ' ' || r == '\n' {
-			if width == 0 && word == "" && r == ' ' {
-				indent += 1
-				continue
-			}
+	for _, r := range string(text) + string(ETX) {
+		if width == 0 && word == "" && r == ' ' {
+			indent += 1
+			continue
+		}
 
+		if r == ' ' || r == '\n' || r == ETX {
 			charsNeeded := len(word)
 			if width > 0 {
 				charsNeeded += 1 // space

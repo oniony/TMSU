@@ -40,7 +40,7 @@ QUERY may contain tag names to match, operators and parentheses. Operators are: 
 
 Queries are run against the database so the results may not reflect the current state of the filesystem. Only tagged files are matched: to identify untagged files use the 'untagged' subcommand.
 
-Note: Your shell may use some punctuation (e.g. < and >) for its own purposes.  Either enclose the query in quotation marks, escape the problematic characters or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.`,
+Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. Either enclose the query in quotation marks, escape the problematic characters or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.`,
 	Examples: []string{"$ tmsu files music mp3  # files with both 'music' and 'mp3'",
 		"$ tmsu files music and mp3  # same query but with explicit 'and'",
 		"$ tmsu files music and not mp3",

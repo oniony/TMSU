@@ -19,6 +19,7 @@ package cli
 
 import (
 	"fmt"
+	"tmsu/common/terminal"
 	"tmsu/version"
 )
 
@@ -34,11 +35,11 @@ var VersionCommand = Command{
 func versionExec(options Options, args []string) error {
 	fmt.Println("TMSU", version.Version)
 	fmt.Println()
-	fmt.Println(`Copyright © 2011-2014 Paul Ruane.
+	terminal.PrintWrapped(`Copyright © 2011-2014 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.
-See the accompanying COPYING file for further details.`)
+See the accompanying COPYING file for further details.`, terminal.Width(), false)
 
 	return nil
 }

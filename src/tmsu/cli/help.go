@@ -62,7 +62,7 @@ func helpExec(options Options, args []string) error {
 	} else {
 		switch len(args) {
 		case 0:
-			summary()
+			summary(colour)
 		default:
 			commandName := args[0]
 			describeCommand(commandName, colour)
@@ -72,7 +72,7 @@ func helpExec(options Options, args []string) error {
 	return nil
 }
 
-func summary() {
+func summary(colour bool) {
 	fmt.Println("TMSU")
 	fmt.Println()
 
@@ -94,7 +94,11 @@ func summary() {
 			continue
 		}
 
-		fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, commandSummary)
+		if colour {
+			fmt.Printf("  "+string(ansi.Bold)+"%-"+strconv.Itoa(maxWidth)+"v"+string(ansi.Reset)+"  %v\n", command.Name, commandSummary)
+		} else {
+			fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, commandSummary)
+		}
 	}
 
 	fmt.Println()
@@ -102,15 +106,7 @@ func summary() {
 	fmt.Println("Global options:")
 	fmt.Println()
 
-	for _, option := range globalOptions {
-		if option.ShortName != "" && option.LongName != "" {
-			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
-		} else if option.ShortName == "" {
-			fmt.Printf("      %v: %v\n", option.LongName, option.Description)
-		} else {
-			fmt.Printf("  %v: %v\n", option.ShortName, option.Description)
-		}
-	}
+	printOptions(globalOptions)
 
 	fmt.Println()
 	fmt.Println("Specify subcommand name for detailed help on a particular subcommand")
@@ -162,7 +158,7 @@ func describeCommand(commandName string, colour bool) {
 		fmt.Println()
 
 		for _, example := range command.Examples {
-			example = "  " + strings.Replace(example, "\n", "\n  ", -1)
+			example = "  " + strings.Replace(example, "\n", "\n  ", -1) // preserve indent
 			terminal.PrintWrapped(ansi.String(example), terminal.Width(), colour)
 		}
 	}
@@ -189,8 +185,33 @@ func describeCommand(commandName string, colour bool) {
 		terminal.Println(ansi.Bold+ansi.String("Options:")+ansi.Reset, colour)
 		fmt.Println()
 
-		for _, option := range command.Options {
-			fmt.Printf("  %v, %v: %v\n", option.ShortName, option.LongName, option.Description)
+		printOptions(command.Options)
+	}
+}
+
+func printOptions(options []Option) {
+	maxWidth := 0
+	for _, option := range options {
+		maxWidth = int(math.Max(float64(maxWidth), float64(len(option.LongName))))
+	}
+
+	for _, option := range options {
+		line := ""
+
+		if option.ShortName != "" {
+			line += "  " + option.ShortName + " "
+		} else {
+			line += "     "
 		}
+
+		if option.LongName != "" {
+			line += option.LongName
+		}
+
+		line += strings.Repeat(" ", maxWidth-len(option.LongName))
+		line += "  "
+		line += option.Description
+
+		terminal.PrintWrapped(ansi.String(line), terminal.Width(), false)
 	}
 }

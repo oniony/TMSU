@@ -25,11 +25,12 @@ import (
 
 var VersionCommand = Command{
 	Name:        "version",
-	Synopsis:    "",
+	Synopsis:    "Display the version",
 	Usages:      []string{"tmsu version"},
 	Description: "Displays version and copyright information.",
 	Options:     Options{},
 	Exec:        versionExec,
+	Hidden:      true,
 }
 
 func versionExec(options Options, args []string) error {

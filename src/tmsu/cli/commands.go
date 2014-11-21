@@ -26,6 +26,7 @@ type Command struct {
 	Examples    []string
 	Options     Options
 	Exec        func(options Options, args []string) error
+	Hidden      bool
 }
 
 var commands = map[string]*Command{

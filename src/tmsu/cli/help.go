@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"tmsu/common/log"
 	"tmsu/common/terminal"
 	"tmsu/common/terminal/ansi"
 )
@@ -89,15 +90,14 @@ func summary(colour bool) {
 	for _, commandName := range commandNames {
 		command, _ := helpCommands[commandName]
 
-		commandSummary := command.Synopsis
-		if commandSummary == "" {
+		if command.Hidden && log.Verbosity < 2 {
 			continue
 		}
 
 		if colour {
-			fmt.Printf("  "+string(ansi.Bold)+"%-"+strconv.Itoa(maxWidth)+"v"+string(ansi.Reset)+"  %v\n", command.Name, commandSummary)
+			fmt.Printf("  "+string(ansi.Bold)+"%-"+strconv.Itoa(maxWidth)+"v"+string(ansi.Reset)+"  %v\n", command.Name, command.Synopsis)
 		} else {
-			fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, commandSummary)
+			fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, command.Synopsis)
 		}
 	}
 
@@ -117,7 +117,7 @@ func listCommands() {
 	commandNames := make(ansi.Strings, 0, len(helpCommands))
 
 	for _, command := range helpCommands {
-		if command.Synopsis == "" {
+		if command.Hidden && log.Verbosity < 2 {
 			continue
 		}
 
@@ -126,7 +126,7 @@ func listCommands() {
 
 	sort.Sort(commandNames)
 
-	terminal.PrintList(commandNames, terminal.Width(), false)
+	terminal.PrintList(commandNames, 0, false)
 }
 
 func describeCommand(commandName string, colour bool) {

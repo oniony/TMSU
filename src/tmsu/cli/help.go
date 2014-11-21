@@ -109,8 +109,7 @@ func summary(colour bool) {
 	printOptions(globalOptions)
 
 	fmt.Println()
-	fmt.Println("Specify subcommand name for detailed help on a particular subcommand")
-	fmt.Println("E.g. tmsu help files")
+	terminal.PrintWrapped("Specify subcommand name for detailed help on a particular subcommand, e.g. tmsu help files", terminal.Width(), false)
 }
 
 func listCommands() {

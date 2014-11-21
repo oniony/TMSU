@@ -167,6 +167,7 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 	width := 0
 	indent := 0
 	for _, r := range string(text) + string(ETX) {
+		// spaces at the beginning of the line make up the indent
 		if width == 0 && word == "" && r == ' ' {
 			indent += 1
 			continue
@@ -179,6 +180,7 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 			}
 
 			if width+charsNeeded > maxWidth {
+				// wrap onto new line
 				fmt.Println()
 				width = 0
 
@@ -188,13 +190,17 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 				}
 			} else {
 				if width > 0 {
+					// add space between words
 					fmt.Print(" ")
 					width += 1
-				} else {
-					if indent > 0 {
-						fmt.Print(strings.Repeat(" ", indent))
-						width += indent
-					}
+				}
+			}
+
+			if width == 0 && indent > 0 {
+				// add indent to new line
+				if indent > 0 {
+					fmt.Print(strings.Repeat(" ", indent))
+					width += indent
 				}
 			}
 
@@ -203,24 +209,18 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 			word = ""
 
 			if r == '\n' {
+				// start a new line
 				fmt.Println()
 				width = 0
 				indent = 0
 			}
 		} else {
+			// add character to word
 			word += string(r)
 		}
 	}
 
-	if width > 0 {
-		fmt.Print(" ")
-	} else {
-		if indent > 0 {
-			fmt.Print(strings.Repeat(" ", indent))
-		}
-	}
-
-	fmt.Println(word)
+	fmt.Println()
 }
 
 // unexported

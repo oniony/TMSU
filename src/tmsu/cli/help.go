@@ -73,7 +73,13 @@ func helpExec(options Options, args []string) error {
 }
 
 func summary(colour bool) {
+	if colour {
+		fmt.Print(ansi.Bold)
+	}
 	fmt.Println("TMSU")
+	if colour {
+		fmt.Print(ansi.Reset)
+	}
 	fmt.Println()
 
 	var maxWidth int
@@ -98,7 +104,13 @@ func summary(colour bool) {
 
 	fmt.Println()
 
+	if colour {
+		fmt.Print(ansi.Bold)
+	}
 	fmt.Println("Global options:")
+	if colour {
+		fmt.Print(ansi.Reset)
+	}
 	fmt.Println()
 
 	printOptions(globalOptions)

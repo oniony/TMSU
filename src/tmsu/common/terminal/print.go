@@ -171,7 +171,7 @@ func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
 			if word == "" && r == ' ' {
 				fmt.Print(" ")
 				width += 1
-				indent = width + 1
+				indent = width
 				continue
 			}
 
@@ -191,7 +191,7 @@ func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
 					width += indent
 				}
 			} else {
-				if width > 0 {
+				if width > indent {
 					// add space between words
 					fmt.Print(" ")
 					width += 1

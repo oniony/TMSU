@@ -21,7 +21,6 @@ import (
 	"fmt"
 	"math"
 	"sort"
-	"strconv"
 	"strings"
 	"tmsu/common/log"
 	"tmsu/common/terminal"
@@ -94,11 +93,7 @@ func summary(colour bool) {
 			continue
 		}
 
-		if colour {
-			fmt.Printf("  "+string(ansi.Bold)+"%-"+strconv.Itoa(maxWidth)+"v"+string(ansi.Reset)+"  %v\n", command.Name, command.Synopsis)
-		} else {
-			fmt.Printf("  %-"+strconv.Itoa(maxWidth)+"v  %v\n", command.Name, command.Synopsis)
-		}
+		terminal.PrintWrapped(ansi.String(fmt.Sprintf("  %-*v  %v", maxWidth, command.Name, command.Synopsis)), terminal.Width(), colour)
 	}
 
 	fmt.Println()

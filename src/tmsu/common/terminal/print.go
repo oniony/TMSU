@@ -26,8 +26,8 @@ import (
 
 const ETX rune = '\003'
 
-func PrintListOnLine(items ansi.Strings, ansi bool) {
-	if !ansi {
+func PrintListOnLine(items ansi.Strings, printAnsi bool) {
+	if !printAnsi {
 		items = plain(items)
 	}
 
@@ -44,8 +44,8 @@ func PrintListOnLine(items ansi.Strings, ansi bool) {
 	fmt.Println()
 }
 
-func PrintList(items ansi.Strings, indent int, ansi bool) {
-	if !ansi {
+func PrintList(items ansi.Strings, indent int, printAnsi bool) {
+	if !printAnsi {
 		items = plain(items)
 	}
 
@@ -58,8 +58,8 @@ func PrintList(items ansi.Strings, indent int, ansi bool) {
 	}
 }
 
-func PrintColumns(items ansi.Strings, width int, ansi bool) {
-	if !ansi {
+func PrintColumns(items ansi.Strings, width int, printAnsi bool) {
+	if !printAnsi {
 		items = plain(items)
 	}
 
@@ -136,25 +136,24 @@ func PrintColumns(items ansi.Strings, width int, ansi bool) {
 	}
 }
 
-func Print(text ansi.String, ansi bool) {
-	if !ansi {
+func Print(text ansi.String, printAnsi bool) {
+	if !printAnsi {
 		text = text.Plain()
 	}
 
 	fmt.Print(string(text))
 }
 
-func Println(text ansi.String, ansi bool) {
-	if !ansi {
+func Println(text ansi.String, printAnsi bool) {
+	if !printAnsi {
 		text = text.Plain()
 	}
 
 	fmt.Println(string(text))
 }
 
-//TODO doesn't calculate correctly when there are ansi codes
-func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
-	if !ansi {
+func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
+	if !printAnsi {
 		text = text.Plain()
 	}
 
@@ -167,13 +166,15 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 	width := 0
 	indent := 0
 	for _, r := range string(text) + string(ETX) {
-		// spaces at the beginning of the line make up the indent
-		if width == 0 && word == "" && r == ' ' {
-			indent += 1
-			continue
-		}
-
 		if r == ' ' || r == '\n' || r == ETX {
+			// tabulation
+			if word == "" && r == ' ' {
+				fmt.Print(" ")
+				width += 1
+				indent = width + 1
+				continue
+			}
+
 			charsNeeded := len(word)
 			if width > 0 {
 				charsNeeded += 1 // space
@@ -185,6 +186,7 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 				width = 0
 
 				if indent > 0 {
+					// print indent on new line
 					fmt.Print(strings.Repeat(" ", indent))
 					width += indent
 				}
@@ -196,16 +198,14 @@ func PrintWrapped(text ansi.String, maxWidth int, ansi bool) {
 				}
 			}
 
-			if width == 0 && indent > 0 {
-				// add indent to new line
-				if indent > 0 {
-					fmt.Print(strings.Repeat(" ", indent))
-					width += indent
-				}
+			if word == "" && indent > 0 {
+				// print indent on new line
+				fmt.Print(strings.Repeat(" ", indent))
+				width += indent
 			}
 
 			fmt.Print(word)
-			width += len(word)
+			width += len(ansi.String(word).Plain())
 			word = ""
 
 			if r == '\n' {

@@ -105,15 +105,17 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 			return fmt.Errorf("could not retrieve tags: %v", err)
 		}
 
-		tagNames := make(ansi.Strings, len(tags))
+		tagNames := make([]string, len(tags))
 		for index, tag := range tags {
-			tagNames[index] = ansi.String(tag.Name)
+			tagNames[index] = tag.Name
 		}
 
 		if onePerLine {
-			terminal.PrintList(tagNames, 0, colour)
+			for _, tagName := range tagNames {
+				fmt.Println(tagName)
+			}
 		} else {
-			terminal.PrintColumns(tagNames, terminal.Width(), colour)
+			terminal.PrintColumns(tagNames)
 		}
 	}
 
@@ -152,7 +154,7 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 
-	var tagNames ansi.Strings
+	var tagNames []string
 	if file != nil {
 		tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
 		if err != nil {
@@ -178,9 +180,11 @@ func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine,
 		fmt.Println(len(tagNames))
 	} else {
 		if onePerLine {
-			terminal.PrintList(tagNames, 0, colour)
+			for _, tagName := range tagNames {
+				fmt.Println(tagName)
+			}
 		} else {
-			terminal.PrintColumns(tagNames, terminal.Width(), colour)
+			terminal.PrintColumns(tagNames)
 		}
 	}
 
@@ -198,7 +202,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 			continue
 		}
 
-		var tagNames ansi.Strings
+		var tagNames []string
 		if file != nil {
 			tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
 			if err != nil {
@@ -227,10 +231,16 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 		} else {
 			if onePerLine {
 				fmt.Println(path)
-				terminal.PrintList(tagNames, 2, colour)
+				for _, tagName := range tagNames {
+					fmt.Print(tagName)
+				}
+				fmt.Println()
 			} else {
-				fmt.Print(path + ": ")
-				terminal.PrintListOnLine(tagNames, colour)
+				fmt.Print(path + ":")
+				for _, tagName := range tagNames {
+					fmt.Print(" " + tagName)
+				}
+				fmt.Println()
 			}
 		}
 	}
@@ -278,10 +288,15 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 		} else {
 			if onePerLine {
 				fmt.Println(dirName)
-				terminal.PrintList(tagNames, 2, colour)
+				for _, tagName := range tagNames {
+					fmt.Println(tagName)
+				}
 			} else {
-				fmt.Print(dirName + ": ")
-				terminal.PrintListOnLine(tagNames, colour)
+				fmt.Print(dirName + ":")
+				for _, tagName := range tagNames {
+					fmt.Print(" " + tagName)
+				}
+				fmt.Println()
 			}
 		}
 	}
@@ -289,13 +304,13 @@ func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, 
 	return nil
 }
 
-func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnly, colour bool) (ansi.Strings, error) {
+func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {
 	fileTags, err := store.FileTagsByFileId(fileId, explicitOnly)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
 	}
 
-	tagNames := make(ansi.Strings, len(fileTags))
+	tagNames := make([]string, len(fileTags))
 
 	for index, fileTag := range fileTags {
 		tag, err := store.Tag(fileTag.TagId)
@@ -306,9 +321,9 @@ func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnl
 			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
 		}
 
-		var tagName ansi.String
+		var tagName string
 		if fileTag.ValueId == 0 {
-			tagName = ansi.String(tag.Name)
+			tagName = tag.Name
 		} else {
 			value, err := store.Value(fileTag.ValueId)
 			if err != nil {
@@ -318,21 +333,23 @@ func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnl
 				return nil, fmt.Errorf("value '%v' does not exist", fileTag.ValueId)
 			}
 
-			tagName = ansi.String(tag.Name + "=" + value.Name)
+			tagName = tag.Name + "=" + value.Name
 		}
 
 		if colour {
 			if fileTag.Implicit {
 				if fileTag.Explicit {
-					tagName = ansi.String(ansi.Yellow + tagName + ansi.Reset)
+					tagName = ansi.Yellow(tagName)
 				} else {
-					tagName = ansi.String(ansi.Cyan + tagName + ansi.Reset)
+					tagName = ansi.Cyan(tagName)
 				}
 			}
 		}
 
 		tagNames[index] = tagName
 	}
+
+	ansi.Sort(tagNames)
 
 	return tagNames, nil
 }

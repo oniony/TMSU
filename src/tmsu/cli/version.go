@@ -40,7 +40,7 @@ func versionExec(options Options, args []string) error {
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.
-See the accompanying COPYING file for further details.`, terminal.Width(), false)
+See the accompanying COPYING file for further details.`)
 
 	return nil
 }

@@ -26,44 +26,12 @@ import (
 
 const ETX rune = '\003'
 
-func PrintListOnLine(items ansi.Strings, printAnsi bool) {
-	if !printAnsi {
-		items = plain(items)
-	}
-
-	sort.Sort(items)
-
-	for index, item := range items {
-		if index > 0 {
-			fmt.Print(" ")
-		}
-
-		fmt.Print(item)
-	}
-
-	fmt.Println()
+func PrintColumns(items []string) {
+	PrintColumnsWidth(items, Width())
 }
 
-func PrintList(items ansi.Strings, indent int, printAnsi bool) {
-	if !printAnsi {
-		items = plain(items)
-	}
-
-	sort.Sort(items)
-
-	var padding = strings.Repeat(" ", indent)
-
-	for _, item := range items {
-		fmt.Println(padding + string(item))
-	}
-}
-
-func PrintColumns(items ansi.Strings, width int, printAnsi bool) {
-	if !printAnsi {
-		items = plain(items)
-	}
-
-	sort.Sort(items)
+func PrintColumnsWidth(items []string, width int) {
+	sort.Strings(items)
 
 	padding := 2 // minimum column padding
 
@@ -90,7 +58,7 @@ func PrintColumns(items ansi.Strings, width int, printAnsi bool) {
 				calcWidth += padding
 			}
 
-			var itemLength = item.Length()
+			var itemLength = len(ansi.Strip(item))
 			if itemLength > colWidths[col] {
 				// widen column
 				calcWidth += -colWidths[col] + itemLength
@@ -127,7 +95,7 @@ func PrintColumns(items ansi.Strings, width int, printAnsi bool) {
 			fmt.Print(item)
 
 			if columnIndex < cols-1 {
-				padding := (colWidths[columnIndex] + padding) - item.Length()
+				padding := (colWidths[columnIndex] + padding) - len(item)
 				fmt.Print(strings.Repeat(" ", padding))
 			}
 		}
@@ -136,27 +104,11 @@ func PrintColumns(items ansi.Strings, width int, printAnsi bool) {
 	}
 }
 
-func Print(text ansi.String, printAnsi bool) {
-	if !printAnsi {
-		text = text.Plain()
-	}
-
-	fmt.Print(string(text))
+func PrintWrapped(text string) {
+	PrintWrappedWidth(text, Width())
 }
 
-func Println(text ansi.String, printAnsi bool) {
-	if !printAnsi {
-		text = text.Plain()
-	}
-
-	fmt.Println(string(text))
-}
-
-func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
-	if !printAnsi {
-		text = text.Plain()
-	}
-
+func PrintWrappedWidth(text string, maxWidth int) {
 	if maxWidth == 0 {
 		fmt.Println(string(text))
 		return
@@ -168,7 +120,7 @@ func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
 	for _, r := range string(text) + string(ETX) {
 		if r == ' ' || r == '\n' || r == ETX {
 			// tabulation
-			if word == "" && r == ' ' {
+			if ansi.Strip(word) == "" && r == ' ' {
 				fmt.Print(" ")
 				width += 1
 				indent = width
@@ -198,14 +150,14 @@ func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
 				}
 			}
 
-			if word == "" && indent > 0 {
+			if ansi.Strip(word) == "" && indent > 0 {
 				// print indent on new line
 				fmt.Print(strings.Repeat(" ", indent))
 				width += indent
 			}
 
 			fmt.Print(word)
-			width += len(ansi.String(word).Plain())
+			width += len(ansi.Strip(word))
 			word = ""
 
 			if r == '\n' {
@@ -221,16 +173,4 @@ func PrintWrapped(text ansi.String, maxWidth int, printAnsi bool) {
 	}
 
 	fmt.Println()
-}
-
-// unexported
-
-func plain(items []ansi.String) []ansi.String {
-	plain := make([]ansi.String, len(items))
-
-	for index, item := range items {
-		plain[index] = item.Plain()
-	}
-
-	return plain
 }

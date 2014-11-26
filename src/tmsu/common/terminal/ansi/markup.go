@@ -21,13 +21,13 @@ import (
 	"strings"
 )
 
-func ParseMarkup(text string) String {
-	text = strings.Replace(text, "$BOLD", string(Bold), -1)
-	text = strings.Replace(text, "$YELLOW", string(Yellow), -1)
-	text = strings.Replace(text, "$GREEN", string(Green), -1)
-	text = strings.Replace(text, "$CYAN", string(Cyan), -1)
-	text = strings.Replace(text, "$WHITE", string(White), -1)
-	text = strings.Replace(text, "$RESET", string(Reset), -1)
+func ParseMarkup(text string) string {
+	text = strings.Replace(text, "$BOLD", string(BoldCode), -1)
+	text = strings.Replace(text, "$YELLOW", string(YellowCode), -1)
+	text = strings.Replace(text, "$GREEN", string(GreenCode), -1)
+	text = strings.Replace(text, "$CYAN", string(CyanCode), -1)
+	text = strings.Replace(text, "$WHITE", string(WhiteCode), -1)
+	text = strings.Replace(text, "$RESET", string(ResetCode), -1)
 
-	return String(text)
+	return string(text)
 }

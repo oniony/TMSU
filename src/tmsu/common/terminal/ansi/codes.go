@@ -17,16 +17,18 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package ansi
 
-var Reset String = "\x1b[0m"
+var ResetCode string = "\x1b[0m"
 
-var Bold String = "\x1b[1m"
-var Italic String = "\x1b[3m"
-var Underline String = "\x1b[4m"
+var BoldCode string = "\x1b[1m"
+var ItalicCode string = "\x1b[3m"
+var UnderlineCode string = "\x1b[4m"
+var BlinkCode string = "\x1b[5m"
+var InvertCode string = "\x1b[7m"
 
-var Red String = "\x1b[31m"
-var Green String = "\x1b[32m"
-var Yellow String = "\x1b[33m"
-var Blue String = "\x1b[34m"
-var Magenta String = "\x1b[35m"
-var Cyan String = "\x1b[36m"
-var White String = "\x1b[37m"
+var RedCode string = "\x1b[31m"
+var GreenCode string = "\x1b[32m"
+var YellowCode string = "\x1b[33m"
+var BlueCode string = "\x1b[34m"
+var MagentaCode string = "\x1b[35m"
+var CyanCode string = "\x1b[36m"
+var WhiteCode string = "\x1b[37m"

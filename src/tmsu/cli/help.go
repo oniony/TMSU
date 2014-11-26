@@ -73,13 +73,11 @@ func helpExec(options Options, args []string) error {
 }
 
 func summary(colour bool) {
+	text := "TMSU"
 	if colour {
-		fmt.Print(ansi.Bold)
+		text = ansi.Bold(text)
 	}
-	fmt.Println("TMSU")
-	if colour {
-		fmt.Print(ansi.Reset)
-	}
+	fmt.Println(text)
 	fmt.Println()
 
 	var maxWidth int
@@ -99,40 +97,51 @@ func summary(colour bool) {
 			continue
 		}
 
-		terminal.PrintWrapped(ansi.String(fmt.Sprintf("  %-*v  %v", maxWidth, command.Name, command.Synopsis)), terminal.Width(), colour)
+		synopsis := command.Synopsis
+		if !colour {
+			synopsis = ansi.Strip(synopsis)
+		}
+
+		line := fmt.Sprintf("  %-*v  %v", maxWidth, command.Name, synopsis)
+
+		if command.Hidden && colour {
+			line = ansi.Yellow(line)
+		}
+
+		terminal.PrintWrapped(line)
 	}
 
 	fmt.Println()
 
+	text = "Global options:"
 	if colour {
-		fmt.Print(ansi.Bold)
+		text = ansi.Bold(text)
 	}
-	fmt.Println("Global options:")
-	if colour {
-		fmt.Print(ansi.Reset)
-	}
+	fmt.Println(text)
 	fmt.Println()
 
 	printOptions(globalOptions)
 
 	fmt.Println()
-	terminal.PrintWrapped("Specify subcommand name for detailed help on a particular subcommand, e.g. tmsu help files", terminal.Width(), false)
+	terminal.PrintWrapped("Specify subcommand name for detailed help on a particular subcommand, e.g. tmsu help files")
 }
 
 func listCommands() {
-	commandNames := make(ansi.Strings, 0, len(helpCommands))
+	commandNames := make([]string, 0, len(helpCommands))
 
 	for _, command := range helpCommands {
 		if command.Hidden && log.Verbosity < 2 {
 			continue
 		}
 
-		commandNames = append(commandNames, ansi.String(command.Name))
+		commandNames = append(commandNames, command.Name)
 	}
 
-	sort.Sort(commandNames)
+	sort.Strings(commandNames)
 
-	terminal.PrintList(commandNames, 0, false)
+	for _, commandName := range commandNames {
+		fmt.Println(commandName)
+	}
 }
 
 func describeCommand(commandName string, colour bool) {
@@ -144,28 +153,37 @@ func describeCommand(commandName string, colour bool) {
 
 	// usages
 	for _, usage := range command.Usages {
-		fmt.Print(string(ansi.Bold))
-		terminal.PrintWrapped(ansi.String(usage), terminal.Width(), colour)
-		fmt.Print(string(ansi.Reset))
+		if colour {
+			usage = ansi.Bold(usage)
+		}
+
+		terminal.PrintWrapped(usage)
 	}
 
 	// description
 	fmt.Println()
 	description := ansi.ParseMarkup(command.Description)
-	terminal.PrintWrapped(description, terminal.Width(), colour)
+
+	if !colour {
+		description = ansi.Strip(description)
+	}
+
+	terminal.PrintWrapped(description)
 
 	// examples
 	if command.Examples != nil && len(command.Examples) > 0 {
 		fmt.Println()
 
-		fmt.Print(string(ansi.Bold))
-		fmt.Print("Examples:")
-		fmt.Println(string(ansi.Reset))
+		text := "Examples:"
+		if colour {
+			text = ansi.Bold(text)
+		}
+		fmt.Println(text)
 		fmt.Println()
 
 		for _, example := range command.Examples {
 			example = "  " + strings.Replace(example, "\n", "\n  ", -1) // preserve indent
-			terminal.PrintWrapped(ansi.String(example), terminal.Width(), colour)
+			terminal.PrintWrapped(example)
 		}
 	}
 
@@ -174,7 +192,11 @@ func describeCommand(commandName string, colour bool) {
 		fmt.Println()
 
 		if command.Aliases != nil {
-			terminal.Print(ansi.Bold+ansi.String("Aliases:")+ansi.Reset, colour)
+			text := "Aliases:"
+			if colour {
+				text = ansi.Bold(text)
+			}
+			fmt.Print(text)
 
 			for _, alias := range command.Aliases {
 				fmt.Print(" " + alias)
@@ -188,7 +210,11 @@ func describeCommand(commandName string, colour bool) {
 	if command.Options != nil && len(command.Options) > 0 {
 		fmt.Println()
 
-		terminal.Println(ansi.Bold+ansi.String("Options:")+ansi.Reset, colour)
+		text := "Options:"
+		if colour {
+			text = ansi.Bold(text)
+		}
+		fmt.Println(text)
 		fmt.Println()
 
 		printOptions(command.Options)
@@ -202,22 +228,7 @@ func printOptions(options []Option) {
 	}
 
 	for _, option := range options {
-		line := ""
-
-		if option.ShortName != "" {
-			line += "  " + option.ShortName + " "
-		} else {
-			line += "     "
-		}
-
-		if option.LongName != "" {
-			line += option.LongName
-		}
-
-		line += strings.Repeat(" ", maxWidth-len(option.LongName))
-		line += "  "
-		line += option.Description
-
-		terminal.PrintWrapped(ansi.String(line), terminal.Width(), false)
+		line := fmt.Sprintf("  %-2v %-*v  %v", option.ShortName, maxWidth-len(option.LongName), option.LongName, option.Description)
+		terminal.PrintWrapped(line)
 	}
 }

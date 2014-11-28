@@ -80,7 +80,7 @@ func TestStatusReport(test *testing.T) {
 
 	// test
 
-	if err := StatusCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
+	if err := StatusCommand.Exec(Options{{"--verbose", "-v", "", false, ""}}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b", "/tmp/tmsu/c", "/tmp/tmsu/d"}); err != nil {
 		test.Fatal(err)
 	}
 

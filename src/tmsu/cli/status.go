@@ -233,7 +233,7 @@ func statusCheckFile(file *entities.File, report *StatusReport) error {
 		}
 	} else {
 		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
-			log.Infof(2, "%v: file is modified.", file.Path())
+			log.Infof(2, "%v: file is modified. DB size %v, stat size %v, DB date %v, stat date %v", file.Path(), file.Size, stat.Size, file.ModTime, stat.ModTime().UTC())
 
 			report.AddRow(Row{relPath, MODIFIED})
 		} else {

@@ -53,7 +53,8 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 		{"--pretend", "-P", "do not make any changes", false, ""},
 		{"--remove", "-R", "remove missing files from the database", false, ""},
 		{"--manual", "-m", "manually relocate files", false, ""},
-		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""}},
+		{"--unmodified", "-u", "recalculate fingerprints for unmodified files", false, ""},
+		{"--rationalize", "", "remove explicit taggings where an implicit tagging exists", false, ""}},
 	Exec: repairExec,
 }
 
@@ -74,11 +75,12 @@ func repairExec(options Options, args []string) error {
 		limitPath := "/" //TODO Windows
 		removeMissing := options.HasOption("--remove")
 		recalcUnmodified := options.HasOption("--unmodified")
+		rationalize := options.HasOption("--rationalize")
 		if options.HasOption("--path") {
 			limitPath = options.Get("--path").Argument
 		}
 
-		if err := fullRepair(searchPaths, limitPath, removeMissing, recalcUnmodified, pretend); err != nil {
+		if err := fullRepair(searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
 			return err
 		}
 	}
@@ -178,7 +180,7 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 	return err
 }
 
-func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, pretend bool) error {
+func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -232,6 +234,12 @@ func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnm
 		return err
 	}
 
+	if rationalize {
+		if err = rationalizeFileTags(store, dbFiles); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -260,6 +268,29 @@ func deleteUnusedValues(store *storage.Storage) error {
 	}
 
 	return store.DeleteUnusedValues(valueIds)
+}
+
+func rationalizeFileTags(store *storage.Storage, files entities.Files) error {
+	log.Infof(2, "rationalizing file tags")
+
+	for _, file := range files {
+		fileTags, err := store.FileTagsByFileId(file.Id, false)
+		if err != nil {
+			return fmt.Errorf("could not determine tags for file '%v': %v", file.Path(), err)
+		}
+
+		for _, fileTag := range fileTags {
+			if fileTag.Implicit && fileTag.Explicit {
+				log.Infof(2, "%v: removing explicit tagging %v as implicit tagging exists", file.Path(), fileTag.TagId)
+
+				if err := store.DeleteFileTag(fileTag.FileId, fileTag.TagId, fileTag.ValueId); err != nil {
+					return fmt.Errorf("could not delete file tag for file %v, tag %v and value %v", fileTag.FileId, fileTag.TagId, fileTag.ValueId)
+				}
+			}
+		}
+	}
+
+	return nil
 }
 
 func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing entities.Files) {

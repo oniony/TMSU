@@ -329,7 +329,7 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 			}
 		}
 
-		if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
+		if dbFile.ModTime.Equal(stat.ModTime().UTC()) && dbFile.Size == stat.Size() {
 			log.Infof(2, "%v: unmodified", dbFile.Path())
 			unmodified = append(unmodified, dbFile)
 		} else {

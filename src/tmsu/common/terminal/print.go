@@ -19,7 +19,6 @@ package terminal
 
 import (
 	"fmt"
-	"sort"
 	"strings"
 	"tmsu/common/terminal/ansi"
 )
@@ -31,7 +30,7 @@ func PrintColumns(items []string) {
 }
 
 func PrintColumnsWidth(items []string, width int) {
-	sort.Strings(items)
+	ansi.Sort(items)
 
 	padding := 2 // minimum column padding
 
@@ -58,7 +57,7 @@ func PrintColumnsWidth(items []string, width int) {
 				calcWidth += padding
 			}
 
-			var itemLength = len(ansi.Strip(item))
+			itemLength := len(ansi.Strip(item))
 			if itemLength > colWidths[col] {
 				// widen column
 				calcWidth += -colWidths[col] + itemLength
@@ -95,7 +94,8 @@ func PrintColumnsWidth(items []string, width int) {
 			fmt.Print(item)
 
 			if columnIndex < cols-1 {
-				padding := (colWidths[columnIndex] + padding) - len(item)
+				itemLength := len(ansi.Strip(item))
+				padding := (colWidths[columnIndex] + padding) - itemLength
 				fmt.Print(strings.Repeat(" ", padding))
 			}
 		}

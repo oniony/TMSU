@@ -47,7 +47,7 @@ Files that have been both moved and modified cannot be repaired and must be manu
 When run with the --manual option, any paths that begin with OLD are updated to begin with NEW. Any affected files' fingerprints are updated providing the file exists at the new location. No further repairs are attempted in this mode.`,
 	Examples: []string{"$ tmsu repair",
 		"$ tmsu repair /new/path  # look for missing files here",
-		"$ tmsu repair --path /home/sally  # repair subset of database",
+		"$ tmsu repair --path=/home/sally  # repair subset of database",
 		"$ tmsu repair --manual /home/bob /home/fred  # manually repair paths"},
 	Options: Options{{"--path", "-p", "limit repair to files in database under path", true, ""},
 		{"--pretend", "-P", "do not make any changes", false, ""},
@@ -72,10 +72,11 @@ func repairExec(options Options, args []string) error {
 		}
 	} else {
 		searchPaths := args
-		limitPath := "/" //TODO Windows
 		removeMissing := options.HasOption("--remove")
 		recalcUnmodified := options.HasOption("--unmodified")
 		rationalize := options.HasOption("--rationalize")
+
+		limitPath := "/" //TODO Windows
 		if options.HasOption("--path") {
 			limitPath = options.Get("--path").Argument
 		}
@@ -181,6 +182,11 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 }
 
 func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
+	absLimitPath, err := filepath.Abs(limitPath)
+	if err != nil {
+		return fmt.Errorf("%v: could not determine absolute path", err)
+	}
+
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
@@ -199,9 +205,18 @@ func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnm
 
 	log.Infof(2, "retrieving all files from the database")
 
-	dbFiles, err := store.FilesByDirectory(limitPath)
+	dbFiles, err := store.FilesByDirectory(absLimitPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve files from storage: %v", err)
+	}
+
+	dbFile, err := store.FileByPath(absLimitPath)
+	if err != nil {
+		return fmt.Errorf("could not retrieve file from storage: %v", err)
+	}
+
+	if dbFile != nil {
+		dbFiles = append(dbFiles, dbFile)
 	}
 
 	log.Infof(2, "retrieved %v files from the database", len(dbFiles))

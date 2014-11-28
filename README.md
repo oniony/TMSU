@@ -1,4 +1,4 @@
-[ ![Codeship build tatus for oniony/tmsu](https://codeship.com/projects/58bc8ed0-2348-0132-5932-5ab9281f4098/status?branch=default)](https://codeship.com/projects/36664)
+[ ![Codeship build tatus for TMSU](https://codeship.com/projects/58bc8ed0-2348-0132-5932-5ab9281f4098/status?branch=v0.4)](https://codeship.com/projects/36664)
 
 Overview
 ========

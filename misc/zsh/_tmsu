@@ -239,11 +239,12 @@ _tmsu_cmd_rename() {
 }
 
 _tmsu_cmd_repair() {
-	_arguments -s -w ''{--path,-P}'[limit repair to files under a path]' \
+	_arguments -s -w ''{--path=,-p}'[limit repair to files under a path]':path:_files \
                      ''{--remove,-R}'[remove missing files from the database]' \
 	                 ''{--unmodified,-u}'[recalculate fingerprints for unmodified files]' \
 	                 ''{--pretend,-P}'[do not make any changes]' \
 	                 ''{--manual,-m}'[manually relocate files]' \
+	                 ''--rationalize'[remove explicit taggings where an implicit tagging exists]' \
 	                 '*:file:_files' \
     && ret=0
 }

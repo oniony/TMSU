@@ -88,6 +88,9 @@ func NewReport() *StatusReport {
 }
 
 func statusExec(options Options, args []string) error {
+	//TEMP
+	log.Verbosity = 2
+
 	dirOnly := options.HasOption("--directory")
 
 	var report *StatusReport

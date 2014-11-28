@@ -50,6 +50,8 @@ Copy the Zsh completion file to the Zsh site-functions directory:
 
     $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
 
+[ ![Codeship Status for oniony/tmsu](https://codeship.com/projects/58bc8ed0-2348-0132-5932-5ab9281f4098/status?branch=default)](https://codeship.com/projects/36664)
+
 About
 =====
 

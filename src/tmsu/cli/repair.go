@@ -214,7 +214,7 @@ func determineStatuses(fsPaths fileInfoMap, dbPaths databaseFileMap) (unmodified
 				stat   os.FileInfo
 			}{dbFile.Id, stat}
 
-			if dbFile.ModTime == stat.ModTime().UTC() && dbFile.Size == stat.Size() {
+			if dbFile.ModTime.Equal(stat.ModTime().UTC()) && dbFile.Size == stat.Size() {
 				unmodified[path] = dbFileAndStat
 			} else {
 				modified[path] = dbFileAndStat

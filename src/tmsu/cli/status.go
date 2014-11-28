@@ -240,7 +240,7 @@ func statusCheckFile(file *entities.File, report *StatusReport) error {
 			return fmt.Errorf("%v: could not stat: %v", file.Path(), err)
 		}
 	} else {
-		if stat.Size() != file.Size || stat.ModTime().UTC() != file.ModTime {
+		if stat.Size() != file.Size || !stat.ModTime().UTC().Equal(file.ModTime) {
 			log.Infof(2, "%v: file is modified.", file.Path())
 
 			report.AddRow(Row{relPath, MODIFIED})

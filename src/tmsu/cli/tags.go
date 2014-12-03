@@ -20,7 +20,6 @@ package cli
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"sort"
 	"strconv"
 	"tmsu/common/log"
@@ -80,7 +79,7 @@ func tagsExec(options Options, args []string) error {
 		return listAllTags(showCount, onePerLine, colour)
 	}
 
-	return listTags(args, showCount, onePerLine, explicitOnly, colour)
+	return listTagsForPaths(args, showCount, onePerLine, explicitOnly, colour)
 }
 
 func listAllTags(showCount, onePerLine, colour bool) error {
@@ -122,78 +121,17 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 	return nil
 }
 
-func listTags(paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
+func listTagsForPaths(paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)
 	}
 	defer store.Close()
 
-	switch len(paths) {
-	case 0:
-		return listTagsForWorkingDirectory(store, showCount, onePerLine, explicitOnly, colour)
-	case 1:
-		return listTagsForPath(store, paths[0], showCount, onePerLine, explicitOnly, colour)
-	default:
-		return listTagsForPaths(store, paths, showCount, onePerLine, explicitOnly, colour)
-	}
-
-	return nil
-}
-
-func listTagsForPath(store *storage.Storage, path string, showCount, onePerLine, explicitOnly, colour bool) error {
-	log.Infof(2, "%v: retrieving tags.", path)
-
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return fmt.Errorf("%v: could not retrieve absolute path: %v", path, err)
-	}
-
-	file, err := store.FileByPath(absPath)
-	if err != nil {
-		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
-	}
-
-	var tagNames []string
-	if file != nil {
-		tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
-		if err != nil {
-			return err
-		}
-	} else {
-		log.Infof(2, "%v: untagged", path)
-
-		_, err := os.Stat(path)
-		if err != nil {
-			switch {
-			case os.IsPermission(err):
-				return fmt.Errorf("%v: permission denied", path)
-			case os.IsNotExist(err):
-				return fmt.Errorf("%v: no such file", path)
-			default:
-				return fmt.Errorf("%v: could not stat file: %v", path, err)
-			}
-		}
-	}
-
-	if showCount {
-		fmt.Println(len(tagNames))
-	} else {
-		if onePerLine {
-			for _, tagName := range tagNames {
-				fmt.Println(tagName)
-			}
-		} else {
-			terminal.PrintColumns(tagNames)
-		}
-	}
-
-	return nil
-}
-
-func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	wereErrors := false
-	for _, path := range paths {
+	printPath := len(paths) > 1 || terminal.Width() == 0
+
+	for index, path := range paths {
 		log.Infof(2, "%v: retrieving tags.", path)
 
 		file, err := store.FileByPath(path)
@@ -226,21 +164,36 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 			}
 		}
 
-		if showCount {
-			fmt.Println(path + ": " + strconv.Itoa(len(tagNames)))
-		} else {
-			if onePerLine {
-				fmt.Println(path)
-				for _, tagName := range tagNames {
-					fmt.Print(tagName)
-				}
+		switch {
+		case showCount:
+			if printPath {
+				fmt.Print(path + ": ")
+			}
+
+			fmt.Println(strconv.Itoa(len(tagNames)))
+		case onePerLine:
+			if index > 0 {
 				fmt.Println()
-			} else {
+			}
+
+			if printPath {
+				fmt.Println(path + ":")
+			}
+
+			for _, tagName := range tagNames {
+				fmt.Println(tagName)
+			}
+		default:
+			if printPath {
 				fmt.Print(path + ":")
+
 				for _, tagName := range tagNames {
 					fmt.Print(" " + tagName)
 				}
+
 				fmt.Println()
+			} else {
+				terminal.PrintColumns(tagNames)
 			}
 		}
 	}

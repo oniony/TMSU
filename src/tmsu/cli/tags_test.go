@@ -80,7 +80,7 @@ func TestTagsForSingleFile(test *testing.T) {
 	outFile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(outFile)
-	compareOutput(test, "apple\nbanana\n", string(bytes))
+	compareOutput(test, "/tmp/tmsu/a: apple banana\n", string(bytes))
 }
 
 func TestTagsForMultipleFiles(test *testing.T) {
@@ -254,5 +254,5 @@ func TestImpliedTags(test *testing.T) {
 	outFile.Seek(0, 0)
 
 	bytes, err := ioutil.ReadAll(outFile)
-	compareOutput(test, "apple\nfood\nfruit\n", string(bytes))
+	compareOutput(test, "/tmp/tmsu/a: apple food fruit\n", string(bytes))
 }

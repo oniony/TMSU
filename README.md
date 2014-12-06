@@ -20,15 +20,14 @@ integrated help:
 
 Documentation is maintained online on the wiki:
 
-  * <http://bitbucket.org/oniony/tmsu/wiki>
+  * <https://github.com/oniony/TMSU/wiki>
 
-Installing
-==========
+Installing==========
 
 Binary builds for a limited number of architectures and operating system
 combinations are available:
 
-  * <http://bitbucket.org/oniony/tmsu/downloads>
+  * <https://github.com/oniony/TMSU/releases>
 
 (If you would rather build from the source code then please see COMPILING.md
 in the root of the repository.)
@@ -66,8 +65,9 @@ Much of the functionality the program provides is made possible by the FUSE and
 Sqlite3 libraries, their Go bindings and the Go language standard library.
 
   * Website: <http://tmsu.org/>
-  * Project: <http://bitbucket.org/oniony/tmsu>
-  * Wiki: <http://bitbucket.org/oniony/tmsu/wiki>
+  * Project: <https://github.com/oniony/TMSU/>
+  * Wiki: <https://github.com/oniony/TMSU/wiki>
+  * Issue tracker: <https://github.com/oniony/TMSU/issues>
   * Mailing list: <http://groups.google.com/group/tmsu>
 
 Release Notes

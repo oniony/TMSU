@@ -22,7 +22,8 @@ Documentation is maintained online on the wiki:
 
   * <https://github.com/oniony/TMSU/wiki>
 
-Installing==========
+Installing
+==========
 
 Binary builds for a limited number of architectures and operating system
 combinations are available:

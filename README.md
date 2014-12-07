@@ -1,4 +1,4 @@
-[ ![TMSU build status](https://codeship.com/projects/ad81c060-5f0e-0132-2efc-3643fcd47fc7/status)](https://codeship.com/projects/51490)
+[ ![TMSU release tag status](https://codeship.com/projects/ad81c060-5f0e-0132-2efc-3643fcd47fc7/status?branch=release)](https://codeship.com/projects/51490) [ ![TMSU dev branch status](https://codeship.com/projects/ad81c060-5f0e-0132-2efc-3643fcd47fc7/status?branch=master)](https://codeship.com/projects/51490)
 
 Overview
 ========

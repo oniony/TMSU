@@ -36,13 +36,13 @@ a downloaded binary then they can be safely ignored.
 
     To clone the current stable release branch:
 
-        $ hg clone -r release https://bitbucket.org/oniony/tmsu
+        $ git clone -b release https://github.com/oniony/TMSU.git
 
-    Active development takes place on the default branch. This branch is subject
-    to build failures and breaking changes but will have the latest
+    Active development takes place on the 'master' branch. This branch is
+    subject to build failures and breaking changes but will have the latest
     functionality and improvements:
 
-        $ hg clone https://bitbucket.org/oniony/tmsu
+        $ git clone https://github.com/oniony/TMSU.git
 
 5. Make the project
 

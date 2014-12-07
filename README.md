@@ -109,6 +109,11 @@ v0.5.0 (in development)
   * TMSU can now be built without the Makefile.
   * Bug fixes.
 
+v0.4.3
+------
+
+  * Fixed unit-test problems.
+
 v0.4.2
 ------
 

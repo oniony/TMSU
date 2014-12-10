@@ -39,16 +39,16 @@ operating system's package management system.
 
 1. Install the binary
 
-Copy the program binary. The location may be different for your operating
-system:
+    Copy the program binary. The location may be different for your operating
+    system:
 
-    $ sudo cp bin/tmsu /usr/bin
+        $ sudo cp bin/tmsu /usr/bin
 
 2. Optional: Zsh completion
 
-Copy the Zsh completion file to the Zsh site-functions directory:
+    Copy the Zsh completion file to the Zsh site-functions directory:
 
-    $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
+        $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
 
 About
 =====

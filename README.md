@@ -1,3 +1,5 @@
+![TMSU](http://tmsu.org/images/tmsu.png)
+
 Overview
 ========
 

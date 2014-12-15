@@ -37,7 +37,6 @@ var commands = map[string]*Command{
 	"help":   &HelpCommand,
 	"imply":  &ImplyCommand,
 	"merge":  &MergeCommand,
-	//	"relocate": &RelocateCommand,
 	"rename":   &RenameCommand,
 	"repair":   &RepairCommand,
 	"stats":    &StatsCommand,

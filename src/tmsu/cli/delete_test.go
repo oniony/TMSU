@@ -164,9 +164,15 @@ func TestDeleteNonExistentTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
 	// test
 
-	err := DeleteCommand.Exec(store, Options{}, []string{"deleteme"})
+	err = DeleteCommand.Exec(store, Options{}, []string{"deleteme"})
 
 	// validate
 

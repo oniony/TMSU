@@ -97,9 +97,15 @@ func TestRenameNonExistentSourceTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
 	// test
 
-	err := RenameCommand.Exec(store, Options{}, []string{"source", "dest"})
+	err = RenameCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 
@@ -114,9 +120,15 @@ func TestRenameInvalidDestTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
 	// test
 
-	err := RenameCommand.Exec(store, Options{}, []string{"source", "slash/invalid"})
+	err = RenameCommand.Exec(store, Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 

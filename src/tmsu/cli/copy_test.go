@@ -86,9 +86,15 @@ func TestCopyNonExistentSourceTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
 	// test
 
-	err := CopyCommand.Exec(store, Options{}, []string{"source", "dest"})
+	err = CopyCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 
@@ -103,9 +109,15 @@ func TestCopyInvalidDestTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
 	// test
 
-	err := CopyCommand.Exec(Options{}, []string{"source", "slash/invalid"})
+	err = CopyCommand.Exec(store, Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 
@@ -138,7 +150,7 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 
 	// test
 
-	err = CopyCommand.Exec(Options{}, []string{"source", "dest"})
+	err = CopyCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 

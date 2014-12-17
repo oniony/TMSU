@@ -21,6 +21,7 @@ import (
 	"io/ioutil"
 	"os"
 	"testing"
+	"tmsu/storage"
 )
 
 func TestStatusReport(test *testing.T) {
@@ -29,7 +30,13 @@ func TestStatusReport(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	err := redirectStreams()
+	store, err := storage.Open()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer store.Close()
+
+	err = redirectStreams()
 	if err != nil {
 		test.Fatal(err)
 	}

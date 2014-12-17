@@ -62,7 +62,7 @@ func TestCopySuccessful(test *testing.T) {
 
 	// test
 
-	if err := CopyCommand.Exec(Options{}, []string{"source", "dest"}); err != nil {
+	if err := CopyCommand.Exec(store, Options{}, []string{"source", "dest"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -88,7 +88,7 @@ func TestCopyNonExistentSourceTag(test *testing.T) {
 
 	// test
 
-	err := CopyCommand.Exec(Options{}, []string{"source", "dest"})
+	err := CopyCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 

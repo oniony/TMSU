@@ -71,7 +71,7 @@ func TestTagsForSingleFile(test *testing.T) {
 
 	// test
 
-	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a"}); err != nil {
+	if err := TagsCommand.Exec(store, Options{}, []string{"/tmp/tmsu/a"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -138,7 +138,7 @@ func TestTagsForMultipleFiles(test *testing.T) {
 
 	// test
 
-	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
+	if err := TagsCommand.Exec(store, Options{}, []string{"/tmp/tmsu/a", "/tmp/tmsu/b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -180,7 +180,7 @@ func TestAllTags(test *testing.T) {
 
 	// test
 
-	if err := TagsCommand.Exec(Options{}, []string{}); err != nil {
+	if err := TagsCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -245,7 +245,7 @@ func TestImpliedTags(test *testing.T) {
 
 	// test
 
-	if err := TagsCommand.Exec(Options{}, []string{"/tmp/tmsu/a"}); err != nil {
+	if err := TagsCommand.Exec(store, Options{}, []string{"/tmp/tmsu/a"}); err != nil {
 		test.Fatal(err)
 	}
 

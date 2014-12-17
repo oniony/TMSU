@@ -53,7 +53,7 @@ Optionally tags applied to files may be attributed with a VALUE using the TAG=VA
 	Exec: tagExec,
 }
 
-func tagExec(options Options, args []string) error {
+func tagExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
 
@@ -63,7 +63,7 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("set of tags to create must be specified")
 		}
 
-		if err := createTags(args); err != nil {
+		if err := createTags(store, args); err != nil {
 			return err
 		}
 	case options.HasOption("--tags"):
@@ -81,7 +81,7 @@ func tagExec(options Options, args []string) error {
 			return fmt.Errorf("at least one file to tag must be specified")
 		}
 
-		if err := tagPaths(tagArgs, paths, explicit, recursive); err != nil {
+		if err := tagPaths(store, tagArgs, paths, explicit, recursive); err != nil {
 			return err
 		}
 	case options.HasOption("--from"):
@@ -96,7 +96,7 @@ func tagExec(options Options, args []string) error {
 
 		paths := args
 
-		if err := tagFrom(fromPath, paths, explicit, recursive); err != nil {
+		if err := tagFrom(store, fromPath, paths, explicit, recursive); err != nil {
 			return err
 		}
 	default:
@@ -107,7 +107,7 @@ func tagExec(options Options, args []string) error {
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := tagPaths(tagArgs, paths, explicit, recursive); err != nil {
+		if err := tagPaths(store, tagArgs, paths, explicit, recursive); err != nil {
 			return err
 		}
 	}
@@ -115,18 +115,7 @@ func tagExec(options Options, args []string) error {
 	return nil
 }
 
-func createTags(tagNames []string) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func createTags(store *storage.Storage, tagNames []string) error {
 	wereErrors := false
 	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tagName)
@@ -154,18 +143,7 @@ func createTags(tagNames []string) error {
 	return nil
 }
 
-func tagPaths(tagArgs, paths []string, explicit, recursive bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursive bool) error {
 	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
 	if err != nil {
 		return err
@@ -254,18 +232,7 @@ func tagPaths(tagArgs, paths []string, explicit, recursive bool) error {
 	return nil
 }
 
-func tagFrom(fromPath string, paths []string, explicit, recursive bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, recursive bool) error {
 	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
 	if err != nil {
 		return fmt.Errorf("could not retrieve fingerprint algorithm: %v", err)

@@ -36,18 +36,7 @@ Attempting to rename a tag with a new name for which a tag already exists will r
 	Exec:     renameExec,
 }
 
-func renameExec(options Options, args []string) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func renameExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("tag to rename and new name must both be specified")
 	}

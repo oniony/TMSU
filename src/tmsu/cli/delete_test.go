@@ -44,7 +44,7 @@ func TestDeleteUnappliedTag(test *testing.T) {
 
 	// test
 
-	if err := DeleteCommand.Exec(Options{}, []string{"beetroot"}); err != nil {
+	if err := DeleteCommand.Exec(store, Options{}, []string{"beetroot"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -113,7 +113,7 @@ func TestDeleteAppliedTag(test *testing.T) {
 
 	// test
 
-	if err := DeleteCommand.Exec(Options{}, []string{"deathrow"}); err != nil {
+	if err := DeleteCommand.Exec(store, Options{}, []string{"deathrow"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -166,7 +166,7 @@ func TestDeleteNonExistentTag(test *testing.T) {
 
 	// test
 
-	err := DeleteCommand.Exec(Options{}, []string{"deleteme"})
+	err := DeleteCommand.Exec(store, Options{}, []string{"deleteme"})
 
 	// validate
 

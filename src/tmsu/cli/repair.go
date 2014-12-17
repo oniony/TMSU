@@ -60,14 +60,14 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 
 // unexported
 
-func repairExec(options Options, args []string) error {
+func repairExec(store *storage.Storage, options Options, args []string) error {
 	pretend := options.HasOption("--pretend")
 
 	if options.HasOption("--manual") {
 		fromPath := args[0]
 		toPath := args[1]
 
-		if err := manualRepair(fromPath, toPath, pretend); err != nil {
+		if err := manualRepair(store, fromPath, toPath, pretend); err != nil {
 			return err
 		}
 	} else {
@@ -81,7 +81,7 @@ func repairExec(options Options, args []string) error {
 			limitPath = options.Get("--path").Argument
 		}
 
-		if err := fullRepair(searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
+		if err := fullRepair(store, searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
 			return err
 		}
 	}
@@ -89,7 +89,7 @@ func repairExec(options Options, args []string) error {
 	return nil
 }
 
-func manualRepair(fromPath, toPath string, pretend bool) error {
+func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool) error {
 	absFromPath, err := filepath.Abs(fromPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not determine absolute path", err)
@@ -99,17 +99,6 @@ func manualRepair(fromPath, toPath string, pretend bool) error {
 	if err != nil {
 		return fmt.Errorf("%v: could not determine absolute path", err)
 	}
-
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
 
 	log.Infof(2, "retrieving files under '%v' from the database", fromPath)
 
@@ -181,22 +170,11 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 	return err
 }
 
-func fullRepair(searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
+func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
 	absLimitPath, err := filepath.Abs(limitPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not determine absolute path", err)
 	}
-
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
 
 	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
 	if err != nil {

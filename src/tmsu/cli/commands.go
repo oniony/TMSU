@@ -17,6 +17,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package cli
 
+import (
+    "tmsu/storage"
+)
+
 type Command struct {
 	Name        string
 	Aliases     []string
@@ -25,25 +29,28 @@ type Command struct {
 	Description string
 	Examples    []string
 	Options     Options
-	Exec        func(options Options, args []string) error
+	Exec        func(*storage.Storage, Options, []string) error
 	Hidden      bool
 }
 
 var commands = map[string]*Command{
-	"copy":   &CopyCommand,
-	"delete": &DeleteCommand,
-	"dupes":  &DupesCommand,
-	"files":  &FilesCommand,
-	"help":   &HelpCommand,
-	"imply":  &ImplyCommand,
-	"merge":  &MergeCommand,
+	"copy":     &CopyCommand,
+	"delete":   &DeleteCommand,
+	"dupes":    &DupesCommand,
+	"files":    &FilesCommand,
+	"help":     &HelpCommand,
+	"imply":    &ImplyCommand,
+	"merge":    &MergeCommand,
+    "mount":    &MountCommand,
 	"rename":   &RenameCommand,
 	"repair":   &RepairCommand,
 	"stats":    &StatsCommand,
 	"status":   &StatusCommand,
 	"tag":      &TagCommand,
 	"tags":     &TagsCommand,
+    "unmount":  &UnmountCommand,
 	"untag":    &UntagCommand,
 	"untagged": &UntaggedCommand,
 	"values":   &ValuesCommand,
-	"version":  &VersionCommand}
+	"version":  &VersionCommand,
+    "vfs":      &VfsCommand}

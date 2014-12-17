@@ -62,7 +62,7 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 	Exec: filesExec,
 }
 
-func filesExec(options Options, args []string) error {
+func filesExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	topOnly := options.HasOption("--top")
@@ -84,18 +84,12 @@ func filesExec(options Options, args []string) error {
 	}
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)
+	return listFilesForQuery(store, queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)
 }
 
 // unexported
 
-func listFilesForQuery(queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly bool) error {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)

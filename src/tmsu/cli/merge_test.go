@@ -85,7 +85,7 @@ func TestMergeSingleTag(test *testing.T) {
 
 	// test
 
-	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err != nil {
+	if err := MergeCommand.Exec(store, Options{}, []string{"a", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -196,7 +196,7 @@ func TestMergeMultipleTags(test *testing.T) {
 
 	// test
 
-	if err := MergeCommand.Exec(Options{}, []string{"a", "b", "c"}); err != nil {
+	if err := MergeCommand.Exec(store, Options{}, []string{"a", "b", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -253,7 +253,7 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 
 	// test
 
-	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err == nil {
+	if err := MergeCommand.Exec(store, Options{}, []string{"a", "b"}); err == nil {
 		test.Fatal("Expected non-existent source tag to be identified.")
 	}
 }
@@ -277,7 +277,7 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 
 	// test
 
-	if err := MergeCommand.Exec(Options{}, []string{"a", "b"}); err == nil {
+	if err := MergeCommand.Exec(store, Options{}, []string{"a", "b"}); err == nil {
 		test.Fatal("Expected non-existent destination tag to be identified.")
 	}
 }
@@ -301,7 +301,7 @@ func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 
 	// test
 
-	if err := MergeCommand.Exec(Options{}, []string{"a", "a"}); err == nil {
+	if err := MergeCommand.Exec(store, Options{}, []string{"a", "a"}); err == nil {
 		test.Fatal("Expected source and destination the same tag to be identified.")
 	}
 }

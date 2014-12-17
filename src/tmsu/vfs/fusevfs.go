@@ -66,7 +66,7 @@ type FuseVfs struct {
 	server    *fuse.Server
 }
 
-func MountVfs(databasePath string, mountPath string, options []string) (*FuseVfs, error) {
+func MountVfs(store *storage.Storage, mountPath string, options []string) (*FuseVfs, error) {
 	fuseVfs := FuseVfs{}
 	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
 	conn := nodefs.NewFileSystemConnector(pathFs.Root(), nil)
@@ -75,11 +75,6 @@ func MountVfs(databasePath string, mountPath string, options []string) (*FuseVfs
 	server, err := fuse.NewServer(conn.RawFS(), mountPath, mountOptions)
 	if err != nil {
 		return nil, fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
-	}
-
-	store, err := storage.OpenAt(databasePath)
-	if err != nil {
-		return nil, fmt.Errorf("could not open database at '%v': %v", databasePath, err)
 	}
 
 	fuseVfs.store = store

@@ -52,7 +52,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Exec: tagsExec,
 }
 
-func tagsExec(options Options, args []string) error {
+func tagsExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
@@ -76,19 +76,13 @@ func tagsExec(options Options, args []string) error {
 	}
 
 	if len(args) == 0 {
-		return listAllTags(showCount, onePerLine, colour)
+		return listAllTags(store, showCount, onePerLine, colour)
 	}
 
-	return listTagsForPaths(args, showCount, onePerLine, explicitOnly, colour)
+	return listTagsForPaths(store, args, showCount, onePerLine, explicitOnly, colour)
 }
 
-func listAllTags(showCount, onePerLine, colour bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func listAllTags(store *storage.Storage, showCount, onePerLine, colour bool) error {
 	log.Info(2, "retrieving all tags.")
 
 	if showCount {
@@ -121,7 +115,7 @@ func listAllTags(showCount, onePerLine, colour bool) error {
 	return nil
 }
 
-func listTagsForPaths(paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
+func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

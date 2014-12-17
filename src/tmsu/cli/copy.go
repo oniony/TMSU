@@ -35,18 +35,7 @@ var CopyCommand = Command{
 	Exec:    copyExec,
 }
 
-func copyExec(options Options, args []string) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func copyExec(store *storage.Storage, options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagNames := args[1:]
 

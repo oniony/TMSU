@@ -40,26 +40,20 @@ var DupesCommand = Command{
 	Exec:    dupesExec,
 }
 
-func dupesExec(options Options, args []string) error {
+func dupesExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 
 	switch len(args) {
 	case 0:
-		findDuplicatesInDb()
+		findDuplicatesInDb(store)
 	default:
-		return findDuplicatesOf(args, recursive)
+		return findDuplicatesOf(store, args, recursive)
 	}
 
 	return nil
 }
 
-func findDuplicatesInDb() error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func findDuplicatesInDb(store *storage.Storage) error {
 	log.Info(2, "identifying duplicate files.")
 
 	fileSets, err := store.DuplicateFiles()
@@ -85,7 +79,7 @@ func findDuplicatesInDb() error {
 	return nil
 }
 
-func findDuplicatesOf(paths []string, recursive bool) error {
+func findDuplicatesOf(store *storage.Storage, paths []string, recursive bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

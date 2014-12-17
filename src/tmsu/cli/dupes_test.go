@@ -57,7 +57,7 @@ func TestDupesSingle(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -110,7 +110,7 @@ func TestDupesMultiple(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -162,7 +162,7 @@ func TestDupesNone(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -221,7 +221,7 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{path}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -280,7 +280,7 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{path}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -339,7 +339,7 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 
 	// test
 
-	if err := DupesCommand.Exec(Options{}, []string{path}); err != nil {
+	if err := DupesCommand.Exec(store, Options{}, []string{path}); err != nil {
 		test.Fatal(err)
 	}
 

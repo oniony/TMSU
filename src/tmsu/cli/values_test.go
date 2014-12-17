@@ -76,7 +76,7 @@ func TestValuesForSingleTag(test *testing.T) {
 
 	// test
 
-	if err := ValuesCommand.Exec(Options{}, []string{"material"}); err != nil {
+	if err := ValuesCommand.Exec(store, Options{}, []string{"material"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -153,7 +153,7 @@ func TestValuesForMulitpleTags(test *testing.T) {
 
 	// test
 
-	if err := ValuesCommand.Exec(Options{}, []string{"material", "shape"}); err != nil {
+	if err := ValuesCommand.Exec(store, Options{}, []string{"material", "shape"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -200,7 +200,7 @@ func TestAllValues(test *testing.T) {
 
 	// test
 
-	if err := ValuesCommand.Exec(Options{}, []string{}); err != nil {
+	if err := ValuesCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 

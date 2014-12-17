@@ -32,14 +32,8 @@ var StatsCommand = Command{
 	Exec:        statsExec,
 }
 
-func statsExec(options Options, args []string) error {
+func statsExec(store *storage.Storage, options Options, args []string) error {
 	usage := options.HasOption("--usage")
-
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
 
 	tagCount, err := store.TagCount()
 	if err != nil {

@@ -87,19 +87,19 @@ func NewReport() *StatusReport {
 	return &StatusReport{make([]Row, 0, 10)}
 }
 
-func statusExec(options Options, args []string) error {
+func statusExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 
 	var report *StatusReport
 	var err error
 
 	if len(args) == 0 {
-		report, err = statusDatabase(dirOnly)
+		report, err = statusDatabase(store, dirOnly)
 		if err != nil {
 			return err
 		}
 	} else {
-		report, err = statusPaths(args, dirOnly)
+		report, err = statusPaths(store, args, dirOnly)
 		if err != nil {
 			return err
 		}
@@ -110,14 +110,8 @@ func statusExec(options Options, args []string) error {
 	return nil
 }
 
-func statusDatabase(dirOnly bool) (*StatusReport, error) {
+func statusDatabase(store *storage.Storage, dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
-
-	store, err := storage.Open()
-	if err != nil {
-		return nil, fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
 
 	log.Info(2, "retrieving all files from database.")
 
@@ -150,14 +144,8 @@ func statusDatabase(dirOnly bool) (*StatusReport, error) {
 	return report, nil
 }
 
-func statusPaths(paths []string, dirOnly bool) (*StatusReport, error) {
+func statusPaths(store *storage.Storage, paths []string, dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
-
-	store, err := storage.Open()
-	if err != nil {
-		return nil, fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)

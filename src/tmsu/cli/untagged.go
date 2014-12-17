@@ -39,7 +39,7 @@ Where PATHs are not specified, untagged items under the current working director
 	Exec:    untaggedExec,
 }
 
-func untaggedExec(options Options, args []string) error {
+func untaggedExec(store *storage.Storage, options Options, args []string) error {
 	recursive := !options.HasOption("--directory")
 
 	paths := args
@@ -50,12 +50,6 @@ func untaggedExec(options Options, args []string) error {
 			return err
 		}
 	}
-
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
 
 	if err := findUntagged(store, paths, recursive); err != nil {
 		return err

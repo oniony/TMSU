@@ -15,6 +15,8 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// +build !windows
+
 package cli
 
 import (
@@ -25,6 +27,7 @@ import (
 	"syscall"
 	"time"
 	"tmsu/common/log"
+	"tmsu/storage"
 	"tmsu/storage/database"
 	"tmsu/vfs"
 )
@@ -50,7 +53,7 @@ To allow other users access to the mounted filesystem, pass the 'allow_other' FU
 	Exec:    mountExec,
 }
 
-func mountExec(options Options, args []string) error {
+func mountExec(store *storage.Storage, options Options, args []string) error {
 	var mountOptions string
 	if options.HasOption("--options") {
 		mountOptions = options.Get("--options").Argument
@@ -139,7 +142,7 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 
 	log.Infof(2, "spawning daemon to mount VFS for database '%v' at '%v'", databasePath, mountPath)
 
-	args := []string{"vfs", databasePath, mountPath, "--options=" + mountOptions}
+	args := []string{"vfs", "--database=" + databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
 
 	errorPipe, err := daemon.StderrPipe()

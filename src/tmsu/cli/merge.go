@@ -34,21 +34,10 @@ var MergeCommand = Command{
 	Exec:    mergeExec,
 }
 
-func mergeExec(options Options, args []string) error {
+func mergeExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments")
 	}
-
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
 
 	destTagName := args[len(args)-1]
 	destTag, err := store.TagByName(destTagName)

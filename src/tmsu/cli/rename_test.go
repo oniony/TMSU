@@ -62,7 +62,7 @@ func TestRenameSuccessful(test *testing.T) {
 
 	// test
 
-	if err := RenameCommand.Exec(Options{}, []string{"source", "dest"}); err != nil {
+	if err := RenameCommand.Exec(store, Options{}, []string{"source", "dest"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -99,7 +99,7 @@ func TestRenameNonExistentSourceTag(test *testing.T) {
 
 	// test
 
-	err := RenameCommand.Exec(Options{}, []string{"source", "dest"})
+	err := RenameCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 
@@ -116,7 +116,7 @@ func TestRenameInvalidDestTag(test *testing.T) {
 
 	// test
 
-	err := RenameCommand.Exec(Options{}, []string{"source", "slash/invalid"})
+	err := RenameCommand.Exec(store, Options{}, []string{"source", "slash/invalid"})
 
 	// validate
 
@@ -149,7 +149,7 @@ func TestRenameDestTagAlreadyExists(test *testing.T) {
 
 	// test
 
-	err = RenameCommand.Exec(Options{}, []string{"source", "dest"})
+	err = RenameCommand.Exec(store, Options{}, []string{"source", "dest"})
 
 	// validate
 

@@ -38,24 +38,18 @@ var ValuesCommand = Command{
 	Exec: valuesExec,
 }
 
-func valuesExec(options Options, args []string) error {
+func valuesExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
 	if len(args) == 0 {
-		return listAllValues(showCount, onePerLine)
+		return listAllValues(store, showCount, onePerLine)
 	}
 
-	return listValues(args, showCount, onePerLine)
+	return listValues(store, args, showCount, onePerLine)
 }
 
-func listAllValues(showCount, onePerLine bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
+func listAllValues(store *storage.Storage, showCount, onePerLine bool) error {
 	log.Info(2, "retrieving all values.")
 
 	if showCount {
@@ -88,7 +82,7 @@ func listAllValues(showCount, onePerLine bool) error {
 	return nil
 }
 
-func listValues(tagNames []string, showCount, onePerLine bool) error {
+func listValues(store *storage.Storage, tagNames []string, showCount, onePerLine bool) error {
 	store, err := storage.Open()
 	if err != nil {
 		return fmt.Errorf("could not open storage: %v", err)

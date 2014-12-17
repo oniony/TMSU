@@ -25,6 +25,7 @@ import (
 	"tmsu/common/log"
 	"tmsu/common/terminal"
 	"tmsu/common/terminal/ansi"
+	"tmsu/storage"
 )
 
 var HelpCommand = Command{
@@ -38,7 +39,7 @@ var HelpCommand = Command{
 
 var helpCommands map[string]*Command
 
-func helpExec(options Options, args []string) error {
+func helpExec(store *storage.Storage, options Options, args []string) error {
 	var colour bool
 	if options.HasOption("--color") {
 		when := options.Get("--color").Argument

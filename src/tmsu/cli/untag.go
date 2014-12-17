@@ -42,7 +42,7 @@ var UntagCommand = Command{
 	Exec: untagExec,
 }
 
-func untagExec(options Options, args []string) error {
+func untagExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("no arguments specified")
 	}
@@ -56,7 +56,7 @@ func untagExec(options Options, args []string) error {
 
 		paths := args
 
-		if err := untagPathsAll(paths, recursive); err != nil {
+		if err := untagPathsAll(store, paths, recursive); err != nil {
 			return err
 		}
 	} else if options.HasOption("--tags") {
@@ -70,7 +70,7 @@ func untagExec(options Options, args []string) error {
 			return fmt.Errorf("at least one file to untag must be specified")
 		}
 
-		if err := untagPaths(paths, tagArgs, recursive); err != nil {
+		if err := untagPaths(store, paths, tagArgs, recursive); err != nil {
 			return err
 		}
 	} else {
@@ -81,7 +81,7 @@ func untagExec(options Options, args []string) error {
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := untagPaths(paths, tagArgs, recursive); err != nil {
+		if err := untagPaths(store, paths, tagArgs, recursive); err != nil {
 			return err
 		}
 	}
@@ -89,18 +89,7 @@ func untagExec(options Options, args []string) error {
 	return nil
 }
 
-func untagPathsAll(paths []string, recursive bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func untagPathsAll(store *storage.Storage, paths []string, recursive bool) error {
 	wereErrors := false
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -145,18 +134,7 @@ func untagPathsAll(paths []string, recursive bool) error {
 	return nil
 }
 
-func untagPaths(paths, tagArgs []string, recursive bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
-	if err := store.Begin(); err != nil {
-		return fmt.Errorf("could not begin transaction: %v", err)
-	}
-	defer store.Commit()
-
+func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool) error {
 	wereErrors := false
 
 	files := make(entities.Files, 0, len(paths))

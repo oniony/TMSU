@@ -15,18 +15,21 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+// +build !windows
+
 package cli
 
 import (
 	"fmt"
 	"strings"
+	"tmsu/storage"
 	"tmsu/vfs"
 )
 
 var VfsCommand = Command{
 	Name:     "vfs",
 	Synopsis: "Hosts the virtual filesystem",
-	Usages:   []string{"tmsu vfs [OPTION]... FILE MOUNTPOINT"},
+	Usages:   []string{"tmsu vfs [OPTION]... MOUNTPOINT"},
 	Description: `This subcommand is the foreground process which hosts the virtual filesystem. It is run automatically when a virtual filesystem is mounted using the 'mount' subcommand and terminated when the virtual filesystem is unmounted.
 
 It is not normally necessary to issue this subcommand manually unless debugging the virtual filesystem. For debug output use the --verbose option.`,
@@ -35,7 +38,7 @@ It is not normally necessary to issue this subcommand manually unless debugging 
 	Hidden:  true,
 }
 
-func vfsExec(options Options, args []string) error {
+func vfsExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) == 0 {
 		fmt.Errorf("mountpoint not specified")
 	}
@@ -45,12 +48,11 @@ func vfsExec(options Options, args []string) error {
 		mountOptions = strings.Split(options.Get("--options").Argument, ",")
 	}
 
-	databasePath := args[0]
-	mountPath := args[1]
+	mountPath := args[0]
 
-	vfs, err := vfs.MountVfs(databasePath, mountPath, mountOptions)
+	vfs, err := vfs.MountVfs(store, mountPath, mountOptions)
 	if err != nil {
-		return fmt.Errorf("could not mount virtual filesystem for database '%v' at '%v': %v", databasePath, mountPath, err)
+		return fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
 	}
 	defer vfs.Unmount()
 

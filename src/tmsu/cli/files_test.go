@@ -59,7 +59,7 @@ func TestFilesAll(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -123,7 +123,7 @@ func TestFilesSingleTag(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -186,7 +186,7 @@ func TestFilesNotSingleTag(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"not", "b"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"not", "b"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -257,7 +257,7 @@ func TestFilesImplicitAnd(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b", "c"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -328,7 +328,7 @@ func TestFilesAnd(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b", "and", "c"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b", "and", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -399,7 +399,7 @@ func TestFilesImplicitAndNot(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b", "not", "c"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b", "not", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -470,7 +470,7 @@ func TestFilesAndNot(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b", "and", "not", "c"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b", "and", "not", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -541,7 +541,7 @@ func TestFilesOr(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"b", "or", "c"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"b", "or", "c"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -603,10 +603,10 @@ func TestFilesTagEqualsValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"size", "=", "100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size", "=", "100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size = 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size = 100"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -668,13 +668,13 @@ func TestFilesTagNotEqualsValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"not", "size", "=", "100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"not", "size", "=", "100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"not size = 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"not size = 100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"not size eq 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"not size eq 100"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -736,13 +736,13 @@ func TestFilesTagLessThanValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"size", "<", "100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size", "<", "100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size < 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size < 100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size lt 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size lt 100"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -804,13 +804,13 @@ func TestFilesTagGreaterThanValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"size", ">", "99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size", ">", "99"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size > 99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size > 99"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size gt 99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size gt 99"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -872,13 +872,13 @@ func TestFilesTagLessThanOrEqualToValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"size", "<=", "100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size", "<=", "100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size <= 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size <= 100"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size le 100"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size le 100"}); err != nil {
 		test.Fatal(err)
 	}
 
@@ -940,13 +940,13 @@ func TestFilesTagGreaterThanOrEqualToValue(test *testing.T) {
 
 	// test
 
-	if err := FilesCommand.Exec(Options{}, []string{"size", ">=", "99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size", ">=", "99"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size >= 99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size >= 99"}); err != nil {
 		test.Fatal(err)
 	}
-	if err := FilesCommand.Exec(Options{}, []string{"size ge 99"}); err != nil {
+	if err := FilesCommand.Exec(store, Options{}, []string{"size ge 99"}); err != nil {
 		test.Fatal(err)
 	}
 

@@ -21,8 +21,8 @@ import (
     "bufio"
     "io"
 	"os"
-	"strings"
 	"tmsu/common/log"
+	"tmsu/common/text"
 	"tmsu/storage"
 	"tmsu/storage/database"
 )
@@ -104,7 +104,7 @@ func readCommandsFromStdin(store *storage.Storage) error {
         }
 
         parser := NewOptionParser(globalOptions, commands)
-        words := strings.SplitN(string(line), " ", -1)
+        words := text.Tokenize(string(line))
         commandName, options, arguments, err := parser.Parse(words...)
         if err != nil {
             log.Fatal(err)

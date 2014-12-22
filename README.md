@@ -15,10 +15,23 @@ the tags you set up.
 Usage
 =====
 
+You can tag a file by specifying the file and the list of tags to apply:
+
+    $ tmsu tag banana.jpg fruit art year=2014
+
+Or you can apply tags to multiple files:
+
+    $ tmsu tag --tags="fruit still-life art" banana.jpg apple.png
+
+You can query for files with or without particular tags:
+
+    $ tmsu files fruit and not still-life
+    
 A subcommand overview and detail on how to use each subcommand is available via the
 integrated help:
 
     $ tmsu help
+    $ tmsu help tags
 
 Documentation is maintained online on the wiki:
 
@@ -60,7 +73,7 @@ TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>.
 The creation of TMSU is motivation in itself, but if you should feel inclinded
 to make a small gift via Bitcoin then it shall be gratefully received:
 
-  * 1TMSU5TL3Yj6AGP7Wq6uahTfkTSX2nWvM
+  * `1TMSU5TL3Yj6AGP7Wq6uahTfkTSX2nWvM`
 
 TMSU is written in Go: <http://www.golang.org/>
 

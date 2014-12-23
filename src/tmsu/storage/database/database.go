@@ -22,13 +22,9 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"os"
-	"os/user"
-	"path/filepath"
 	"tmsu/common/log"
+	"os"
 )
-
-var Path string
 
 type Database struct {
 	Path string
@@ -36,15 +32,6 @@ type Database struct {
 	// unexported
 	connection  *sql.DB
 	transaction *sql.Tx
-}
-
-// Opens the database
-func Open() (*Database, error) {
-	// attempt to create database directory
-	dir := filepath.Dir(Path)
-	os.MkdirAll(dir, os.ModeDir|0755)
-
-	return OpenAt(Path)
 }
 
 // Opens the database at the specified path
@@ -198,20 +185,6 @@ func (db *Database) Close() error {
 }
 
 // unexported
-
-func init() {
-	if path := os.Getenv("TMSU_DB"); path != "" {
-		log.Info(3, "TMSU_DB=", path)
-		Path = path
-	} else {
-		u, err := user.Current()
-		if err != nil {
-			panic(fmt.Sprintf("Could not identify current user: %v", err))
-		}
-
-		Path = filepath.Join(u.HomeDir, ".tmsu", "default.db")
-	}
-}
 
 func readCount(rows *sql.Rows) (uint, error) {
 	if !rows.Next() {

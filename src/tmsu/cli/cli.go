@@ -19,12 +19,14 @@ package cli
 
 import (
     "bufio"
+    "fmt"
     "io"
 	"os"
+	"os/user"
+	"path/filepath"
 	"tmsu/common/log"
 	"tmsu/common/text"
 	"tmsu/storage"
-	"tmsu/storage/database"
 )
 
 func Run() {
@@ -45,11 +47,20 @@ func Run() {
 
 	log.Verbosity = options.Count("--verbose") + 1
 
-	if dbOption := options.Get("--database"); dbOption != nil && dbOption.Argument != "" {
-		database.Path = dbOption.Argument
-	}
+    var databasePath string
+    switch {
+    case options.HasOption("--database"):
+	    databasePath = options.Get("--database").Argument
+    case os.Getenv("TMSU_DB") != "":
+        databasePath = os.Getenv("TMSU_DB")
+	default:
+        databasePath, err = findDatabase()
+        if err != nil {
+            log.Fatalf("could not find database: %v", err)
+        }
+    }
 
-    store, err := storage.Open()
+    store, err := storage.OpenAt(databasePath)
     if err != nil {
         log.Fatalf("could not open storage: %v", err)
     }
@@ -83,6 +94,53 @@ var globalOptions = Options{Option{"--verbose", "-v", "show verbose messages", f
 	Option{"--version", "-V", "show version information and exit", false, ""},
 	Option{"--database", "-D", "use the specified database", true, ""},
 	Option{"--color", "", "colorize the output (auto/always/never)", true, ""},
+}
+
+func findDatabase() (string, error) {
+    databasePath, err := findDatabaseInPath()
+    if err != nil {
+        return "", err
+    }
+    if databasePath != "" {
+        return databasePath, nil
+    }
+
+    u, err := user.Current()
+    if err != nil {
+        panic(fmt.Sprintf("could not identify current user: %v", err))
+    }
+
+    return filepath.Join(u.HomeDir, ".tmsu", "default.db"), nil
+}
+
+func findDatabaseInPath() (string, error) {
+    path, err := os.Getwd()
+    if err != nil {
+        return "", err
+    }
+
+    // look for .tmsu/db in current directory and ancestors
+    for {
+        dbPath := filepath.Join(path, ".tmsu", "db")
+        _, err := os.Stat(dbPath)
+        if err == nil {
+            return dbPath, nil
+        }
+
+        switch {
+        case os.IsNotExist(err):
+            if path == "/" {
+                return "", nil
+            }
+
+            path = filepath.Dir(path)
+            continue
+        case os.IsPermission(err):
+            return "", nil
+        default:
+            return "", err
+        }
+    }
 }
 
 func readCommandsFromStdin(store *storage.Storage) error {

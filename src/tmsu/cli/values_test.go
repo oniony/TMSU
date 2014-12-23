@@ -38,7 +38,7 @@ func TestValuesForSingleTag(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -100,7 +100,7 @@ func TestValuesForMulitpleTags(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -177,7 +177,7 @@ func TestAllValues(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

@@ -38,7 +38,7 @@ func TestFilesAll(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -83,7 +83,7 @@ func TestFilesSingleTag(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -147,7 +147,7 @@ func TestFilesNotSingleTag(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -210,7 +210,7 @@ func TestFilesImplicitAnd(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -281,7 +281,7 @@ func TestFilesAnd(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -352,7 +352,7 @@ func TestFilesImplicitAndNot(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -423,7 +423,7 @@ func TestFilesAndNot(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -494,7 +494,7 @@ func TestFilesOr(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -565,7 +565,7 @@ func TestFilesTagEqualsValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -630,7 +630,7 @@ func TestFilesTagNotEqualsValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -698,7 +698,7 @@ func TestFilesTagLessThanValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -766,7 +766,7 @@ func TestFilesTagGreaterThanValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -834,7 +834,7 @@ func TestFilesTagLessThanOrEqualToValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -902,7 +902,7 @@ func TestFilesTagGreaterThanOrEqualToValue(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

@@ -8,7 +8,6 @@ import (
 	"testing"
 	"tmsu/entities"
 	"tmsu/storage"
-	"tmsu/storage/database"
 )
 
 var stdout = os.Stdout
@@ -46,9 +45,7 @@ func restoreStreams() {
 }
 
 func testDatabase() string {
-	databasePath := filepath.Join(os.TempDir(), "tmsu_test.db")
-	database.Path = databasePath
-	return databasePath
+	return filepath.Join(os.TempDir(), "tmsu_test.db")
 }
 
 func compareOutput(test *testing.T, expected, actual string) {

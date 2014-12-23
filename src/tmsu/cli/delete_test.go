@@ -31,7 +31,7 @@ func TestDeleteUnappliedTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -65,7 +65,7 @@ func TestDeleteAppliedTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -164,7 +164,7 @@ func TestDeleteNonExistentTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

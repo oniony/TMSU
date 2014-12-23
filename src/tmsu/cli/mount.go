@@ -28,7 +28,6 @@ import (
 	"time"
 	"tmsu/common/log"
 	"tmsu/storage"
-	"tmsu/storage/database"
 	"tmsu/vfs"
 )
 
@@ -70,7 +69,7 @@ func mountExec(store *storage.Storage, options Options, args []string) error {
 	case 1:
 		mountPath := args[0]
 
-		err := mountDefault(mountPath, mountOptions)
+		err := mountExplicit(store.Db.Path, mountPath, mountOptions)
 		if err != nil {
 			return err
 		}
@@ -103,14 +102,6 @@ func listMounts() error {
 
 	for _, mount := range mt {
 		fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
-	}
-
-	return nil
-}
-
-func mountDefault(mountPath string, mountOptions string) error {
-	if err := mountExplicit(database.Path, mountPath, mountOptions); err != nil {
-		return err
 	}
 
 	return nil

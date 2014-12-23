@@ -26,15 +26,6 @@ type Storage struct {
 	Db *database.Database
 }
 
-func Open() (*Storage, error) {
-	db, err := database.Open()
-	if err != nil {
-		return nil, fmt.Errorf("could not open database: %v", err)
-	}
-
-	return &Storage{db}, nil
-}
-
 func OpenAt(path string) (*Storage, error) {
 	db, err := database.OpenAt(path)
 	if err != nil {

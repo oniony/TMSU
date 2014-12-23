@@ -30,7 +30,7 @@ func TestStatusReport(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

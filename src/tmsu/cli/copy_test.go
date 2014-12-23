@@ -31,7 +31,7 @@ func TestCopySuccessful(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -86,7 +86,7 @@ func TestCopyNonExistentSourceTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -109,7 +109,7 @@ func TestCopyInvalidDestTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -132,7 +132,7 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

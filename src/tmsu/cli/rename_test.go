@@ -31,7 +31,7 @@ func TestRenameSuccessful(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -97,7 +97,7 @@ func TestRenameNonExistentSourceTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -120,7 +120,7 @@ func TestRenameInvalidDestTag(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -143,7 +143,7 @@ func TestRenameDestTagAlreadyExists(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

@@ -30,7 +30,7 @@ func TestRepairMovedFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -77,7 +77,7 @@ func TestRepairModifiedFile(test *testing.T) {
 	databasePath := testDatabase()
 	defer os.Remove(databasePath)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func TestReportsMissingFiles(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

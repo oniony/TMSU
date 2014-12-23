@@ -39,7 +39,7 @@ func TestDupesSingle(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -80,7 +80,7 @@ func TestDupesMultiple(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -133,7 +133,7 @@ func TestDupesNone(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -192,7 +192,7 @@ func TestDupesSingleUntaggedFile(test *testing.T) {
 	}
 	defer os.Remove(path)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -251,7 +251,7 @@ func TestDupesMultipleUntaggedFile(test *testing.T) {
 	}
 	defer os.Remove(path)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -310,7 +310,7 @@ func TestDupesNoneUntaggedFile(test *testing.T) {
 	}
 	defer os.Remove(path)
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

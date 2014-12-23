@@ -38,7 +38,7 @@ func TestTagsForSingleFile(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -95,7 +95,7 @@ func TestTagsForMultipleFiles(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -162,7 +162,7 @@ func TestAllTags(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -204,7 +204,7 @@ func TestImpliedTags(test *testing.T) {
 	}
 	defer restoreStreams()
 
-	store, err := storage.Open()
+	store, err := storage.OpenAt(databasePath)
 	if err != nil {
 		test.Fatal(err)
 	}

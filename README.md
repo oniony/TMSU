@@ -118,7 +118,8 @@ v0.5.0 (in development)
   * Added subcommand aliases, e.g. 'query' for 'files'.
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
-  * Issue #82: It is now possible to remove tags with values via the VFS.
+  * It is now possible to remove tags with values via the VFS.
+  * Subcommands can now be read from standard input by passing an argument of '-'.
   * The 'help' subcommand now wraps textual output to fit the terminal.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * TMSU can now be built without the Makefile.

@@ -120,6 +120,8 @@ v0.5.0 (in development)
     will now be reported as a warning.
   * It is now possible to remove tags with values via the VFS.
   * Subcommands can now be read from standard input by passing an argument of '-'.
+  * TMSU will now automatically use a database in .tmsu/db in working directory
+    or any parent.
   * The 'help' subcommand now wraps textual output to fit the terminal.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * TMSU can now be built without the Makefile.

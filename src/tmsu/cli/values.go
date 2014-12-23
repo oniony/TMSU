@@ -83,12 +83,6 @@ func listAllValues(store *storage.Storage, showCount, onePerLine bool) error {
 }
 
 func listValues(store *storage.Storage, tagNames []string, showCount, onePerLine bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
 	switch len(tagNames) {
 	case 0:
 		return fmt.Errorf("at least one tag must be specified")

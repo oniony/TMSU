@@ -80,12 +80,6 @@ func findDuplicatesInDb(store *storage.Storage) error {
 }
 
 func findDuplicatesOf(store *storage.Storage, paths []string, recursive bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
 	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
 	if err != nil {
 		return err

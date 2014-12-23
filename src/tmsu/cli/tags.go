@@ -116,12 +116,6 @@ func listAllTags(store *storage.Storage, showCount, onePerLine, colour bool) err
 }
 
 func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
-	store, err := storage.Open()
-	if err != nil {
-		return fmt.Errorf("could not open storage: %v", err)
-	}
-	defer store.Close()
-
 	wereErrors := false
 	printPath := len(paths) > 1 || terminal.Width() == 0
 

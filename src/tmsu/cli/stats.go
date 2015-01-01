@@ -65,6 +65,11 @@ func statsExec(store *storage.Storage, options Options, args []string) error {
 		averageFilesPerTag = float32(fileTagCount) / float32(tagCount)
 	}
 
+    fmt.Println("DATABASE")
+    fmt.Println()
+    fmt.Printf("  Path: %v\n", store.Db.Path)
+    fmt.Printf("  Root: %v\n", store.RootPath)
+    fmt.Println()
 	fmt.Println("COUNTS")
 	fmt.Println()
 	fmt.Printf("  Tags:     %v\n", tagCount)
@@ -75,8 +80,8 @@ func statsExec(store *storage.Storage, options Options, args []string) error {
 
 	fmt.Println("AVERAGES")
 	fmt.Println()
-	fmt.Printf("  Tags per file:  %1.2f\n", averageTagsPerFile)
-	fmt.Printf("  Files per tag:  %1.2f\n", averageFilesPerTag)
+	fmt.Printf("  Tags per file: %1.2f\n", averageTagsPerFile)
+	fmt.Printf("  Files per tag: %1.2f\n", averageFilesPerTag)
 	fmt.Println()
 
 	if usage {

@@ -34,12 +34,17 @@ func Rel(path string) string {
 		return path
 	}
 
-	if path == workingDirectory {
+    return RelTo(path, workingDirectory)
+}
+
+func RelTo(path, to string) string {
+	if path == to {
 		return "."
 	}
 
-	if strings.HasPrefix(path, workingDirectory+string(filepath.Separator)) {
-		return "." + string(filepath.Separator) + path[len(workingDirectory)+1:]
+	if strings.HasPrefix(path, to+string(filepath.Separator)) {
+	    // can't use filepath.Join as it strips the leading './'
+        return "." + string(filepath.Separator) + path[len(to)+1:]
 	}
 
 	return path

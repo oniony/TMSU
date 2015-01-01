@@ -76,7 +76,7 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 		recalcUnmodified := options.HasOption("--unmodified")
 		rationalize := options.HasOption("--rationalize")
 
-		limitPath := "/" //TODO Windows
+		limitPath := string(filepath.Separator) //TODO Windows
 		if options.HasOption("--path") {
 			limitPath = options.Get("--path").Argument
 		}

@@ -23,6 +23,7 @@ import (
 	"time"
 	"tmsu/common/fingerprint"
 	"tmsu/entities"
+	_path "tmsu/common/path"
 	"tmsu/query"
 )
 
@@ -33,27 +34,36 @@ func (storage *Storage) FileCount() (uint, error) {
 
 // The complete set of tracked files.
 func (storage *Storage) Files() (entities.Files, error) {
-	return storage.Db.Files()
+    files, err := storage.Db.Files()
+    storage.absPaths(files)
+
+    return files, err
 }
 
 // Retrieves a specific file.
 func (storage *Storage) File(id entities.FileId) (*entities.File, error) {
-	return storage.Db.File(id)
+    file, err := storage.Db.File(id)
+    storage.absPath(file)
+
+    return file, err
 }
 
 // Retrieves the file with the specified path.
 func (storage *Storage) FileByPath(path string) (*entities.File, error) {
-	absPath, err := filepath.Abs(path)
-	if err != nil {
-		return nil, AbsolutePathResolutionError{path, err}
-	}
+    relPath := storage.relPath(path)
+    file, err := storage.Db.FileByPath(relPath)
+    storage.absPath(file)
 
-	return storage.Db.FileByPath(absPath)
+    return file, err
 }
 
 // Retrieves all files that are under the specified directory.
 func (storage *Storage) FilesByDirectory(path string) (entities.Files, error) {
-	return storage.Db.FilesByDirectory(path)
+    relPath := storage.relPath(path)
+    files, err := storage.Db.FilesByDirectory(relPath)
+    storage.absPaths(files)
+
+    return files, err
 }
 
 // Retrieves all file that are under the specified directories.
@@ -61,13 +71,16 @@ func (storage *Storage) FilesByDirectories(paths []string) (entities.Files, erro
 	files := make(entities.Files, 0, 100)
 
 	for _, path := range paths {
-		pathFiles, err := storage.Db.FilesByDirectory(path)
+        relPath := storage.relPath(path)
+		pathFiles, err := storage.Db.FilesByDirectory(relPath)
 		if err != nil {
 			return nil, fmt.Errorf("'%v': could not retrieve files for directory: %v", path, err)
 		}
 
 		files = append(files, pathFiles...)
 	}
+
+    storage.absPaths(files)
 
 	return files, nil
 }
@@ -79,12 +92,16 @@ func (storage *Storage) FileCountByFingerprint(fingerprint fingerprint.Fingerpri
 
 // Retrieves the set of files with the specified fingerprint.
 func (storage *Storage) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (entities.Files, error) {
-	return storage.Db.FilesByFingerprint(fingerprint)
+    files, err := storage.Db.FilesByFingerprint(fingerprint)
+    storage.absPaths(files)
+    return files, err
 }
 
 // Retrieves the set of untagged files.
 func (storage *Storage) UntaggedFiles() (entities.Files, error) {
-	return storage.Db.UntaggedFiles()
+    files, err := storage.Db.UntaggedFiles()
+    storage.absPaths(files)
+    return files, err
 }
 
 // Retrieves the count of files with the specified tags and matching the specified path.
@@ -99,7 +116,8 @@ func (storage *Storage) FileCountWithTags(tagNames []string, path string, explic
 		}
 	}
 
-	return storage.Db.QueryFileCount(expression, path)
+    relPath := storage.relPath(path)
+	return storage.Db.QueryFileCount(expression, relPath)
 }
 
 // Retrieves the set of files with the specified tags and matching the specified path.
@@ -114,7 +132,10 @@ func (storage *Storage) FilesWithTags(tagNames []string, path string, explicitOn
 		}
 	}
 
-	return storage.Db.QueryFiles(expression, path)
+    relPath := storage.relPath(path)
+    files, err := storage.Db.QueryFiles(expression, relPath)
+    storage.absPaths(files)
+    return files, err
 }
 
 // Retrieves the count of files that match the specified query and matching the specified path.
@@ -127,7 +148,8 @@ func (storage *Storage) QueryFileCount(expression query.Expression, path string,
 		}
 	}
 
-	return storage.Db.QueryFileCount(expression, path)
+    relPath := storage.relPath(path)
+	return storage.Db.QueryFileCount(expression, relPath)
 }
 
 // Retrieves the set of files that match the specified query.
@@ -140,22 +162,39 @@ func (storage *Storage) QueryFiles(expression query.Expression, path string, exp
 		}
 	}
 
-	return storage.Db.QueryFiles(expression, path)
+    relPath := storage.relPath(path)
+    files, err := storage.Db.QueryFiles(expression, relPath)
+    storage.absPaths(files)
+    return files, err
 }
 
 // Retrieves the sets of duplicate files within the database.
 func (storage *Storage) DuplicateFiles() ([]entities.Files, error) {
-	return storage.Db.DuplicateFiles()
+    fileSets, err := storage.Db.DuplicateFiles()
+
+    for _, fileSet := range fileSets {
+        storage.absPaths(fileSet)
+    }
+
+    return fileSets, err
 }
 
 // Adds a file to the database.
 func (storage *Storage) AddFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
-	return storage.Db.InsertFile(path, fingerprint, modTime, size, isDir)
+    relPath := storage.relPath(path)
+    file, err := storage.Db.InsertFile(relPath, fingerprint, modTime, size, isDir)
+    storage.absPath(file)
+
+    return file, err
 }
 
 // Updates a file in the database.
 func (storage *Storage) UpdateFile(fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
-	return storage.Db.UpdateFile(fileId, path, fingerprint, modTime, size, isDir)
+    relPath := storage.relPath(path)
+    file, err := storage.Db.UpdateFile(fileId, relPath, fingerprint, modTime, size, isDir)
+    storage.absPath(file)
+
+    return file, err
 }
 
 // Deletes a file from the database.
@@ -184,6 +223,24 @@ func (storage *Storage) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 }
 
 // unexported
+
+func (storage *Storage) relPath(path string) string {
+    return _path.RelTo(path, storage.RootPath)
+}
+
+func (storage *Storage) absPaths(files entities.Files) {
+    for _, file := range files {
+        storage.absPath(file)
+    }
+}
+
+func (storage *Storage) absPath(file *entities.File) {
+    if file == nil || file.Directory == "" || file.Directory[0] == filepath.Separator {
+        return
+    }
+
+    file.Directory = filepath.Join(storage.RootPath, file.Directory)
+}
 
 func (storage *Storage) addImpliedTags(expression query.Expression) (query.Expression, error) {
 	implications, err := storage.Implications()

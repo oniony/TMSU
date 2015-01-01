@@ -20,7 +20,7 @@ package cli
 import (
 	"fmt"
 	"os"
-	"sort"
+	"path/filepath"
 	"strconv"
 	"tmsu/common/log"
 	"tmsu/common/terminal"
@@ -120,9 +120,14 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	printPath := len(paths) > 1 || terminal.Width() == 0
 
 	for index, path := range paths {
+        absPath, err := filepath.Abs(path)
+        if err != nil {
+            return err
+        }
+
 		log.Infof(2, "%v: retrieving tags.", path)
 
-		file, err := store.FileByPath(path)
+		file, err := store.FileByPath(absPath)
 		if err != nil {
 			log.Warn(err.Error())
 			continue
@@ -135,7 +140,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 				return err
 			}
 		} else {
-			_, err := os.Stat(path)
+			_, err := os.Stat(absPath)
 			if err != nil {
 				switch {
 				case os.IsPermission(err):
@@ -188,58 +193,6 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 
 	if wereErrors {
 		return errBlank
-	}
-
-	return nil
-}
-
-func listTagsForWorkingDirectory(store *storage.Storage, showCount, onePerLine, explicitOnly, colour bool) error {
-	file, err := os.Open(".")
-	if err != nil {
-		return fmt.Errorf("could not open working directory: %v", err)
-	}
-	defer file.Close()
-
-	dirNames, err := file.Readdirnames(0)
-	if err != nil {
-		return fmt.Errorf("could not list working directory contents: %v", err)
-	}
-
-	sort.Strings(dirNames)
-
-	for _, dirName := range dirNames {
-		log.Infof(2, "%v: retrieving tags.", dirName)
-
-		file, err := store.FileByPath(dirName)
-		if err != nil {
-			log.Warn(err.Error())
-			continue
-		}
-		if file == nil {
-			continue
-		}
-
-		tagNames, err := tagNamesForFile(store, file.Id, explicitOnly, colour)
-		if err != nil {
-			return err
-		}
-
-		if showCount {
-			fmt.Println(dirName + ": " + strconv.Itoa(len(tagNames)))
-		} else {
-			if onePerLine {
-				fmt.Println(dirName)
-				for _, tagName := range tagNames {
-					fmt.Println(tagName)
-				}
-			} else {
-				fmt.Print(dirName + ":")
-				for _, tagName := range tagNames {
-					fmt.Print(" " + tagName)
-				}
-				fmt.Println()
-			}
-		}
 	}
 
 	return nil

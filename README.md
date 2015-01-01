@@ -95,6 +95,11 @@ v0.5.0 (in development)
   *Note: This release changes the behaviour of some of the subcommands. Please
   read the following release notes carefully.*
 
+  *Note: To move from absolute paths in your existing database to relative paths
+  please issue:*
+
+      tmsu repair --manual / /
+
   * The --untagged option on the 'files' and 'status' subcommands has been
     replaced by a new 'untagged' subcommand, which should be more intuitive.
   * The --all option on the 'files', 'tags' and 'values' subcommands has been
@@ -122,6 +127,9 @@ v0.5.0 (in development)
   * Subcommands can now be read from standard input by passing an argument of '-'.
   * TMSU will now automatically use a database in .tmsu/db in working directory
     or any parent.
+  * Paths are now stored relative to the .tmsu directory's parent rather than as
+    absolute paths. This allows a branch of the filesystem to be moved around,
+    shared or archived whilst preserving the tagging information.
   * The 'help' subcommand now wraps textual output to fit the terminal.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * TMSU can now be built without the Makefile.

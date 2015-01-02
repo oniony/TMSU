@@ -36,9 +36,34 @@ import (
 	"tmsu/storage"
 )
 
+const helpFilename = "README.md"
+
 const tagsDir = "tags"
+const tagsDirHelp = `Tags Directories
+----------------
+
+Tags you create will appear here as directories. Inside a tag directory are the
+files that have that tag and the other tags applied to those files.
+
+Descend the tag directories to hone in on the files you want:
+
+    $ ls
+    cheese  mushroom  tomato  wine
+    $ ls cheese
+    edam_blanc.14  funghi.11  margherita.7  mushroom  pino_cheddar.12  tomato  wine
+    $ ls cheese/tomato
+    margherita.7
+    
+The tags directory also allows some operations to be performed:
+
+  * Create a tag by creating a new directory
+  * Rename a tag by renaming the tag directory
+  * Untag a file by deleting the file symlink from the tag directory
+  * Delete an unused tag by deleting the directory
+  
+(This file will hide once you have created a few tags.)`
+
 const queriesDir = "queries"
-const queryHelpFilename = "README.md"
 const queryDirHelp = `Query Directories
 -----------------
 
@@ -58,7 +83,9 @@ You can even create new queries by typing the query into the file chooser of a
 graphical program.
 
 Use ` + "`rmdir`" + ` to remove any query directory you no longer need. Do not use ` + "`rm -r`" + ` 
-as this will untag the contained files.`
+as this will untag the contained files.
+
+(This file will hide once you have created a query.)`
 
 type FuseVfs struct {
 	store     *storage.Storage
@@ -217,9 +244,12 @@ func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodef
 	log.Infof(2, "BEGIN Open(%v)", name)
 	defer log.Infof(2, "END Open(%v)", name)
 
-	if name == filepath.Join(queriesDir, queryHelpFilename) {
+    switch name {
+    case filepath.Join(queriesDir, helpFilename):
 		return nodefs.NewDataFile([]byte(queryDirHelp)), fuse.OK
-	}
+    case filepath.Join(tagsDir, helpFilename):
+		return nodefs.NewDataFile([]byte(tagsDirHelp)), fuse.OK
+    }
 
 	return nil, fuse.ENOSYS
 }
@@ -499,6 +529,10 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 
+	if len(tags) < 5 {
+	    entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
+    }
+
 	return entries, fuse.OK
 }
 
@@ -511,13 +545,13 @@ func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
 		log.Fatalf("could not retrieve queries: %v", err)
 	}
 
-	if len(queries) == 0 {
-		return []fuse.DirEntry{fuse.DirEntry{Name: queryHelpFilename, Mode: fuse.S_IFREG}}, fuse.OK
-	}
-
 	entries := make([]fuse.DirEntry, len(queries))
 	for index, query := range queries {
 		entries[index] = fuse.DirEntry{Name: query.Text, Mode: fuse.S_IFDIR}
+	}
+
+	if len(queries) < 1 {
+		entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
 	}
 
 	return entries, fuse.OK
@@ -547,6 +581,11 @@ func (vfs FuseVfs) getQueryAttr() (*fuse.Attr, fuse.Status) {
 func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	log.Infof(2, "BEGIN getTaggedEntryAttr(%v)", path)
 	defer log.Infof(2, "END getTaggedEntryAttr(%v)", path)
+
+	if len(path) == 1 && path[0] == helpFilename {
+		now := time.Now()
+		return &fuse.Attr{Mode: fuse.S_IFREG | 0444, Nlink: 1, Size: uint64(len(tagsDirHelp)), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
+	}
 
 	name := path[len(path)-1]
 
@@ -579,12 +618,12 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	log.Infof(2, "BEGIN getQueryEntryAttr(%v)", path)
 	defer log.Infof(2, "END getQueryEntryAttr(%v)", path)
 
-	name := path[len(path)-1]
-
-	if len(path) == 1 && path[0] == queryHelpFilename {
+	if len(path) == 1 && path[0] == helpFilename {
 		now := time.Now()
 		return &fuse.Attr{Mode: fuse.S_IFREG | 0444, Nlink: 1, Size: uint64(len(queryDirHelp)), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 	}
+
+	name := path[len(path)-1]
 
 	if len(path) > 1 {
 		fileId := vfs.parseFileId(name)

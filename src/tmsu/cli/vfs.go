@@ -43,6 +43,8 @@ func vfsExec(store *storage.Storage, options Options, args []string) error {
 		fmt.Errorf("mountpoint not specified")
 	}
 
+    store.Rollback() // ensure no open transaction
+
 	mountOptions := []string{}
 	if options.HasOption("--options") {
 		mountOptions = strings.Split(options.Get("--options").Argument, ",")

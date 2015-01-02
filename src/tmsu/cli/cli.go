@@ -75,7 +75,10 @@ func Run() {
         err = processCommand(store, commandName, options, arguments)
     }
 
-    store.Commit()
+    if err := store.Commit(); err != nil {
+        log.Fatalf("could not commit transaction: %v", err)
+    }
+
     store.Close()
 
     if err != nil {

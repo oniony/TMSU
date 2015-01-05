@@ -17,7 +17,7 @@ Usage
 
 You can tag a file by specifying the file and the list of tags to apply:
 
-    $ tmsu tag banana.jpg fruit art year=2014
+    $ tmsu tag banana.jpg fruit art year=2015
 
 Or you can apply tags to multiple files:
 
@@ -242,7 +242,7 @@ v0.2.0
 
 - - -
 
-Copyright 2011-2014 Paul Ruane
+Copyright 2011-2015 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

@@ -1,5 +1,5 @@
 /*
-Copyright 2011-2014 Paul Ruane.
+Copyright 2011-2015 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -37,7 +37,7 @@ var VersionCommand = Command{
 func versionExec(store *storage.Storage, options Options, args []string) error {
 	fmt.Println("TMSU", version.Version)
 	fmt.Println()
-	terminal.PrintWrapped(`Copyright © 2011-2014 Paul Ruane.
+	terminal.PrintWrapped(`Copyright © 2011-2015 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY.
 This is free software, and you are welcome to redistribute it under certain conditions.

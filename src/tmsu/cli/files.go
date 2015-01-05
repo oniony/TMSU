@@ -1,5 +1,5 @@
 /*
-Copyright 2011-2014 Paul Ruane.
+Copyright 2011-2015 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -45,9 +45,9 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		"$ tmsu files music and mp3  # same query but with explicit 'and'",
 		"$ tmsu files music and not mp3",
 		`$ tmsu files \"music and (mp3 or flac)"}`,
-		`$ tmsu files "year == 2014"  # tagged 'year' with a value '2014'`,
-		`$ tmsu files "year < 2014" # tagged 'year' with values under '2014'`,
-		`$ tmsu files year lt 2014  # same query but using textual operator`,
+		`$ tmsu files "year == 2015"  # tagged 'year' with a value '2015'`,
+		`$ tmsu files "year < 2015" # tagged 'year' with values under '2015'`,
+		`$ tmsu files year lt 2015  # same query but using textual operator`,
 		`$ tmsu files year  # tagged 'year' (any or no value)`,
 		`$ tmsu files --top music  # don't list individual files if directory is tagged`,
 		`$ tmsu files --path=/home/bob music  # tagged 'music' under /home/bob`},

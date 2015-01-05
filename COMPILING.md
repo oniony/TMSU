@@ -64,7 +64,7 @@ a downloaded binary then they can be safely ignored.
 
 - - -
 
-Copyright 2011-2014 Paul Ruane
+Copyright 2011-2015 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

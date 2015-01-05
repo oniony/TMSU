@@ -1,5 +1,5 @@
 /*
-Copyright 2011-2014 Paul Ruane.
+Copyright 2011-2012015 Paul Ruane.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

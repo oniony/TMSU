@@ -57,7 +57,9 @@ func OpenAt(path string) (*Database, error) {
 
 	database := &Database{path, connection, nil}
 
-    database.Begin()
+    if err := database.Begin(); err != nil {
+        return nil, err
+    }
 
     version := database.SchemaVersion()
     if version.LessThan(latestSchemaVersion) {
@@ -69,7 +71,9 @@ func OpenAt(path string) (*Database, error) {
 
     }
 
-    database.Commit()
+    if err := database.Commit(); err != nil {
+        return nil, err
+    }
 
 	return database, nil
 }

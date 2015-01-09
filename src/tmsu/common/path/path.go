@@ -38,14 +38,44 @@ func Rel(path string) string {
 }
 
 func RelTo(path, to string) string {
+    var err error
+
+    path, err = filepath.Abs(path)
+    if err != nil {
+        panic("could not get absolute path")
+    }
+
+    to, err = filepath.Abs(to)
+    if err != nil {
+        panic("could not get absolute path")
+    }
+
 	if path == to {
 		return "."
 	}
 
-	if strings.HasPrefix(path, to+string(filepath.Separator)) {
+    prefix := trailingSeparator(to)
+	if strings.HasPrefix(path, prefix) {
 	    // can't use filepath.Join as it strips the leading './'
-        return "." + string(filepath.Separator) + path[len(to)+1:]
+        return "." + string(filepath.Separator) + path[len(prefix):]
 	}
 
+    to = filepath.Dir(to)
+    prefix = trailingSeparator(to)
+    if strings.HasPrefix(path, prefix) {
+	    // can't use filepath.Join as it strips the leading './'
+        return ".." + string(filepath.Separator) + path[len(prefix):]
+    }
+
 	return path
+}
+
+// unexported
+
+func trailingSeparator(path string) string {
+    if path[len(path)-1] == filepath.Separator {
+        return path
+    }
+
+    return path + string(filepath.Separator)
 }

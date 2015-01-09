@@ -65,6 +65,8 @@ func Run() {
         log.Fatalf("could not open storage: %v", err)
     }
 
+    store.Rollback()
+
     if err := store.Begin(); err != nil {
         log.Fatalf("could not begin transaction: %v", err)
     }

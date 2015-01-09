@@ -17,4 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package version
 
-var Version = "0.5.0"
+import (
+    "tmsu/common"
+)
+
+var Version = common.ParseVersion("0.5.0")

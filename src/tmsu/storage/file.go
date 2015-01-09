@@ -225,6 +225,10 @@ func (storage *Storage) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 // unexported
 
 func (storage *Storage) relPath(path string) string {
+    if path == "" {
+        return "" // don't alter empty paths
+    }
+
     return _path.RelTo(path, storage.RootPath)
 }
 

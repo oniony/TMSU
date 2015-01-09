@@ -26,7 +26,7 @@ import (
 type Version struct {
     Major uint
     Minor uint
-    Revision uint
+    Patch uint
 }
 
 func ParseVersion(version string) Version {
@@ -42,22 +42,22 @@ func ParseVersion(version string) Version {
         panic("invalid minor version")
     }
 
-    revision, err := strconv.Atoi(parts[2])
+    patch, err := strconv.Atoi(parts[2])
     if err != nil {
-        panic("invalid revision version")
+        panic("invalid patch version")
     }
 
-    return Version{uint(major), uint(minor), uint(revision)}
+    return Version{uint(major), uint(minor), uint(patch)}
 }
 
 func (version Version) String() string {
-    return fmt.Sprintf("%v.%v.%v", version.Major, version.Minor, version.Revision)
+    return fmt.Sprintf("%v.%v.%v", version.Major, version.Minor, version.Patch)
 }
 
 func (this Version) LessThan(that Version) bool {
-    return this.Major < that.Major || this.Minor < that.Minor || this.Revision < that.Revision
+    return this.Major < that.Major || this.Minor < that.Minor || this.Patch < that.Patch
 }
 
 func (this Version) GreaterThan(that Version) bool {
-    return this.Major > that.Major || this.Minor > that.Minor || this.Revision > that.Revision
+    return this.Major > that.Major || this.Minor > that.Minor || this.Patch > that.Patch
 }

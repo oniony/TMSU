@@ -19,12 +19,24 @@ package database
 
 import (
 	_ "github.com/mattn/go-sqlite3"
-	"tmsu/common/log"
+	"tmsu/common"
 )
 
-func (db *Database) CreateSchema() error {
-	log.Info(2, "creating schema")
+func (db *Database) SchemaVersion() common.Version {
+    sql := `SELECT major, minor, patch
+            FROM version`
 
+    var major, minor, patch uint
+
+    rows, err := db.ExecQuery(sql)
+    if err == nil && rows.Next() && rows.Err() == nil {
+        rows.Scan(&major, &minor, &patch) // ignore errors
+    }
+
+    return common.Version{major, minor, patch}
+}
+
+func (db *Database) CreateSchema() error {
 	if err := db.CreateTagTable(); err != nil {
 		return err
 	}
@@ -52,6 +64,10 @@ func (db *Database) CreateSchema() error {
 	if err := db.CreateSettingTable(); err != nil {
 		return err
 	}
+
+    if err := db.CreateVersionTable(); err != nil {
+        return err
+    }
 
 	return nil
 }
@@ -190,6 +206,28 @@ func (db *Database) CreateSettingTable() error {
 	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
+
+	return nil
+}
+
+func (db *Database) CreateVersionTable() error {
+	sql := `CREATE TABLE IF NOT EXISTS version (
+                major NUMBER NOT NULL,
+                minor NUMBER NOT NULL,
+                patch NUMBER NOT NULL,
+                PRIMARY KEY (major, minor, patch)
+            )`
+
+	if _, err := db.Exec(sql); err != nil {
+		return err
+	}
+
+    sql = `INSERT OR REPLACE INTO version (major, minor, patch)
+           VALUES (0, 5, 0)`
+
+    if _, err := db.Exec(sql); err != nil {
+        return err
+    }
 
 	return nil
 }

@@ -15,8 +15,13 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-package fingerprint
+package storage
 
-type Fingerprint string
+import (
+	"tmsu/entities"
+)
 
-const Empty Fingerprint = Fingerprint("")
+// The complete set of settings.
+func (storage *Storage) Settings() (entities.Settings, error) {
+    return storage.Db.Settings()
+}

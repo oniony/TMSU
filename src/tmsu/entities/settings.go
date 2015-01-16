@@ -17,9 +17,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 package entities
 
-type Setting struct {
-	Name  string
-	Value string
+type Settings struct {
+    FileFingerprintAlgorithm string
+    DirectoryFingerprintAlgorithm string
+    AutoCreateTags bool
+    AutoCreateValues bool
 }
-
-type Settings []*Setting

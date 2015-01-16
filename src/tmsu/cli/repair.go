@@ -76,7 +76,7 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 		recalcUnmodified := options.HasOption("--unmodified")
 		rationalize := options.HasOption("--rationalize")
 
-		limitPath := string(filepath.Separator) //TODO Windows
+		limitPath := ""
 		if options.HasOption("--path") {
 			limitPath = options.Get("--path").Argument
 		}
@@ -171,17 +171,21 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 }
 
 func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
-	absLimitPath, err := filepath.Abs(limitPath)
-	if err != nil {
-		return fmt.Errorf("%v: could not determine absolute path", err)
-	}
+    absLimitPath := ""
+    if limitPath != "" {
+        var err error
+        absLimitPath, err = filepath.Abs(limitPath)
+        if err != nil {
+            return fmt.Errorf("%v: could not determine absolute path", err)
+        }
+    }
 
-	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
+	settings, err := store.Settings()
 	if err != nil {
 		return err
 	}
 
-	log.Infof(2, "retrieving all files from the database")
+	log.Infof(2, "retrieving files under '%v' from the database", absLimitPath)
 
 	dbFiles, err := store.FilesByDirectory(absLimitPath)
 	if err != nil {
@@ -197,21 +201,21 @@ func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, 
 		dbFiles = append(dbFiles, dbFile)
 	}
 
-	log.Infof(2, "retrieved %v files from the database", len(dbFiles))
+	log.Infof(2, "retrieved %v files from the database for path '%v'", len(dbFiles), absLimitPath)
 
 	unmodfied, modified, missing := determineStatuses(dbFiles)
 
 	if recalcUnmodified {
-		if err = repairUnmodified(store, unmodfied, pretend, fingerprintAlgorithm); err != nil {
+		if err = repairUnmodified(store, unmodfied, pretend, settings); err != nil {
 			return err
 		}
 	}
 
-	if err = repairModified(store, modified, pretend, fingerprintAlgorithm); err != nil {
+	if err = repairModified(store, modified, pretend, settings); err != nil {
 		return err
 	}
 
-	if err = repairMoved(store, missing, searchPaths, pretend, fingerprintAlgorithm); err != nil {
+	if err = repairMoved(store, missing, searchPaths, pretend, settings); err != nil {
 		return err
 	}
 
@@ -319,7 +323,7 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 	return
 }
 
-func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend bool, fingerprintAlgorithm string) error {
+func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "recalculating fingerprints for unmodified files")
 
 	for _, dbFile := range unmodified {
@@ -328,7 +332,7 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), fingerprintAlgorithm)
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm)
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -347,7 +351,7 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 	return nil
 }
 
-func repairModified(store *storage.Storage, modified entities.Files, pretend bool, fingerprintAlgorithm string) error {
+func repairModified(store *storage.Storage, modified entities.Files, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "repairing modified files")
 
 	for _, dbFile := range modified {
@@ -356,7 +360,7 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), fingerprintAlgorithm)
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm)
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -376,7 +380,7 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 	return nil
 }
 
-func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []string, pretend bool, fingerprintAlgorithm string) error {
+func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []string, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "repairing moved files")
 
 	if len(missing) == 0 || len(searchPaths) == 0 {
@@ -410,7 +414,7 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 				return fmt.Errorf("%v: could not stat file: %v", candidatePath, err)
 			}
 
-			fingerprint, err := fingerprint.Create(candidatePath, fingerprintAlgorithm)
+			fingerprint, err := fingerprint.Create(candidatePath, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm)
 			if err != nil {
 				return fmt.Errorf("%v: could not create fingerprint: %v", candidatePath, err)
 			}

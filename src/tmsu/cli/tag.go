@@ -144,17 +144,7 @@ func createTags(store *storage.Storage, tagNames []string) error {
 }
 
 func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursive bool) error {
-	fingerprintAlgorithm, err := store.SettingAsString("fingerprintAlgorithm")
-	if err != nil {
-		return err
-	}
-
-	autoCreateTags, err := store.SettingAsBool("autoCreateTags")
-	if err != nil {
-		return err
-	}
-
-	autoCreateValues, err := store.SettingAsBool("autoCreateValues")
+	settings, err := store.Settings()
 	if err != nil {
 		return err
 	}
@@ -178,7 +168,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			return err
 		}
 		if tag == nil {
-			if autoCreateTags {
+			if settings.AutoCreateTags {
 				tag, err = createTag(store, tagName)
 				if err != nil {
 					return err
@@ -195,7 +185,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			return err
 		}
 		if value == nil {
-			if autoCreateValues {
+			if settings.AutoCreateValues {
 				value, err = createValue(store, valueName)
 				if err != nil {
 					return err
@@ -211,7 +201,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, fingerprintAlgorithm); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -233,9 +223,9 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 }
 
 func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, recursive bool) error {
-	fingerprintAlgorithmSetting, err := store.Setting("fingerprintAlgorithm")
+	settings, err := store.Settings()
 	if err != nil {
-		return fmt.Errorf("could not retrieve fingerprint algorithm: %v", err)
+		return fmt.Errorf("could not retrieve settings: %v", err)
 	}
 
 	file, err := store.FileByPath(fromPath)
@@ -258,7 +248,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 
 	wereErrors := false
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, fingerprintAlgorithmSetting.Value); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -279,7 +269,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 	return nil
 }
 
-func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit, recursive bool, fingerprintAlgorithm string) error {
+func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit, recursive bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -306,7 +296,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		file, err = addFile(store, absPath, stat.ModTime(), uint(stat.Size()), stat.IsDir(), fingerprintAlgorithm)
+		file, err = addFile(store, absPath, stat.ModTime(), uint(stat.Size()), stat.IsDir(), fileFingerprintAlg, dirFingerprintAlg)
 		if err != nil {
 			return fmt.Errorf("%v: could not add file: %v", path, err)
 		}
@@ -328,7 +318,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, path, tagValuePairs, explicit, fingerprintAlgorithm); err != nil {
+		if err = tagRecursively(store, path, tagValuePairs, explicit, fileFingerprintAlg, dirFingerprintAlg); err != nil {
 			return err
 		}
 	}
@@ -336,7 +326,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit bool, fingerprintAlgorithm string) error {
+func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -351,7 +341,7 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValu
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = tagPath(store, childPath, tagValuePairs, explicit, true, fingerprintAlgorithm); err != nil {
+		if err = tagPath(store, childPath, tagValuePairs, explicit, true, fileFingerprintAlg, dirFingerprintAlg); err != nil {
 			return err
 		}
 	}
@@ -399,10 +389,10 @@ func createValue(store *storage.Storage, valueName string) (*entities.Value, err
 	return value, nil
 }
 
-func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool, fingerprintAlgorithm string) (*entities.File, error) {
+func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool, fileFingerprintAlg, dirFingerprintAlg string) (*entities.File, error) {
 	log.Infof(2, "%v: creating fingerprint", path)
 
-	fingerprint, err := fingerprint.Create(path, fingerprintAlgorithm)
+	fingerprint, err := fingerprint.Create(path, fileFingerprintAlg, dirFingerprintAlg)
 	if err != nil {
 		return nil, fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 	}

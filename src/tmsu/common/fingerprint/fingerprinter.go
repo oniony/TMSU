@@ -27,68 +27,66 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"strconv"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
-// Create a fingerprint using the specified algorithm.
-func Create(path, fingerprintAlgorithm string) (Fingerprint, error) {
-	switch fingerprintAlgorithm {
+func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error) {
+	stat, err := os.Stat(path)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return Empty, nil
+		}
+
+		return Empty, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
+	}
+
+	if stat.IsDir() {
+	    switch directoryAlgorithm {
+        case "sumSizes":
+            return sumSizesFingerprint(path, 0)
+        case "dynamic:sumSizes", "":
+            return sumSizesFingerprint(path, 500)
+        case "none":
+            return Empty, nil
+        default:
+            return "", fmt.Errorf("unsupported directory fingerprint algorithm '%v'.", directoryAlgorithm)
+        }
+    }
+
+	switch fileAlgorithm {
+	case "symlinkTargetName":
+		return symlinkTargetNameFingerprint(path, true)
+	case "symlinkTargetNameNoExt":
+		return symlinkTargetNameFingerprint(path, false)
 	case "dynamic:SHA256", "":
-		return dynamicFingerprint(path, sha256.New())
+		return dynamicFingerprint(path, sha256.New(), stat.Size())
 	case "dynamic:SHA1":
-		return dynamicFingerprint(path, sha1.New())
+		return dynamicFingerprint(path, sha1.New(), stat.Size())
 	case "dynamic:MD5":
-		return dynamicFingerprint(path, md5.New())
+		return dynamicFingerprint(path, md5.New(), stat.Size())
 	case "SHA256":
 		return regularFingerprint(path, sha256.New())
 	case "SHA1":
 		return regularFingerprint(path, sha1.New())
 	case "MD5":
 		return regularFingerprint(path, md5.New())
-	case "symlinkTargetName":
-		return symlinkTargetName(path, true)
-	case "symlinkTargetNameNoExt":
-		return symlinkTargetName(path, false)
+	case "none":
+	    return Empty, nil
 	default:
-		return "", fmt.Errorf("unsupported fingerprint algorithm '%v'.", fingerprintAlgorithm)
+		return "", fmt.Errorf("unsupported file fingerprint algorithm '%v'.", fileAlgorithm)
 	}
 }
 
 // unexported
 
 func regularFingerprint(path string, h hash.Hash) (Fingerprint, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return EMPTY, nil
-		}
-
-		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
-	}
-	if stat.IsDir() {
-		return EMPTY, nil
-	}
-
 	return calculateRegularFingerprint(path, h)
 }
 
-func dynamicFingerprint(path string, h hash.Hash) (Fingerprint, error) {
-	stat, err := os.Stat(path)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return EMPTY, nil
-		}
-
-		return EMPTY, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
-	}
-	if stat.IsDir() {
-		return EMPTY, nil
-	}
-
-	fileSize := stat.Size()
-
+func dynamicFingerprint(path string, h hash.Hash, fileSize int64) (Fingerprint, error) {
 	if fileSize > sparseFingerprintThreshold {
 		return calculateSparseFingerprint(path, fileSize, h)
 	}
@@ -97,14 +95,14 @@ func dynamicFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 }
 
 // Uses the symoblic target's filename as the fingerprint
-func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) {
+func symlinkTargetNameFingerprint(path string, includeExtension bool) (Fingerprint, error) {
 	stat, err := os.Lstat(path)
 	if err != nil {
 		if os.IsNotExist(err) {
-			return EMPTY, nil
+			return Empty, nil
 		}
 
-		return EMPTY, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
+		return Empty, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
 	}
 
 	if stat.Mode()&os.ModeSymlink != os.ModeSymlink {
@@ -129,43 +127,86 @@ func symlinkTargetName(path string, includeExtension bool) (Fingerprint, error) 
 	return Fingerprint(fingerprint), nil
 }
 
+// Creates a crude directory fingerprint by add the size of the contained files
+func sumSizesFingerprint(path string, maxFiles uint) (Fingerprint, error) {
+    paths := []string{path}
+    var fileCount uint = 0
+    var totalSize int64 = 0
+
+    out:
+    for index := 0; index < len(paths); index++ {
+        path := paths[index]
+        stats := stats(path)
+
+        for _, stat := range stats {
+            if stat.IsDir() {
+                childPath := filepath.Join(path, stat.Name())
+                paths = append(paths, childPath)
+            } else {
+                totalSize += stat.Size()
+
+                if fileCount++; maxFiles != 0 && fileCount >= maxFiles {
+                    break out
+                }
+            }
+        }
+    }
+
+    return Fingerprint(strconv.FormatInt(totalSize, 16)), nil
+}
+
+func stats(path string) []os.FileInfo {
+    file, err := os.Open(path)
+    if err != nil {
+        return []os.FileInfo{} // ignore the error
+    }
+    defer file.Close()
+
+    stats, err := file.Readdir(0)
+    if err != nil {
+        return []os.FileInfo{} // ignore the error
+    }
+
+    return stats
+}
+
 func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Fingerprint, error) {
 	buffer := make([]byte, sparseFingerprintSize)
 
 	file, err := os.Open(path)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 	defer file.Close()
 
 	// start
 	count, err := file.Read(buffer)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 	h.Write(buffer[:count])
 
 	// middle
 	_, err = file.Seek((fileSize-sparseFingerprintSize)/2, 0)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 
 	count, err = file.Read(buffer)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 	h.Write(buffer[:count])
 
 	// end
 	_, err = file.Seek(-sparseFingerprintSize, 2)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 
 	count, err = file.Read(buffer)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 	h.Write(buffer[:count])
 
@@ -178,7 +219,7 @@ func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Finge
 func calculateRegularFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 	file, err := os.Open(path)
 	if err != nil {
-		return EMPTY, err
+		return Empty, err
 	}
 	defer file.Close()
 

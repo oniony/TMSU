@@ -93,3 +93,11 @@ type NoSuchImplicationError struct {
 func (err NoSuchImplicationError) Error() string {
 	return fmt.Sprintf("no such implication where tag #%v implies tag #%v", err.TagId, err.ImpliedTagId)
 }
+
+type NoSuchSettingError struct {
+    Name string
+}
+
+func (err NoSuchSettingError) Error() string {
+    return fmt.Sprintf("no such setting '%v'", err.Name)
+}

@@ -124,7 +124,7 @@ func findDuplicatesOf(store *storage.Storage, paths []string, recursive bool) er
 	for _, path := range paths {
 		log.Infof(2, "%v: identifying duplicate files.", path)
 
-		fp, err := fingerprint.Create(path, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm)
+		fp, err := fingerprint.Create(path, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
 		if err != nil {
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 		}

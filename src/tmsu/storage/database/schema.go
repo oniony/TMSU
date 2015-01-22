@@ -18,11 +18,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
+    "fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"tmsu/common"
 )
 
-func (db *Database) SchemaVersion() common.Version {
+// unexported
+
+var latestSchemaVersion = common.Version{0, 5, 0}
+
+func (db *Database) schemaVersion() common.Version {
     sql := `SELECT major, minor, patch
             FROM version`
 
@@ -36,43 +41,84 @@ func (db *Database) SchemaVersion() common.Version {
     return common.Version{major, minor, patch}
 }
 
-func (db *Database) CreateSchema() error {
-	if err := db.CreateTagTable(); err != nil {
+func (db *Database) insertSchemaVersion(version common.Version) error {
+    sql := `INSERT INTO version (major, minor, patch)
+            VALUES (?, ?, ?)`
+
+    result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+    if err != nil {
+        return fmt.Errorf("could not update schema version: %v", err)
+    }
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return err
+    }
+    if rowsAffected != 1 {
+        return fmt.Errorf("version could not be inserted: expected exactly one row to be affected")
+    }
+
+    return nil
+}
+
+func (db *Database) updateSchemaVersion(version common.Version) error {
+    sql := `UPDATE version SET major = ?, minor = ?, patch = ?`
+
+    result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+    if err != nil {
+        return fmt.Errorf("could not update schema version: %v", err)
+    }
+    rowsAffected, err := result.RowsAffected()
+    if err != nil {
+        return err
+    }
+    if rowsAffected != 1 {
+        return fmt.Errorf("version could not be updated: expected exactly one row to be affected")
+    }
+
+    return nil
+}
+
+func (db *Database) createSchema() error {
+	if err := db.createTagTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateFileTable(); err != nil {
+	if err := db.createFileTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateValueTable(); err != nil {
+	if err := db.createValueTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateFileTagTable(); err != nil {
+	if err := db.createFileTagTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateImplicationTable(); err != nil {
+	if err := db.createImplicationTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateQueryTable(); err != nil {
+	if err := db.createQueryTable(); err != nil {
 		return err
 	}
 
-	if err := db.CreateSettingTable(); err != nil {
+	if err := db.createSettingTable(); err != nil {
 		return err
 	}
 
-    if err := db.CreateVersionTable(); err != nil {
+    if err := db.createVersionTable(); err != nil {
+        return err
+    }
+
+    if err := db.insertSchemaVersion(latestSchemaVersion); err != nil {
         return err
     }
 
 	return nil
 }
 
-func (db *Database) CreateTagTable() error {
+func (db *Database) createTagTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS tag (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
@@ -92,7 +138,7 @@ func (db *Database) CreateTagTable() error {
 	return nil
 }
 
-func (db *Database) CreateFileTable() error {
+func (db *Database) createFileTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS file (
                 id INTEGER PRIMARY KEY,
                 directory TEXT NOT NULL,
@@ -118,7 +164,7 @@ func (db *Database) CreateFileTable() error {
 	return nil
 }
 
-func (db *Database) CreateValueTable() error {
+func (db *Database) createValueTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS value (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
@@ -132,7 +178,7 @@ func (db *Database) CreateValueTable() error {
 	return nil
 }
 
-func (db *Database) CreateFileTagTable() error {
+func (db *Database) createFileTagTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS file_tag (
                 file_id INTEGER NOT NULL,
                 tag_id INTEGER NOT NULL,
@@ -171,7 +217,7 @@ func (db *Database) CreateFileTagTable() error {
 	return nil
 }
 
-func (db *Database) CreateImplicationTable() error {
+func (db *Database) createImplicationTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS implication (
                 tag_id INTEGER NOT NULL,
                 implied_tag_id INTEGER NOT NULL,
@@ -185,7 +231,7 @@ func (db *Database) CreateImplicationTable() error {
 	return nil
 }
 
-func (db *Database) CreateQueryTable() error {
+func (db *Database) createQueryTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS query (
                 text TEXT PRIMARY KEY
             )`
@@ -197,7 +243,7 @@ func (db *Database) CreateQueryTable() error {
 	return nil
 }
 
-func (db *Database) CreateSettingTable() error {
+func (db *Database) createSettingTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS setting (
                 name TEXT PRIMARY KEY,
                 value TEXT NOT NULL
@@ -210,7 +256,7 @@ func (db *Database) CreateSettingTable() error {
 	return nil
 }
 
-func (db *Database) CreateVersionTable() error {
+func (db *Database) createVersionTable() error {
 	sql := `CREATE TABLE IF NOT EXISTS version (
                 major NUMBER NOT NULL,
                 minor NUMBER NOT NULL,
@@ -221,13 +267,6 @@ func (db *Database) CreateVersionTable() error {
 	if _, err := db.Exec(sql); err != nil {
 		return err
 	}
-
-    sql = `INSERT OR REPLACE INTO version (major, minor, patch)
-           VALUES (0, 5, 0)`
-
-    if _, err := db.Exec(sql); err != nil {
-        return err
-    }
 
 	return nil
 }

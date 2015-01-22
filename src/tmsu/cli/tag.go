@@ -168,7 +168,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			return err
 		}
 		if tag == nil {
-			if settings.AutoCreateTags {
+			if settings.AutoCreateTags() {
 				tag, err = createTag(store, tagName)
 				if err != nil {
 					return err
@@ -185,7 +185,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			return err
 		}
 		if value == nil {
-			if settings.AutoCreateValues {
+			if settings.AutoCreateValues() {
 				value, err = createValue(store, valueName)
 				if err != nil {
 					return err
@@ -201,7 +201,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -248,7 +248,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 
 	wereErrors := false
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm, settings.DirectoryFingerprintAlgorithm); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)

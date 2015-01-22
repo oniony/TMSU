@@ -31,12 +31,12 @@ func (db *Database) Implications() (entities.Implications, error) {
             AND implication.implied_tag_id = t2.id
             ORDER BY t1.name, t2.name`
 
-	result, err := db.ExecQuery(sql)
+	rows, err := db.ExecQuery(sql)
 	if err != nil {
 		return nil, err
 	}
 
-	implications, err := readImplications(result, make(entities.Implications, 0, 10))
+	implications, err := readImplications(rows, make(entities.Implications, 0, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -59,12 +59,12 @@ func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implic
 		params[index] = tagId
 	}
 
-	result, err := db.ExecQuery(sql, params...)
+	rows, err := db.ExecQuery(sql, params...)
 	if err != nil {
 		return nil, err
 	}
 
-	implications, err := readImplications(result, make(entities.Implications, 0, 10))
+	implications, err := readImplications(rows, make(entities.Implications, 0, 10))
 	if err != nil {
 		return nil, err
 	}
@@ -133,7 +133,6 @@ func (db Database) DeleteImplication(tagId, impliedTagId entities.TagId) error {
 	if err != nil {
 		return err
 	}
-
 	if rowsAffected == 0 {
 		return NoSuchImplicationError{tagId, impliedTagId}
 	}

@@ -22,12 +22,9 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"tmsu/common"
 	"tmsu/common/log"
 	"os"
 )
-
-var latestSchemaVersion = common.Version{0, 5, 0}
 
 type Database struct {
 	Path string
@@ -57,21 +54,7 @@ func OpenAt(path string) (*Database, error) {
 
 	database := &Database{path, connection, nil}
 
-    if err := database.Begin(); err != nil {
-        return nil, err
-    }
-
-    version := database.SchemaVersion()
-    if version.LessThan(latestSchemaVersion) {
-        log.Infof(2, "creating schema")
-
-        if err := database.CreateSchema(); err != nil {
-            return nil, err
-        }
-
-    }
-
-    if err := database.Commit(); err != nil {
+    if err := database.Upgrade(); err != nil {
         return nil, err
     }
 

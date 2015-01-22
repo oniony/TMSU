@@ -34,6 +34,7 @@ type Command struct {
 }
 
 var commands = map[string]*Command{
+    "config":   &ConfigCommand,
 	"copy":     &CopyCommand,
 	"delete":   &DeleteCommand,
 	"dupes":    &DupesCommand,

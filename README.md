@@ -130,6 +130,7 @@ v0.5.0 (in development)
   * Paths are now stored relative to the .tmsu directory's parent rather than as
     absolute paths. This allows a branch of the filesystem to be moved around,
     shared or archived whilst preserving the tagging information.
+  * Added 'config' command to view and amend settings.
   * The 'help' subcommand now wraps textual output to fit the terminal.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * TMSU can now be built without the Makefile.

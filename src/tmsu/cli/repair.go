@@ -171,14 +171,14 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 }
 
 func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
-    absLimitPath := ""
-    if limitPath != "" {
-        var err error
-        absLimitPath, err = filepath.Abs(limitPath)
-        if err != nil {
-            return fmt.Errorf("%v: could not determine absolute path", err)
-        }
-    }
+	absLimitPath := ""
+	if limitPath != "" {
+		var err error
+		absLimitPath, err = filepath.Abs(limitPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not determine absolute path", err)
+		}
+	}
 
 	settings, err := store.Settings()
 	if err != nil {

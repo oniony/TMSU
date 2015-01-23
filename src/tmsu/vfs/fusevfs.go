@@ -244,12 +244,12 @@ func (vfs FuseVfs) Open(name string, flags uint32, context *fuse.Context) (nodef
 	log.Infof(2, "BEGIN Open(%v)", name)
 	defer log.Infof(2, "END Open(%v)", name)
 
-    switch name {
-    case filepath.Join(queriesDir, helpFilename):
+	switch name {
+	case filepath.Join(queriesDir, helpFilename):
 		return nodefs.NewDataFile([]byte(queryDirHelp)), fuse.OK
-    case filepath.Join(tagsDir, helpFilename):
+	case filepath.Join(tagsDir, helpFilename):
 		return nodefs.NewDataFile([]byte(tagsDirHelp)), fuse.OK
-    }
+	}
 
 	return nil, fuse.ENOSYS
 }
@@ -530,8 +530,8 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	}
 
 	if len(tags) < 5 {
-	    entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
-    }
+		entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
+	}
 
 	return entries, fuse.OK
 }

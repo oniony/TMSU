@@ -26,8 +26,8 @@ import (
 	"hash"
 	"os"
 	"path/filepath"
-	"strings"
 	"strconv"
+	"strings"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
@@ -44,17 +44,17 @@ func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error)
 	}
 
 	if stat.IsDir() {
-	    switch directoryAlgorithm {
-        case "sumSizes":
-            return sumSizesFingerprint(path, 0)
-        case "dynamic:sumSizes", "":
-            return sumSizesFingerprint(path, 500)
-        case "none":
-            return Empty, nil
-        default:
-            return "", fmt.Errorf("unsupported directory fingerprint algorithm '%v'.", directoryAlgorithm)
-        }
-    }
+		switch directoryAlgorithm {
+		case "sumSizes":
+			return sumSizesFingerprint(path, 0)
+		case "dynamic:sumSizes", "":
+			return sumSizesFingerprint(path, 500)
+		case "none":
+			return Empty, nil
+		default:
+			return "", fmt.Errorf("unsupported directory fingerprint algorithm '%v'.", directoryAlgorithm)
+		}
+	}
 
 	switch fileAlgorithm {
 	case "symlinkTargetName":
@@ -74,7 +74,7 @@ func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error)
 	case "MD5":
 		return regularFingerprint(path, md5.New())
 	case "none":
-	    return Empty, nil
+		return Empty, nil
 	default:
 		return "", fmt.Errorf("unsupported file fingerprint algorithm '%v'.", fileAlgorithm)
 	}
@@ -129,45 +129,45 @@ func symlinkTargetNameFingerprint(path string, includeExtension bool) (Fingerpri
 
 // Creates a crude directory fingerprint by add the size of the contained files
 func sumSizesFingerprint(path string, maxFiles uint) (Fingerprint, error) {
-    paths := []string{path}
-    var fileCount uint = 0
-    var totalSize int64 = 0
+	paths := []string{path}
+	var fileCount uint = 0
+	var totalSize int64 = 0
 
-    out:
-    for index := 0; index < len(paths); index++ {
-        path := paths[index]
-        stats := stats(path)
+out:
+	for index := 0; index < len(paths); index++ {
+		path := paths[index]
+		stats := stats(path)
 
-        for _, stat := range stats {
-            if stat.IsDir() {
-                childPath := filepath.Join(path, stat.Name())
-                paths = append(paths, childPath)
-            } else {
-                totalSize += stat.Size()
+		for _, stat := range stats {
+			if stat.IsDir() {
+				childPath := filepath.Join(path, stat.Name())
+				paths = append(paths, childPath)
+			} else {
+				totalSize += stat.Size()
 
-                if fileCount++; maxFiles != 0 && fileCount >= maxFiles {
-                    break out
-                }
-            }
-        }
-    }
+				if fileCount++; maxFiles != 0 && fileCount >= maxFiles {
+					break out
+				}
+			}
+		}
+	}
 
-    return Fingerprint(strconv.FormatInt(totalSize, 16)), nil
+	return Fingerprint(strconv.FormatInt(totalSize, 16)), nil
 }
 
 func stats(path string) []os.FileInfo {
-    file, err := os.Open(path)
-    if err != nil {
-        return []os.FileInfo{} // ignore the error
-    }
-    defer file.Close()
+	file, err := os.Open(path)
+	if err != nil {
+		return []os.FileInfo{} // ignore the error
+	}
+	defer file.Close()
 
-    stats, err := file.Readdir(0)
-    if err != nil {
-        return []os.FileInfo{} // ignore the error
-    }
+	stats, err := file.Readdir(0)
+	if err != nil {
+		return []os.FileInfo{} // ignore the error
+	}
 
-    return stats
+	return stats
 }
 
 func calculateSparseFingerprint(path string, fileSize int64, h hash.Hash) (Fingerprint, error) {

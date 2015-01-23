@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 func init() {
-    delete(commands, "mount")
-    delete(commands, "unmount")
-    delete(commands, "vfs")
+	delete(commands, "mount")
+	delete(commands, "unmount")
+	delete(commands, "vfs")
 }

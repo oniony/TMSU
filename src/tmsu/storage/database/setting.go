@@ -34,86 +34,86 @@ func (db *Database) Settings() (entities.Settings, error) {
 	}
 	defer rows.Close()
 
-    settings, err := readSettings(rows, make(entities.Settings, 0, 10))
-    if err != nil {
-        return nil, err
-    }
+	settings, err := readSettings(rows, make(entities.Settings, 0, 10))
+	if err != nil {
+		return nil, err
+	}
 
-    return settings, nil
+	return settings, nil
 }
 
 func (db *Database) Setting(name string) (*entities.Setting, error) {
-    sql := `SELECT name, value
+	sql := `SELECT name, value
             FROM setting
             WHERE name = ?`
 
-    rows, err := db.ExecQuery(sql, name)
-    if err != nil {
-        return nil, err
-    }
-    defer rows.Close()
+	rows, err := db.ExecQuery(sql, name)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
 
-    setting, err := readSetting(rows)
-    if err != nil {
-        return nil, err
-    }
+	setting, err := readSetting(rows)
+	if err != nil {
+		return nil, err
+	}
 
-    return setting, nil
+	return setting, nil
 }
 
 func (db *Database) UpdateSetting(name, value string) (*entities.Setting, error) {
-    sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
+	sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
 
-    result, err := db.Exec(sql, name, value)
-    if err != nil {
-        return nil, err
-    }
+	result, err := db.Exec(sql, name, value)
+	if err != nil {
+		return nil, err
+	}
 
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        return nil, err
-    }
-    if rowsAffected == 0 {
-        return nil, NoSuchSettingError{name}
-    }
-    if rowsAffected > 1 {
-        panic("expected exactly one row to be affected")
-    }
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected == 0 {
+		return nil, NoSuchSettingError{name}
+	}
+	if rowsAffected > 1 {
+		panic("expected exactly one row to be affected")
+	}
 
-    return &entities.Setting{name, value}, nil
+	return &entities.Setting{name, value}, nil
 }
 
 // unexported
 
 func readSetting(rows *sql.Rows) (*entities.Setting, error) {
-    if !rows.Next() {
-        return nil, nil
-    }
-    if rows.Err() != nil {
-        return nil, rows.Err()
-    }
+	if !rows.Next() {
+		return nil, nil
+	}
+	if rows.Err() != nil {
+		return nil, rows.Err()
+	}
 
-    var name, value string
-    err := rows.Scan(&name, &value)
-    if err != nil {
-        return nil, err
-    }
+	var name, value string
+	err := rows.Scan(&name, &value)
+	if err != nil {
+		return nil, err
+	}
 
-    return &entities.Setting{name, value}, nil
+	return &entities.Setting{name, value}, nil
 }
 
 func readSettings(rows *sql.Rows, settings entities.Settings) (entities.Settings, error) {
-    for {
-        setting, err := readSetting(rows)
-        if err != nil {
-            return nil, err
-        }
-        if setting == nil {
-            break
-        }
+	for {
+		setting, err := readSetting(rows)
+		if err != nil {
+			return nil, err
+		}
+		if setting == nil {
+			break
+		}
 
-        settings = append(settings, setting)
-    }
+		settings = append(settings, setting)
+	}
 
-    return settings, nil
+	return settings, nil
 }

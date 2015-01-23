@@ -18,41 +18,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package text
 
 func Tokenize(text string) []string {
-    tokens := make([]string, 0, 10)
-    token := make([]rune, 0, 100)
-    var quote rune = 0
-    escape := false
+	tokens := make([]string, 0, 10)
+	token := make([]rune, 0, 100)
+	var quote rune = 0
+	escape := false
 
-    for _, char := range text {
-        switch {
-        case escape:
-            token = append(token, char)
-            escape = false
-        case char == '\\':
-            escape = true
-        case quote != 0:
-            if char == quote {
-                tokens = append(tokens, string(token))
-                token = make([]rune, 0, 100)
-                quote = 0
-            } else {
-                token = append(token, char)
-            }
-        case char == '"', char == '\'':
-            quote = char
-        case char == ' ', char == '\t':
-            if len(token) > 0 {
-                tokens = append(tokens, string(token))
-                token = make([]rune, 0, 100)
-            }
-        default:
-            token = append(token, char)
-        }
-    }
+	for _, char := range text {
+		switch {
+		case escape:
+			token = append(token, char)
+			escape = false
+		case char == '\\':
+			escape = true
+		case quote != 0:
+			if char == quote {
+				tokens = append(tokens, string(token))
+				token = make([]rune, 0, 100)
+				quote = 0
+			} else {
+				token = append(token, char)
+			}
+		case char == '"', char == '\'':
+			quote = char
+		case char == ' ', char == '\t':
+			if len(token) > 0 {
+				tokens = append(tokens, string(token))
+				token = make([]rune, 0, 100)
+			}
+		default:
+			token = append(token, char)
+		}
+	}
 
-    if len(token) > 0 {
-        tokens = append(tokens, string(token))
-    }
+	if len(token) > 0 {
+		tokens = append(tokens, string(token))
+	}
 
-    return tokens
+	return tokens
 }

@@ -24,53 +24,53 @@ import (
 )
 
 func TestDefaultGeneration(test *testing.T) {
-    testCreateForSmallFile(test, "", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
-    testCreateForLargeFile(test, "", "0a9f9c7cd5939b04ad4bb7d14f801fe671c1b622d0e3b7769798b14dbdbf07f1")
+	testCreateForSmallFile(test, "", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
+	testCreateForLargeFile(test, "", "0a9f9c7cd5939b04ad4bb7d14f801fe671c1b622d0e3b7769798b14dbdbf07f1")
 }
 
 func TestMD5Generation(test *testing.T) {
-    testCreateForSmallFile(test, "MD5", "a758071b3c2fe43c9a9b91db5077cd12")
-    testCreateForLargeFile(test, "MD5", "40cb0a2f629169e30c2ef707255b33d5")
+	testCreateForSmallFile(test, "MD5", "a758071b3c2fe43c9a9b91db5077cd12")
+	testCreateForLargeFile(test, "MD5", "40cb0a2f629169e30c2ef707255b33d5")
 }
 
 func TestSHA1Generation(test *testing.T) {
-    testCreateForSmallFile(test, "SHA1", "09bc65c6f6588b802177632a81b3afbe3358b7f3")
-    testCreateForLargeFile(test, "SHA1", "6dfb0884a5f2738700b9beb5473f3dd9c9fd2762")
+	testCreateForSmallFile(test, "SHA1", "09bc65c6f6588b802177632a81b3afbe3358b7f3")
+	testCreateForLargeFile(test, "SHA1", "6dfb0884a5f2738700b9beb5473f3dd9c9fd2762")
 }
 
 func TestSHA256Generation(test *testing.T) {
-    testCreateForSmallFile(test, "SHA256", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
-    testCreateForLargeFile(test, "SHA256", "a4bd6407e40326c126f10412e245e4491c511636dbeddc3d2b16b41700017bc9")
+	testCreateForSmallFile(test, "SHA256", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
+	testCreateForLargeFile(test, "SHA256", "a4bd6407e40326c126f10412e245e4491c511636dbeddc3d2b16b41700017bc9")
 }
 
 func TestDynamicMD5Generation(test *testing.T) {
-    testCreateForSmallFile(test, "dynamic:MD5", "a758071b3c2fe43c9a9b91db5077cd12")
-    testCreateForLargeFile(test, "dynamic:MD5", "668a4b622482b9fd30b1ad0eac4ab8f1")
+	testCreateForSmallFile(test, "dynamic:MD5", "a758071b3c2fe43c9a9b91db5077cd12")
+	testCreateForLargeFile(test, "dynamic:MD5", "668a4b622482b9fd30b1ad0eac4ab8f1")
 }
 
 func TestDynamicSHA1Generation(test *testing.T) {
-    testCreateForSmallFile(test, "dynamic:SHA1", "09bc65c6f6588b802177632a81b3afbe3358b7f3")
-    testCreateForLargeFile(test, "dynamic:SHA1", "30af88de9e731520fbcb4ec5f7276af8e06eb61b")
+	testCreateForSmallFile(test, "dynamic:SHA1", "09bc65c6f6588b802177632a81b3afbe3358b7f3")
+	testCreateForLargeFile(test, "dynamic:SHA1", "30af88de9e731520fbcb4ec5f7276af8e06eb61b")
 }
 
 func TestDynamicSHA256Generation(test *testing.T) {
-    testCreateForSmallFile(test, "dynamic:SHA256", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
-    testCreateForLargeFile(test, "dynamic:SHA256", "0a9f9c7cd5939b04ad4bb7d14f801fe671c1b622d0e3b7769798b14dbdbf07f1")
+	testCreateForSmallFile(test, "dynamic:SHA256", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
+	testCreateForLargeFile(test, "dynamic:SHA256", "0a9f9c7cd5939b04ad4bb7d14f801fe671c1b622d0e3b7769798b14dbdbf07f1")
 }
 
 func TestNoneGeneration(test *testing.T) {
-    testCreateForSmallFile(test, "none", "")
-    testCreateForLargeFile(test, "none", "")
+	testCreateForSmallFile(test, "none", "")
+	testCreateForLargeFile(test, "none", "")
 }
 
 // unexported
 
 func testCreateForSmallFile(test *testing.T, algorithm string, expectedFingerprint Fingerprint) {
-    testCreateForFile(test, algorithm, 2 * 1024 * 1024, expectedFingerprint)
+	testCreateForFile(test, algorithm, 2*1024*1024, expectedFingerprint)
 }
 
 func testCreateForLargeFile(test *testing.T, algorithm string, expectedFingerprint Fingerprint) {
-    testCreateForFile(test, algorithm, 6 * 1024 * 1024, expectedFingerprint)
+	testCreateForFile(test, algorithm, 6*1024*1024, expectedFingerprint)
 }
 
 func testCreateForFile(test *testing.T, algorithm string, size uint, expectedFingerprint Fingerprint) {
@@ -80,7 +80,6 @@ func testCreateForFile(test *testing.T, algorithm string, size uint, expectedFin
 		test.Fatal(err.Error())
 	}
 	defer os.Remove(tempFilePath)
-
 
 	_, err = file.WriteAt([]byte("!"), int64(size-1))
 	if err != nil {
@@ -93,6 +92,6 @@ func testCreateForFile(test *testing.T, algorithm string, size uint, expectedFin
 	}
 
 	if fingerprint != expectedFingerprint {
-        test.Fatalf("Fingerprint incorrect: expected '%v' but was '%v'", expectedFingerprint, fingerprint)
+		test.Fatalf("Fingerprint incorrect: expected '%v' but was '%v'", expectedFingerprint, fingerprint)
 	}
 }

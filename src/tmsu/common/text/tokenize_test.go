@@ -22,65 +22,65 @@ import (
 )
 
 func TestSimple(test *testing.T) {
-    words := Tokenize("one two three")
+	words := Tokenize("one two three")
 
-    if len(words) != 3 || words[0] != "one" || words[1] != "two" || words[2] != "three" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one" || words[1] != "two" || words[2] != "three" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestQuoted(test *testing.T) {
-    words := Tokenize(`one 'two three' four`)
+	words := Tokenize(`one 'two three' four`)
 
-    if len(words) != 3 || words[0] != "one" || words[1] != "two three" || words[2] != "four" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one" || words[1] != "two three" || words[2] != "four" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestDoubleQuoted(test *testing.T) {
-    words := Tokenize(`one "two three" four`)
+	words := Tokenize(`one "two three" four`)
 
-    if len(words) != 3 || words[0] != "one" || words[1] != "two three" || words[2] != "four" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one" || words[1] != "two three" || words[2] != "four" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestSingleQuoteInsideDoubleQuoted(test *testing.T) {
-    words := Tokenize(`one "two 'three'" four`)
+	words := Tokenize(`one "two 'three'" four`)
 
-    if len(words) != 3 || words[0] != "one" || words[1] != "two 'three'" || words[2] != "four" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one" || words[1] != "two 'three'" || words[2] != "four" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestDoubleQuoteInsideSingleQuoted(test *testing.T) {
-    words := Tokenize(`one 'two "three"' four`)
+	words := Tokenize(`one 'two "three"' four`)
 
-    if len(words) != 3 || words[0] != "one" || words[1] != `two "three"` || words[2] != "four" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one" || words[1] != `two "three"` || words[2] != "four" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestEscapedSingleQuote(test *testing.T) {
-    words := Tokenize(`one\'s 'two\'s three\'s' four\'s`)
+	words := Tokenize(`one\'s 'two\'s three\'s' four\'s`)
 
-    if len(words) != 3 || words[0] != "one's" || words[1] != "two's three's" || words[2] != "four's" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != "one's" || words[1] != "two's three's" || words[2] != "four's" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestEscapedDoubleQuote(test *testing.T) {
-    words := Tokenize(`one\"s "two\"s three\"s" four\"s`)
+	words := Tokenize(`one\"s "two\"s three\"s" four\"s`)
 
-    if len(words) != 3 || words[0] != `one"s` || words[1] != `two"s three"s` || words[2] != `four"s` {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 3 || words[0] != `one"s` || words[1] != `two"s three"s` || words[2] != `four"s` {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }
 
 func TestComplex(test *testing.T) {
-    words := Tokenize(`'one' "two three" four 'five "six" seven' "eight"`)
+	words := Tokenize(`'one' "two three" four 'five "six" seven' "eight"`)
 
-    if len(words) != 5 || words[0] != "one" || words[1] != "two three" || words[2] != "four" || words[3] != `five "six" seven` || words[4] != "eight" {
-        test.Fatalf("tokenization failed: %v", words)
-    }
+	if len(words) != 5 || words[0] != "one" || words[1] != "two three" || words[2] != "four" || words[3] != `five "six" seven` || words[4] != "eight" {
+		test.Fatalf("tokenization failed: %v", words)
+	}
 }

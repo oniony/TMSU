@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package cli
 
 import (
-    "tmsu/storage"
+	"tmsu/storage"
 )
 
 type Command struct {
@@ -34,7 +34,7 @@ type Command struct {
 }
 
 var commands = map[string]*Command{
-    "config":   &ConfigCommand,
+	"config":   &ConfigCommand,
 	"copy":     &CopyCommand,
 	"delete":   &DeleteCommand,
 	"dupes":    &DupesCommand,
@@ -42,16 +42,16 @@ var commands = map[string]*Command{
 	"help":     &HelpCommand,
 	"imply":    &ImplyCommand,
 	"merge":    &MergeCommand,
-    "mount":    &MountCommand,
+	"mount":    &MountCommand,
 	"rename":   &RenameCommand,
 	"repair":   &RepairCommand,
 	"stats":    &StatsCommand,
 	"status":   &StatusCommand,
 	"tag":      &TagCommand,
 	"tags":     &TagsCommand,
-    "unmount":  &UnmountCommand,
+	"unmount":  &UnmountCommand,
 	"untag":    &UntagCommand,
 	"untagged": &UntaggedCommand,
 	"values":   &ValuesCommand,
 	"version":  &VersionCommand,
-    "vfs":      &VfsCommand}
+	"vfs":      &VfsCommand}

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package database
 
 import (
-    "fmt"
+	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"tmsu/common"
 )
@@ -28,54 +28,54 @@ import (
 var latestSchemaVersion = common.Version{0, 5, 0}
 
 func (db *Database) schemaVersion() common.Version {
-    sql := `SELECT major, minor, patch
+	sql := `SELECT major, minor, patch
             FROM version`
 
-    var major, minor, patch uint
+	var major, minor, patch uint
 
-    rows, err := db.ExecQuery(sql)
-    if err == nil && rows.Next() && rows.Err() == nil {
-        rows.Scan(&major, &minor, &patch) // ignore errors
-    }
+	rows, err := db.ExecQuery(sql)
+	if err == nil && rows.Next() && rows.Err() == nil {
+		rows.Scan(&major, &minor, &patch) // ignore errors
+	}
 
-    return common.Version{major, minor, patch}
+	return common.Version{major, minor, patch}
 }
 
 func (db *Database) insertSchemaVersion(version common.Version) error {
-    sql := `INSERT INTO version (major, minor, patch)
+	sql := `INSERT INTO version (major, minor, patch)
             VALUES (?, ?, ?)`
 
-    result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
-    if err != nil {
-        return fmt.Errorf("could not update schema version: %v", err)
-    }
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        return err
-    }
-    if rowsAffected != 1 {
-        return fmt.Errorf("version could not be inserted: expected exactly one row to be affected")
-    }
+	result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+	if err != nil {
+		return fmt.Errorf("could not update schema version: %v", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return fmt.Errorf("version could not be inserted: expected exactly one row to be affected")
+	}
 
-    return nil
+	return nil
 }
 
 func (db *Database) updateSchemaVersion(version common.Version) error {
-    sql := `UPDATE version SET major = ?, minor = ?, patch = ?`
+	sql := `UPDATE version SET major = ?, minor = ?, patch = ?`
 
-    result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
-    if err != nil {
-        return fmt.Errorf("could not update schema version: %v", err)
-    }
-    rowsAffected, err := result.RowsAffected()
-    if err != nil {
-        return err
-    }
-    if rowsAffected != 1 {
-        return fmt.Errorf("version could not be updated: expected exactly one row to be affected")
-    }
+	result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+	if err != nil {
+		return fmt.Errorf("could not update schema version: %v", err)
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected != 1 {
+		return fmt.Errorf("version could not be updated: expected exactly one row to be affected")
+	}
 
-    return nil
+	return nil
 }
 
 func (db *Database) createSchema() error {
@@ -107,13 +107,13 @@ func (db *Database) createSchema() error {
 		return err
 	}
 
-    if err := db.createVersionTable(); err != nil {
-        return err
-    }
+	if err := db.createVersionTable(); err != nil {
+		return err
+	}
 
-    if err := db.insertSchemaVersion(latestSchemaVersion); err != nil {
-        return err
-    }
+	if err := db.insertSchemaVersion(latestSchemaVersion); err != nil {
+		return err
+	}
 
 	return nil
 }

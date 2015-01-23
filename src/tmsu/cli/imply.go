@@ -39,26 +39,26 @@ The 'tags' subcommand can be used to identify which tags applied to a file are i
 		`$ tmsu imply\nmp3 => music`,
 		`$ tmsu imply --delete mp3 music`},
 	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""}},
-	Exec: implyExec,
+	Exec:    implyExec,
 }
 
 func implyExec(store *storage.Storage, options Options, args []string) error {
-    if options.HasOption("--delete") {
+	if options.HasOption("--delete") {
 		if len(args) < 2 {
 			return fmt.Errorf("implying and implied tag(s) must be specified")
 		}
 
 		return deleteImplications(store, args[0], args[1:])
-    }
+	}
 
-    switch len(args) {
-    case 0:
-        return listImplications(store)
-    case 1:
-        return fmt.Errorf("tag(s) to be implied must be specified")
-    default:
-        return addImplications(store, args[0], args[1:])
-    }
+	switch len(args) {
+	case 0:
+		return listImplications(store)
+	case 1:
+		return fmt.Errorf("tag(s) to be implied must be specified")
+	default:
+		return addImplications(store, args[0], args[1:])
+	}
 }
 
 // unexported

@@ -120,10 +120,10 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	printPath := len(paths) > 1 || terminal.Width() == 0
 
 	for index, path := range paths {
-        absPath, err := filepath.Abs(path)
-        if err != nil {
-            return err
-        }
+		absPath, err := filepath.Abs(path)
+		if err != nil {
+			return err
+		}
 
 		log.Infof(2, "%v: retrieving tags.", path)
 

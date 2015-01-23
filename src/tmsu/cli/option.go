@@ -74,7 +74,7 @@ func NewOptionParser(globalOptions Options, commandByName map[string]*Command) *
 	return &parser
 }
 
-func (parser *OptionParser) Parse(args... string) (commandName string, options Options, arguments []string, err error) {
+func (parser *OptionParser) Parse(args ...string) (commandName string, options Options, arguments []string, err error) {
 	commandName = ""
 	options = make(Options, 0)
 	arguments = make([]string, 0)

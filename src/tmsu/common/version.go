@@ -18,46 +18,46 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package common
 
 import (
-    "fmt"
-    "strings"
-    "strconv"
+	"fmt"
+	"strconv"
+	"strings"
 )
 
 type Version struct {
-    Major uint
-    Minor uint
-    Patch uint
+	Major uint
+	Minor uint
+	Patch uint
 }
 
 func ParseVersion(version string) Version {
-    parts := strings.Split(version, ".")
+	parts := strings.Split(version, ".")
 
-    major, err := strconv.Atoi(parts[0])
-    if err != nil {
-        panic("invalid major version")
-    }
+	major, err := strconv.Atoi(parts[0])
+	if err != nil {
+		panic("invalid major version")
+	}
 
-    minor, err := strconv.Atoi(parts[1])
-    if err != nil {
-        panic("invalid minor version")
-    }
+	minor, err := strconv.Atoi(parts[1])
+	if err != nil {
+		panic("invalid minor version")
+	}
 
-    patch, err := strconv.Atoi(parts[2])
-    if err != nil {
-        panic("invalid patch version")
-    }
+	patch, err := strconv.Atoi(parts[2])
+	if err != nil {
+		panic("invalid patch version")
+	}
 
-    return Version{uint(major), uint(minor), uint(patch)}
+	return Version{uint(major), uint(minor), uint(patch)}
 }
 
 func (version Version) String() string {
-    return fmt.Sprintf("%v.%v.%v", version.Major, version.Minor, version.Patch)
+	return fmt.Sprintf("%v.%v.%v", version.Major, version.Minor, version.Patch)
 }
 
 func (this Version) LessThan(that Version) bool {
-    return this.Major < that.Major || this.Minor < that.Minor || this.Patch < that.Patch
+	return this.Major < that.Major || this.Minor < that.Minor || this.Patch < that.Patch
 }
 
 func (this Version) GreaterThan(that Version) bool {
-    return this.Major > that.Major || this.Minor > that.Minor || this.Patch > that.Patch
+	return this.Major > that.Major || this.Minor > that.Minor || this.Patch > that.Patch
 }

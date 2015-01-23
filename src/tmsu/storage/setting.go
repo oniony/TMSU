@@ -21,47 +21,47 @@ import (
 	"tmsu/entities"
 )
 
-var defaultSettings = map[string]string {
-    "autoCreateTags": "yes",
-    "autoCreateValues": "yes",
-    "fileFingerprintAlgorithm": "dynamic:SHA256",
-    "directoryFingerprintAlgorithm": "sumSizes",
+var defaultSettings = map[string]string{
+	"autoCreateTags":                "yes",
+	"autoCreateValues":              "yes",
+	"fileFingerprintAlgorithm":      "dynamic:SHA256",
+	"directoryFingerprintAlgorithm": "sumSizes",
 }
 
 // The complete set of settings.
 func (storage *Storage) Settings() (entities.Settings, error) {
-    settings, err := storage.Db.Settings()
-    if err != nil {
-        return nil, err
-    }
+	settings, err := storage.Db.Settings()
+	if err != nil {
+		return nil, err
+	}
 
-    // enrich with defaults
-    for name, value := range defaultSettings {
-        if !settings.ContainsName(name) {
-            settings = append(settings, &entities.Setting{name, value})
-        }
-    }
+	// enrich with defaults
+	for name, value := range defaultSettings {
+		if !settings.ContainsName(name) {
+			settings = append(settings, &entities.Setting{name, value})
+		}
+	}
 
-    return settings, nil
+	return settings, nil
 }
 
 func (storage *Storage) Setting(name string) (*entities.Setting, error) {
-    setting, err := storage.Db.Setting(name)
-    if err != nil {
-        return nil, err
-    }
-    if setting == nil {
-        value, ok := defaultSettings[name]
-        if !ok {
-            return nil, nil
-        }
+	setting, err := storage.Db.Setting(name)
+	if err != nil {
+		return nil, err
+	}
+	if setting == nil {
+		value, ok := defaultSettings[name]
+		if !ok {
+			return nil, nil
+		}
 
-        setting = &entities.Setting{name, value}
-    }
+		setting = &entities.Setting{name, value}
+	}
 
-    return setting, nil
+	return setting, nil
 }
 
 func (storage *Storage) UpdateSetting(name, value string) (*entities.Setting, error) {
-    return storage.Db.UpdateSetting(name, value)
+	return storage.Db.UpdateSetting(name, value)
 }

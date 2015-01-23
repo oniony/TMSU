@@ -18,61 +18,61 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package entities
 
 type Setting struct {
-    Name string
-    Value string
+	Name  string
+	Value string
 }
 
 type Settings []*Setting
 
 func (settings Settings) AutoCreateTags() bool {
-    return settings.BoolValue("autoCreateTags")
+	return settings.BoolValue("autoCreateTags")
 }
 
 func (settings Settings) AutoCreateValues() bool {
-    return settings.BoolValue("autoCreateValues")
+	return settings.BoolValue("autoCreateValues")
 }
 
 func (settings Settings) FileFingerprintAlgorithm() string {
-    return settings.Value("fileFingerprintAlgorithm")
+	return settings.Value("fileFingerprintAlgorithm")
 }
 
 func (settings Settings) DirectoryFingerprintAlgorithm() string {
-    return settings.Value("directoyFingerprintAlgorithm")
+	return settings.Value("directoyFingerprintAlgorithm")
 }
 
 func (settings Settings) ContainsName(name string) bool {
-    for _, setting := range settings {
-        if setting.Name == name {
-            return true
-        }
-    }
+	for _, setting := range settings {
+		if setting.Name == name {
+			return true
+		}
+	}
 
-    return false
+	return false
 }
 
 func (settings Settings) Value(name string) string {
-    for _, setting := range settings {
-        if setting.Name == name {
-            return setting.Value
-        }
-    }
+	for _, setting := range settings {
+		if setting.Name == name {
+			return setting.Value
+		}
+	}
 
-    return ""
+	return ""
 }
 
 func (settings Settings) BoolValue(name string) bool {
-    for _, setting := range settings {
-        if setting.Name == name {
-            switch setting.Value {
-            case "yes", "Yes", "YES", "true", "True", "TRUE":
-                return true
-            case "no", "No", "false", "False", "FALSE":
-                return false
-            default:
-                panic("invalid boolean value")
-            }
-        }
-    }
+	for _, setting := range settings {
+		if setting.Name == name {
+			switch setting.Value {
+			case "yes", "Yes", "YES", "true", "True", "TRUE":
+				return true
+			case "no", "No", "false", "False", "FALSE":
+				return false
+			default:
+				panic("invalid boolean value")
+			}
+		}
+	}
 
-    return false
+	return false
 }

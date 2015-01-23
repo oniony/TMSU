@@ -22,8 +22,8 @@ import (
 	"errors"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
-	"tmsu/common/log"
 	"os"
+	"tmsu/common/log"
 )
 
 type Database struct {
@@ -54,9 +54,9 @@ func OpenAt(path string) (*Database, error) {
 
 	database := &Database{path, connection, nil}
 
-    if err := database.Upgrade(); err != nil {
-        return nil, err
-    }
+	if err := database.Upgrade(); err != nil {
+		return nil, err
+	}
 
 	return database, nil
 }

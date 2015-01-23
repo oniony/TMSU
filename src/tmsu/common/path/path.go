@@ -34,38 +34,38 @@ func Rel(path string) string {
 		return path
 	}
 
-    return RelTo(path, workingDirectory)
+	return RelTo(path, workingDirectory)
 }
 
 func RelTo(path, to string) string {
-    var err error
+	var err error
 
-    path, err = filepath.Abs(path)
-    if err != nil {
-        panic("could not get absolute path")
-    }
+	path, err = filepath.Abs(path)
+	if err != nil {
+		panic("could not get absolute path")
+	}
 
-    to, err = filepath.Abs(to)
-    if err != nil {
-        panic("could not get absolute path")
-    }
+	to, err = filepath.Abs(to)
+	if err != nil {
+		panic("could not get absolute path")
+	}
 
 	if path == to {
 		return "."
 	}
 
-    prefix := trailingSeparator(to)
+	prefix := trailingSeparator(to)
 	if strings.HasPrefix(path, prefix) {
-	    // can't use filepath.Join as it strips the leading './'
-        return "." + string(filepath.Separator) + path[len(prefix):]
+		// can't use filepath.Join as it strips the leading './'
+		return "." + string(filepath.Separator) + path[len(prefix):]
 	}
 
-    to = filepath.Dir(to)
-    prefix = trailingSeparator(to)
-    if strings.HasPrefix(path, prefix) {
-	    // can't use filepath.Join as it strips the leading './'
-        return ".." + string(filepath.Separator) + path[len(prefix):]
-    }
+	to = filepath.Dir(to)
+	prefix = trailingSeparator(to)
+	if strings.HasPrefix(path, prefix) {
+		// can't use filepath.Join as it strips the leading './'
+		return ".." + string(filepath.Separator) + path[len(prefix):]
+	}
 
 	return path
 }
@@ -73,9 +73,9 @@ func RelTo(path, to string) string {
 // unexported
 
 func trailingSeparator(path string) string {
-    if path[len(path)-1] == filepath.Separator {
-        return path
-    }
+	if path[len(path)-1] == filepath.Separator {
+		return path
+	}
 
-    return path + string(filepath.Separator)
+	return path + string(filepath.Separator)
 }

@@ -25,59 +25,59 @@ import (
 )
 
 func (db *Database) Upgrade() error {
-    if err := db.Begin(); err != nil {
-        return  err
-    }
-    defer db.Rollback()
+	if err := db.Begin(); err != nil {
+		return err
+	}
+	defer db.Rollback()
 
-    version := db.schemaVersion()
+	version := db.schemaVersion()
 
-    log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
+	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
 
-    if version == latestSchemaVersion {
-        return nil
-    }
+	if version == latestSchemaVersion {
+		return nil
+	}
 
-    noVersion := common.Version{}
-    if version == noVersion {
-        log.Infof(2, "creating schema")
+	noVersion := common.Version{}
+	if version == noVersion {
+		log.Infof(2, "creating schema")
 
-        if err := db.createSchema(); err != nil {
-            return err
-        }
+		if err := db.createSchema(); err != nil {
+			return err
+		}
 
-        // still need to run upgrade as per 0.5.0 database did not store a version
-    }
+		// still need to run upgrade as per 0.5.0 database did not store a version
+	}
 
-    log.Infof(2, "upgrading database")
+	log.Infof(2, "upgrading database")
 
-    if version.LessThan(common.Version{0, 5, 0}) {
-        if err := db.renameFingerprintAlgorithmSetting(); err != nil {
-            return err
-        }
-    }
+	if version.LessThan(common.Version{0, 5, 0}) {
+		if err := db.renameFingerprintAlgorithmSetting(); err != nil {
+			return err
+		}
+	}
 
-    if err := db.updateSchemaVersion(latestSchemaVersion); err != nil {
-        return err
-    }
+	if err := db.updateSchemaVersion(latestSchemaVersion); err != nil {
+		return err
+	}
 
-    if err := db.Commit(); err != nil {
-        return err
-    }
+	if err := db.Commit(); err != nil {
+		return err
+	}
 
-    return nil
+	return nil
 }
 
 // unexported
 
 func (db *Database) renameFingerprintAlgorithmSetting() error {
-    _, err := db.Exec(`UPDATE setting
+	_, err := db.Exec(`UPDATE setting
                             SET name = 'fileFingerprintAlgorithm'
                             WHERE name = 'fingerprintAlgorithm'`)
 
-    if err != nil {
-        return fmt.Errorf("could not upgrade database: %v", err)
-    }
+	if err != nil {
+		return fmt.Errorf("could not upgrade database: %v", err)
+	}
 
-    return nil
+	return nil
 }

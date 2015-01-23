@@ -95,9 +95,9 @@ func (err NoSuchImplicationError) Error() string {
 }
 
 type NoSuchSettingError struct {
-    Name string
+	Name string
 }
 
 func (err NoSuchSettingError) Error() string {
-    return fmt.Sprintf("no such setting '%v'", err.Name)
+	return fmt.Sprintf("no such setting '%v'", err.Name)
 }

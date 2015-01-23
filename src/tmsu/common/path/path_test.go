@@ -18,30 +18,30 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package path
 
 import (
-    "testing"
+	"testing"
 )
 
 func TestRelTo(test *testing.T) {
-    paths := map[string]string{
-        "/": "./some/path",
-        "/other": "../some/path",
-        "/other/": "../some/path",
-        "/other/mother": "/some/path",
-        "/other/mother/": "/some/path",
-        "/some": "./path",
-        "/some/": "./path",
-        "/some/path": ".",
-        "/some/path/": ".",
-        "/some/cheese": "../path",
-        "/some/cheese/": "../path",
-        "/some/cheese/sandwich": "/some/path",
-        "/some/cheese/sandwich/": "/some/path"}
+	paths := map[string]string{
+		"/":                      "./some/path",
+		"/other":                 "../some/path",
+		"/other/":                "../some/path",
+		"/other/mother":          "/some/path",
+		"/other/mother/":         "/some/path",
+		"/some":                  "./path",
+		"/some/":                 "./path",
+		"/some/path":             ".",
+		"/some/path/":            ".",
+		"/some/cheese":           "../path",
+		"/some/cheese/":          "../path",
+		"/some/cheese/sandwich":  "/some/path",
+		"/some/cheese/sandwich/": "/some/path"}
 
-    for to, expected := range paths {
-        actual := RelTo("/some/path", to)
+	for to, expected := range paths {
+		actual := RelTo("/some/path", to)
 
-        if actual != expected {
-            test.Fatalf("Expected '/some/path' relative to '%v' to be '%v' but was '%v'", to, expected, actual)
-        }
-    }
+		if actual != expected {
+			test.Fatalf("Expected '/some/path' relative to '%v' to be '%v' but was '%v'", to, expected, actual)
+		}
+	}
 }

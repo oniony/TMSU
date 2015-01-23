@@ -27,37 +27,38 @@ var ImplyCommand = Command{
 	Name:     "imply",
 	Synopsis: "Creates a tag implication",
 	Usages: []string{"tmsu imply [OPTION] TAG IMPL...",
-		"tmsu imply --list"},
+		"tmsu imply"},
 	Description: `Creates a tag implication such that whenever TAG is applied, IMPL are automatically applied.
+
+When run without arguments lists the tag implications.
 
 It is possible that a file may end up with the same tag applied explicitly and by way of a tag implication, making the explicit tag redundant. The decision on whether to keep or remove the redundant explicit tag is with you, but understand that the implied tags are more flexible in that the rules of which tags implies which others can be changed at any time.
 
 The 'tags' subcommand can be used to identify which tags applied to a file are implied.`,
 	Examples: []string{`$ tmsu imply mp3 music`,
-		`$ tmsu imply --list\nmp3 => music`,
+		`$ tmsu imply\nmp3 => music`,
 		`$ tmsu imply --delete mp3 music`},
-	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""},
-		Option{"--list", "-l", "lists the tag implications", false, ""}},
+	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""}},
 	Exec: implyExec,
 }
 
 func implyExec(store *storage.Storage, options Options, args []string) error {
-	switch {
-	case options.HasOption("--list"):
-		return listImplications(store)
-	case options.HasOption("--delete"):
+    if options.HasOption("--delete") {
 		if len(args) < 2 {
-			return fmt.Errorf("implying and implied tag must be specified")
+			return fmt.Errorf("implying and implied tag(s) must be specified")
 		}
 
 		return deleteImplications(store, args[0], args[1:])
-	}
+    }
 
-	if len(args) < 2 {
-		return fmt.Errorf("implying and implied tags must be specified")
-	}
-
-	return addImplications(store, args[0], args[1:])
+    switch len(args) {
+    case 0:
+        return listImplications(store)
+    case 1:
+        return fmt.Errorf("tag(s) to be implied must be specified")
+    default:
+        return addImplications(store, args[0], args[1:])
+    }
 }
 
 // unexported

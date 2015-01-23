@@ -81,8 +81,15 @@ func listAllSettings(store *storage.Storage) error {
         return fmt.Errorf("could not retrieve settings: %v", err)
     }
 
+    width := 0
     for _, setting := range settings {
-        fmt.Printf("%v=%v\n", setting.Name, setting.Value)
+        if len(setting.Name) > width {
+            width = len(setting.Name)
+        }
+    }
+
+    for _, setting := range settings {
+        fmt.Printf("%*v %v\n", -width, setting.Name, setting.Value)
     }
 
     return nil
@@ -101,7 +108,7 @@ func printSetting(store *storage.Storage, name string) error {
         return fmt.Errorf("no such setting '%v'", name)
     }
 
-    fmt.Printf("%v=%v", setting.Name, setting.Value)
+    fmt.Printf("%v %v\n", setting.Name, setting.Value)
 
     return nil
 }

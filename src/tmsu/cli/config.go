@@ -27,8 +27,7 @@ var ConfigCommand = Command{
 	Name:     "config",
 	Synopsis: "Views or amends database settings",
 	Usages: []string{"tmsu config",
-		"tmsu config NAME...",
-		"tmsu config NAME=VALUE..."},
+		"tmsu config NAME[=VALUE]..."},
 	Description: `Lists or views the database settings for the current database.
 
 Without arguments the complete set of settings are shown, otherwise lists the settings for the specified setting NAMEs.

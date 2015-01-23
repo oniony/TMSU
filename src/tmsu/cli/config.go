@@ -20,7 +20,6 @@ package cli
 import (
 	"fmt"
 	"strings"
-	"tmsu/entities"
 	"tmsu/storage"
 )
 
@@ -41,9 +40,14 @@ If a VALUE is specified then the setting is updated.`,
 
 func configExec(store *storage.Storage, options Options, args []string) error {
     if len(args) == 0 {
-        if err := listSettings(store); err != nil {
+        if err := listAllSettings(store); err != nil {
             return fmt.Errorf("could not list settings")
         }
+    }
+
+    if len(args) == 1 && strings.Index(args[0], "=") == -1 {
+        printSettingValue(store, args[0])
+        return nil
     }
 
     for _, arg := range args {
@@ -51,12 +55,13 @@ func configExec(store *storage.Storage, options Options, args []string) error {
         switch len(parts) {
         case 1:
             name := parts[0]
-            if err := listSetting(store, name); err != nil {
+            if err := printSetting(store, name); err != nil {
                 return fmt.Errorf("could not show value for setting '%v': %v", name, err)
             }
         case 2:
             name := parts[0]
             value := parts[1]
+
             if err := amendSetting(store, name, value); err != nil {
                 return fmt.Errorf("could not amend setting '%v' to '%v': %v", name, value, err)
             }
@@ -70,20 +75,24 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 
 // unexported
 
-func listSettings(store *storage.Storage) error {
+func listAllSettings(store *storage.Storage) error {
     settings, err := store.Settings()
     if err != nil {
         return fmt.Errorf("could not retrieve settings: %v", err)
     }
 
     for _, setting := range settings {
-        printSetting(setting)
+        fmt.Printf("%v=%v\n", setting.Name, setting.Value)
     }
 
     return nil
 }
 
-func listSetting(store *storage.Storage, name string) error {
+func printSetting(store *storage.Storage, name string) error {
+    if name == "" {
+        return fmt.Errorf("setting name must be specified")
+    }
+
     setting, err := store.Setting(name)
     if err != nil {
         return fmt.Errorf("could not retrieve setting '%v'", err)
@@ -92,12 +101,37 @@ func listSetting(store *storage.Storage, name string) error {
         return fmt.Errorf("no such setting '%v'", name)
     }
 
-    printSetting(setting)
+    fmt.Printf("%v=%v", setting.Name, setting.Value)
+
+    return nil
+}
+
+func printSettingValue(store *storage.Storage, name string) error {
+    if name == "" {
+        return fmt.Errorf("setting name must be specified")
+    }
+
+    setting, err := store.Setting(name)
+    if err != nil {
+        return fmt.Errorf("could not retrieve setting '%v'", err)
+    }
+    if setting == nil {
+        return fmt.Errorf("no such setting '%v'", name)
+    }
+
+    fmt.Println(setting.Value)
 
     return nil
 }
 
 func amendSetting(store *storage.Storage, name, value string) error {
+    if name == "" {
+        return fmt.Errorf("setting name must be specified")
+    }
+    if value == "" {
+        return fmt.Errorf("setting '%v' value must be specified", name)
+    }
+
     setting, err := store.Setting(name)
     if err != nil {
         return fmt.Errorf("could not retrieve setting '%v'", err)
@@ -111,8 +145,4 @@ func amendSetting(store *storage.Storage, name, value string) error {
     }
 
     return nil
-}
-
-func printSetting(setting *entities.Setting) {
-    fmt.Printf("%v=%v\n", setting.Name, setting.Value)
 }

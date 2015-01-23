@@ -182,7 +182,26 @@ _tmsu_file_tags() {
     fi
 }
 
+_tmsu_setting_names() {
+    if [[ -prefix *^= ]] 
+    then
+        typeset -a setting_names
+        local name
+
+        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read -A name
+        do
+            setting_names+=$name
+        done
+
+        _describe -t names 'names' setting_names
+    fi
+}
+
 # commands
+
+_tmsu_cmd_config() {
+    _arguments -s -w '*:setting:_tmsu_setting_names' && ret=0
+}
 
 _tmsu_cmd_copy() {
     _arguments -s -w ':tag:_tmsu_tags' && ret=0

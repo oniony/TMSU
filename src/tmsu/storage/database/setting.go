@@ -25,7 +25,8 @@ import (
 // The complete set of settings.
 func (db *Database) Settings() (entities.Settings, error) {
 	sql := `SELECT name, value
-	        FROM setting`
+	        FROM setting
+	        ORDER BY name`
 
 	rows, err := db.ExecQuery(sql)
 	if err != nil {

@@ -49,11 +49,15 @@ func configExec(store *storage.Storage, options Options, args []string) error {
         switch len(parts) {
         case 1:
             name := parts[0]
-            listSetting(store, name)
+            if err := listSetting(store, name); err != nil {
+                fmt.Errorf("could not show value for setting '%v': %v", name, err)
+            }
         case 2:
             name := parts[0]
             value := parts[1]
-            amendSetting(store, name, value)
+            if err := amendSetting(store, name, value); err != nil {
+                fmt.Errorf("could not amend setting '%v' to '%v': %v", name, value, err)
+            }
         default:
             return fmt.Errorf("invalid argument, '%v'", arg)
         }

@@ -23,7 +23,7 @@ import (
 
 var defaultSettings = map[string]string {
     "autoCreateTags": "yes",
-    "atuoCreateValues": "yes",
+    "autoCreateValues": "yes",
     "fileFingerprintAlgorithm": "dynamic:SHA256",
     "directoryFingerprintAlgorithm": "sumSizes",
 }
@@ -63,10 +63,5 @@ func (storage *Storage) Setting(name string) (*entities.Setting, error) {
 }
 
 func (storage *Storage) UpdateSetting(name, value string) (*entities.Setting, error) {
-    setting, err := storage.UpdateSetting(name, value)
-    if err != nil {
-        return nil, err
-    }
-
-    return setting, err
+    return storage.Db.UpdateSetting(name, value)
 }

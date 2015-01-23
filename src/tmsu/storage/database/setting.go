@@ -46,7 +46,7 @@ func (db *Database) Setting(name string) (*entities.Setting, error) {
             FROM setting
             WHERE name = ?`
 
-    rows, err := db.ExecQuery(sql)
+    rows, err := db.ExecQuery(sql, name)
     if err != nil {
         return nil, err
     }
@@ -61,11 +61,9 @@ func (db *Database) Setting(name string) (*entities.Setting, error) {
 }
 
 func (db *Database) UpdateSetting(name, value string) (*entities.Setting, error) {
-    sql := `UPDATE setting
-            SET value = ?
-            WHERE name = ?`
+    sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
 
-    result, err := db.Exec(sql)
+    result, err := db.Exec(sql, name, value)
     if err != nil {
         return nil, err
     }

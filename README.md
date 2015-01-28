@@ -45,7 +45,7 @@ combinations are available:
 
   * <https://github.com/oniony/TMSU/releases>
 
-(If you would rather build from the source code then please see COMPILING.md
+(If you would rather build from the source code then please see `COMPILING.md`
 in the root of the repository.)
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the

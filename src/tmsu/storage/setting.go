@@ -25,7 +25,7 @@ var defaultSettings = map[string]string{
 	"autoCreateTags":                "yes",
 	"autoCreateValues":              "yes",
 	"fileFingerprintAlgorithm":      "dynamic:SHA256",
-	"directoryFingerprintAlgorithm": "sumSizes",
+	"directoryFingerprintAlgorithm": "none",
 }
 
 // The complete set of settings.

@@ -124,7 +124,7 @@ v0.5.0 (in development)
   * Subcommands can be read from standard input by passing an argument of '-'.
   * TMSU will now automatically use a local database in .tmsu/db in working
     directory or any parent. The new 'init' subcommand allows a new local
-    database to be initialized. See [Switching Databases](https://github.com/oniony/wiki/Switching%23Databases).
+    database to be initialized. See [Switching Databases](https://github.com/oniony/TMSU/wiki/Switching%20Databases).
   * Paths are now stored relative to the .tmsu directory's parent rather than as
     absolute paths. This allows a branch of the filesystem to be moved around,
     shared or archived whilst preserving the tagging information. Existing

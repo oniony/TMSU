@@ -92,13 +92,10 @@ Release Notes
 v0.5.0 (in development)
 ------
 
-  *Note: This release changes the behaviour of some of the subcommands. Please
-  read the following release notes carefully.*
-
-  *Note: To move from absolute paths in your existing database to relative paths
-  please issue:*
-
-      tmsu repair --manual / /
+  *Note: This release has some important changes, including the renaming of
+  some options, the introduction of local databases and a switch from absolute
+  to relative paths in the database. Please read the following release notes
+  carefully.*
 
   * The --untagged option on the 'files' and 'status' subcommands has been
     replaced by a new 'untagged' subcommand, which should be more intuitive.
@@ -124,13 +121,18 @@ v0.5.0 (in development)
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
   * It is now possible to remove tags with values via the VFS.
-  * Subcommands can now be read from standard input by passing an argument of '-'.
-  * TMSU will now automatically use a database in .tmsu/db in working directory
-    or any parent.
+  * Subcommands can be read from standard input by passing an argument of '-'.
+  * TMSU will now automatically use a local database in .tmsu/db in working
+    directory or any parent. The new 'init' subcommand allows a new local
+    database to be initialized. See [Switching Databases](https://github.com/oniony/wiki/Switching%23Databases).
   * Paths are now stored relative to the .tmsu directory's parent rather than as
     absolute paths. This allows a branch of the filesystem to be moved around,
-    shared or archived whilst preserving the tagging information.
-  * Added 'config' command to view and amend settings.
+    shared or archived whilst preserving the tagging information. Existing
+    absolute paths can be converted by running a manual repair:
+
+        tmsu repair --mnaual / /
+
+  * Added 'config' subcommand to view and amend settings.
   * The 'help' subcommand now wraps textual output to fit the terminal.
   * Rudimentary Microsoft Windows support (no virtual filesystem yet).
   * TMSU can now be built without the Makefile.

@@ -242,6 +242,10 @@ _tmsu_cmd_imply() {
     && ret=0
 }
 
+_tmsu_cmd_init() {
+    _arguments -s -w '*:file:_files' && ret=0
+}
+
 _tmsu_cmd_merge() {
 	_arguments -s -w '*:tag:_tmsu_tags' && ret=0
 }

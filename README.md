@@ -68,7 +68,7 @@ operating system's package management system.
 About
 =====
 
-TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>.
+TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul@tmsu.org>).
 
 The creation of TMSU is motivation in itself, but if you should feel inclinded
 to make a small gift via Bitcoin then it shall be gratefully received:

@@ -45,7 +45,7 @@ combinations are available:
 
   * <https://github.com/oniony/TMSU/releases>
 
-(If you would rather build from the source code then please see COMPILING.md
+(If you would rather build from the source code then please see `COMPILING.md`
 in the root of the repository.)
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
@@ -68,7 +68,7 @@ operating system's package management system.
 About
 =====
 
-TMSU itself is written and maintained by Paul Ruane <paul@tmsu.org>.
+TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul@tmsu.org>).
 
 The creation of TMSU is motivation in itself, but if you should feel inclinded
 to make a small gift via Bitcoin then it shall be gratefully received:
@@ -124,7 +124,7 @@ v0.5.0 (in development)
   * Subcommands can be read from standard input by passing an argument of '-'.
   * TMSU will now automatically use a local database in .tmsu/db in working
     directory or any parent. The new 'init' subcommand allows a new local
-    database to be initialized. See [Switching Databases](https://github.com/oniony/wiki/Switching%23Databases).
+    database to be initialized. See [Switching Databases](https://github.com/oniony/TMSU/wiki/Switching%20Databases).
   * Paths are now stored relative to the .tmsu directory's parent rather than as
     absolute paths. This allows a branch of the filesystem to be moved around,
     shared or archived whilst preserving the tagging information. Existing

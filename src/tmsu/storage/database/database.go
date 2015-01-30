@@ -47,7 +47,7 @@ func OpenAt(path string) (*Database, error) {
 		}
 	}
 
-    connection, err := sql.Open("sqlite3", path)
+	connection, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, DatabaseAccessError{path, err}
 	}

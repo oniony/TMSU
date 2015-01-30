@@ -584,7 +584,7 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
 	}
 
-	if len(tags) < 5 {
+	if len(tags) < 3 {
 		entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
 	}
 

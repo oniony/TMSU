@@ -32,6 +32,7 @@ func (db *Database) ValueCount() (uint, error) {
 	if err != nil {
 		return 0, err
 	}
+	defer rows.Close()
 
 	return readCount(rows)
 }
@@ -145,6 +146,7 @@ func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	values, err := readValues(rows, make(entities.Values, 0, len(names)))
 	if err != nil {

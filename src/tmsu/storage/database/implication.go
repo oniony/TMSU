@@ -35,6 +35,7 @@ func (db *Database) Implications() (entities.Implications, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	implications, err := readImplications(rows, make(entities.Implications, 0, 10))
 	if err != nil {
@@ -63,6 +64,7 @@ func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implic
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	implications, err := readImplications(rows, make(entities.Implications, 0, 10))
 	if err != nil {

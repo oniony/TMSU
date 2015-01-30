@@ -43,8 +43,6 @@ func vfsExec(store *storage.Storage, options Options, args []string) error {
 		fmt.Errorf("mountpoint not specified")
 	}
 
-	store.Rollback() // ensure no open transaction
-
 	mountOptions := []string{}
 	if options.HasOption("--options") {
 		mountOptions = strings.Split(options.Get("--options").Argument, ",")
@@ -58,7 +56,17 @@ func vfsExec(store *storage.Storage, options Options, args []string) error {
 	}
 	defer vfs.Unmount()
 
+    // virtual filesystem manages its own transactions so start with none
+    if err := store.Rollback(); err != nil {
+        return fmt.Errorf("could not roll back transaction: %v", err)
+    }
+
 	vfs.Serve()
+
+    // start a new transaction for any subsequent commands
+    if err := store.Begin(); err != nil {
+        return fmt.Errorf("could not start transaction: %v", err)
+    }
 
 	return nil
 }

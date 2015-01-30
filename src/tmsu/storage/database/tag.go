@@ -130,6 +130,7 @@ func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
 	if err != nil {
 		return nil, err
 	}
+	defer rows.Close()
 
 	tags, err := readTags(rows, make(entities.Tags, 0, len(names)))
 	if err != nil {

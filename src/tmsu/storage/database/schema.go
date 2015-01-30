@@ -34,7 +34,12 @@ func (db *Database) schemaVersion() common.Version {
 	var major, minor, patch uint
 
 	rows, err := db.ExecQuery(sql)
-	if err == nil && rows.Next() && rows.Err() == nil {
+	if err != nil {
+	    return common.Version{}
+    }
+    defer rows.Close()
+
+	if rows.Next() && rows.Err() == nil {
 		rows.Scan(&major, &minor, &patch) // ignore errors
 	}
 

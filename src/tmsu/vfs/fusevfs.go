@@ -155,6 +155,11 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	log.Infof(2, "BEGIN GetAttr(%v)", name)
 	defer log.Infof(2, "END GetAttr(%v)", name)
 
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
+
 	switch name {
 	case "":
 		fallthrough
@@ -207,6 +212,11 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 		return fuse.EPERM
 	}
 
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
+
 	switch path[0] {
 	case tagsDir:
 		name := path[1]
@@ -214,6 +224,10 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 		if _, err := vfs.store.AddTag(name); err != nil {
 			log.Fatalf("could not create tag '%v': %v", name, err)
 		}
+
+        if err := vfs.store.Commit(); err != nil {
+            log.Fatalf("could not commit transaction: %v", err)
+        }
 
 		return fuse.OK
 	case queriesDir:
@@ -258,6 +272,11 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	log.Infof(2, "BEGIN OpenDir(%v)", name)
 	defer log.Infof(2, "END OpenDir(%v)", name)
 
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
+
 	switch name {
 	case "":
 		return vfs.topDirectories()
@@ -282,6 +301,11 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	log.Infof(2, "BEGIN Readlink(%v)", name)
 	defer log.Infof(2, "END Readlink(%v)", name)
 
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
+
 	path := vfs.splitPath(name)
 	switch path[0] {
 	case tagsDir, queriesDir:
@@ -301,6 +325,11 @@ func (vfs FuseVfs) RemoveXAttr(name string, attr string, context *fuse.Context) 
 func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Rename(%v, %v)", oldName, newName)
 	defer log.Infof(2, "END Rename(%v, %v)", oldName, newName)
+
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
 
 	oldPath := vfs.splitPath(oldName)
 	newPath := vfs.splitPath(newName)
@@ -328,12 +357,21 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
 	}
 
+    if err := vfs.store.Commit(); err != nil {
+        log.Fatalf("could not commit transaction: %v", err)
+    }
+
 	return fuse.OK
 }
 
 func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Rmdir(%v)", name)
 	defer log.Infof(2, "END Rmdir(%v)", name)
+
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
 
 	path := vfs.splitPath(name)
 
@@ -365,6 +403,10 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not delete tag '%v': %v", tagName, err)
 		}
 
+        if err := vfs.store.Commit(); err != nil {
+            log.Fatalf("could not commit transaction: %v", err)
+        }
+
 		return fuse.OK
 	case queriesDir:
 		if len(path) != 2 {
@@ -377,6 +419,10 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 		if err := vfs.store.DeleteQuery(text); err != nil {
 			log.Fatalf("could not remove tag '%v': %v", name, err)
 		}
+
+        if err := vfs.store.Commit(); err != nil {
+            log.Fatalf("could not commit transaction: %v", err)
+        }
 
 		return fuse.OK
 	}
@@ -419,6 +465,11 @@ func (vfs FuseVfs) Truncate(name string, offset uint64, context *fuse.Context) f
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Unlink(%v)", name)
 	defer log.Infof(2, "END Unlink(%v)", name)
+
+    if err := vfs.store.Begin(); err != nil {
+        log.Fatalf("could not begin transaction: %v", err)
+    }
+    defer vfs.store.Rollback()
 
 	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
@@ -468,6 +519,10 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 		if err = vfs.store.DeleteFileTag(fileId, tag.Id, value.Id); err != nil {
 			log.Fatal(err)
 		}
+
+        if err := vfs.store.Commit(); err != nil {
+            log.Fatalf("could not commit transaction: %v", err)
+        }
 
 		return fuse.OK
 	case queriesDir:

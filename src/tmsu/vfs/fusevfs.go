@@ -37,6 +37,7 @@ import (
 )
 
 const helpFilename = "README.md"
+const databaseFilename = ".database"
 
 const tagsDir = "tags"
 const tagsDirHelp = `Tags Directories
@@ -161,6 +162,8 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	defer vfs.store.Rollback()
 
 	switch name {
+	case databaseFilename:
+		return vfs.getDatabaseFileAttr()
 	case "":
 		fallthrough
 	case tagsDir:
@@ -279,7 +282,7 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 
 	switch name {
 	case "":
-		return vfs.topDirectories()
+		return vfs.topFiles()
 	case tagsDir:
 		return vfs.tagDirectories()
 	case queriesDir:
@@ -305,6 +308,10 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 		log.Fatalf("could not begin transaction: %v", err)
 	}
 	defer vfs.store.Rollback()
+
+	if name == ".database" {
+		return vfs.readDatabaseFileLink()
+	}
 
 	path := vfs.splitPath(name)
 	switch path[0] {
@@ -561,11 +568,13 @@ func (vfs FuseVfs) parseFileId(name string) entities.FileId {
 	return entities.FileId(id)
 }
 
-func (vfs FuseVfs) topDirectories() ([]fuse.DirEntry, fuse.Status) {
-	log.Infof(2, "BEGIN topDirectories")
-	defer log.Infof(2, "END topDirectories")
+func (vfs FuseVfs) topFiles() ([]fuse.DirEntry, fuse.Status) {
+	log.Infof(2, "BEGIN topFiles")
+	defer log.Infof(2, "END topFiles")
 
-	entries := []fuse.DirEntry{fuse.DirEntry{Name: tagsDir, Mode: fuse.S_IFDIR},
+	entries := []fuse.DirEntry{
+		fuse.DirEntry{Name: databaseFilename, Mode: fuse.S_IFLNK},
+		fuse.DirEntry{Name: tagsDir, Mode: fuse.S_IFDIR},
 		fuse.DirEntry{Name: queriesDir, Mode: fuse.S_IFDIR}}
 	return entries, fuse.OK
 }
@@ -724,6 +733,19 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: uint64(0), Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
+func (vfs FuseVfs) getDatabaseFileAttr() (*fuse.Attr, fuse.Status) {
+	databasePath := vfs.store.Db.Path
+
+	fileInfo, err := os.Stat(databasePath)
+	if err != nil {
+		log.Fatalf("could not stat database: %v", err)
+	}
+
+	modTime := fileInfo.ModTime()
+
+	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(fileInfo.Size()), Mtime: uint64(modTime.Unix()), Mtimensec: uint32(modTime.Nanosecond())}, fuse.OK
+}
+
 func (vfs FuseVfs) getFileEntryAttr(fileId entities.FileId) (*fuse.Attr, fuse.Status) {
 	file, err := vfs.store.File(fileId)
 	if err != nil {
@@ -826,6 +848,13 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 	}
 
 	return entries, fuse.OK
+}
+
+func (vfs FuseVfs) readDatabaseFileLink() (string, fuse.Status) {
+	log.Infof(2, "BEGIN readDatabaseFileLink()")
+	defer log.Infof(2, "END readDatabaseFileLink()")
+
+	return vfs.store.Db.Path, fuse.OK
 }
 
 func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {

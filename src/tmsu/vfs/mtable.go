@@ -18,10 +18,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
+    "bufio"
+    "path/filepath"
 	"fmt"
+	"io"
 	"os"
-	"path/filepath"
-	"tmsu/common/proc"
+	"strings"
 )
 
 // +build !windows
@@ -32,30 +34,36 @@ type Mount struct {
 }
 
 func GetMountTable() ([]Mount, error) {
-	pids, err := proc.GetProcessIds()
-	if err != nil {
-		return nil, fmt.Errorf("could not get process IDs: %v", err)
-	}
-
 	mountTable := make([]Mount, 0, 10)
 
-	for _, pid := range pids {
-		process, err := proc.GetProcess(pid)
-		if err != nil {
-			if !os.IsPermission(err) {
-				return nil, err
-			}
-		} else {
-			if len(process.CommandLine) >= 4 && process.CommandLine[0] == "tmsu" && process.CommandLine[1] == "vfs" {
-				databasePath := filepath.Join(process.WorkingDirectory, process.CommandLine[2])
-				mountPath := process.CommandLine[3]
-				if mountPath[0] != '/' {
-					mountPath = filepath.Join(process.WorkingDirectory, mountPath)
-				}
-				mountTable = append(mountTable, Mount{databasePath, mountPath})
-			}
-		}
-	}
+    file, err := os.Open("/proc/mounts")
+    if err != nil {
+        return nil, fmt.Errorf("could not open system mount table")
+    }
+    defer file.Close()
+
+    reader := bufio.NewReader(file)
+    for line, err := reader.ReadString('\n'); err != io.EOF; line, err = reader.ReadString('\n') {
+        if err != nil {
+            return nil, err
+        }
+
+        parts := strings.Split(line, " ")
+
+        if parts[0] != "pathfs.pathInode" {
+            continue
+        }
+
+        mountpoint := parts[1]
+
+        databaseSymlink := filepath.Join(mountpoint, ".database")
+        databasePath, err := os.Readlink(databaseSymlink)
+        if err != nil {
+            return nil, err
+        }
+
+        mountTable = append(mountTable, Mount{databasePath, mountpoint})
+    }
 
 	return mountTable, nil
 }

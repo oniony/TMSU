@@ -24,6 +24,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"tmsu/common/path"
 )
 
 // +build !windows
@@ -42,6 +43,7 @@ func GetMountTable() ([]Mount, error) {
 	}
 	defer file.Close()
 
+
 	reader := bufio.NewReader(file)
 	for line, err := reader.ReadString('\n'); err != io.EOF; line, err = reader.ReadString('\n') {
 		if err != nil {
@@ -54,7 +56,7 @@ func GetMountTable() ([]Mount, error) {
 			continue
 		}
 
-		mountpoint := parts[1]
+		mountpoint := path.UnescapeOctal(parts[1])
 
 		databaseSymlink := filepath.Join(mountpoint, ".database")
 		databasePath, err := os.Readlink(databaseSymlink)

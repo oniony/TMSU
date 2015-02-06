@@ -150,7 +150,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 	}
 
 	wereErrors := false
-	tagValuePairs := make([]TagValuePair, 0, 10)
+	tagValuePairs := make([]tagValuePair, 0, 10)
 	for _, tagArg := range tagArgs {
 		var tagName, valueName string
 		index := strings.Index(tagArg, "=")
@@ -197,7 +197,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			}
 		}
 
-		tagValuePairs = append(tagValuePairs, TagValuePair{tag.Id, value.Id})
+		tagValuePairs = append(tagValuePairs, tagValuePair{tag.Id, value.Id})
 	}
 
 	for _, path := range paths {
@@ -241,9 +241,9 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
 	}
 
-	tagValuePairs := make([]TagValuePair, len(fileTags))
+	tagValuePairs := make([]tagValuePair, len(fileTags))
 	for index, fileTag := range fileTags {
-		tagValuePairs[index] = TagValuePair{fileTag.TagId, fileTag.ValueId}
+		tagValuePairs[index] = tagValuePair{fileTag.TagId, fileTag.ValueId}
 	}
 
 	wereErrors := false
@@ -269,7 +269,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 	return nil
 }
 
-func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit, recursive bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit, recursive bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -326,7 +326,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []TagValuePair, 
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagValuePairs []TagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -407,7 +407,7 @@ func addFile(store *storage.Storage, path string, modTime time.Time, size uint, 
 	return file, nil
 }
 
-func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tagValuePairs []TagValuePair, file *entities.File) ([]TagValuePair, error) {
+func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tagValuePairs []tagValuePair, file *entities.File) ([]tagValuePair, error) {
 	log.Infof(2, "%v: determining existing file-tags", file.Path())
 
 	existingFileTags, err := store.FileTagsByFileId(file.Id, false)
@@ -429,7 +429,7 @@ func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tagValuePairs []T
 
 	log.Infof(2, "%v: revising set of tags to apply", file.Path())
 
-	revisedTagValuePairs := make([]TagValuePair, 0, len(tagValuePairs))
+	revisedTagValuePairs := make([]tagValuePair, 0, len(tagValuePairs))
 	for _, tagValuePair := range tagValuePairs {
 		if existingFileTags.Contains(tagValuePair.TagId, tagValuePair.ValueId) {
 			continue

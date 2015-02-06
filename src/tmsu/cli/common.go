@@ -19,12 +19,35 @@ package cli
 
 import (
 	"errors"
+	"fmt"
+	"tmsu/common/terminal"
 	"tmsu/entities"
 )
 
+// unexported
+
 var errBlank = errors.New("")
 
-type TagValuePair struct {
+type tagValuePair struct {
 	TagId   entities.TagId
 	ValueId entities.ValueId
+}
+
+func useColour(options Options) (bool, error) {
+	when := "auto"
+	if options.HasOption("--color") {
+		when = options.Get("--color").Argument
+	}
+
+	switch when {
+	case "":
+	case "auto":
+		return terminal.Colour() && terminal.Width() > 0, nil
+	case "always":
+		return true, nil
+	case "never":
+		return false, nil
+	}
+
+	return false, fmt.Errorf("invalid argument '%v' for '--color'", when)
 }

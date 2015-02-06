@@ -56,23 +56,9 @@ func tagsExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
-
-	var colour bool
-	if options.HasOption("--color") {
-		when := options.Get("--color").Argument
-		switch when {
-		case "auto":
-			colour = terminal.Colour() && terminal.Width() > 0
-		case "":
-		case "always":
-			colour = true
-		case "never":
-			colour = false
-		default:
-			return fmt.Errorf("invalid argument '%v' for '--color'", when)
-		}
-	} else {
-		colour = terminal.Colour() && terminal.Width() > 0
+	colour, err := useColour(options)
+	if err != nil {
+		return err
 	}
 
 	if len(args) == 0 {

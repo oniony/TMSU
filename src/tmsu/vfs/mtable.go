@@ -43,7 +43,6 @@ func GetMountTable() ([]Mount, error) {
 	}
 	defer file.Close()
 
-
 	reader := bufio.NewReader(file)
 	for line, err := reader.ReadString('\n'); err != io.EOF; line, err = reader.ReadString('\n') {
 		if err != nil {

@@ -18,8 +18,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package log
 
 import (
-    "io"
 	"fmt"
+	"io"
 	"os"
 	"time"
 )
@@ -27,21 +27,21 @@ import (
 var Verbosity uint = 1
 
 func Fatal(values ...interface{}) {
-    log(os.Stderr, values...)
+	log(os.Stderr, values...)
 	os.Exit(1)
 }
 
 func Fatalf(format string, values ...interface{}) {
-    logf(os.Stderr, format, values...)
+	logf(os.Stderr, format, values...)
 	os.Exit(1)
 }
 
 func Warn(values ...interface{}) {
-    log(os.Stderr, values...)
+	log(os.Stderr, values...)
 }
 
 func Warnf(format string, values ...interface{}) {
-    logf(os.Stderr, format, values...)
+	logf(os.Stderr, format, values...)
 }
 
 func Info(verbosity uint, values ...interface{}) {
@@ -49,7 +49,7 @@ func Info(verbosity uint, values ...interface{}) {
 		return
 	}
 
-    log(os.Stdout, values)
+	log(os.Stdout, values)
 }
 
 func Infof(verbosity uint, format string, values ...interface{}) {
@@ -57,25 +57,25 @@ func Infof(verbosity uint, format string, values ...interface{}) {
 		return
 	}
 
-    logf(os.Stdout, format, values...)
+	logf(os.Stdout, format, values...)
 }
 
 // unexported
 
 func log(dest io.Writer, values ...interface{}) {
-    if Verbosity > 1 {
-        fmt.Printf("%v: ", time.Now())
-    }
+	if Verbosity > 1 {
+		fmt.Printf("%v: ", time.Now())
+	}
 
-    fmt.Printf("tmsu: ")
-    fmt.Println(values...)
+	fmt.Printf("tmsu: ")
+	fmt.Println(values...)
 }
 
 func logf(dest io.Writer, format string, values ...interface{}) {
-    if Verbosity > 1 {
-        fmt.Printf("%v: ", time.Now())
-    }
+	if Verbosity > 1 {
+		fmt.Printf("%v: ", time.Now())
+	}
 
-    format = "tmsu: " + format + "\n"
-    fmt.Fprintf(dest, format, values...)
+	format = "tmsu: " + format + "\n"
+	fmt.Fprintf(dest, format, values...)
 }

@@ -18,7 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package path
 
 import (
-    "fmt"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -74,16 +74,16 @@ func RelTo(path, to string) string {
 }
 
 func UnescapeOctal(path string) string {
-    decodeChar := func(match string) string {
-        code, err := strconv.ParseUint(match[1:len(match)], 8, 0)
-        if err != nil {
-            panic(fmt.Sprintf("invalid octal number %v", match)) // unreachable
-        }
+	decodeChar := func(match string) string {
+		code, err := strconv.ParseUint(match[1:len(match)], 8, 0)
+		if err != nil {
+			panic(fmt.Sprintf("invalid octal number %v", match)) // unreachable
+		}
 
-        return string(byte(code))
-    }
+		return string(byte(code))
+	}
 
-    return octalEscapePattern.ReplaceAllStringFunc(path, decodeChar)
+	return octalEscapePattern.ReplaceAllStringFunc(path, decodeChar)
 }
 
 // unexported

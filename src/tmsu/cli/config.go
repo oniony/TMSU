@@ -20,6 +20,7 @@ package cli
 import (
 	"fmt"
 	"strings"
+	"tmsu/common/terminal/ansi"
 	"tmsu/storage"
 )
 
@@ -38,8 +39,13 @@ If a VALUE is specified then the setting is updated.`,
 }
 
 func configExec(store *storage.Storage, options Options, args []string) error {
+	colour, err := useColour(options)
+	if err != nil {
+		return err
+	}
+
 	if len(args) == 0 {
-		if err := listAllSettings(store); err != nil {
+		if err := listAllSettings(store, colour); err != nil {
 			return fmt.Errorf("could not list settings")
 		}
 	}
@@ -54,7 +60,7 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 		switch len(parts) {
 		case 1:
 			name := parts[0]
-			if err := printSetting(store, name); err != nil {
+			if err := printSetting(store, name, colour); err != nil {
 				return fmt.Errorf("could not show value for setting '%v': %v", name, err)
 			}
 		case 2:
@@ -74,20 +80,25 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 
 // unexported
 
-func listAllSettings(store *storage.Storage) error {
+func listAllSettings(store *storage.Storage, colour bool) error {
 	settings, err := store.Settings()
 	if err != nil {
 		return fmt.Errorf("could not retrieve settings: %v", err)
 	}
 
 	for _, setting := range settings {
-		fmt.Printf("%v=%v\n", setting.Name, setting.Value)
+		value := setting.Value
+		if colour {
+			value = ansi.Green(value)
+		}
+
+		fmt.Printf("%v=%v\n", setting.Name, value)
 	}
 
 	return nil
 }
 
-func printSetting(store *storage.Storage, name string) error {
+func printSetting(store *storage.Storage, name string, colour bool) error {
 	if name == "" {
 		return fmt.Errorf("setting name must be specified")
 	}
@@ -100,7 +111,12 @@ func printSetting(store *storage.Storage, name string) error {
 		return fmt.Errorf("no such setting '%v'", name)
 	}
 
-	fmt.Printf("%v=%v\n", setting.Name, setting.Value)
+	value := setting.Value
+	if colour {
+		value = ansi.Green(value)
+	}
+
+	fmt.Printf("%v=%v\n", setting.Name, value)
 
 	return nil
 }

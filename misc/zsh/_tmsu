@@ -188,7 +188,7 @@ _tmsu_setting_names() {
         typeset -a setting_names
         local name
 
-        _call_program tmsu tmsu $db config | cut -d \  -f 1 | while read -A name
+        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read -A name
         do
             setting_names+=$name
         done

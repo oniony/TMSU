@@ -100,8 +100,15 @@ func listMounts() error {
 		log.Info(2, "mount table is empty.")
 	}
 
+	dbPathWidth := 0
 	for _, mount := range mt {
-		fmt.Printf("'%v' at '%v'\n", mount.DatabasePath, mount.MountPath)
+		if len(mount.DatabasePath) > dbPathWidth {
+			dbPathWidth = len(mount.DatabasePath)
+		}
+	}
+
+	for _, mount := range mt {
+		fmt.Printf("%-*v\tat\t%v\n", dbPathWidth, mount.DatabasePath, mount.MountPath)
 	}
 
 	return nil

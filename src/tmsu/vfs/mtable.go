@@ -18,11 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package vfs
 
 import (
-    "bufio"
-    "path/filepath"
+	"bufio"
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -36,34 +36,34 @@ type Mount struct {
 func GetMountTable() ([]Mount, error) {
 	mountTable := make([]Mount, 0, 10)
 
-    file, err := os.Open("/proc/mounts")
-    if err != nil {
-        return nil, fmt.Errorf("could not open system mount table")
-    }
-    defer file.Close()
+	file, err := os.Open("/proc/mounts")
+	if err != nil {
+		return nil, fmt.Errorf("could not open system mount table")
+	}
+	defer file.Close()
 
-    reader := bufio.NewReader(file)
-    for line, err := reader.ReadString('\n'); err != io.EOF; line, err = reader.ReadString('\n') {
-        if err != nil {
-            return nil, err
-        }
+	reader := bufio.NewReader(file)
+	for line, err := reader.ReadString('\n'); err != io.EOF; line, err = reader.ReadString('\n') {
+		if err != nil {
+			return nil, err
+		}
 
-        parts := strings.Split(line, " ")
+		parts := strings.Split(line, " ")
 
-        if parts[0] != "pathfs.pathInode" {
-            continue
-        }
+		if parts[0] != "pathfs.pathInode" {
+			continue
+		}
 
-        mountpoint := parts[1]
+		mountpoint := parts[1]
 
-        databaseSymlink := filepath.Join(mountpoint, ".database")
-        databasePath, err := os.Readlink(databaseSymlink)
-        if err != nil {
-            return nil, err
-        }
+		databaseSymlink := filepath.Join(mountpoint, ".database")
+		databasePath, err := os.Readlink(databaseSymlink)
+		if err != nil {
+			return nil, err
+		}
 
-        mountTable = append(mountTable, Mount{databasePath, mountpoint})
-    }
+		mountTable = append(mountTable, Mount{databasePath, mountpoint})
+	}
 
 	return mountTable, nil
 }

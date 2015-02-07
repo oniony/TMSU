@@ -1,5 +1,7 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
+[ ![Build status](https://codeship.com/projects/ad81c060-5f0e-0132-2efc-3643fcd47fc7/status?branch=master)](https://codeship.com/projects/51490)
+
 Overview
 ========
 

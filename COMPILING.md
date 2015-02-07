@@ -18,49 +18,54 @@ a downloaded binary then they can be safely ignored.
 
 2. Set up the Go path
 
-    Go (as of verison 1.1) requires the GOPATH environment variable be set for the
+    Go, as of verison 1.1, requires the GOPATH environment variable be set for the
     'go get' command to function. You will need to set up a path for Go packages to
-    live if you do not already have one:
+    live if you do not already have one. Please see the following page for details
+    on how to set this up:
 
-        $ mkdir $HOME/gopath
-        $ export GOPATH=$HOME/gopath
+    * <http://golang.org/cmd/go/#hdr-GOPATH_environment_variable>
 
 3. Install the dependent packages.
 
-    These will be installed to your $GOPATH directory.
+    These will be installed to your GOPATH directory (see previous step).
 
-        $ go get -u github.com/mattn/go-sqlite3
-        $ go get -u github.com/hanwen/go-fuse/fuse
+    Unix like operating systems:
+
+        go get -u github.com/mattn/go-sqlite3
+        go get -u github.com/hanwen/go-fuse/fuse
+
+    Microsoft Windows:
+
+        go get -u github.com/mattn/go-sqlite3
 
 4. Clone the TMSU respository:
 
     To clone the current stable release branch:
 
-        $ git clone -b v0.4 https://github.com/oniony/TMSU.git
+        git clone -b v0.4 https://github.com/oniony/TMSU.git
 
     Active development takes place on the 'master' branch. This branch is
     subject to build failures and breaking changes but will have the latest
     functionality and improvements:
 
-        $ git clone https://github.com/oniony/TMSU.git
+        git clone https://github.com/oniony/TMSU.git
 
-5. Make the project
+5. Build and install
 
-        $ cd tmsu
+    Unix like operating systems:
+
         $ make
-
-    This will compile to 'bin/tmsu' within the working directory.
-
-6. Install the project
-
         $ sudo make install
 
-    This will install TMSU to '/usr/bin/tmsu'.
+    This will build the binary and copy it to `/usr/bin`, aswell as installing
+    Zsh completion, a `mount` wrapper and the manual page. To adjust the paths
+    please edit the `Makefile`.
 
-    It will also install the Zsh completion to '/usr/share/zsh/site-functions'
-    and mount wrapper to '/usr/sbin'.
+    Microsoft Windows:
 
-    To change the paths used override the variables at the top of the Makefile.
+        > go build tmsu
+
+    This will build `tmsu.exe` to the working directory.
 
 - - -
 

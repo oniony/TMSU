@@ -115,9 +115,9 @@ func findDatabaseInPath() (string, error) {
 
 		switch {
 		case os.IsNotExist(err):
-		    if _path.IsRoot(path) {
-		        return "", nil
-            }
+			if _path.IsRoot(path) {
+				return "", nil
+			}
 
 			path = filepath.Dir(path)
 			continue

@@ -30,7 +30,7 @@ type FileSystemFile struct {
 }
 
 func IsRoot(path string) bool {
-    return filepath.Dir(path) == path
+	return filepath.Dir(path) == path
 }
 
 func Rel(path string) string {

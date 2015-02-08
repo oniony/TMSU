@@ -34,7 +34,7 @@ var MergeCommand = Command{
 
 func mergeExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("at least two tags two merge must be specified")
 	}
 
 	if err := store.Begin(); err != nil {

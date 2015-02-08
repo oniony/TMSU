@@ -34,9 +34,9 @@ var CopyCommand = Command{
 }
 
 func copyExec(store *storage.Storage, options Options, args []string) error {
-    if len(args) < 2 {
-        return fmt.Errorf("the tag to copy and at least one copy name must be specified")
-    }
+	if len(args) < 2 {
+		return fmt.Errorf("the tag to copy and at least one copy name must be specified")
+	}
 
 	sourceTagName := args[0]
 	destTagNames := args[1:]

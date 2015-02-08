@@ -49,10 +49,10 @@ func implyExec(store *storage.Storage, options Options, args []string) error {
 		return deleteImplications(store, args[0], args[1:])
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	switch len(args) {
 	case 0:

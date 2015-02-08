@@ -61,10 +61,10 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 func repairExec(store *storage.Storage, options Options, args []string) error {
 	pretend := options.HasOption("--pretend")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	if options.HasOption("--manual") {
 		fromPath := args[0]

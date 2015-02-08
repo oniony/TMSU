@@ -61,15 +61,15 @@ func Run() {
 	}
 
 	if err = processCommand(store, commandName, options, arguments); err != nil {
-	    if err != errBlank {
-	        log.Warn(err.Error())
-        }
+		if err != errBlank {
+			log.Warn(err.Error())
+		}
 
-        store.Close()
+		store.Close()
 		os.Exit(1)
-    }
+	}
 
-    store.Close()
+	store.Close()
 }
 
 // unexported
@@ -114,11 +114,11 @@ func findDatabaseInPath() (string, error) {
 
 		switch {
 		case os.IsNotExist(err):
-            newPath := filepath.Dir(path)
-            if newPath == path {
-                return "", nil // must be at a root
-            }
-            path = newPath
+			newPath := filepath.Dir(path)
+			if newPath == path {
+				return "", nil // must be at a root
+			}
+			path = newPath
 
 			continue
 		case os.IsPermission(err):

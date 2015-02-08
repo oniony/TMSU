@@ -40,10 +40,10 @@ func valuesExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	if len(args) == 0 {
 		return listAllValues(store, showCount, onePerLine)

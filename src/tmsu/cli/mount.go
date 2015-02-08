@@ -56,10 +56,10 @@ func mountExec(store *storage.Storage, options Options, args []string) error {
 		mountOptions = options.Get("--options").Argument
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	switch len(args) {
 	case 0:

@@ -33,10 +33,10 @@ var StatsCommand = Command{
 func statsExec(store *storage.Storage, options Options, args []string) error {
 	usage := options.HasOption("--usage")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	tagCount, err := store.TagCount()
 	if err != nil {

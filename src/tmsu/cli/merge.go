@@ -37,10 +37,10 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 		return fmt.Errorf("too few arguments")
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	destTagName := args[len(args)-1]
 	destTag, err := store.TagByName(destTagName)

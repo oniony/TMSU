@@ -16,7 +16,7 @@
 package cli
 
 import (
-    "bufio"
+	"bufio"
 	"fmt"
 	"io"
 	"os"
@@ -37,7 +37,7 @@ var TagCommand = Command{
 		`tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...`,
 		"tmsu tag [OPTION]... --from=SOURCE FILE...",
 		"tmsu tag [OPTION]... --create TAG[=VALUE]...",
-	    "tmsu tag [OPTION[... -"},
+		"tmsu tag [OPTION[... -"},
 	Description: `Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
 
 Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names may not contain whitespace characters, the comparison operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
@@ -61,10 +61,10 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	switch {
 	case options.HasOption("--create"):
@@ -109,9 +109,9 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 			return err
 		}
 	case len(args) == 1 && args[0] == "-":
-        if err := readStandardInput(store, recursive, explicit); err != nil {
-            return err
-        }
+		if err := readStandardInput(store, recursive, explicit); err != nil {
+			return err
+		}
 	default:
 		if len(args) < 2 {
 			return fmt.Errorf("file to tag and tag(s) to apply must be specified")
@@ -340,38 +340,38 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, 
 }
 
 func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
-    reader := bufio.NewReader(os.Stdin)
+	reader := bufio.NewReader(os.Stdin)
 
-    wereErrors := false
+	wereErrors := false
 
-    for {
-        line, err := reader.ReadString('\n')
-        if err != nil {
-            if err == io.EOF {
-                break
-            }
+	for {
+		line, err := reader.ReadString('\n')
+		if err != nil {
+			if err == io.EOF {
+				break
+			}
 
-            return err
-        }
+			return err
+		}
 
-        words := text.Tokenize(line[0:len(line)-1])
+		words := text.Tokenize(line[0 : len(line)-1])
 
-        path := words[0]
-        tagArgs := words[1:]
+		path := words[0]
+		tagArgs := words[1:]
 
-        fmt.Println("path", path, "tags", tagArgs)
+		fmt.Println("path", path, "tags", tagArgs)
 
 		if err := tagPaths(store, tagArgs, []string{path}, explicit, recursive); err != nil {
-            log.Warnf("%v: %v", path, err)
-            wereErrors = true
+			log.Warnf("%v: %v", path, err)
+			wereErrors = true
 		}
-    }
+	}
 
-    if wereErrors {
-        return errBlank
-    }
+	if wereErrors {
+		return errBlank
+	}
 
-    return nil
+	return nil
 }
 
 func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {

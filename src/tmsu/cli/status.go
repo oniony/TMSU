@@ -88,10 +88,10 @@ func NewReport() *StatusReport {
 func statusExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	var report *StatusReport
 	var err error

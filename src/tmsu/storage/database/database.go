@@ -138,7 +138,7 @@ func (db *Database) Commit() error {
 	log.Info(2, "committing transaction")
 
 	if err := db.transaction.Commit(); err != nil {
-        db.transaction = nil
+		db.transaction = nil
 		return DatabaseTransactionError{db.Path, err}
 	}
 
@@ -156,11 +156,11 @@ func (db *Database) Rollback() error {
 	log.Info(2, "rolling back transaction")
 
 	if err := db.transaction.Rollback(); err != nil {
-	    db.transaction = nil
+		db.transaction = nil
 		return DatabaseTransactionError{db.Path, err}
 	}
 
-    db.transaction = nil
+	db.transaction = nil
 
 	return nil
 }

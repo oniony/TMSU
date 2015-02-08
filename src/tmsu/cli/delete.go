@@ -38,10 +38,10 @@ func deleteExec(store *storage.Storage, options Options, args []string) error {
 		return fmt.Errorf("no tags to delete specified")
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	wereErrors := false
 	for _, tagName := range args {

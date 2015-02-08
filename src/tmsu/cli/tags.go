@@ -59,10 +59,10 @@ func tagsExec(store *storage.Storage, options Options, args []string) error {
 		return err
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	if len(args) == 0 {
 		return listAllTags(store, showCount, onePerLine, colour)

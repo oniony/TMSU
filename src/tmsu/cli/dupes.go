@@ -41,14 +41,14 @@ var DupesCommand = Command{
 func dupesExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	switch len(args) {
 	case 0:
-        return findDuplicatesInDb(store)
+		return findDuplicatesInDb(store)
 	default:
 		return findDuplicatesOf(store, args, recursive)
 	}

@@ -81,10 +81,10 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 		}
 	}
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	queryText := strings.Join(args, " ")
 	return listFilesForQuery(store, queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)

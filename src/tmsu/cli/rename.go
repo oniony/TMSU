@@ -46,10 +46,10 @@ func renameExec(store *storage.Storage, options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-    if err := store.Begin(); err != nil {
-        return err
-    }
-    defer store.Commit()
+	if err := store.Begin(); err != nil {
+		return err
+	}
+	defer store.Commit()
 
 	sourceTag, err := store.TagByName(sourceTagName)
 	if err != nil {

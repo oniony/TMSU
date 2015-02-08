@@ -227,7 +227,7 @@ func printOptions(options []Option) {
 	}
 
 	for _, option := range options {
-		line := fmt.Sprintf("  %-2v %-*v  %v", option.ShortName, maxWidth-len(option.LongName), option.LongName, option.Description)
+		line := fmt.Sprintf("  %-2v %-*v  %v", option.ShortName, maxWidth, option.LongName, option.Description)
 		terminal.PrintWrapped(line)
 	}
 }

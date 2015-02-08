@@ -29,6 +29,10 @@ type FileSystemFile struct {
 	IsDir bool
 }
 
+func IsRoot(path string) bool {
+    return filepath.Dir(path) == path
+}
+
 func Rel(path string) string {
 	workingDirectory, err := os.Getwd()
 	if err != nil {

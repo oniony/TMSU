@@ -21,6 +21,7 @@ import (
 	"os/user"
 	"path/filepath"
 	"tmsu/common/log"
+	_path "tmsu/common/path"
 	"tmsu/storage"
 )
 
@@ -114,12 +115,11 @@ func findDatabaseInPath() (string, error) {
 
 		switch {
 		case os.IsNotExist(err):
-			newPath := filepath.Dir(path)
-			if newPath == path {
-				return "", nil // must be at a root
-			}
-			path = newPath
+		    if _path.IsRoot(path) {
+		        return "", nil
+            }
 
+			path = filepath.Dir(path)
 			continue
 		case os.IsPermission(err):
 			return "", nil

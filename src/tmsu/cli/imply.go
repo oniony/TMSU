@@ -43,7 +43,7 @@ The 'tags' subcommand can be used to identify which tags applied to a file are i
 func implyExec(store *storage.Storage, options Options, args []string) error {
 	if options.HasOption("--delete") {
 		if len(args) < 2 {
-			return fmt.Errorf("implying and implied tag(s) must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		return deleteImplications(store, args[0], args[1:])

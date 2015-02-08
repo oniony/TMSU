@@ -36,7 +36,7 @@ Attempting to rename a tag with a new name for which a tag already exists will r
 
 func renameExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
-		return fmt.Errorf("tag to rename and new name must both be specified")
+		return fmt.Errorf("too few arguments")
 	}
 
 	if len(args) > 2 {

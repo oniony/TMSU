@@ -35,7 +35,7 @@ var DeleteCommand = Command{
 
 func deleteExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) == 0 {
-		return fmt.Errorf("no tags to delete specified")
+		return fmt.Errorf("too few arguments")
 	}
 
 	if err := store.Begin(); err != nil {

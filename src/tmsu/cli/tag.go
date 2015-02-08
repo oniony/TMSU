@@ -69,7 +69,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 	switch {
 	case options.HasOption("--create"):
 		if len(args) == 0 {
-			return fmt.Errorf("set of tags to create must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		if err := createTags(store, args); err != nil {
@@ -77,17 +77,17 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 		}
 	case options.HasOption("--tags"):
 		if len(args) < 1 {
-			return fmt.Errorf("files to tag must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		tagArgs := strings.Fields(options.Get("--tags").Argument)
 		if len(tagArgs) == 0 {
-			return fmt.Errorf("set of tags to apply must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		paths := args
 		if len(paths) < 1 {
-			return fmt.Errorf("at least one file to tag must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		if err := tagPaths(store, tagArgs, paths, explicit, recursive); err != nil {
@@ -95,7 +95,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 		}
 	case options.HasOption("--from"):
 		if len(args) < 1 {
-			return fmt.Errorf("files to tag must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		fromPath, err := filepath.Abs(options.Get("--from").Argument)
@@ -114,7 +114,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 		}
 	default:
 		if len(args) < 2 {
-			return fmt.Errorf("file to tag and tag(s) to apply must be specified")
+			return fmt.Errorf("too few arguments")
 		}
 
 		paths := args[0:1]
@@ -356,10 +356,13 @@ func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
 
 		words := text.Tokenize(line[0 : len(line)-1])
 
+        if len(words) < 2 {
+            log.Warnf("too few arguments")
+            wereErrors = true
+        }
+
 		path := words[0]
 		tagArgs := words[1:]
-
-		fmt.Println("path", path, "tags", tagArgs)
 
 		if err := tagPaths(store, tagArgs, []string{path}, explicit, recursive); err != nil {
 			log.Warnf("%v: %v", path, err)

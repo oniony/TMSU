@@ -43,7 +43,7 @@ func unmountExec(store *storage.Storage, options Options, args []string) error {
 	}
 
 	if len(args) < 1 {
-		return fmt.Errorf("path to unmount must be specified")
+		return fmt.Errorf("too few arguments")
 	}
 
 	return unmount(args[0])

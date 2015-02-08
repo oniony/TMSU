@@ -42,7 +42,7 @@ var UntagCommand = Command{
 
 func untagExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 1 {
-		return fmt.Errorf("no arguments specified")
+		return fmt.Errorf("too few arguments")
 	}
 
 	recursive := options.HasOption("--recursive")

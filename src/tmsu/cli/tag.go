@@ -356,10 +356,11 @@ func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
 
 		words := text.Tokenize(line[0 : len(line)-1])
 
-        if len(words) < 2 {
-            log.Warnf("too few arguments")
-            wereErrors = true
-        }
+		if len(words) < 2 {
+			log.Warnf("too few arguments")
+			wereErrors = true
+			continue
+		}
 
 		path := words[0]
 		tagArgs := words[1:]

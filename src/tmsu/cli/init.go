@@ -50,6 +50,11 @@ func initExec(store *storage.Storage, options Options, args []string) error {
 		paths = []string{workingDirectory}
 	}
 
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	wereErrors := false
 	for _, path := range paths {
 		if err := initializeDatabase(path); err != nil {

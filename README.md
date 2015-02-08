@@ -123,7 +123,8 @@ v0.5.0 (in development)
   * It is now possible to tag a broken symbolic link: instead of an error this
     will now be reported as a warning.
   * It is now possible to remove tags with values via the VFS.
-  * Subcommands can be read from standard input by passing an argument of '-'.
+  * 'tag' subcommand can tag multiple files with different tags by reading from
+    standard input by passing an argument of '-'.
   * TMSU will now automatically use a local database in .tmsu/db in working
     directory or any parent. The new 'init' subcommand allows a new local
     database to be initialized. See [Switching Databases](https://github.com/oniony/TMSU/wiki/Switching%20Databases).

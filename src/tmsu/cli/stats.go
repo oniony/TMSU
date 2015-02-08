@@ -33,6 +33,11 @@ var StatsCommand = Command{
 func statsExec(store *storage.Storage, options Options, args []string) error {
 	usage := options.HasOption("--usage")
 
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	tagCount, err := store.TagCount()
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag count: %v", err)

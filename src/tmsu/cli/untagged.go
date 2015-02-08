@@ -49,6 +49,11 @@ func untaggedExec(store *storage.Storage, options Options, args []string) error 
 		}
 	}
 
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	if err := findUntagged(store, paths, recursive); err != nil {
 		return err
 	}

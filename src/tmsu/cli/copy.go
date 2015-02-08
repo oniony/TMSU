@@ -37,6 +37,11 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagNames := args[1:]
 
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	sourceTag, err := store.Db.TagByName(sourceTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)

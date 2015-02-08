@@ -157,7 +157,7 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	switch name {
 	case databaseFilename:
@@ -216,7 +216,7 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	switch path[0] {
 	case tagsDir:
@@ -276,7 +276,7 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	switch name {
 	case "":
@@ -305,7 +305,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	if name == ".database" {
 		return vfs.readDatabaseFileLink()
@@ -334,7 +334,7 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	oldPath := vfs.splitPath(oldName)
 	newPath := vfs.splitPath(newName)
@@ -376,7 +376,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	path := vfs.splitPath(name)
 
@@ -474,7 +474,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Rollback()
+	defer vfs.store.Commit()
 
 	fileId := vfs.parseFileId(name)
 	if fileId == 0 {

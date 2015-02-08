@@ -123,9 +123,6 @@ func summary(colour bool) {
 
 	fmt.Println()
 	terminal.PrintWrapped("Specify subcommand name for detailed help on a particular subcommand, e.g. tmsu help files")
-
-	fmt.Println()
-	terminal.PrintWrapped("To read subcommands from standard input specify - as an argument.")
 }
 
 func listCommands() {

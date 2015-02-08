@@ -47,6 +47,11 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 
 	recursive := options.HasOption("--recursive")
 
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	if options.HasOption("--all") {
 		if len(args) < 1 {
 			return fmt.Errorf("files to untag must be specified")

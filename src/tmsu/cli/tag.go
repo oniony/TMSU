@@ -16,13 +16,16 @@
 package cli
 
 import (
+    "bufio"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
+	"tmsu/common/text"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -33,12 +36,15 @@ var TagCommand = Command{
 	Usages: []string{"tmsu tag [OPTION]... FILE TAG[=VALUE]...",
 		`tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...`,
 		"tmsu tag [OPTION]... --from=SOURCE FILE...",
-		"tmsu tag [OPTION]... --create TAG[=VALUE]..."},
+		"tmsu tag [OPTION]... --create TAG[=VALUE]...",
+	    "tmsu tag [OPTION[... -"},
 	Description: `Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
 
 Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names may not contain whitespace characters, the comparison operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
 
-Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.`,
+Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
+
+If a single argument of - is passed, TMSU will read lines from standard input in the format 'FILE TAG[=VALUE]...'.`,
 	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
@@ -54,6 +60,11 @@ Optionally tags applied to files may be attributed with a VALUE using the TAG=VA
 func tagExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
+
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
 
 	switch {
 	case options.HasOption("--create"):
@@ -97,9 +108,13 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 		if err := tagFrom(store, fromPath, paths, explicit, recursive); err != nil {
 			return err
 		}
+	case len(args) == 1 && args[0] == "-":
+        if err := readStandardInput(store, recursive, explicit); err != nil {
+            return err
+        }
 	default:
 		if len(args) < 2 {
-			return fmt.Errorf("file to tag and tags to apply must be specified")
+			return fmt.Errorf("file to tag and tag(s) to apply must be specified")
 		}
 
 		paths := args[0:1]
@@ -322,6 +337,41 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, 
 	}
 
 	return nil
+}
+
+func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
+    reader := bufio.NewReader(os.Stdin)
+
+    wereErrors := false
+
+    for {
+        line, err := reader.ReadString('\n')
+        if err != nil {
+            if err == io.EOF {
+                break
+            }
+
+            return err
+        }
+
+        words := text.Tokenize(line[0:len(line)-1])
+
+        path := words[0]
+        tagArgs := words[1:]
+
+        fmt.Println("path", path, "tags", tagArgs)
+
+		if err := tagPaths(store, tagArgs, []string{path}, explicit, recursive); err != nil {
+            log.Warnf("%v: %v", path, err)
+            wereErrors = true
+		}
+    }
+
+    if wereErrors {
+        return errBlank
+    }
+
+    return nil
 }
 
 func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {

@@ -16,14 +16,11 @@
 package cli
 
 import (
-	"bufio"
 	"fmt"
-	"io"
 	"os"
 	"os/user"
 	"path/filepath"
 	"tmsu/common/log"
-	"tmsu/common/text"
 	"tmsu/storage"
 )
 
@@ -63,29 +60,16 @@ func Run() {
 		log.Fatalf("could not open storage: %v", err)
 	}
 
-	if err := store.Begin(); err != nil {
-		log.Fatalf("could not begin transaction: %v", err)
-	}
+	if err = processCommand(store, commandName, options, arguments); err != nil {
+	    if err != errBlank {
+	        log.Warn(err.Error())
+        }
 
-	if commandName == "-" {
-		err = readCommandsFromStdin(store)
-	} else {
-		err = processCommand(store, commandName, options, arguments)
-	}
-
-	if err := store.Commit(); err != nil {
-		log.Fatalf("could not commit transaction: %v", err)
-	}
-
-	store.Close()
-
-	if err != nil {
-		if err != errBlank {
-			log.Warn(err.Error())
-		}
-
+        store.Close()
 		os.Exit(1)
-	}
+    }
+
+    store.Close()
 }
 
 // unexported
@@ -145,47 +129,10 @@ func findDatabaseInPath() (string, error) {
 	}
 }
 
-func readCommandsFromStdin(store *storage.Storage) error {
-	reader := bufio.NewReader(os.Stdin)
-
-	wereErrors := false
-	for {
-		line, _, err := reader.ReadLine()
-		if err != nil {
-			if err == io.EOF {
-				if wereErrors {
-					return errBlank
-				} else {
-					return nil
-				}
-			}
-
-			log.Fatal(err)
-		}
-
-		parser := NewOptionParser(globalOptions, commands)
-		words := text.Tokenize(string(line))
-		commandName, options, arguments, err := parser.Parse(words...)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		if err := processCommand(store, commandName, options, arguments); err != nil {
-			if err != nil {
-				if err == errBlank {
-					wereErrors = true
-				} else {
-					return err
-				}
-			}
-		}
-	}
-}
-
 func processCommand(store *storage.Storage, commandName string, options Options, arguments []string) error {
 	command := findCommand(commands, commandName)
 	if command == nil {
-		log.Fatalf("invalid command '%v'.", commandName)
+		return fmt.Errorf("invalid command '%v'.", commandName)
 	}
 
 	if err := command.Exec(store, options, arguments); err != nil {

@@ -37,6 +37,11 @@ If a VALUE is specified then the setting is updated.`,
 }
 
 func configExec(store *storage.Storage, options Options, args []string) error {
+    if err := store.Begin(); err != nil {
+        return err
+    }
+    defer store.Commit()
+
 	colour, err := useColour(options)
 	if err != nil {
 		return err

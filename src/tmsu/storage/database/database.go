@@ -42,8 +42,8 @@ func OpenAt(path string) (*Database, error) {
 		if os.IsNotExist(err) {
 			log.Warnf("creating database at '%v'.", path)
 
-            dir := filepath.Dir(path)
-            os.Mkdir(dir, 0755)
+			dir := filepath.Dir(path)
+			os.Mkdir(dir, 0755)
 		} else {
 			log.Warnf("could not stat database: %v", err)
 		}

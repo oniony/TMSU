@@ -133,7 +133,7 @@ v0.5.0
     shared or archived whilst preserving the tagging information. Existing
     absolute paths can be converted by running a manual repair:
 
-        tmsu repair --mnaual / /
+        tmsu repair --manual / /
 
   * Added 'config' subcommand to view and amend settings.
   * The 'help' subcommand now wraps textual output to fit the terminal.

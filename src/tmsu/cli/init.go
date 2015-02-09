@@ -75,12 +75,6 @@ func initExec(store *storage.Storage, options Options, args []string) error {
 func initializeDatabase(path string) error {
 	tmsuPath := filepath.Join(path, ".tmsu")
 
-	if err := os.Mkdir(tmsuPath, 0755); err != nil {
-		if !os.IsExist(err) {
-			return fmt.Errorf("could not create .tmsu directory: %v", err)
-		}
-	}
-
 	dbPath := filepath.Join(tmsuPath, "db")
 
 	store, err := storage.OpenAt(dbPath)

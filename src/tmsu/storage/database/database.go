@@ -21,6 +21,7 @@ import (
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
+	"path/filepath"
 	"tmsu/common/log"
 )
 
@@ -40,6 +41,9 @@ func OpenAt(path string) (*Database, error) {
 	if err != nil {
 		if os.IsNotExist(err) {
 			log.Warnf("creating database at '%v'.", path)
+
+            dir := filepath.Dir(path)
+            os.Mkdir(dir, 0755)
 		} else {
 			log.Warnf("could not stat database: %v", err)
 		}

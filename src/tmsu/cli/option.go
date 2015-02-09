@@ -105,6 +105,11 @@ func (parser *OptionParser) Parse(args ...string) (commandName string, options O
 					if len(parts) == 2 {
 						option.Argument = parts[1]
 					} else {
+					    if len(args) < index+2 {
+					        err = fmt.Errorf("missing argument for option '%v'", optionName)
+					        return
+                        }
+
 						option.Argument = args[index+1]
 						index++
 					}

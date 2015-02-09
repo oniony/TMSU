@@ -91,6 +91,12 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.5.1
+------
+
+  * Fixed bug with database initialization when .tmsu directory does not
+    already exist.
+
 v0.5.0
 ------
 

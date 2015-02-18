@@ -31,8 +31,8 @@ func (storage *Storage) FileCount() (uint, error) {
 }
 
 // The complete set of tracked files.
-func (storage *Storage) Files() (entities.Files, error) {
-	files, err := storage.Db.Files()
+func (storage *Storage) Files(sort string) (entities.Files, error) {
+	files, err := storage.Db.Files(sort)
 	storage.absPaths(files)
 
 	return files, err
@@ -118,24 +118,6 @@ func (storage *Storage) FileCountWithTags(tagNames []string, path string, explic
 	return storage.Db.QueryFileCount(expression, relPath)
 }
 
-// Retrieves the set of files with the specified tags and matching the specified path.
-func (storage *Storage) FilesWithTags(tagNames []string, path string, explicitOnly bool) (entities.Files, error) {
-	expression := query.HasAll(tagNames)
-
-	if !explicitOnly {
-		var err error
-		expression, err = storage.addImpliedTags(expression)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	relPath := storage.relPath(path)
-	files, err := storage.Db.QueryFiles(expression, relPath)
-	storage.absPaths(files)
-	return files, err
-}
-
 // Retrieves the count of files that match the specified query and matching the specified path.
 func (storage *Storage) QueryFileCount(expression query.Expression, path string, explicitOnly bool) (uint, error) {
 	if !explicitOnly {
@@ -151,7 +133,7 @@ func (storage *Storage) QueryFileCount(expression query.Expression, path string,
 }
 
 // Retrieves the set of files that match the specified query.
-func (storage *Storage) QueryFiles(expression query.Expression, path string, explicitOnly bool) (entities.Files, error) {
+func (storage *Storage) QueryFiles(expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
 	if !explicitOnly {
 		var err error
 		expression, err = storage.addImpliedTags(expression)
@@ -161,7 +143,7 @@ func (storage *Storage) QueryFiles(expression query.Expression, path string, exp
 	}
 
 	relPath := storage.relPath(path)
-	files, err := storage.Db.QueryFiles(expression, relPath)
+	files, err := storage.Db.QueryFiles(expression, relPath, sort)
 	storage.absPaths(files)
 	return files, err
 }

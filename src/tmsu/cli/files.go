@@ -18,7 +18,6 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
-	"sort"
 	"strings"
 	"tmsu/common/log"
 	"tmsu/common/path"
@@ -51,24 +50,26 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		`$ tmsu files --path=/home/bob music  # tagged 'music' under /home/bob`},
 	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
-		{"--top", "-t", "list only the top-most matching items (exclude files under matching directories)", false, ""},
-		{"--leaf", "-l", "list only the leaf items (files and directories without tagged contents)", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
-		{"--explicit", "-e", "list only explicitly tagged files", false, ""}},
+		{"--explicit", "-e", "list only explicitly tagged files", false, ""},
+	    {"--sort", "-s", "sort output: none, name, size, time", true, ""}},
 	Exec: filesExec,
 }
 
 func filesExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
-	topOnly := options.HasOption("--top")
-	leafOnly := options.HasOption("--leaf")
 	print0 := options.HasOption("--print0")
 	showCount := options.HasOption("--count")
 	hasPath := options.HasOption("--path")
 	explicitOnly := options.HasOption("--explicit")
+
+    sort := "name"
+    if options.HasOption("--sort") {
+        sort = options.Get("--sort").Argument
+    }
 
 	absPath := ""
 	if hasPath {
@@ -87,12 +88,12 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 	defer store.Commit()
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(store, queryText, absPath, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly)
+	return listFilesForQuery(store, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, sort)
 }
 
 // unexported
 
-func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount, explicitOnly bool) error {
+func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) error {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
@@ -120,7 +121,7 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 
 	log.Info(2, "querying database")
 
-	files, err := store.QueryFiles(expression, path, explicitOnly)
+	files, err := store.QueryFiles(expression, path, explicitOnly, sort)
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
 			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)")
@@ -129,46 +130,32 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 		}
 	}
 
-	if err = listFiles(files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount); err != nil {
+	if err = listFiles(files, dirOnly, fileOnly, print0, showCount); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func listFiles(files entities.Files, dirOnly, fileOnly, topOnly, leafOnly, print0, showCount bool) error {
-	tree := path.NewTree()
-	for _, file := range files {
-		tree.Add(file.Path(), file.IsDir)
-	}
+func listFiles(files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {
+    relPaths := make([]string, 0, len(files))
+    for _, file := range files {
+        if fileOnly && file.IsDir {
+            continue
+        }
+        if dirOnly && !file.IsDir {
+            continue
+        }
 
-	if topOnly {
-		tree = tree.TopLevel()
-	}
+        absPath := file.Path()
+        relPath := path.Rel(absPath)
 
-	if leafOnly {
-		tree = tree.Leaves()
-	}
-
-	if fileOnly {
-		tree = tree.Files()
-	}
-
-	if dirOnly {
-		tree = tree.Directories()
-	}
-
-	absPaths := tree.Paths()
+        relPaths = append(relPaths, relPath)
+    }
 
 	if showCount {
-		fmt.Println(len(absPaths))
+		fmt.Println(len(relPaths))
 	} else {
-		relPaths := make([]string, len(absPaths))
-		for index, absPath := range absPaths {
-			relPaths[index] = path.Rel(absPath)
-		}
-		sort.Strings(relPaths)
-
 		for _, relPath := range relPaths {
 			if print0 {
 				fmt.Printf("%v\000", relPath)

@@ -41,12 +41,14 @@ func (db *Database) FileCount() (uint, error) {
 }
 
 // The complete set of tracked files.
-func (db *Database) Files() (entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-	        FROM file
-	        ORDER BY directory || '/' || name`
+func (db *Database) Files(sort string) (entities.Files, error) {
+	builder := NewBuilder()
+	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+                       FROM file `)
 
-	rows, err := db.ExecQuery(sql)
+    buildSort(sort, builder)
+
+	rows, err := db.ExecQuery(builder.Sql)
 	if err != nil {
 		return nil, err
 	}
@@ -167,8 +169,8 @@ func (db *Database) QueryFileCount(expression query.Expression, path string) (ui
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func (db *Database) QueryFiles(expression query.Expression, path string) (entities.Files, error) {
-	builder := buildQuery(expression, path)
+func (db *Database) QueryFiles(expression query.Expression, path, sort string) (entities.Files, error) {
+	builder := buildQuery(expression, path, sort)
 	rows, err := db.ExecQuery(builder.Sql, builder.Params...)
 	if err != nil {
 		return nil, err
@@ -386,26 +388,23 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 
 func buildCountQuery(expression query.Expression, path string) *SqlBuilder {
 	builder := NewBuilder()
-	pBuilder := &builder
 
-	pBuilder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
-	buildQueryBranch(expression, pBuilder)
-	buildPathClause(path, pBuilder)
+	builder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
+	buildQueryBranch(expression, builder)
+	buildPathClause(path, builder)
 
-	return pBuilder
+	return builder
 }
 
-func buildQuery(expression query.Expression, path string) *SqlBuilder {
+func buildQuery(expression query.Expression, path, sort string) *SqlBuilder {
 	builder := NewBuilder()
-	pBuilder := &builder
 
-	pBuilder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
-	buildQueryBranch(expression, pBuilder)
-	buildPathClause(path, pBuilder)
+	builder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
+	buildQueryBranch(expression, builder)
+	buildPathClause(path, builder)
+	buildSort(sort, builder)
 
-	pBuilder.AppendSql("ORDER BY directory || '/' || name")
-
-	return pBuilder
+	return builder
 }
 
 func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
@@ -478,4 +477,19 @@ func buildPathClause(path string, builder *SqlBuilder) {
 
 		//builder.AppendSql("AND (directory = '" + path + "' OR directory LIKE '" + filepath.Join(path, "%") + "'x OR (directory = '" + dir + "' AND name = '" + name + "'))\n")
 	}
+}
+
+func buildSort(sort string, builder *SqlBuilder) {
+    switch sort {
+    case "none":
+        // do nowt
+    case "id":
+        builder.AppendSql("ORDER BY id")
+    case "name":
+        builder.AppendSql("ORDER BY directory || '/' || name")
+    case "time":
+        builder.AppendSql("ORDER BY mod_time, directory || '/' || name")
+    case "size":
+        builder.AppendSql("ORDER BY size, directory || '/' || name")
+    }
 }

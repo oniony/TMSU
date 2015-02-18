@@ -118,7 +118,7 @@ func statusDatabase(store *storage.Storage, dirOnly bool) (*StatusReport, error)
 
 	log.Info(2, "retrieving all files from database.")
 
-	files, err := store.Files()
+	files, err := store.Files("name")
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve files: %v", err)
 	}

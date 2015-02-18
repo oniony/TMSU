@@ -27,8 +27,9 @@ type SqlBuilder struct {
 	needsComma bool
 }
 
-func NewBuilder() SqlBuilder {
-	return SqlBuilder{"", make([]interface{}, 0), 1, false}
+func NewBuilder() *SqlBuilder {
+    builder := SqlBuilder{"", make([]interface{}, 0), 1, false}
+    return &builder
 }
 
 func (builder *SqlBuilder) AppendSql(sql string) {

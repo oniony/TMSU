@@ -46,7 +46,7 @@ func (db *Database) Files(sort string) (entities.Files, error) {
 	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
                        FROM file `)
 
-    buildSort(sort, builder)
+	buildSort(sort, builder)
 
 	rows, err := db.ExecQuery(builder.Sql)
 	if err != nil {
@@ -480,16 +480,16 @@ func buildPathClause(path string, builder *SqlBuilder) {
 }
 
 func buildSort(sort string, builder *SqlBuilder) {
-    switch sort {
-    case "none":
-        // do nowt
-    case "id":
-        builder.AppendSql("ORDER BY id")
-    case "name":
-        builder.AppendSql("ORDER BY directory || '/' || name")
-    case "time":
-        builder.AppendSql("ORDER BY mod_time, directory || '/' || name")
-    case "size":
-        builder.AppendSql("ORDER BY size, directory || '/' || name")
-    }
+	switch sort {
+	case "none":
+		// do nowt
+	case "id":
+		builder.AppendSql("ORDER BY id")
+	case "name":
+		builder.AppendSql("ORDER BY directory || '/' || name")
+	case "time":
+		builder.AppendSql("ORDER BY mod_time, directory || '/' || name")
+	case "size":
+		builder.AppendSql("ORDER BY size, directory || '/' || name")
+	}
 }

@@ -28,8 +28,8 @@ type SqlBuilder struct {
 }
 
 func NewBuilder() *SqlBuilder {
-    builder := SqlBuilder{"", make([]interface{}, 0), 1, false}
-    return &builder
+	builder := SqlBuilder{"", make([]interface{}, 0), 1, false}
+	return &builder
 }
 
 func (builder *SqlBuilder) AppendSql(sql string) {

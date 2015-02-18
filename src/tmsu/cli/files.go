@@ -54,7 +54,7 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""},
-	    {"--sort", "-s", "sort output: none, name, size, time", true, ""}},
+		{"--sort", "-s", "sort output: none, name, size, time", true, ""}},
 	Exec: filesExec,
 }
 
@@ -66,10 +66,10 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 	hasPath := options.HasOption("--path")
 	explicitOnly := options.HasOption("--explicit")
 
-    sort := "name"
-    if options.HasOption("--sort") {
-        sort = options.Get("--sort").Argument
-    }
+	sort := "name"
+	if options.HasOption("--sort") {
+		sort = options.Get("--sort").Argument
+	}
 
 	absPath := ""
 	if hasPath {
@@ -138,20 +138,20 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 }
 
 func listFiles(files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {
-    relPaths := make([]string, 0, len(files))
-    for _, file := range files {
-        if fileOnly && file.IsDir {
-            continue
-        }
-        if dirOnly && !file.IsDir {
-            continue
-        }
+	relPaths := make([]string, 0, len(files))
+	for _, file := range files {
+		if fileOnly && file.IsDir {
+			continue
+		}
+		if dirOnly && !file.IsDir {
+			continue
+		}
 
-        absPath := file.Path()
-        relPath := path.Rel(absPath)
+		absPath := file.Path()
+		relPath := path.Rel(absPath)
 
-        relPaths = append(relPaths, relPath)
-    }
+		relPaths = append(relPaths, relPath)
+	}
 
 	if showCount {
 		fmt.Println(len(relPaths))

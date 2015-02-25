@@ -550,19 +550,19 @@ func (vfs FuseVfs) splitPath(path string) []string {
 func (vfs FuseVfs) parseFileId(name string) entities.FileId {
 	parts := strings.Split(name, ".")
 
-    var index int
+	var index int
 	switch len(parts) {
 	case 1:
-	    return 0
-    case 2:
-        index = 1
-    default:
-        index = len(parts)-2
-    }
+		return 0
+	case 2:
+		index = 1
+	default:
+		index = len(parts) - 2
+	}
 
 	id, err := asciiToFileId(parts[index])
 	if err != nil {
-        return 0
+		return 0
 	}
 
 	return entities.FileId(id)

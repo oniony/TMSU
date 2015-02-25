@@ -1,5 +1,5 @@
 bin         Supporting binaries.
 db-upgrade  Database upgrade scripts.
 ebnf        Extended Backus-Naur Form file for the TMSU query language.
-man         Man page
+man         Man page.
 zsh         Command completion for the shell Zsh.

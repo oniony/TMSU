@@ -1,3 +1,1 @@
-mount.tmsu: Helper script so that the TMSU virtual filesystem can be mounted
-            via the *nix 'mount 'command.
-
+mount.tmsu: Helper script so that the TMSU virtual filesystem can be mounted via the Unix 'mount' command.

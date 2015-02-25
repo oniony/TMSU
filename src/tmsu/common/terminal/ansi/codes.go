@@ -30,3 +30,18 @@ var BlueCode string = "\x1b[34m"
 var MagentaCode string = "\x1b[35m"
 var CyanCode string = "\x1b[36m"
 var WhiteCode string = "\x1b[37m"
+
+var CodeByName = map[string]string {
+    "reset": ResetCode,
+    "bold": BoldCode,
+    "italic": ItalicCode,
+    "blink": BlinkCode,
+    "invert": InvertCode,
+    "red": RedCode,
+    "green": GreenCode,
+    "yellow": YellowCode,
+    "blue": BlueCode,
+    "magenta": MagentaCode,
+    "cyan": CyanCode,
+    "white": WhiteCode,
+}

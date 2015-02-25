@@ -36,8 +36,8 @@ var TagsCommand = Command{
 When color is turned on, tags are shown in the following colors:
 
   Normal  An explicitly applied (regular) tag
-  $CYANCyan$RESET    Tag implied by other tags
-  $YELLOWYellow$RESET  Tag is both explicitly applied and implied by other tags
+  'Cyan'    Tag implied by other tags
+  'Yellow'  Tag is both explicitly applied and implied by other tags
 
 See the 'imply' subcommand for more information on implied tags.`,
 	Examples: []string{"$ tmsu tags\nmp3  music  opera",

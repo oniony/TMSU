@@ -18,6 +18,7 @@ package cli
 import (
 	"fmt"
 	"math"
+	"regexp"
 	"sort"
 	"strings"
 	"tmsu/common/log"
@@ -36,6 +37,7 @@ var HelpCommand = Command{
 }
 
 var helpCommands map[string]*Command
+var colorizeRegexp = regexp.MustCompile(`'\S+'`)
 
 func helpExec(store *storage.Storage, options Options, args []string) error {
 	var colour bool
@@ -161,7 +163,7 @@ func describeCommand(commandName string, colour bool) {
 
 	// description
 	fmt.Println()
-	description := ansi.ParseMarkup(command.Description)
+	description := colorize(command.Description)
 
 	if !colour {
 		description = ansi.Strip(description)
@@ -230,4 +232,14 @@ func printOptions(options []Option) {
 		line := fmt.Sprintf("  %-2v %-*v  %v", option.ShortName, maxWidth, option.LongName, option.Description)
 		terminal.PrintWrapped(line)
 	}
+}
+
+func colorize(text string) string {
+    replacer := func(match []byte) []byte {
+        colour := string(match)[1:len(match)-1]
+        code := ansi.CodeByName[strings.ToLower(colour)]
+        return []byte(code + colour + ansi.ResetCode)
+    }
+
+    return string(colorizeRegexp.ReplaceAllFunc([]byte(text), replacer))
 }

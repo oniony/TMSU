@@ -7,8 +7,7 @@ a downloaded binary then they can be safely ignored.
 1. Installing Go
 
     TMSU is written in the Go programming language. To compile from source you must
-    first install Go and the packages that TMSU depends upon. You can get that from
-    the Go website:
+    first install Go:
 
     * <http://www.golang.org/>
 
@@ -18,10 +17,10 @@ a downloaded binary then they can be safely ignored.
 
 2. Set up the Go path
 
-    Go, as of verison 1.1, requires the GOPATH environment variable be set for the
-    'go get' command to function. You will need to set up a path for Go packages to
-    live if you do not already have one. Please see the following page for details
-    on how to set this up:
+    Go, as of verison 1.1, requires the `GOPATH` environment variable be set for
+    the 'go get' command to function. You will need to set up a path for Go
+    packages to live if you do not already have one. Please see the following
+    page for details on how to set this up:
 
     * <http://golang.org/cmd/go/#hdr-GOPATH_environment_variable>
 
@@ -54,8 +53,8 @@ a downloaded binary then they can be safely ignored.
 
     Unix like operating systems:
 
-        $ make
-        $ sudo make install
+        make
+        sudo make install
 
     This will build the binary and copy it to `/usr/bin`, aswell as installing
     Zsh completion, a `mount` wrapper and the manual page. To adjust the paths
@@ -63,7 +62,7 @@ a downloaded binary then they can be safely ignored.
 
     Microsoft Windows:
 
-        > go build tmsu
+        go build tmsu
 
     This will build `tmsu.exe` to the working directory.
 

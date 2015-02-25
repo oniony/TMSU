@@ -4,7 +4,7 @@ OR_EXP   = AND_EXP | AND_EXP 'or' AND_EXP
 
 AND_EXP  = NOT_EXP | NOT_EXP 'and' NOT_EXP
 
-NOT_EXP  = EQUALS_EXP | 'not' NOT_EXP | '(' OR_EXP ')'
+NOT_EXP  = COMP_EXP | 'not' NOT_EXP | '(' OR_EXP ')'
 
 COMP_EXP = TAG_EXP |
            TAG_EXP '=' VALUE_EXP | TAG_EXP '==' VALUE_EXP | TAG_EXP 'eq' VALUE_EXP |

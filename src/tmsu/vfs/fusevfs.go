@@ -549,18 +549,20 @@ func (vfs FuseVfs) splitPath(path string) []string {
 
 func (vfs FuseVfs) parseFileId(name string) entities.FileId {
 	parts := strings.Split(name, ".")
-	count := len(parts)
 
-	if count == 1 {
-		return 0
-	}
+    var index int
+	switch len(parts) {
+	case 1:
+	    return 0
+    case 2:
+        index = 1
+    default:
+        index = len(parts)-2
+    }
 
-	id, err := asciiToFileId(parts[count-2])
+	id, err := asciiToFileId(parts[index])
 	if err != nil {
-		id, err = asciiToFileId(parts[count-1])
-		if err != nil {
-			return 0
-		}
+        return 0
 	}
 
 	return entities.FileId(id)
@@ -979,7 +981,7 @@ func pathToExpression(path []string) query.Expression {
 
 		if element[0] == '=' {
 			tagName := path[index-1]
-			valueName := stone[1:len(stone)]
+			valueName := element[1:len(element)]
 
 			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {

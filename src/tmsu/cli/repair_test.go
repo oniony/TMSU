@@ -55,7 +55,7 @@ func TestRepairMovedFile(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -102,7 +102,7 @@ func TestRepairModifiedFile(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}

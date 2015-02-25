@@ -133,7 +133,7 @@ func TestMultipleUntag(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -195,7 +195,7 @@ func TestUntagMultipleFiles(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -257,7 +257,7 @@ func TestUntagAll(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}

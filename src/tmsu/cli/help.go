@@ -235,11 +235,11 @@ func printOptions(options []Option) {
 }
 
 func colorize(text string) string {
-    replacer := func(match []byte) []byte {
-        colour := string(match)[1:len(match)-1]
-        code := ansi.CodeByName[strings.ToLower(colour)]
-        return []byte(code + colour + ansi.ResetCode)
-    }
+	replacer := func(match []byte) []byte {
+		colour := string(match)[1 : len(match)-1]
+		code := ansi.CodeByName[strings.ToLower(colour)]
+		return []byte(code + colour + ansi.ResetCode)
+	}
 
-    return string(colorizeRegexp.ReplaceAllFunc([]byte(text), replacer))
+	return string(colorizeRegexp.ReplaceAllFunc([]byte(text), replacer))
 }

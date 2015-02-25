@@ -46,7 +46,7 @@ func TestSingleTag(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -108,7 +108,7 @@ func TestMultipleTags(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -193,7 +193,7 @@ func TestTagMultipleFiles(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files()
+	files, err := store.Files("")
 	if err != nil {
 		test.Fatal(err)
 	}

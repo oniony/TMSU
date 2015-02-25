@@ -974,20 +974,20 @@ func (vfs FuseVfs) tagNamesForFiles(files entities.Files) ([]string, error) {
 func pathToExpression(path []string) query.Expression {
 	var expression query.Expression = query.EmptyExpression{}
 
-	for index, stone := range path {
-		var stoneExpression query.Expression
+	for index, element := range path {
+		var elementExpression query.Expression
 
-		if stone[0] == '=' {
+		if element[0] == '=' {
 			tagName := path[index-1]
 			valueName := stone[1:len(stone)]
 
-			stoneExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
+			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {
-			tagName := stone
-			stoneExpression = query.TagExpression{tagName}
+			tagName := element
+			elementExpression = query.TagExpression{tagName}
 		}
 
-		expression = query.AndExpression{expression, stoneExpression}
+		expression = query.AndExpression{expression, elementExpression}
 	}
 
 	return expression

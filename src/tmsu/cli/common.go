@@ -18,6 +18,8 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os"
+	"time"
 	"tmsu/common/terminal"
 	"tmsu/entities"
 )
@@ -48,4 +50,32 @@ func useColour(options Options) (bool, error) {
 	}
 
 	return false, fmt.Errorf("invalid argument '%v' for '--color'", when)
+}
+
+type emptyStat struct {
+	name string
+}
+
+func (es emptyStat) Name() string {
+	return es.name
+}
+
+func (emptyStat) Size() int64 {
+	return 0
+}
+
+func (emptyStat) Mode() os.FileMode {
+	return 0
+}
+
+func (emptyStat) ModTime() time.Time {
+	return time.Time{}
+}
+
+func (emptyStat) IsDir() bool {
+	return false
+}
+
+func (emptyStat) Sys() interface{} {
+	return nil
 }

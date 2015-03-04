@@ -53,13 +53,15 @@ If a single argument of - is passed, TMSU will read lines from standard input in
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
 		{"--create", "-c", "create tags without tagging any files", false, ""},
-		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""}},
+		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""},
+		{"--force", "-F", "create tags for non-existant or permissioned paths", false, ""}},
 	Exec: tagExec,
 }
 
 func tagExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
+	force := options.HasOption("--force")
 
 	if err := store.Begin(); err != nil {
 		return err
@@ -90,7 +92,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 			return fmt.Errorf("too few arguments")
 		}
 
-		if err := tagPaths(store, tagArgs, paths, explicit, recursive); err != nil {
+		if err := tagPaths(store, tagArgs, paths, explicit, recursive, force); err != nil {
 			return err
 		}
 	case options.HasOption("--from"):
@@ -105,11 +107,11 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 
 		paths := args
 
-		if err := tagFrom(store, fromPath, paths, explicit, recursive); err != nil {
+		if err := tagFrom(store, fromPath, paths, explicit, recursive, force); err != nil {
 			return err
 		}
 	case len(args) == 1 && args[0] == "-":
-		if err := readStandardInput(store, recursive, explicit); err != nil {
+		if err := readStandardInput(store, recursive, explicit, force); err != nil {
 			return err
 		}
 	default:
@@ -120,7 +122,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := tagPaths(store, tagArgs, paths, explicit, recursive); err != nil {
+		if err := tagPaths(store, tagArgs, paths, explicit, recursive, force); err != nil {
 			return err
 		}
 	}
@@ -156,7 +158,7 @@ func createTags(store *storage.Storage, tagNames []string) error {
 	return nil
 }
 
-func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursive bool) error {
+func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursive, force bool) error {
 	settings, err := store.Settings()
 	if err != nil {
 		return err
@@ -214,7 +216,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, force, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -235,7 +237,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 	return nil
 }
 
-func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, recursive bool) error {
+func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, recursive, force bool) error {
 	settings, err := store.Settings()
 	if err != nil {
 		return fmt.Errorf("could not retrieve settings: %v", err)
@@ -261,7 +263,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 
 	wereErrors := false
 	for _, path := range paths {
-		if err := tagPath(store, path, tagValuePairs, explicit, recursive, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
+		if err := tagPath(store, path, tagValuePairs, explicit, recursive, force, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
@@ -282,7 +284,7 @@ func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, 
 	return nil
 }
 
-func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit, recursive bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit, recursive, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -290,14 +292,14 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, 
 
 	stat, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			stat, err = os.Lstat(path)
-			if err != nil {
+		switch {
+		case os.IsNotExist(err), os.IsPermission(err):
+			if !force {
 				return err
+			} else {
+				stat = emptyStat{}
 			}
-
-			log.Warnf("%v: tagging broken symbolic link", path)
-		} else {
+		default:
 			return err
 		}
 	}
@@ -331,7 +333,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, 
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, path, tagValuePairs, explicit, fileFingerprintAlg, dirFingerprintAlg); err != nil {
+		if err = tagRecursively(store, path, tagValuePairs, explicit, force, fileFingerprintAlg, dirFingerprintAlg); err != nil {
 			return err
 		}
 	}
@@ -339,7 +341,7 @@ func tagPath(store *storage.Storage, path string, tagValuePairs []tagValuePair, 
 	return nil
 }
 
-func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
+func readStandardInput(store *storage.Storage, recursive, explicit, force bool) error {
 	reader := bufio.NewReader(os.Stdin)
 
 	wereErrors := false
@@ -365,7 +367,7 @@ func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
 		path := words[0]
 		tagArgs := words[1:]
 
-		if err := tagPaths(store, tagArgs, []string{path}, explicit, recursive); err != nil {
+		if err := tagPaths(store, tagArgs, []string{path}, explicit, recursive, force); err != nil {
 			log.Warnf("%v: %v", path, err)
 			wereErrors = true
 		}
@@ -378,7 +380,7 @@ func readStandardInput(store *storage.Storage, recursive, explicit bool) error {
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValuePair, explicit, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -393,7 +395,7 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValu
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
 
-		if err = tagPath(store, childPath, tagValuePairs, explicit, true, fileFingerprintAlg, dirFingerprintAlg); err != nil {
+		if err = tagPath(store, childPath, tagValuePairs, explicit, true, force, fileFingerprintAlg, dirFingerprintAlg); err != nil {
 			return err
 		}
 	}

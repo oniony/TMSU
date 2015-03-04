@@ -91,6 +91,12 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.6
+----
+
+  * Added --force option to 'tag' command to allow tagging of missing or
+    permission denied paths and broken symlinks.
+
 v0.5.1
 ------
 

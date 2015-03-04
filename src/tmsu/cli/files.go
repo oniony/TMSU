@@ -54,7 +54,7 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""},
-		{"--sort", "-s", "sort output: none, name, size, time", true, ""}},
+		{"--sort", "-s", "sort output: id, none, name, size, time", true, ""}},
 	Exec: filesExec,
 }
 

@@ -20,8 +20,10 @@ import (
 	"fmt"
 	"os"
 	"time"
+	"tmsu/common/log"
 	"tmsu/common/terminal"
 	"tmsu/entities"
+	"tmsu/storage"
 )
 
 // unexported
@@ -78,4 +80,26 @@ func (emptyStat) IsDir() bool {
 
 func (emptyStat) Sys() interface{} {
 	return nil
+}
+
+func createTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
+	tag, err := store.AddTag(tagName)
+	if err != nil {
+		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+	}
+
+	log.Warnf("New tag '%v'.", tagName)
+
+	return tag, nil
+}
+
+func createValue(store *storage.Storage, valueName string) (*entities.Value, error) {
+	value, err := store.AddValue(valueName)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Warnf("New value '%v'.", valueName)
+
+	return value, nil
 }

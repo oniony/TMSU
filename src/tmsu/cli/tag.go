@@ -159,6 +159,8 @@ func createTags(store *storage.Storage, tagNames []string) error {
 }
 
 func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursive, force bool) error {
+	log.Infof(2, "loading settings")
+
 	settings, err := store.Settings()
 	if err != nil {
 		return err
@@ -178,7 +180,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
-		tag, err := getTag(store, tagName)
+		tag, err := store.TagByName(tagName)
 		if err != nil {
 			return err
 		}
@@ -195,7 +197,7 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 			}
 		}
 
-		value, err := getValue(store, valueName)
+		value, err := store.ValueByName(valueName)
 		if err != nil {
 			return err
 		}
@@ -238,6 +240,8 @@ func tagPaths(store *storage.Storage, tagArgs, paths []string, explicit, recursi
 }
 
 func tagFrom(store *storage.Storage, fromPath string, paths []string, explicit, recursive, force bool) error {
+	log.Infof(2, "loading settings")
+
 	settings, err := store.Settings()
 	if err != nil {
 		return fmt.Errorf("could not retrieve settings: %v", err)
@@ -401,46 +405,6 @@ func tagRecursively(store *storage.Storage, path string, tagValuePairs []tagValu
 	}
 
 	return nil
-}
-
-func getTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
-	tag, err := store.TagByName(tagName)
-	if err != nil {
-		return nil, fmt.Errorf("could not look up tag '%v': %v", tagName, err)
-	}
-
-	return tag, nil
-}
-
-func createTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
-	tag, err := store.AddTag(tagName)
-	if err != nil {
-		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
-	}
-
-	log.Warnf("New tag '%v'.", tagName)
-
-	return tag, nil
-}
-
-func getValue(store *storage.Storage, valueName string) (*entities.Value, error) {
-	value, err := store.ValueByName(valueName)
-	if err != nil {
-		return nil, fmt.Errorf("could not look up value '%v': %v", valueName, err)
-	}
-
-	return value, nil
-}
-
-func createValue(store *storage.Storage, valueName string) (*entities.Value, error) {
-	value, err := store.AddValue(valueName)
-	if err != nil {
-		return nil, err
-	}
-
-	log.Warnf("New value '%v'.", valueName)
-
-	return value, nil
 }
 
 func addFile(store *storage.Storage, path string, modTime time.Time, size uint, isDir bool, fileFingerprintAlg, dirFingerprintAlg string) (*entities.File, error) {

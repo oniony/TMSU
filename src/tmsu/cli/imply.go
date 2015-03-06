@@ -105,6 +105,13 @@ func listImplications(store *storage.Storage) error {
 }
 
 func addImplications(store *storage.Storage, tagName string, impliedTagNames []string) error {
+	log.Infof(2, "loading settings")
+
+	settings, err := store.Settings()
+	if err != nil {
+		return err
+	}
+
 	log.Infof(2, "looking up tag '%v'.", tagName)
 
 	tag, err := store.TagByName(tagName)
@@ -112,7 +119,14 @@ func addImplications(store *storage.Storage, tagName string, impliedTagNames []s
 		return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 	}
 	if tag == nil {
-		return fmt.Errorf("no such tag '%v'", tagName)
+		if settings.AutoCreateTags() {
+			tag, err = createTag(store, tagName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return fmt.Errorf("no such tag '%v'", tagName)
+		}
 	}
 
 	for _, impliedTagName := range impliedTagNames {
@@ -123,7 +137,14 @@ func addImplications(store *storage.Storage, tagName string, impliedTagNames []s
 			return fmt.Errorf("could not retrieve tag '%v': %v", impliedTagName, err)
 		}
 		if impliedTag == nil {
-			return fmt.Errorf("no such tag '%v'", impliedTagName)
+			if settings.AutoCreateTags() {
+				impliedTag, err = createTag(store, impliedTagName)
+				if err != nil {
+					return err
+				}
+			} else {
+				return fmt.Errorf("no such tag '%v'", impliedTagName)
+			}
 		}
 
 		log.Infof(2, "adding tag implication of '%v' to '%v'", tagName, impliedTagName)

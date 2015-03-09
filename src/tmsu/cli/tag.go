@@ -54,7 +54,7 @@ If a single argument of - is passed, TMSU will read lines from standard input in
 		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
 		{"--create", "-c", "create tags without tagging any files", false, ""},
 		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""},
-		{"--force", "-F", "create tags for non-existant or permissioned paths", false, ""}},
+		{"--force", "-F", "apply tags to non-existant or non-permissioned paths", false, ""}},
 	Exec: tagExec,
 }
 

@@ -26,6 +26,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"tmsu/common/log"
@@ -90,10 +91,12 @@ type FuseVfs struct {
 	store     *storage.Storage
 	mountPath string
 	server    *fuse.Server
+	locker    sync.Locker
 }
 
 func MountVfs(store *storage.Storage, mountPath string, options []string) (*FuseVfs, error) {
-	fuseVfs := FuseVfs{}
+	fuseVfs := FuseVfs{nil, "", nil, &(sync.Mutex{})}
+
 	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
 	conn := nodefs.NewFileSystemConnector(pathFs.Root(), nil)
 	mountOptions := &fuse.MountOptions{Options: options}
@@ -154,6 +157,9 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	log.Infof(2, "BEGIN GetAttr(%v)", name)
 	defer log.Infof(2, "END GetAttr(%v)", name)
 
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
+
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
@@ -212,6 +218,9 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 	if len(path) != 2 {
 		return fuse.EPERM
 	}
+
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
 
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
@@ -273,6 +282,9 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	log.Infof(2, "BEGIN OpenDir(%v)", name)
 	defer log.Infof(2, "END OpenDir(%v)", name)
 
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
+
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
@@ -302,6 +314,9 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	log.Infof(2, "BEGIN Readlink(%v)", name)
 	defer log.Infof(2, "END Readlink(%v)", name)
 
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
+
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
@@ -330,6 +345,9 @@ func (vfs FuseVfs) RemoveXAttr(name string, attr string, context *fuse.Context) 
 func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Rename(%v, %v)", oldName, newName)
 	defer log.Infof(2, "END Rename(%v, %v)", oldName, newName)
+
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
 
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
@@ -372,6 +390,9 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Rmdir(%v)", name)
 	defer log.Infof(2, "END Rmdir(%v)", name)
+
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
 
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
@@ -470,6 +491,9 @@ func (vfs FuseVfs) Truncate(name string, offset uint64, context *fuse.Context) f
 func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Unlink(%v)", name)
 	defer log.Infof(2, "END Unlink(%v)", name)
+
+	vfs.locker.Lock()
+	defer vfs.locker.Unlock()
 
 	if err := vfs.store.Begin(); err != nil {
 		log.Fatalf("could not begin transaction: %v", err)

@@ -97,6 +97,8 @@ v0.6
   * Added --force option to 'tag' command to allow tagging of missing or
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
+  * Fixed bug where concurrent access to the virtaul filesystem caused a
+    runtime panic.
 
 v0.5.1
 ------

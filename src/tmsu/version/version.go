@@ -19,4 +19,4 @@ import (
 	"tmsu/common"
 )
 
-var Version = common.ParseVersion("0.5.0")
+var Version = common.ParseVersion("0.5.2")

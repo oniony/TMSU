@@ -91,6 +91,12 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.5.2
+------
+
+  * Fixed bug where concurrent access to the virtual filesystem would cause
+    a runtime panic.
+
 v0.5.1
 ------
 

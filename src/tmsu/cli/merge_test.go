@@ -35,49 +35,58 @@ func TestMergeSingleTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	fileA1, err := store.AddFile(tx, "/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagA, err := store.AddTag("a")
+	fileB1, err := store.AddFile(tx, "/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagB, err := store.AddTag("b")
+	tagA, err := store.AddTag(tx, "a")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagA.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA1.Id, tagA.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileA.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileA1.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB1.Id, tagB.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileB1.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -89,7 +98,13 @@ func TestMergeSingleTag(test *testing.T) {
 
 	// validate
 
-	tagA, err = store.TagByName("a")
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	tagA, err = store.TagByName(tx, "a")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -97,7 +112,7 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal("Tag 'a' still exists.")
 	}
 
-	tagB, err = store.TagByName("b")
+	tagB, err = store.TagByName(tx, "b")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -105,10 +120,10 @@ func TestMergeSingleTag(test *testing.T) {
 		test.Fatal("Tag 'b' does not exist.")
 	}
 
-	expectTags(test, store, fileA, tagB)
-	expectTags(test, store, fileA1, tagB)
-	expectTags(test, store, fileB, tagB)
-	expectTags(test, store, fileB1, tagB)
+	expectTags(test, store, tx, fileA, tagB)
+	expectTags(test, store, tx, fileA1, tagB)
+	expectTags(test, store, tx, fileB, tagB)
+	expectTags(test, store, tx, fileB1, tagB)
 }
 
 func TestMergeMultipleTags(test *testing.T) {
@@ -123,72 +138,81 @@ func TestMergeMultipleTags(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileA1, err := store.AddFile("/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	fileA1, err := store.AddFile(tx, "/tmp/a/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB1, err := store.AddFile("/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileC, err := store.AddFile("/tmp/c", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	fileB1, err := store.AddFile(tx, "/tmp/b/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileC1, err := store.AddFile("/tmp/c/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileC, err := store.AddFile(tx, "/tmp/c", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagA, err := store.AddTag("a")
+	fileC1, err := store.AddFile(tx, "/tmp/c/1", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagB, err := store.AddTag("b")
+	tagA, err := store.AddTag(tx, "a")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagC, err := store.AddTag("c")
+	tagB, err := store.AddTag(tx, "b")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagA.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA1.Id, tagA.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileA.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileA1.Id, tagA.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB1.Id, tagB.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileC.Id, tagC.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileB1.Id, tagB.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileC1.Id, tagC.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileC.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileC1.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -200,7 +224,13 @@ func TestMergeMultipleTags(test *testing.T) {
 
 	// validate
 
-	tagA, err = store.TagByName("a")
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	tagA, err = store.TagByName(tx, "a")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -208,7 +238,7 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal("Tag 'a' still exists.")
 	}
 
-	tagB, err = store.TagByName("b")
+	tagB, err = store.TagByName(tx, "b")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -216,7 +246,7 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal("Tag 'b' still exists.")
 	}
 
-	tagC, err = store.TagByName("c")
+	tagC, err = store.TagByName(tx, "c")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -224,12 +254,12 @@ func TestMergeMultipleTags(test *testing.T) {
 		test.Fatal("Tag 'c' does not exist.")
 	}
 
-	expectTags(test, store, fileA, tagC)
-	expectTags(test, store, fileA1, tagC)
-	expectTags(test, store, fileB, tagC)
-	expectTags(test, store, fileB1, tagC)
-	expectTags(test, store, fileC, tagC)
-	expectTags(test, store, fileC1, tagC)
+	expectTags(test, store, tx, fileA, tagC)
+	expectTags(test, store, tx, fileA1, tagC)
+	expectTags(test, store, tx, fileB, tagC)
+	expectTags(test, store, tx, fileB1, tagC)
+	expectTags(test, store, tx, fileC, tagC)
+	expectTags(test, store, tx, fileC1, tagC)
 }
 
 func TestMergeNonExistentSourceTag(test *testing.T) {
@@ -244,8 +274,17 @@ func TestMergeNonExistentSourceTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("b")
+	tx, err := store.Begin()
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddTag(tx, "b")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -268,8 +307,17 @@ func TestMergeNonExistentDestinationTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("a")
+	tx, err := store.Begin()
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddTag(tx, "a")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -292,8 +340,17 @@ func TestMergeSourceAndDestinationTheSame(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("a")
+	tx, err := store.Begin()
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddTag(tx, "a")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 

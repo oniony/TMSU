@@ -42,33 +42,42 @@ func TestValuesForSingleTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	materialTag, err := store.AddTag("material")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	woodValue, err := store.AddValue("wood")
+	materialTag, err := store.AddTag(tx, "material")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	metalValue, err := store.AddValue("metal")
+	woodValue, err := store.AddValue(tx, "wood")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, materialTag.Id, woodValue.Id)
+	metalValue, err := store.AddValue(tx, "metal")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, materialTag.Id, metalValue.Id)
+	_, err = store.AddFileTag(tx, file.Id, materialTag.Id, woodValue.Id)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, materialTag.Id, metalValue.Id)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -104,48 +113,57 @@ func TestValuesForMulitpleTags(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	materialTag, err := store.AddTag("material")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	shapeTag, err := store.AddTag("shape")
+	materialTag, err := store.AddTag(tx, "material")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	woodValue, err := store.AddValue("wood")
+	shapeTag, err := store.AddTag(tx, "shape")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	metalValue, err := store.AddValue("metal")
+	woodValue, err := store.AddValue(tx, "wood")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	torroidValue, err := store.AddValue("torroid")
+	metalValue, err := store.AddValue(tx, "metal")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, materialTag.Id, woodValue.Id)
+	torroidValue, err := store.AddValue(tx, "torroid")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, materialTag.Id, metalValue.Id)
+	_, err = store.AddFileTag(tx, file.Id, materialTag.Id, woodValue.Id)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, shapeTag.Id, torroidValue.Id)
+	_, err = store.AddFileTag(tx, file.Id, materialTag.Id, metalValue.Id)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, shapeTag.Id, torroidValue.Id)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -181,18 +199,27 @@ func TestAllValues(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddValue("wood")
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddValue("metal")
+	_, err = store.AddValue(tx, "wood")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddValue("torroid")
+	_, err = store.AddValue(tx, "metal")
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddValue(tx, "torroid")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 

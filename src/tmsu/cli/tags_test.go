@@ -42,28 +42,37 @@ func TestTagsForSingleFile(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	bananaTag, err := store.AddTag("banana")
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
+	bananaTag, err := store.AddTag(tx, "banana")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
+	_, err = store.AddFileTag(tx, file.Id, appleTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, bananaTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -99,38 +108,47 @@ func TestTagsForMultipleFiles(test *testing.T) {
 	}
 	defer store.Close()
 
-	aFile, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	bFile, err := store.AddFile("/tmp/tmsu/b", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	aFile, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	bFile, err := store.AddFile(tx, "/tmp/tmsu/b", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	bananaTag, err := store.AddTag("banana")
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(aFile.Id, appleTag.Id, 0)
+	bananaTag, err := store.AddTag(tx, "banana")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(aFile.Id, bananaTag.Id, 0)
+	_, err = store.AddFileTag(tx, aFile.Id, appleTag.Id, 0)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(bFile.Id, appleTag.Id, 0)
+	_, err = store.AddFileTag(tx, aFile.Id, bananaTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, bFile.Id, appleTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -166,13 +184,22 @@ func TestAllTags(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("apple")
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddTag("banana")
+	_, err = store.AddTag(tx, "apple")
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddTag(tx, "banana")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -208,36 +235,45 @@ func TestImpliedTags(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fruitTag, err := store.AddTag("fruit")
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	foodTag, err := store.AddTag("food")
+	fruitTag, err := store.AddTag(tx, "fruit")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if err := store.AddImplication(appleTag.Id, fruitTag.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	if err := store.AddImplication(fruitTag.Id, foodTag.Id); err != nil {
-		test.Fatal(err)
-	}
-
-	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
+	foodTag, err := store.AddTag(tx, "food")
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := store.AddImplication(tx, appleTag.Id, fruitTag.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := store.AddImplication(tx, fruitTag.Id, foodTag.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, appleTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 

@@ -35,26 +35,35 @@ func TestCopySuccessful(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileAB, err := store.AddFile("/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	sourceTag, err := store.AddTag("source")
+	fileAB, err := store.AddFile(tx, "/tmp/a/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, sourceTag.Id, 0); err != nil {
+	sourceTag, err := store.AddTag(tx, "source")
+	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileAB.Id, sourceTag.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileA.Id, sourceTag.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileAB.Id, sourceTag.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -66,7 +75,13 @@ func TestCopySuccessful(test *testing.T) {
 
 	// validate
 
-	destTag, err := store.TagByName("dest")
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	destTag, err := store.TagByName(tx, "dest")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -74,8 +89,8 @@ func TestCopySuccessful(test *testing.T) {
 		test.Fatal("Destination tag does not exist.")
 	}
 
-	expectTags(test, store, fileA, sourceTag, destTag)
-	expectTags(test, store, fileAB, sourceTag, destTag)
+	expectTags(test, store, tx, fileA, sourceTag, destTag)
+	expectTags(test, store, tx, fileAB, sourceTag, destTag)
 }
 
 func TestCopyNonExistentSourceTag(test *testing.T) {
@@ -136,13 +151,22 @@ func TestCopyDestTagAlreadyExists(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddTag("source")
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddTag("dest")
+	_, err = store.AddTag(tx, "source")
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddTag(tx, "dest")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 

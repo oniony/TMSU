@@ -46,7 +46,13 @@ func TestSingleTag(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files("")
+	tx, err := store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -57,7 +63,7 @@ func TestSingleTag(test *testing.T) {
 		test.Fatalf("Incorrect file was added.")
 	}
 
-	tags, err := store.Tags()
+	tags, err := store.Tags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -68,7 +74,7 @@ func TestSingleTag(test *testing.T) {
 		test.Fatalf("Incorrect tag was added.")
 	}
 
-	fileTags, err := store.FileTags()
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -108,7 +114,13 @@ func TestMultipleTags(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files("")
+	tx, err := store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -119,7 +131,7 @@ func TestMultipleTags(test *testing.T) {
 		test.Fatalf("Incorrect file was added.")
 	}
 
-	tags, err := store.Tags()
+	tags, err := store.Tags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -136,7 +148,7 @@ func TestMultipleTags(test *testing.T) {
 		test.Fatalf("Incorrect tag was added.")
 	}
 
-	fileTags, err := store.FileTags()
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -193,7 +205,13 @@ func TestTagMultipleFiles(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files("")
+	tx, err := store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -208,7 +226,7 @@ func TestTagMultipleFiles(test *testing.T) {
 		test.Fatalf("Incorrect file was added.")
 	}
 
-	tags, err := store.Tags()
+	tags, err := store.Tags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -222,7 +240,7 @@ func TestTagMultipleFiles(test *testing.T) {
 		test.Fatalf("Incorrect tag was added.")
 	}
 
-	fileTags, err := store.FileTags()
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}

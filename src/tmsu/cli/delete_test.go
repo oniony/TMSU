@@ -35,8 +35,17 @@ func TestDeleteUnappliedTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	tagBeetroot, err := store.AddTag("beetroot")
+	tx, err := store.Begin()
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	tagBeetroot, err := store.AddTag(tx, "beetroot")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -48,7 +57,13 @@ func TestDeleteUnappliedTag(test *testing.T) {
 
 	// validate
 
-	tagBeetroot, err = store.TagByName("beetroot")
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	tagBeetroot, err = store.TagByName(tx, "beetroot")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -69,43 +84,52 @@ func TestDeleteAppliedTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileF, err := store.AddFile("/tmp/f", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	fileF, err := store.AddFile(tx, "/tmp/f", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagDeathrow, err := store.AddTag("deathrow")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagFreeman, err := store.AddTag("freeman")
+	tagDeathrow, err := store.AddTag(tx, "deathrow")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagDeathrow.Id, 0); err != nil {
+	tagFreeman, err := store.AddTag(tx, "freeman")
+	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileF.Id, tagFreeman.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileD.Id, tagDeathrow.Id, 0); err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileB.Id, tagDeathrow.Id, 0); err != nil {
+	if _, err := store.AddFileTag(tx, fileF.Id, tagFreeman.Id, 0); err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagFreeman.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileB.Id, tagDeathrow.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagFreeman.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -117,7 +141,13 @@ func TestDeleteAppliedTag(test *testing.T) {
 
 	// validate
 
-	tagDeathrow, err = store.TagByName("deathrow")
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	tagDeathrow, err = store.TagByName(tx, "deathrow")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -125,7 +155,7 @@ func TestDeleteAppliedTag(test *testing.T) {
 		test.Fatal("Deleted tag still exists.")
 	}
 
-	fileTagsD, err := store.FileTagsByFileId(fileD.Id, true)
+	fileTagsD, err := store.FileTagsByFileId(tx, fileD.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -133,7 +163,7 @@ func TestDeleteAppliedTag(test *testing.T) {
 		test.Fatal("Expected no file-tags for file 'd'.")
 	}
 
-	fileTagsF, err := store.FileTagsByFileId(fileF.Id, true)
+	fileTagsF, err := store.FileTagsByFileId(tx, fileF.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -144,7 +174,7 @@ func TestDeleteAppliedTag(test *testing.T) {
 		test.Fatal("Expected file-tag for tag 'freeman'.")
 	}
 
-	fileTagsB, err := store.FileTagsByFileId(fileB.Id, true)
+	fileTagsB, err := store.FileTagsByFileId(tx, fileB.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}

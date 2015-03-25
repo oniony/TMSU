@@ -55,7 +55,13 @@ func TestRepairMovedFile(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files("")
+	tx, err := store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -102,7 +108,13 @@ func TestRepairModifiedFile(test *testing.T) {
 
 	// validate
 
-	files, err := store.Files("")
+	tx, err := store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}

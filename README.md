@@ -97,6 +97,7 @@ v0.6 (in development)
   * Added --force option to 'tag' command to allow tagging of missing or
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
+  * Performance improvements to the virtual filesystem.
 
 v0.5.2
 ------

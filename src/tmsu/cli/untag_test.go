@@ -35,28 +35,37 @@ func TestSingleUntag(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	bananaTag, err := store.AddTag("banana")
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
+	bananaTag, err := store.AddTag(tx, "banana")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
+	_, err = store.AddFileTag(tx, file.Id, appleTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, bananaTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -68,7 +77,13 @@ func TestSingleUntag(test *testing.T) {
 
 	// validate
 
-	fileTags, err := store.FileTags()
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -92,28 +107,37 @@ func TestMultipleUntag(test *testing.T) {
 	}
 	defer store.Close()
 
-	file, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	file, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	bananaTag, err := store.AddTag("banana")
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, appleTag.Id, 0)
+	bananaTag, err := store.AddTag(tx, "banana")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(file.Id, bananaTag.Id, 0)
+	_, err = store.AddFileTag(tx, file.Id, appleTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, file.Id, bananaTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -125,7 +149,13 @@ func TestMultipleUntag(test *testing.T) {
 
 	// validate
 
-	fileTags, err := store.FileTags()
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -133,7 +163,7 @@ func TestMultipleUntag(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files("")
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -154,28 +184,37 @@ func TestUntagMultipleFiles(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/tmsu/b", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	fileA, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	fileB, err := store.AddFile(tx, "/tmp/tmsu/b", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileA.Id, appleTag.Id, 0)
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileB.Id, appleTag.Id, 0)
+	_, err = store.AddFileTag(tx, fileA.Id, appleTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, fileB.Id, appleTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -187,7 +226,13 @@ func TestUntagMultipleFiles(test *testing.T) {
 
 	// validate
 
-	fileTags, err := store.FileTags()
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -195,7 +240,7 @@ func TestUntagMultipleFiles(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files("")
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -216,28 +261,37 @@ func TestUntagAll(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	fileB, err := store.AddFile("/tmp/tmsu/b", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
+	fileA, err := store.AddFile(tx, "/tmp/tmsu/a", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	appleTag, err := store.AddTag("apple")
+	fileB, err := store.AddFile(tx, "/tmp/tmsu/b", fingerprint.Fingerprint("abc123"), time.Now(), 0, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileA.Id, appleTag.Id, 0)
+	appleTag, err := store.AddTag(tx, "apple")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	_, err = store.AddFileTag(fileB.Id, appleTag.Id, 0)
+	_, err = store.AddFileTag(tx, fileA.Id, appleTag.Id, 0)
 	if err != nil {
+		test.Fatal(err)
+	}
+
+	_, err = store.AddFileTag(tx, fileB.Id, appleTag.Id, 0)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -249,7 +303,13 @@ func TestUntagAll(test *testing.T) {
 
 	// validate
 
-	fileTags, err := store.FileTags()
+	tx, err = store.Begin()
+	if err != nil {
+		test.Fatal(err)
+	}
+	defer tx.Commit()
+
+	fileTags, err := store.FileTags(tx)
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -257,7 +317,7 @@ func TestUntagAll(test *testing.T) {
 		test.Fatalf("Expected no file-tags but are %v", len(fileTags))
 	}
 
-	files, err := store.Files("")
+	files, err := store.Files(tx, "")
 	if err != nil {
 		test.Fatal(err)
 	}

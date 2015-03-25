@@ -54,8 +54,8 @@ func compareOutput(test *testing.T, expected, actual string) {
 	}
 }
 
-func expectTags(test *testing.T, store *storage.Storage, file *entities.File, tags ...*entities.Tag) {
-	fileTags, err := store.FileTagsByFileId(file.Id, true)
+func expectTags(test *testing.T, store *storage.Storage, tx *storage.Tx, file *entities.File, tags ...*entities.Tag) {
+	fileTags, err := store.FileTagsByFileId(tx, file.Id, true)
 	if err != nil {
 		test.Fatal(err)
 	}

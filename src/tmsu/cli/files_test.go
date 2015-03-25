@@ -42,16 +42,25 @@ func TestFilesAll(test *testing.T) {
 	}
 	defer store.Close()
 
-	_, err = store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+
+	_, err = store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	_, err = store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	_, err = store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
+		test.Fatal(err)
+	}
+	_, err = store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -87,35 +96,44 @@ func TestFilesSingleTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -151,34 +169,43 @@ func TestFilesNotSingleTag(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
-	if err != nil {
-		test.Fatal(err)
-	}
-	tagD, err := store.AddTag("d")
-	if err != nil {
-		test.Fatal(err)
-	}
-	tagB, err := store.AddTag("b")
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
+		test.Fatal(err)
+	}
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -214,42 +241,51 @@ func TestFilesImplicitAnd(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagC, err := store.AddTag("c")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -285,42 +321,51 @@ func TestFilesAnd(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagC, err := store.AddTag("c")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -356,42 +401,51 @@ func TestFilesImplicitAndNot(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagC, err := store.AddTag("c")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -427,42 +481,51 @@ func TestFilesAndNot(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagC, err := store.AddTag("c")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -498,42 +561,51 @@ func TestFilesOr(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileD, err := store.AddFile("/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileBA, err := store.AddFile("/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagD, err := store.AddTag("d")
+	fileD, err := store.AddFile(tx, "/tmp/d", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagB, err := store.AddTag("b")
+	fileBA, err := store.AddFile(tx, "/tmp/b/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
-	tagC, err := store.AddTag("c")
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, true)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileD.Id, tagD.Id, 0); err != nil {
+	tagD, err := store.AddTag(tx, "d")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagB.Id, 0); err != nil {
+	tagB, err := store.AddTag(tx, "b")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagB.Id, 0); err != nil {
+	tagC, err := store.AddTag(tx, "c")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileBA.Id, tagC.Id, 0); err != nil {
+
+	if _, err := store.AddFileTag(tx, fileD.Id, tagD.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagB.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileBA.Id, tagC.Id, 0); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -569,33 +641,42 @@ func TestFilesTagEqualsValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -634,33 +715,42 @@ func TestFilesTagNotEqualsValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -702,33 +792,42 @@ func TestFilesTagLessThanValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -770,33 +869,42 @@ func TestFilesTagGreaterThanValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -838,33 +946,42 @@ func TestFilesTagLessThanOrEqualToValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 
@@ -906,33 +1023,42 @@ func TestFilesTagGreaterThanOrEqualToValue(test *testing.T) {
 	}
 	defer store.Close()
 
-	fileA, err := store.AddFile("/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
-	if err != nil {
-		test.Fatal(err)
-	}
-	fileB, err := store.AddFile("/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	tx, err := store.Begin()
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	tagSize, err := store.AddTag("size")
+	fileA, err := store.AddFile(tx, "/tmp/a", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
+	if err != nil {
+		test.Fatal(err)
+	}
+	fileB, err := store.AddFile(tx, "/tmp/b", fingerprint.Fingerprint("abc"), time.Now(), 123, false)
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	value99, err := store.AddValue("99")
-	if err != nil {
-		test.Fatal(err)
-	}
-	value100, err := store.AddValue("100")
+	tagSize, err := store.AddTag(tx, "size")
 	if err != nil {
 		test.Fatal(err)
 	}
 
-	if _, err := store.AddFileTag(fileA.Id, tagSize.Id, value99.Id); err != nil {
+	value99, err := store.AddValue(tx, "99")
+	if err != nil {
 		test.Fatal(err)
 	}
-	if _, err := store.AddFileTag(fileB.Id, tagSize.Id, value100.Id); err != nil {
+	value100, err := store.AddValue(tx, "100")
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	if _, err := store.AddFileTag(tx, fileA.Id, tagSize.Id, value99.Id); err != nil {
+		test.Fatal(err)
+	}
+	if _, err := store.AddFileTag(tx, fileB.Id, tagSize.Id, value100.Id); err != nil {
+		test.Fatal(err)
+	}
+
+	if err := tx.Commit(); err != nil {
 		test.Fatal(err)
 	}
 

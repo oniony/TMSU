@@ -59,30 +59,31 @@ func tagsExec(store *storage.Storage, options Options, args []string) error {
 		return err
 	}
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	if len(args) == 0 {
-		return listAllTags(store, showCount, onePerLine, colour)
+		return listAllTags(store, tx, showCount, onePerLine, colour)
 	}
 
-	return listTagsForPaths(store, args, showCount, onePerLine, explicitOnly, colour)
+	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, colour)
 }
 
-func listAllTags(store *storage.Storage, showCount, onePerLine, colour bool) error {
+func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, colour bool) error {
 	log.Info(2, "retrieving all tags.")
 
 	if showCount {
-		count, err := store.TagCount()
+		count, err := store.TagCount(tx)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag count: %v", err)
 		}
 
 		fmt.Println(count)
 	} else {
-		tags, err := store.Tags()
+		tags, err := store.Tags(tx)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tags: %v", err)
 		}
@@ -104,7 +105,7 @@ func listAllTags(store *storage.Storage, showCount, onePerLine, colour bool) err
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
+func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
 	wereErrors := false
 	printPath := len(paths) > 1 || terminal.Width() == 0
 
@@ -116,7 +117,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 
 		log.Infof(2, "%v: retrieving tags.", path)
 
-		file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
 			log.Warn(err.Error())
 			continue
@@ -124,7 +125,7 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 
 		var tagNames []string
 		if file != nil {
-			tagNames, err = tagNamesForFile(store, file.Id, explicitOnly, colour)
+			tagNames, err = tagNamesForFile(store, tx, file.Id, explicitOnly, colour)
 			if err != nil {
 				return err
 			}
@@ -187,8 +188,8 @@ func listTagsForPaths(store *storage.Storage, paths []string, showCount, onePerL
 	return nil
 }
 
-func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {
-	fileTags, err := store.FileTagsByFileId(fileId, explicitOnly)
+func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {
+	fileTags, err := store.FileTagsByFileId(tx, fileId, explicitOnly)
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
 	}
@@ -196,7 +197,7 @@ func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnl
 	tagNames := make([]string, len(fileTags))
 
 	for index, fileTag := range fileTags {
-		tag, err := store.Tag(fileTag.TagId)
+		tag, err := store.Tag(tx, fileTag.TagId)
 		if err != nil {
 			return nil, fmt.Errorf("could not lookup tag: %v", err)
 		}
@@ -208,7 +209,7 @@ func tagNamesForFile(store *storage.Storage, fileId entities.FileId, explicitOnl
 		if fileTag.ValueId == 0 {
 			tagName = tag.Name
 		} else {
-			value, err := store.Value(fileTag.ValueId)
+			value, err := store.Value(tx, fileTag.ValueId)
 			if err != nil {
 				return nil, fmt.Errorf("could not lookup value: %v", err)
 			}

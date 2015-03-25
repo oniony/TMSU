@@ -37,10 +37,11 @@ If a VALUE is specified then the setting is updated.`,
 }
 
 func configExec(store *storage.Storage, options Options, args []string) error {
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	colour, err := useColour(options)
 	if err != nil {
@@ -48,13 +49,13 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 	}
 
 	if len(args) == 0 {
-		if err := listAllSettings(store, colour); err != nil {
+		if err := listAllSettings(store, tx, colour); err != nil {
 			return fmt.Errorf("could not list settings")
 		}
 	}
 
 	if len(args) == 1 && strings.Index(args[0], "=") == -1 {
-		printSettingValue(store, args[0])
+		printSettingValue(store, tx, args[0])
 		return nil
 	}
 
@@ -63,14 +64,14 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 		switch len(parts) {
 		case 1:
 			name := parts[0]
-			if err := printSetting(store, name, colour); err != nil {
+			if err := printSetting(store, tx, name, colour); err != nil {
 				return fmt.Errorf("could not show value for setting '%v': %v", name, err)
 			}
 		case 2:
 			name := parts[0]
 			value := parts[1]
 
-			if err := amendSetting(store, name, value); err != nil {
+			if err := amendSetting(store, tx, name, value); err != nil {
 				return fmt.Errorf("could not amend setting '%v' to '%v': %v", name, value, err)
 			}
 		default:
@@ -83,8 +84,8 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 
 // unexported
 
-func listAllSettings(store *storage.Storage, colour bool) error {
-	settings, err := store.Settings()
+func listAllSettings(store *storage.Storage, tx *storage.Tx, colour bool) error {
+	settings, err := store.Settings(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve settings: %v", err)
 	}
@@ -101,12 +102,12 @@ func listAllSettings(store *storage.Storage, colour bool) error {
 	return nil
 }
 
-func printSetting(store *storage.Storage, name string, colour bool) error {
+func printSetting(store *storage.Storage, tx *storage.Tx, name string, colour bool) error {
 	if name == "" {
 		return fmt.Errorf("setting name must be specified")
 	}
 
-	setting, err := store.Setting(name)
+	setting, err := store.Setting(tx, name)
 	if err != nil {
 		return fmt.Errorf("could not retrieve setting '%v'", err)
 	}
@@ -124,12 +125,12 @@ func printSetting(store *storage.Storage, name string, colour bool) error {
 	return nil
 }
 
-func printSettingValue(store *storage.Storage, name string) error {
+func printSettingValue(store *storage.Storage, tx *storage.Tx, name string) error {
 	if name == "" {
 		return fmt.Errorf("setting name must be specified")
 	}
 
-	setting, err := store.Setting(name)
+	setting, err := store.Setting(tx, name)
 	if err != nil {
 		return fmt.Errorf("could not retrieve setting '%v'", err)
 	}
@@ -142,7 +143,7 @@ func printSettingValue(store *storage.Storage, name string) error {
 	return nil
 }
 
-func amendSetting(store *storage.Storage, name, value string) error {
+func amendSetting(store *storage.Storage, tx *storage.Tx, name, value string) error {
 	if name == "" {
 		return fmt.Errorf("setting name must be specified")
 	}
@@ -150,7 +151,7 @@ func amendSetting(store *storage.Storage, name, value string) error {
 		return fmt.Errorf("setting '%v' value must be specified", name)
 	}
 
-	setting, err := store.Setting(name)
+	setting, err := store.Setting(tx, name)
 	if err != nil {
 		return fmt.Errorf("could not retrieve setting '%v'", err)
 	}
@@ -158,7 +159,7 @@ func amendSetting(store *storage.Storage, name, value string) error {
 		return fmt.Errorf("no such setting '%v'", name)
 	}
 
-	if _, err = store.UpdateSetting(name, value); err != nil {
+	if _, err = store.UpdateSetting(tx, name, value); err != nil {
 		return fmt.Errorf("could not update setting '%v': %v", name, err)
 	}
 

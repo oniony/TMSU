@@ -33,27 +33,28 @@ var StatsCommand = Command{
 func statsExec(store *storage.Storage, options Options, args []string) error {
 	usage := options.HasOption("--usage")
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
-	tagCount, err := store.TagCount()
+	tagCount, err := store.TagCount(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag count: %v", err)
 	}
 
-	valueCount, err := store.ValueCount()
+	valueCount, err := store.ValueCount(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve value count: %v", err)
 	}
 
-	fileCount, err := store.FileCount()
+	fileCount, err := store.FileCount(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve file count: %v", err)
 	}
 
-	fileTagCount, err := store.FileTagCount()
+	fileTagCount, err := store.FileTagCount(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve taggings count: %v", err)
 	}
@@ -70,7 +71,7 @@ func statsExec(store *storage.Storage, options Options, args []string) error {
 
 	fmt.Println("DATABASE")
 	fmt.Println()
-	fmt.Printf("  Path: %v\n", store.Db.Path)
+	fmt.Printf("  Path: %v\n", store.DbPath)
 	fmt.Printf("  Root: %v\n", store.RootPath)
 	fmt.Println()
 	fmt.Println("COUNTS")
@@ -88,7 +89,7 @@ func statsExec(store *storage.Storage, options Options, args []string) error {
 	fmt.Println()
 
 	if usage {
-		tagUsages, err := store.TagUsage()
+		tagUsages, err := store.TagUsage(tx)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag usage: %v", err)
 		}

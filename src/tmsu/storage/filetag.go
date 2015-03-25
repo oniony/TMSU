@@ -17,15 +17,16 @@ package storage
 
 import (
 	"tmsu/entities"
+	"tmsu/storage/database"
 )
 
 // Determines whether the specified file has the specified tag applied.
-func (storage *Storage) FileTagExists(fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId, explicitOnly bool) (bool, error) {
+func (storage *Storage) FileTagExists(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId, explicitOnly bool) (bool, error) {
 	if explicitOnly {
-		return storage.Db.FileTagExists(fileId, tagId, valueId)
+		return database.FileTagExists(tx.tx, fileId, tagId, valueId)
 	}
 
-	fileTags, err := storage.FileTagsByFileId(fileId, false)
+	fileTags, err := storage.FileTagsByFileId(tx, fileId, false)
 	if err != nil {
 		return false, err
 	}
@@ -34,22 +35,22 @@ func (storage *Storage) FileTagExists(fileId entities.FileId, tagId entities.Tag
 }
 
 // Retrieves the total count of file tags in the database.
-func (storage *Storage) FileTagCount() (uint, error) {
-	return storage.Db.FileTagCount()
+func (storage *Storage) FileTagCount(tx *Tx) (uint, error) {
+	return database.FileTagCount(tx.tx)
 }
 
 // Retrieves the complete set of file tags.
-func (storage *Storage) FileTags() (entities.FileTags, error) {
-	return storage.Db.FileTags()
+func (storage *Storage) FileTags(tx *Tx) (entities.FileTags, error) {
+	return database.FileTags(tx.tx)
 }
 
 // Retrieves the count of file tags for the specified file.
-func (storage *Storage) FileTagCountByFileId(fileId entities.FileId, explicitOnly bool) (uint, error) {
+func (storage *Storage) FileTagCountByFileId(tx *Tx, fileId entities.FileId, explicitOnly bool) (uint, error) {
 	if explicitOnly {
-		return storage.Db.FileTagCountByFileId(fileId)
+		return database.FileTagCountByFileId(tx.tx, fileId)
 	}
 
-	fileTags, err := storage.FileTagsByFileId(fileId, false)
+	fileTags, err := storage.FileTagsByFileId(tx, fileId, false)
 	if err != nil {
 		return 0, err
 	}
@@ -58,12 +59,12 @@ func (storage *Storage) FileTagCountByFileId(fileId entities.FileId, explicitOnl
 }
 
 // Retrieves the count of file tags for the specified tag.
-func (storage *Storage) FileTagCountByTagId(tagId entities.TagId, explicitOnly bool) (uint, error) {
+func (storage *Storage) FileTagCountByTagId(tx *Tx, tagId entities.TagId, explicitOnly bool) (uint, error) {
 	if explicitOnly {
-		return storage.Db.FileTagCountByTagId(tagId)
+		return database.FileTagCountByTagId(tx.tx, tagId)
 	}
 
-	fileTags, err := storage.FileTagsByTagId(tagId, false)
+	fileTags, err := storage.FileTagsByTagId(tx, tagId, false)
 	if err != nil {
 		return 0, err
 	}
@@ -72,15 +73,15 @@ func (storage *Storage) FileTagCountByTagId(tagId entities.TagId, explicitOnly b
 }
 
 // Retrieves the file tags with the specified tag ID.
-func (storage *Storage) FileTagsByTagId(tagId entities.TagId, explicitOnly bool) (entities.FileTags, error) {
-	fileTags, err := storage.Db.FileTagsByTagId(tagId)
+func (storage *Storage) FileTagsByTagId(tx *Tx, tagId entities.TagId, explicitOnly bool) (entities.FileTags, error) {
+	fileTags, err := database.FileTagsByTagId(tx.tx, tagId)
 	if err != nil {
 		return nil, err
 	}
 
 	if !explicitOnly {
 		var err error
-		fileTags, err = storage.addImpliedFileTags(fileTags)
+		fileTags, err = storage.addImpliedFileTags(tx, fileTags)
 		if err != nil {
 			return nil, err
 		}
@@ -90,25 +91,25 @@ func (storage *Storage) FileTagsByTagId(tagId entities.TagId, explicitOnly bool)
 }
 
 // Retrieves the count of file tags for the specified value.
-func (storage *Storage) FileTagCountByValueId(valueId entities.ValueId) (uint, error) {
-	return storage.Db.FileTagCountByValueId(valueId)
+func (storage *Storage) FileTagCountByValueId(tx *Tx, valueId entities.ValueId) (uint, error) {
+	return database.FileTagCountByValueId(tx.tx, valueId)
 }
 
 // Retrieves the file tags with the specified value ID.
-func (storage *Storage) FileTagsByValueId(valueId entities.ValueId) (entities.FileTags, error) {
-	return storage.Db.FileTagsByValueId(valueId)
+func (storage *Storage) FileTagsByValueId(tx *Tx, valueId entities.ValueId) (entities.FileTags, error) {
+	return database.FileTagsByValueId(tx.tx, valueId)
 }
 
 // Retrieves the file tags with the specified file ID.
-func (storage *Storage) FileTagsByFileId(fileId entities.FileId, explicitOnly bool) (entities.FileTags, error) {
-	fileTags, err := storage.Db.FileTagsByFileId(fileId)
+func (storage *Storage) FileTagsByFileId(tx *Tx, fileId entities.FileId, explicitOnly bool) (entities.FileTags, error) {
+	fileTags, err := database.FileTagsByFileId(tx.tx, fileId)
 	if err != nil {
 		return nil, err
 	}
 
 	if !explicitOnly {
 		var err error
-		fileTags, err = storage.addImpliedFileTags(fileTags)
+		fileTags, err = storage.addImpliedFileTags(tx, fileTags)
 		if err != nil {
 			return nil, err
 		}
@@ -118,13 +119,13 @@ func (storage *Storage) FileTagsByFileId(fileId entities.FileId, explicitOnly bo
 }
 
 // Adds a file tag.
-func (storage *Storage) AddFileTag(fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) (*entities.FileTag, error) {
-	return storage.Db.AddFileTag(fileId, tagId, valueId)
+func (storage *Storage) AddFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) (*entities.FileTag, error) {
+	return database.AddFileTag(tx.tx, fileId, tagId, valueId)
 }
 
 // Delete file tag.
-func (storage *Storage) DeleteFileTag(fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) error {
-	exists, err := storage.FileTagExists(fileId, tagId, valueId, true)
+func (storage *Storage) DeleteFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) error {
+	exists, err := storage.FileTagExists(tx, fileId, tagId, valueId, true)
 	if err != nil {
 		return err
 	}
@@ -132,15 +133,15 @@ func (storage *Storage) DeleteFileTag(fileId entities.FileId, tagId entities.Tag
 		return FileTagDoesNotExist{fileId, tagId, valueId}
 	}
 
-	if err := storage.Db.DeleteFileTag(fileId, tagId, valueId); err != nil {
+	if err := database.DeleteFileTag(tx.tx, fileId, tagId, valueId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteFileIfUntagged(fileId); err != nil {
+	if err := storage.DeleteFileIfUntagged(tx, fileId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteValueIfUnused(valueId); err != nil {
+	if err := storage.DeleteValueIfUnused(tx, valueId); err != nil {
 		return err
 	}
 
@@ -148,21 +149,21 @@ func (storage *Storage) DeleteFileTag(fileId entities.FileId, tagId entities.Tag
 }
 
 // Deletes all of the file tags for the specified file.
-func (storage *Storage) DeleteFileTagsByFileId(fileId entities.FileId) error {
-	fileTags, err := storage.Db.FileTagsByFileId(fileId)
+func (storage *Storage) DeleteFileTagsByFileId(tx *Tx, fileId entities.FileId) error {
+	fileTags, err := database.FileTagsByFileId(tx.tx, fileId)
 	if err != nil {
 		return err
 	}
 
-	if err := storage.Db.DeleteFileTagsByFileId(fileId); err != nil {
+	if err := database.DeleteFileTagsByFileId(tx.tx, fileId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteFileIfUntagged(fileId); err != nil {
+	if err := storage.DeleteFileIfUntagged(tx, fileId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteUnusedValues(fileTags.ValueIds()); err != nil {
+	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
 		return err
 	}
 
@@ -170,21 +171,21 @@ func (storage *Storage) DeleteFileTagsByFileId(fileId entities.FileId) error {
 }
 
 // Deletes all of the file tags for the specified tag.
-func (storage *Storage) DeleteFileTagsByTagId(tagId entities.TagId) error {
-	fileTags, err := storage.Db.FileTagsByTagId(tagId)
+func (storage *Storage) DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) error {
+	fileTags, err := database.FileTagsByTagId(tx.tx, tagId)
 	if err != nil {
 		return err
 	}
 
-	if err := storage.Db.DeleteFileTagsByTagId(tagId); err != nil {
+	if err := database.DeleteFileTagsByTagId(tx.tx, tagId); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteUntaggedFiles(fileTags.FileIds()); err != nil {
+	if err := storage.DeleteUntaggedFiles(tx, fileTags.FileIds()); err != nil {
 		return err
 	}
 
-	if err := storage.DeleteUnusedValues(fileTags.ValueIds()); err != nil {
+	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
 		return err
 	}
 
@@ -192,19 +193,19 @@ func (storage *Storage) DeleteFileTagsByTagId(tagId entities.TagId) error {
 }
 
 // Copies file tags from one tag to another.
-func (storage *Storage) CopyFileTags(sourceTagId, destTagId entities.TagId) error {
-	return storage.Db.CopyFileTags(sourceTagId, destTagId)
+func (storage *Storage) CopyFileTags(tx *Tx, sourceTagId, destTagId entities.TagId) error {
+	return database.CopyFileTags(tx.tx, sourceTagId, destTagId)
 }
 
 // unexported
 
-func (storage *Storage) addImpliedFileTags(fileTags entities.FileTags) (entities.FileTags, error) {
+func (storage *Storage) addImpliedFileTags(tx *Tx, fileTags entities.FileTags) (entities.FileTags, error) {
 	tagIds := make(entities.TagIds, 0, len(fileTags))
 	for _, fileTag := range fileTags {
 		tagIds = append(tagIds, fileTag.TagId)
 	}
 
-	implications, err := storage.ImplicationsForTags(tagIds...)
+	implications, err := storage.ImplicationsForTags(tx, tagIds...)
 	if err != nil {
 		return nil, err
 	}

@@ -61,16 +61,17 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 func repairExec(store *storage.Storage, options Options, args []string) error {
 	pretend := options.HasOption("--pretend")
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	if options.HasOption("--manual") {
 		fromPath := args[0]
 		toPath := args[1]
 
-		if err := manualRepair(store, fromPath, toPath, pretend); err != nil {
+		if err := manualRepair(store, tx, fromPath, toPath, pretend); err != nil {
 			return err
 		}
 	} else {
@@ -84,7 +85,7 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 			limitPath = options.Get("--path").Argument
 		}
 
-		if err := fullRepair(store, searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
+		if err := fullRepair(store, tx, searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
 			return err
 		}
 	}
@@ -92,7 +93,7 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool) error {
+func manualRepair(store *storage.Storage, tx *storage.Tx, fromPath, toPath string, pretend bool) error {
 	absFromPath, err := filepath.Abs(fromPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not determine absolute path", err)
@@ -105,7 +106,7 @@ func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool)
 
 	log.Infof(2, "retrieving files under '%v' from the database", fromPath)
 
-	dbFile, err := store.FileByPath(absFromPath)
+	dbFile, err := store.FileByPath(tx, absFromPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not retrieve file: %v", fromPath, err)
 	}
@@ -114,13 +115,13 @@ func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool)
 		log.Infof(2, "%v: updating to %v", fromPath, toPath)
 
 		if !pretend {
-			if err := manualRepairFile(store, dbFile, absToPath); err != nil {
+			if err := manualRepairFile(store, tx, dbFile, absToPath); err != nil {
 				return err
 			}
 		}
 	}
 
-	dbFiles, err := store.FilesByDirectory(absFromPath)
+	dbFiles, err := store.FilesByDirectory(tx, absFromPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve files from storage: %v", err)
 	}
@@ -133,7 +134,7 @@ func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool)
 		log.Infof(2, "%v: updating to %v", relFileFromPath, relFileToPath)
 
 		if !pretend {
-			if err := manualRepairFile(store, dbFile, absFileToPath); err != nil {
+			if err := manualRepairFile(store, tx, dbFile, absFileToPath); err != nil {
 				return err
 			}
 		}
@@ -142,7 +143,7 @@ func manualRepair(store *storage.Storage, fromPath, toPath string, pretend bool)
 	return nil
 }
 
-func manualRepairFile(store *storage.Storage, file *entities.File, toPath string) error {
+func manualRepairFile(store *storage.Storage, tx *storage.Tx, file *entities.File, toPath string) error {
 	var fingerprint fingerprint.Fingerprint
 	var modTime time.Time
 	var size int64
@@ -168,12 +169,12 @@ func manualRepairFile(store *storage.Storage, file *entities.File, toPath string
 		isDir = stat.IsDir()
 	}
 
-	_, err = store.UpdateFile(file.Id, toPath, fingerprint, modTime, size, isDir)
+	_, err = store.UpdateFile(tx, file.Id, toPath, fingerprint, modTime, size, isDir)
 
 	return err
 }
 
-func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
+func fullRepair(store *storage.Storage, tx *storage.Tx, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {
 	absLimitPath := ""
 	if limitPath != "" {
 		var err error
@@ -183,19 +184,19 @@ func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, 
 		}
 	}
 
-	settings, err := store.Settings()
+	settings, err := store.Settings(tx)
 	if err != nil {
 		return err
 	}
 
 	log.Infof(2, "retrieving files under '%v' from the database", absLimitPath)
 
-	dbFiles, err := store.FilesByDirectory(absLimitPath)
+	dbFiles, err := store.FilesByDirectory(tx, absLimitPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve files from storage: %v", err)
 	}
 
-	dbFile, err := store.FileByPath(absLimitPath)
+	dbFile, err := store.FileByPath(tx, absLimitPath)
 	if err != nil {
 		return fmt.Errorf("could not retrieve file from storage: %v", err)
 	}
@@ -209,33 +210,33 @@ func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, 
 	unmodfied, modified, missing := determineStatuses(dbFiles)
 
 	if recalcUnmodified {
-		if err = repairUnmodified(store, unmodfied, pretend, settings); err != nil {
+		if err = repairUnmodified(store, tx, unmodfied, pretend, settings); err != nil {
 			return err
 		}
 	}
 
-	if err = repairModified(store, modified, pretend, settings); err != nil {
+	if err = repairModified(store, tx, modified, pretend, settings); err != nil {
 		return err
 	}
 
-	if err = repairMoved(store, missing, searchPaths, pretend, settings); err != nil {
+	if err = repairMoved(store, tx, missing, searchPaths, pretend, settings); err != nil {
 		return err
 	}
 
-	if err = repairMissing(store, missing, pretend, removeMissing); err != nil {
+	if err = repairMissing(store, tx, missing, pretend, removeMissing); err != nil {
 		return err
 	}
 
-	if err = deleteUntaggedFiles(store, dbFiles); err != nil {
+	if err = deleteUntaggedFiles(store, tx, dbFiles); err != nil {
 		return err
 	}
 
-	if err = deleteUnusedValues(store); err != nil {
+	if err = deleteUnusedValues(store, tx); err != nil {
 		return err
 	}
 
 	if rationalize {
-		if err = rationalizeFileTags(store, dbFiles); err != nil {
+		if err = rationalizeFileTags(store, tx, dbFiles); err != nil {
 			return err
 		}
 	}
@@ -243,7 +244,7 @@ func fullRepair(store *storage.Storage, searchPaths []string, limitPath string, 
 	return nil
 }
 
-func deleteUntaggedFiles(store *storage.Storage, files entities.Files) error {
+func deleteUntaggedFiles(store *storage.Storage, tx *storage.Tx, files entities.Files) error {
 	log.Infof(2, "purging untagged files")
 
 	fileIds := make([]entities.FileId, len(files))
@@ -251,13 +252,13 @@ func deleteUntaggedFiles(store *storage.Storage, files entities.Files) error {
 		fileIds[index] = file.Id
 	}
 
-	return store.DeleteUntaggedFiles(fileIds)
+	return store.DeleteUntaggedFiles(tx, fileIds)
 }
 
-func deleteUnusedValues(store *storage.Storage) error {
+func deleteUnusedValues(store *storage.Storage, tx *storage.Tx) error {
 	log.Infof(2, "purging unused values")
 
-	values, err := store.Values()
+	values, err := store.Values(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve set of values")
 	}
@@ -267,14 +268,14 @@ func deleteUnusedValues(store *storage.Storage) error {
 		valueIds[index] = value.Id
 	}
 
-	return store.DeleteUnusedValues(valueIds)
+	return store.DeleteUnusedValues(tx, valueIds)
 }
 
-func rationalizeFileTags(store *storage.Storage, files entities.Files) error {
+func rationalizeFileTags(store *storage.Storage, tx *storage.Tx, files entities.Files) error {
 	log.Infof(2, "rationalizing file tags")
 
 	for _, file := range files {
-		fileTags, err := store.FileTagsByFileId(file.Id, false)
+		fileTags, err := store.FileTagsByFileId(tx, file.Id, false)
 		if err != nil {
 			return fmt.Errorf("could not determine tags for file '%v': %v", file.Path(), err)
 		}
@@ -283,7 +284,7 @@ func rationalizeFileTags(store *storage.Storage, files entities.Files) error {
 			if fileTag.Implicit && fileTag.Explicit {
 				log.Infof(2, "%v: removing explicit tagging %v as implicit tagging exists", file.Path(), fileTag.TagId)
 
-				if err := store.DeleteFileTag(fileTag.FileId, fileTag.TagId, fileTag.ValueId); err != nil {
+				if err := store.DeleteFileTag(tx, fileTag.FileId, fileTag.TagId, fileTag.ValueId); err != nil {
 					return fmt.Errorf("could not delete file tag for file %v, tag %v and value %v", fileTag.FileId, fileTag.TagId, fileTag.ValueId)
 				}
 			}
@@ -326,7 +327,7 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 	return
 }
 
-func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend bool, settings entities.Settings) error {
+func repairUnmodified(store *storage.Storage, tx *storage.Tx, unmodified entities.Files, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "recalculating fingerprints for unmodified files")
 
 	for _, dbFile := range unmodified {
@@ -342,7 +343,7 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 		}
 
 		if !pretend {
-			_, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
+			_, err := store.UpdateFile(tx, dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
@@ -354,7 +355,7 @@ func repairUnmodified(store *storage.Storage, unmodified entities.Files, pretend
 	return nil
 }
 
-func repairModified(store *storage.Storage, modified entities.Files, pretend bool, settings entities.Settings) error {
+func repairModified(store *storage.Storage, tx *storage.Tx, modified entities.Files, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "repairing modified files")
 
 	for _, dbFile := range modified {
@@ -370,11 +371,10 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 		}
 
 		if !pretend {
-			_, err := store.UpdateFile(dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
+			_, err := store.UpdateFile(tx, dbFile.Id, dbFile.Path(), fingerprint, stat.ModTime(), stat.Size(), stat.IsDir())
 			if err != nil {
 				return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 			}
-
 		}
 
 		fmt.Printf("%v: updated fingerprint\n", dbFile.Path())
@@ -383,7 +383,7 @@ func repairModified(store *storage.Storage, modified entities.Files, pretend boo
 	return nil
 }
 
-func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []string, pretend bool, settings entities.Settings) error {
+func repairMoved(store *storage.Storage, tx *storage.Tx, missing entities.Files, searchPaths []string, pretend bool, settings entities.Settings) error {
 	log.Infof(2, "repairing moved files")
 
 	if len(missing) == 0 || len(searchPaths) == 0 {
@@ -403,7 +403,7 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 		log.Infof(2, "%v: file is of size %v, identified %v files of this size", dbFile.Path(), dbFile.Size, len(pathsOfSize))
 
 		for _, candidatePath := range pathsOfSize {
-			candidateFile, err := store.FileByPath(candidatePath)
+			candidateFile, err := store.FileByPath(tx, candidatePath)
 			if err != nil {
 				return err
 			}
@@ -424,7 +424,7 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 
 			if fingerprint == dbFile.Fingerprint {
 				if !pretend {
-					_, err := store.UpdateFile(dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
+					_, err := store.UpdateFile(tx, dbFile.Id, candidatePath, dbFile.Fingerprint, stat.ModTime(), dbFile.Size, dbFile.IsDir)
 					if err != nil {
 						return fmt.Errorf("%v: could not update file in database: %v", dbFile.Path(), err)
 					}
@@ -442,7 +442,7 @@ func repairMoved(store *storage.Storage, missing entities.Files, searchPaths []s
 	return nil
 }
 
-func repairMissing(store *storage.Storage, missing entities.Files, pretend, force bool) error {
+func repairMissing(store *storage.Storage, tx *storage.Tx, missing entities.Files, pretend, force bool) error {
 	for _, dbFile := range missing {
 		if dbFile == nil {
 			continue
@@ -450,7 +450,7 @@ func repairMissing(store *storage.Storage, missing entities.Files, pretend, forc
 
 		if force {
 			if !pretend {
-				if err := store.DeleteFileTagsByFileId(dbFile.Id); err != nil {
+				if err := store.DeleteFileTagsByFileId(tx, dbFile.Id); err != nil {
 					return fmt.Errorf("%v: could not delete file-tags: %v", dbFile.Path(), err)
 				}
 			}

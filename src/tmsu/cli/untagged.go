@@ -49,19 +49,20 @@ func untaggedExec(store *storage.Storage, options Options, args []string) error 
 		}
 	}
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
-	if err := findUntagged(store, paths, recursive); err != nil {
+	if err := findUntagged(store, tx, paths, recursive); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func findUntagged(store *storage.Storage, paths []string, recursive bool) error {
+func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
@@ -69,7 +70,7 @@ func findUntagged(store *storage.Storage, paths []string, recursive bool) error 
 		}
 
 		//TODO PERF no need to retrieve file: we merely need to know it exists
-		file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
 			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
@@ -84,7 +85,7 @@ func findUntagged(store *storage.Storage, paths []string, recursive bool) error 
 				return err
 			}
 
-			findUntagged(store, entries, true)
+			findUntagged(store, tx, entries, true)
 		}
 	}
 

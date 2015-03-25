@@ -22,11 +22,11 @@ import (
 )
 
 // Retrieves the count of values.
-func (db *Database) ValueCount() (uint, error) {
+func ValueCount(tx *sql.Tx) (uint, error) {
 	sql := `SELECT count(1)
             FROM value`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -36,12 +36,12 @@ func (db *Database) ValueCount() (uint, error) {
 }
 
 // Retrieves the complete set of values.
-func (db *Database) Values() (entities.Values, error) {
+func Values(tx *sql.Tx) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             ORDER BY name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +51,12 @@ func (db *Database) Values() (entities.Values, error) {
 }
 
 // Retrieves a specific value.
-func (db *Database) Value(id entities.ValueId) (*entities.Value, error) {
+func Value(tx *sql.Tx, id entities.ValueId) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id = ?`
 
-	rows, err := db.ExecQuery(sql, id)
+	rows, err := tx.Query(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (db *Database) Value(id entities.ValueId) (*entities.Value, error) {
 }
 
 // Retrieves a specific set of values.
-func (db *Database) ValuesByIds(ids entities.ValueIds) (entities.Values, error) {
+func ValuesByIds(tx *sql.Tx, ids entities.ValueIds) (entities.Values, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id IN (?`
@@ -78,7 +78,7 @@ func (db *Database) ValuesByIds(ids entities.ValueIds) (entities.Values, error) 
 		params[index] = id
 	}
 
-	rows, err := db.ExecQuery(sql, params...)
+	rows, err := tx.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,13 +93,13 @@ func (db *Database) ValuesByIds(ids entities.ValueIds) (entities.Values, error) 
 }
 
 // Retrieves the set of unused values.
-func (db *Database) UnusedValues() (entities.Values, error) {
+func UnusedValues(tx *sql.Tx) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             WHERE id NOT IN (SELECT distinct(value_id)
                              FROM file_tag)`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +109,12 @@ func (db *Database) UnusedValues() (entities.Values, error) {
 }
 
 // Retrieves a specific value by name.
-func (db *Database) ValueByName(name string) (*entities.Value, error) {
+func ValueByName(tx *sql.Tx, name string) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE name = ?`
 
-	rows, err := db.ExecQuery(sql, name)
+	rows, err := tx.Query(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -124,7 +124,7 @@ func (db *Database) ValueByName(name string) (*entities.Value, error) {
 }
 
 // Retrieves the set of values with the specified names.
-func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
+func ValuesByNames(tx *sql.Tx, names []string) (entities.Values, error) {
 	if len(names) == 0 {
 		return make(entities.Values, 0), nil
 	}
@@ -140,7 +140,7 @@ func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
 		params[index] = name
 	}
 
-	rows, err := db.ExecQuery(sql, params...)
+	rows, err := tx.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -155,7 +155,7 @@ func (db *Database) ValuesByNames(names []string) (entities.Values, error) {
 }
 
 // Retrieves the set of values for the specified tag.
-func (db *Database) ValuesByTagId(tagId entities.TagId) (entities.Values, error) {
+func ValuesByTagId(tx *sql.Tx, tagId entities.TagId) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             WHERE id IN (
@@ -164,7 +164,7 @@ func (db *Database) ValuesByTagId(tagId entities.TagId) (entities.Values, error)
                 WHERE tag_id = ?1)
             ORDER BY name`
 
-	rows, err := db.ExecQuery(sql, tagId)
+	rows, err := tx.Query(sql, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -174,11 +174,11 @@ func (db *Database) ValuesByTagId(tagId entities.TagId) (entities.Values, error)
 }
 
 // Adds a value.
-func (db *Database) InsertValue(name string) (*entities.Value, error) {
+func InsertValue(tx *sql.Tx, name string) (*entities.Value, error) {
 	sql := `INSERT INTO value (name)
 	        VALUES (?)`
 
-	result, err := db.Exec(sql, name)
+	result, err := tx.Exec(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -200,11 +200,11 @@ func (db *Database) InsertValue(name string) (*entities.Value, error) {
 }
 
 // Deletes a value.
-func (db *Database) DeleteValue(valueId entities.ValueId) error {
+func DeleteValue(tx *sql.Tx, valueId entities.ValueId) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
-	result, err := db.Exec(sql, valueId)
+	result, err := tx.Exec(sql, valueId)
 	if err != nil {
 		return err
 	}
@@ -224,7 +224,7 @@ func (db *Database) DeleteValue(valueId entities.ValueId) error {
 }
 
 // Deletes all unused values.
-func (db *Database) DeleteUnusedValues(valueIds entities.ValueIds) error {
+func DeleteUnusedValues(tx *sql.Tx, valueIds entities.ValueIds) error {
 	if len(valueIds) == 0 {
 		return nil
 	}
@@ -245,7 +245,7 @@ func (db *Database) DeleteUnusedValues(valueIds entities.ValueIds) error {
 		params[len(valueIds)+index] = valueId
 	}
 
-	_, err := db.Exec(sql, params...)
+	_, err := tx.Exec(sql, params...)
 	if err != nil {
 		return nil
 	}

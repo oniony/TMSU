@@ -38,14 +38,15 @@ func deleteExec(store *storage.Storage, options Options, args []string) error {
 		return fmt.Errorf("too few arguments")
 	}
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	wereErrors := false
 	for _, tagName := range args {
-		tag, err := store.TagByName(tagName)
+		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
@@ -55,7 +56,7 @@ func deleteExec(store *storage.Storage, options Options, args []string) error {
 			continue
 		}
 
-		err = store.DeleteTag(tag.Id)
+		err = store.DeleteTag(tx, tag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
 		}

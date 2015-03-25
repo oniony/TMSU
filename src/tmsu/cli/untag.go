@@ -47,10 +47,11 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 
 	recursive := options.HasOption("--recursive")
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	if options.HasOption("--all") {
 		if len(args) < 1 {
@@ -59,7 +60,7 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 
 		paths := args
 
-		if err := untagPathsAll(store, paths, recursive); err != nil {
+		if err := untagPathsAll(store, tx, paths, recursive); err != nil {
 			return err
 		}
 	} else if options.HasOption("--tags") {
@@ -73,7 +74,7 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 			return fmt.Errorf("at least one file to untag must be specified")
 		}
 
-		if err := untagPaths(store, paths, tagArgs, recursive); err != nil {
+		if err := untagPaths(store, tx, paths, tagArgs, recursive); err != nil {
 			return err
 		}
 	} else {
@@ -84,7 +85,7 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := untagPaths(store, paths, tagArgs, recursive); err != nil {
+		if err := untagPaths(store, tx, paths, tagArgs, recursive); err != nil {
 			return err
 		}
 	}
@@ -92,7 +93,7 @@ func untagExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func untagPathsAll(store *storage.Storage, paths []string, recursive bool) error {
+func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
 	wereErrors := false
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -100,7 +101,7 @@ func untagPathsAll(store *storage.Storage, paths []string, recursive bool) error
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
 			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
@@ -112,18 +113,18 @@ func untagPathsAll(store *storage.Storage, paths []string, recursive bool) error
 
 		log.Infof(2, "%v: removing all tags.", file.Path())
 
-		if err := store.DeleteFileTagsByFileId(file.Id); err != nil {
+		if err := store.DeleteFileTagsByFileId(tx, file.Id); err != nil {
 			return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
 		}
 
 		if recursive {
-			childFiles, err := store.FilesByDirectory(file.Path())
+			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
 				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
 			}
 
 			for _, childFile := range childFiles {
-				if err := store.DeleteFileTagsByFileId(childFile.Id); err != nil {
+				if err := store.DeleteFileTagsByFileId(tx, childFile.Id); err != nil {
 					return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err)
 				}
 			}
@@ -137,7 +138,7 @@ func untagPathsAll(store *storage.Storage, paths []string, recursive bool) error
 	return nil
 }
 
-func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool) error {
+func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string, recursive bool) error {
 	wereErrors := false
 
 	files := make(entities.Files, 0, len(paths))
@@ -147,7 +148,7 @@ func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool)
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
 			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
@@ -160,7 +161,7 @@ func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool)
 		files = append(files, file)
 
 		if recursive {
-			childFiles, err := store.FilesByDirectory(file.Path())
+			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
 				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
 			}
@@ -181,7 +182,7 @@ func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool)
 			valueName = tagArg[index+1 : len(tagArg)]
 		}
 
-		tag, err := store.TagByName(tagName)
+		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
@@ -191,7 +192,7 @@ func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool)
 			continue
 		}
 
-		value, err := store.ValueByName(valueName)
+		value, err := store.ValueByName(tx, valueName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
 		}
@@ -202,10 +203,10 @@ func untagPaths(store *storage.Storage, paths, tagArgs []string, recursive bool)
 		}
 
 		for _, file := range files {
-			if err := store.DeleteFileTag(file.Id, tag.Id, value.Id); err != nil {
+			if err := store.DeleteFileTag(tx, file.Id, tag.Id, value.Id); err != nil {
 				switch err.(type) {
 				case storage.FileTagDoesNotExist:
-					exists, err := store.FileTagExists(file.Id, tag.Id, value.Id, false)
+					exists, err := store.FileTagExists(tx, file.Id, tag.Id, value.Id, false)
 					if err != nil {
 						return fmt.Errorf("could not check if tag exists: %v", err)
 					}

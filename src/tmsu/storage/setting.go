@@ -17,6 +17,7 @@ package storage
 
 import (
 	"tmsu/entities"
+	"tmsu/storage/database"
 )
 
 var defaultSettings = map[string]string{
@@ -27,8 +28,8 @@ var defaultSettings = map[string]string{
 }
 
 // The complete set of settings.
-func (storage *Storage) Settings() (entities.Settings, error) {
-	settings, err := storage.Db.Settings()
+func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
+	settings, err := database.Settings(tx.tx)
 	if err != nil {
 		return nil, err
 	}
@@ -43,8 +44,8 @@ func (storage *Storage) Settings() (entities.Settings, error) {
 	return settings, nil
 }
 
-func (storage *Storage) Setting(name string) (*entities.Setting, error) {
-	setting, err := storage.Db.Setting(name)
+func (storage *Storage) Setting(tx *Tx, name string) (*entities.Setting, error) {
+	setting, err := database.Setting(tx.tx, name)
 	if err != nil {
 		return nil, err
 	}
@@ -60,6 +61,6 @@ func (storage *Storage) Setting(name string) (*entities.Setting, error) {
 	return setting, nil
 }
 
-func (storage *Storage) UpdateSetting(name, value string) (*entities.Setting, error) {
-	return storage.Db.UpdateSetting(name, value)
+func (storage *Storage) UpdateSetting(tx *Tx, name, value string) (*entities.Setting, error) {
+	return database.UpdateSetting(tx.tx, name, value)
 }

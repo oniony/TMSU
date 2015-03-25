@@ -41,12 +41,13 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagNames := args[1:]
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
-	sourceTag, err := store.Db.TagByName(sourceTagName)
+	sourceTag, err := store.TagByName(tx, sourceTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
@@ -56,7 +57,7 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 
 	wereErrors := false
 	for _, destTagName := range destTagNames {
-		destTag, err := store.Db.TagByName(destTagName)
+		destTag, err := store.TagByName(tx, destTagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 		}
@@ -68,7 +69,7 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 
 		log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
-		if _, err = store.CopyTag(sourceTag.Id, destTagName); err != nil {
+		if _, err = store.CopyTag(tx, sourceTag.Id, destTagName); err != nil {
 			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 		}
 	}

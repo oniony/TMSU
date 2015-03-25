@@ -37,13 +37,14 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 		return fmt.Errorf("too few arguments")
 	}
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	destTagName := args[len(args)-1]
-	destTag, err := store.TagByName(destTagName)
+	destTag, err := store.TagByName(tx, destTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
@@ -59,7 +60,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 			continue
 		}
 
-		sourceTag, err := store.TagByName(sourceTagName)
+		sourceTag, err := store.TagByName(tx, sourceTagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 		}
@@ -71,7 +72,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 
 		log.Infof(2, "finding files tagged '%v'.", sourceTagName)
 
-		fileTags, err := store.FileTagsByTagId(sourceTag.Id, true)
+		fileTags, err := store.FileTagsByTagId(tx, sourceTag.Id, true)
 		if err != nil {
 			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
 		}
@@ -79,7 +80,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 		log.Infof(2, "applying tag '%v' to these files.", destTagName)
 
 		for _, fileTag := range fileTags {
-			_, err = store.AddFileTag(fileTag.FileId, destTag.Id, fileTag.ValueId)
+			_, err = store.AddFileTag(tx, fileTag.FileId, destTag.Id, fileTag.ValueId)
 			if err != nil {
 				return fmt.Errorf("could not apply tag '%v' to file #%v: %v", destTagName, fileTag.FileId, err)
 			}
@@ -87,7 +88,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 
 		log.Infof(2, "deleting tag '%v'.", sourceTagName)
 
-		err = store.DeleteTag(sourceTag.Id)
+		err = store.DeleteTag(tx, sourceTag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err)
 		}

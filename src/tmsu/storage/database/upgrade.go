@@ -16,19 +16,15 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"tmsu/common"
 	"tmsu/common/log"
 )
 
-func (db *Database) Upgrade() error {
-	if err := db.Begin(); err != nil {
-		return err
-	}
-	defer db.Rollback()
-
-	version := db.schemaVersion()
+func Upgrade(tx *sql.Tx) error {
+	version := schemaVersion(tx)
 
 	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
 
@@ -40,7 +36,7 @@ func (db *Database) Upgrade() error {
 	if version == noVersion {
 		log.Infof(2, "creating schema")
 
-		if err := db.createSchema(); err != nil {
+		if err := createSchema(tx); err != nil {
 			return err
 		}
 
@@ -50,16 +46,12 @@ func (db *Database) Upgrade() error {
 	log.Infof(2, "upgrading database")
 
 	if version.LessThan(common.Version{0, 5, 0}) {
-		if err := db.renameFingerprintAlgorithmSetting(); err != nil {
+		if err := renameFingerprintAlgorithmSetting(tx); err != nil {
 			return err
 		}
 	}
 
-	if err := db.updateSchemaVersion(latestSchemaVersion); err != nil {
-		return err
-	}
-
-	if err := db.Commit(); err != nil {
+	if err := updateSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
 	}
 
@@ -68,10 +60,10 @@ func (db *Database) Upgrade() error {
 
 // unexported
 
-func (db *Database) renameFingerprintAlgorithmSetting() error {
-	_, err := db.Exec(`UPDATE setting
-                            SET name = 'fileFingerprintAlgorithm'
-                            WHERE name = 'fingerprintAlgorithm'`)
+func renameFingerprintAlgorithmSetting(tx *sql.Tx) error {
+	_, err := tx.Exec(`UPDATE setting
+                          SET name = 'fileFingerprintAlgorithm'
+                          WHERE name = 'fingerprintAlgorithm'`)
 
 	if err != nil {
 		return fmt.Errorf("could not upgrade database: %v", err)

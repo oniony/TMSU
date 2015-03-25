@@ -21,12 +21,12 @@ import (
 )
 
 // The complete set of queries.
-func (db *Database) Queries() (entities.Queries, error) {
+func Queries(tx *sql.Tx) (entities.Queries, error) {
 	sql := `SELECT text
 	        FROM query
 	        ORDER BY text`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -36,12 +36,12 @@ func (db *Database) Queries() (entities.Queries, error) {
 }
 
 // Retrieves the specified query.
-func (db *Database) Query(text string) (*entities.Query, error) {
+func Query(tx *sql.Tx, text string) (*entities.Query, error) {
 	sql := `SELECT 1
             FROM query
             WHERE text = ?`
 
-	rows, err := db.ExecQuery(sql, text)
+	rows, err := tx.Query(sql, text)
 	if err != nil {
 		return nil, err
 	}
@@ -51,11 +51,11 @@ func (db *Database) Query(text string) (*entities.Query, error) {
 }
 
 // Adds a query to the database.
-func (db *Database) InsertQuery(text string) (*entities.Query, error) {
+func InsertQuery(tx *sql.Tx, text string) (*entities.Query, error) {
 	sql := `INSERT INTO query (text)
 	        VALUES (?)`
 
-	result, err := db.Exec(sql, text)
+	result, err := tx.Exec(sql, text)
 	if err != nil {
 		return nil, err
 	}
@@ -72,11 +72,11 @@ func (db *Database) InsertQuery(text string) (*entities.Query, error) {
 }
 
 // Removes a query from the database.
-func (db *Database) DeleteQuery(text string) error {
+func DeleteQuery(tx *sql.Tx, text string) error {
 	sql := `DELETE FROM query
 	        WHERE text = ?`
 
-	result, err := db.Exec(sql, text)
+	result, err := tx.Exec(sql, text)
 	if err != nil {
 		return err
 	}

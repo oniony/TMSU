@@ -46,12 +46,13 @@ func renameExec(store *storage.Storage, options Options, args []string) error {
 	sourceTagName := args[0]
 	destTagName := args[1]
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
-	sourceTag, err := store.TagByName(sourceTagName)
+	sourceTag, err := store.TagByName(tx, sourceTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 	}
@@ -59,7 +60,7 @@ func renameExec(store *storage.Storage, options Options, args []string) error {
 		return fmt.Errorf("no such tag '%v'", sourceTagName)
 	}
 
-	destTag, err := store.TagByName(destTagName)
+	destTag, err := store.TagByName(tx, destTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 	}
@@ -69,7 +70,7 @@ func renameExec(store *storage.Storage, options Options, args []string) error {
 
 	log.Infof(2, "renaming tag '%v' to '%v'.", sourceTagName, destTagName)
 
-	_, err = store.RenameTag(sourceTag.Id, destTagName)
+	_, err = store.RenameTag(tx, sourceTag.Id, destTagName)
 	if err != nil {
 		return fmt.Errorf("could not rename tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 	}

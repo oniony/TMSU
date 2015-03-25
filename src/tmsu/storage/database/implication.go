@@ -22,14 +22,14 @@ import (
 )
 
 // Retrieves the complete set of tag implications.
-func (db *Database) Implications() (entities.Implications, error) {
+func Implications(tx *sql.Tx) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id = t1.id
             AND implication.implied_tag_id = t2.id
             ORDER BY t1.name, t2.name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -44,7 +44,7 @@ func (db *Database) Implications() (entities.Implications, error) {
 }
 
 // Retrieves the set of tags implied by the specified tags.
-func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implications, error) {
+func ImplicationsForTags(tx *sql.Tx, tagIds entities.TagIds) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id IN (?`
@@ -58,7 +58,7 @@ func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implic
 		params[index] = tagId
 	}
 
-	rows, err := db.ExecQuery(sql, params...)
+	rows, err := tx.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -73,14 +73,14 @@ func (db *Database) ImplicationsForTags(tagIds entities.TagIds) (entities.Implic
 }
 
 // Updates implications featuring the specified tag.
-func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId entities.TagId) error {
+func UpdateImplicationsForTagId(tx *sql.Tx, implyingTagId, impliedTagId entities.TagId) error {
 	// prevent a tag implying itself
 
 	sql := `DELETE from implication
             WHERE (tag_id = ?1 AND implied_tag_id = ?2)
             OR (tag_id = ?2 AND implied_tag_id = ?1)`
 
-	_, err := db.Exec(sql, implyingTagId, impliedTagId)
+	_, err := tx.Exec(sql, implyingTagId, impliedTagId)
 	if err != nil {
 		return err
 	}
@@ -89,7 +89,7 @@ func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId entiti
            SET tag_id = ?2
            WHERE tag_id = ?1`
 
-	_, err = db.Exec(sql, implyingTagId, impliedTagId)
+	_, err = tx.Exec(sql, implyingTagId, impliedTagId)
 	if err != nil {
 		return err
 	}
@@ -98,7 +98,7 @@ func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId entiti
            SET implied_tag_id = ?2
            WHERE implied_tag_id = ?1`
 
-	_, err = db.Exec(sql, implyingTagId, impliedTagId)
+	_, err = tx.Exec(sql, implyingTagId, impliedTagId)
 	if err != nil {
 		return err
 	}
@@ -107,11 +107,11 @@ func (db Database) UpdateImplicationsForTagId(implyingTagId, impliedTagId entiti
 }
 
 // Adds the specified implications
-func (db Database) AddImplication(tagId, impliedTagId entities.TagId) error {
+func AddImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
 	sql := `INSERT OR IGNORE INTO implication (tag_id, implied_tag_id)
 	        VALUES (?1, ?2)`
 
-	_, err := db.Exec(sql, tagId, impliedTagId)
+	_, err := tx.Exec(sql, tagId, impliedTagId)
 	if err != nil {
 		return err
 	}
@@ -120,11 +120,11 @@ func (db Database) AddImplication(tagId, impliedTagId entities.TagId) error {
 }
 
 // Deletes the specified implications
-func (db Database) DeleteImplication(tagId, impliedTagId entities.TagId) error {
+func DeleteImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 AND implied_tag_id = ?2`
 
-	result, err := db.Exec(sql, tagId, impliedTagId)
+	result, err := tx.Exec(sql, tagId, impliedTagId)
 	if err != nil {
 		return err
 	}
@@ -144,11 +144,11 @@ func (db Database) DeleteImplication(tagId, impliedTagId entities.TagId) error {
 }
 
 // Deletes implications featuring the specified tag.
-func (db Database) DeleteImplicationsForTagId(tagId entities.TagId) error {
+func DeleteImplicationsForTagId(tx *sql.Tx, tagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 OR implied_tag_id = ?1`
 
-	_, err := db.Exec(sql, tagId)
+	_, err := tx.Exec(sql, tagId)
 	if err != nil {
 		return err
 	}

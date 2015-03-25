@@ -41,25 +41,26 @@ var DupesCommand = Command{
 func dupesExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	switch len(args) {
 	case 0:
-		return findDuplicatesInDb(store)
+		return findDuplicatesInDb(store, tx)
 	default:
-		return findDuplicatesOf(store, args, recursive)
+		return findDuplicatesOf(store, tx, args, recursive)
 	}
 
 	return nil
 }
 
-func findDuplicatesInDb(store *storage.Storage) error {
+func findDuplicatesInDb(store *storage.Storage, tx *storage.Tx) error {
 	log.Info(2, "identifying duplicate files.")
 
-	fileSets, err := store.DuplicateFiles()
+	fileSets, err := store.DuplicateFiles(tx)
 	if err != nil {
 		return fmt.Errorf("could not identify duplicate files: %v", err)
 	}
@@ -82,8 +83,8 @@ func findDuplicatesInDb(store *storage.Storage) error {
 	return nil
 }
 
-func findDuplicatesOf(store *storage.Storage, paths []string, recursive bool) error {
-	settings, err := store.Settings()
+func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
+	settings, err := store.Settings(tx)
 	if err != nil {
 		return err
 	}
@@ -136,7 +137,7 @@ func findDuplicatesOf(store *storage.Storage, paths []string, recursive bool) er
 			continue
 		}
 
-		files, err := store.FilesByFingerprint(fp)
+		files, err := store.FilesByFingerprint(tx, fp)
 		if err != nil {
 			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fp, err)
 		}

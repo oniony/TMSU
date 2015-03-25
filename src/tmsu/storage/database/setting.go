@@ -21,12 +21,12 @@ import (
 )
 
 // The complete set of settings.
-func (db *Database) Settings() (entities.Settings, error) {
+func Settings(tx *sql.Tx) (entities.Settings, error) {
 	sql := `SELECT name, value
 	        FROM setting
 	        ORDER BY name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return entities.Settings{}, err
 	}
@@ -40,12 +40,12 @@ func (db *Database) Settings() (entities.Settings, error) {
 	return settings, nil
 }
 
-func (db *Database) Setting(name string) (*entities.Setting, error) {
+func Setting(tx *sql.Tx, name string) (*entities.Setting, error) {
 	sql := `SELECT name, value
             FROM setting
             WHERE name = ?`
 
-	rows, err := db.ExecQuery(sql, name)
+	rows, err := tx.Query(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -59,10 +59,10 @@ func (db *Database) Setting(name string) (*entities.Setting, error) {
 	return setting, nil
 }
 
-func (db *Database) UpdateSetting(name, value string) (*entities.Setting, error) {
+func UpdateSetting(tx *sql.Tx, name, value string) (*entities.Setting, error) {
 	sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
 
-	result, err := db.Exec(sql, name, value)
+	result, err := tx.Exec(sql, name, value)
 	if err != nil {
 		return nil, err
 	}

@@ -82,18 +82,19 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 		}
 	}
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(store, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, sort)
+	return listFilesForQuery(store, tx, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, sort)
 }
 
 // unexported
 
-func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) error {
+func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) error {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
@@ -106,7 +107,7 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 	wereErrors := false
 
 	tagNames := query.TagNames(expression)
-	tags, err := store.TagsByNames(tagNames)
+	tags, err := store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !tags.ContainsName(tagName) {
 			log.Warnf("no such tag '%v'.", tagName)
@@ -121,7 +122,7 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 
 	log.Info(2, "querying database")
 
-	files, err := store.QueryFiles(expression, path, explicitOnly, sort)
+	files, err := store.QueryFiles(tx, expression, path, explicitOnly, sort)
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
 			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)")
@@ -130,14 +131,14 @@ func listFilesForQuery(store *storage.Storage, queryText, path string, dirOnly, 
 		}
 	}
 
-	if err = listFiles(files, dirOnly, fileOnly, print0, showCount); err != nil {
+	if err = listFiles(tx, files, dirOnly, fileOnly, print0, showCount); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func listFiles(files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {
+func listFiles(tx *storage.Tx, files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {
 	relPaths := make([]string, 0, len(files))
 	for _, file := range files {
 		if fileOnly && file.IsDir {

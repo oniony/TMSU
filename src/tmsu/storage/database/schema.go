@@ -16,6 +16,7 @@
 package database
 
 import (
+	"database/sql"
 	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"tmsu/common"
@@ -25,13 +26,13 @@ import (
 
 var latestSchemaVersion = common.Version{0, 5, 0}
 
-func (db *Database) schemaVersion() common.Version {
+func schemaVersion(tx *sql.Tx) common.Version {
 	sql := `SELECT major, minor, patch
             FROM version`
 
 	var major, minor, patch uint
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return common.Version{}
 	}
@@ -44,11 +45,11 @@ func (db *Database) schemaVersion() common.Version {
 	return common.Version{major, minor, patch}
 }
 
-func (db *Database) insertSchemaVersion(version common.Version) error {
+func insertSchemaVersion(tx *sql.Tx, version common.Version) error {
 	sql := `INSERT INTO version (major, minor, patch)
             VALUES (?, ?, ?)`
 
-	result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
 	if err != nil {
 		return fmt.Errorf("could not update schema version: %v", err)
 	}
@@ -63,10 +64,10 @@ func (db *Database) insertSchemaVersion(version common.Version) error {
 	return nil
 }
 
-func (db *Database) updateSchemaVersion(version common.Version) error {
+func updateSchemaVersion(tx *sql.Tx, version common.Version) error {
 	sql := `UPDATE version SET major = ?, minor = ?, patch = ?`
 
-	result, err := db.Exec(sql, version.Major, version.Minor, version.Patch)
+	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
 	if err != nil {
 		return fmt.Errorf("could not update schema version: %v", err)
 	}
@@ -81,67 +82,67 @@ func (db *Database) updateSchemaVersion(version common.Version) error {
 	return nil
 }
 
-func (db *Database) createSchema() error {
-	if err := db.createTagTable(); err != nil {
+func createSchema(tx *sql.Tx) error {
+	if err := createTagTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createFileTable(); err != nil {
+	if err := createFileTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createValueTable(); err != nil {
+	if err := createValueTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createFileTagTable(); err != nil {
+	if err := createFileTagTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createImplicationTable(); err != nil {
+	if err := createImplicationTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createQueryTable(); err != nil {
+	if err := createQueryTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createSettingTable(); err != nil {
+	if err := createSettingTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.createVersionTable(); err != nil {
+	if err := createVersionTable(tx); err != nil {
 		return err
 	}
 
-	if err := db.insertSchemaVersion(latestSchemaVersion); err != nil {
+	if err := insertSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createTagTable() error {
+func createTagTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS tag (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
            ON tag(name)`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createFileTable() error {
+func createFileTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS file (
                 id INTEGER PRIMARY KEY,
                 directory TEXT NOT NULL,
@@ -153,35 +154,35 @@ func (db *Database) createFileTable() error {
                 CONSTRAINT con_file_path UNIQUE (directory, name)
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
            ON file(fingerprint)`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createValueTable() error {
+func createValueTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS value (
                 id INTEGER PRIMARY KEY,
                 name TEXT NOT NULL,
                 CONSTRAINT con_value_name UNIQUE (name)
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createFileTagTable() error {
+func createFileTagTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS file_tag (
                 file_id INTEGER NOT NULL,
                 tag_id INTEGER NOT NULL,
@@ -192,74 +193,74 @@ func (db *Database) createFileTagTable() error {
                 FOREIGN KEY (value_id) REFERENCES value(id)
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
            ON file_tag(file_id)`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
            ON file_tag(tag_id)`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
            ON file_tag(value_id)`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createImplicationTable() error {
+func createImplicationTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS implication (
                 tag_id INTEGER NOT NULL,
                 implied_tag_id INTEGER NOT NULL,
                 PRIMARY KEY (tag_id, implied_tag_id)
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createQueryTable() error {
+func createQueryTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS query (
                 text TEXT PRIMARY KEY
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createSettingTable() error {
+func createSettingTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS setting (
                 name TEXT PRIMARY KEY,
                 value TEXT NOT NULL
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (db *Database) createVersionTable() error {
+func createVersionTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS version (
                 major NUMBER NOT NULL,
                 minor NUMBER NOT NULL,
@@ -267,7 +268,7 @@ func (db *Database) createVersionTable() error {
                 PRIMARY KEY (major, minor, patch)
             )`
 
-	if _, err := db.Exec(sql); err != nil {
+	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 

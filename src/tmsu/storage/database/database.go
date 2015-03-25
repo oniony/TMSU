@@ -18,23 +18,14 @@ package database
 import (
 	"database/sql"
 	"errors"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"path/filepath"
 	"tmsu/common/log"
 )
 
-type Database struct {
-	Path string
-
-	// unexported
-	connection  *sql.DB
-	transaction *sql.Tx
-}
-
 // Opens the database at the specified path
-func OpenAt(path string) (*Database, error) {
+func OpenAt(path string) (*sql.DB, error) {
 	log.Infof(2, "opening database at '%v'.", path)
 
 	_, err := os.Stat(path)
@@ -49,135 +40,25 @@ func OpenAt(path string) (*Database, error) {
 		}
 	}
 
-	connection, err := sql.Open("sqlite3", path)
+	db, err := sql.Open("sqlite3", path)
 	if err != nil {
 		return nil, DatabaseAccessError{path, err}
 	}
 
-	database := &Database{path, connection, nil}
+	tx, err := db.Begin()
+	if err != nil {
+		return nil, DatabaseTransactionError{path, err}
+	}
 
-	if err := database.Upgrade(); err != nil {
+	if err := Upgrade(tx); err != nil {
 		return nil, err
 	}
 
-	return database, nil
-}
-
-// Executes a SQL query.
-func (db *Database) Exec(query string, args ...interface{}) (sql.Result, error) {
-	if log.Verbosity >= 3 {
-		log.Infof(3, "executing update\n"+query)
-
-		for index, arg := range args {
-			log.Infof(3, "Arg %v: %v", index, arg)
-		}
+	if err := tx.Commit(); err != nil {
+		return nil, DatabaseTransactionError{path, err}
 	}
 
-	var result sql.Result
-	var err error
-
-	if db.transaction != nil {
-		result, err = db.transaction.Exec(query, args...)
-	} else {
-		result, err = db.connection.Exec(query, args...)
-	}
-
-	if err != nil {
-		return nil, DatabaseQueryError{db.Path, query, err}
-	}
-
-	return result, nil
-}
-
-// Executes a SQL query returning rows.
-func (db *Database) ExecQuery(query string, args ...interface{}) (*sql.Rows, error) {
-	if log.Verbosity >= 3 {
-		log.Infof(3, "executing query\n"+query)
-
-		for index, arg := range args {
-			log.Infof(3, "Arg %v: %v", index, arg)
-		}
-	}
-
-	var rows *sql.Rows
-	var err error
-
-	if db.transaction != nil {
-		rows, err = db.transaction.Query(query, args...)
-	} else {
-		rows, err = db.connection.Query(query, args...)
-	}
-
-	if err != nil {
-		return nil, DatabaseQueryError{db.Path, query, err}
-	}
-
-	return rows, nil
-}
-
-// Start a transaction
-func (db *Database) Begin() error {
-	if db.transaction != nil {
-		panic("could not begin transaction: there is already an open transaction")
-	}
-
-	log.Info(2, "beginning new transaction")
-
-	transaction, err := db.connection.Begin()
-	if err != nil {
-		return DatabaseTransactionError{db.Path, err}
-	}
-
-	db.transaction = transaction
-
-	return nil
-}
-
-// Commits the current transaction
-func (db *Database) Commit() error {
-	if db.transaction == nil {
-		return fmt.Errorf("could not commit transaction: there is no open transaciton")
-	}
-
-	log.Info(2, "committing transaction")
-
-	if err := db.transaction.Commit(); err != nil {
-		db.transaction = nil
-		return DatabaseTransactionError{db.Path, err}
-	}
-
-	db.transaction = nil
-
-	return nil
-}
-
-// Rolls back the current transaction
-func (db *Database) Rollback() error {
-	if db.transaction == nil {
-		return fmt.Errorf("could not rollback transaction: there is no open transaciton")
-	}
-
-	log.Info(2, "rolling back transaction")
-
-	if err := db.transaction.Rollback(); err != nil {
-		db.transaction = nil
-		return DatabaseTransactionError{db.Path, err}
-	}
-
-	db.transaction = nil
-
-	return nil
-}
-
-// Closes the database connection
-func (db *Database) Close() error {
-	log.Info(3, "closing database")
-
-	if err := db.connection.Close(); err != nil {
-		return DatabaseAccessError{db.Path, err}
-	}
-
-	return nil
+	return db, nil
 }
 
 // unexported

@@ -82,8 +82,8 @@ func (emptyStat) Sys() interface{} {
 	return nil
 }
 
-func createTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
-	tag, err := store.AddTag(tagName)
+func createTag(store *storage.Storage, tx *storage.Tx, tagName string) (*entities.Tag, error) {
+	tag, err := store.AddTag(tx, tagName)
 	if err != nil {
 		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
 	}
@@ -93,8 +93,8 @@ func createTag(store *storage.Storage, tagName string) (*entities.Tag, error) {
 	return tag, nil
 }
 
-func createValue(store *storage.Storage, valueName string) (*entities.Value, error) {
-	value, err := store.AddValue(valueName)
+func createValue(store *storage.Storage, tx *storage.Tx, valueName string) (*entities.Value, error) {
+	value, err := store.AddValue(tx, valueName)
 	if err != nil {
 		return nil, err
 	}

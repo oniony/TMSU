@@ -26,7 +26,6 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"syscall"
 	"time"
 	"tmsu/common/log"
@@ -91,11 +90,10 @@ type FuseVfs struct {
 	store     *storage.Storage
 	mountPath string
 	server    *fuse.Server
-	locker    sync.Locker
 }
 
 func MountVfs(store *storage.Storage, mountPath string, options []string) (*FuseVfs, error) {
-	fuseVfs := FuseVfs{nil, "", nil, &(sync.Mutex{})}
+	fuseVfs := FuseVfs{nil, "", nil}
 
 	pathFs := pathfs.NewPathNodeFs(&fuseVfs, nil)
 	conn := nodefs.NewFileSystemConnector(pathFs.Root(), nil)
@@ -157,14 +155,6 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 	log.Infof(2, "BEGIN GetAttr(%v)", name)
 	defer log.Infof(2, "END GetAttr(%v)", name)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
-		log.Fatalf("could not begin transaction: %v", err)
-	}
-	defer vfs.store.Commit()
-
 	switch name {
 	case databaseFilename:
 		return vfs.getDatabaseFileAttr()
@@ -219,23 +209,21 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 		return fuse.EPERM
 	}
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	switch path[0] {
 	case tagsDir:
 		name := path[1]
 
-		if _, err := vfs.store.AddTag(name); err != nil {
+		if _, err := vfs.store.AddTag(tx, name); err != nil {
 			log.Fatalf("could not create tag '%v': %v", name, err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
+		if err := tx.Commit(); err != nil {
 			log.Fatalf("could not commit transaction: %v", err)
 		}
 
@@ -282,29 +270,27 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	log.Infof(2, "BEGIN OpenDir(%v)", name)
 	defer log.Infof(2, "END OpenDir(%v)", name)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	switch name {
 	case "":
 		return vfs.topFiles()
 	case tagsDir:
-		return vfs.tagDirectories()
+		return vfs.tagDirectories(tx)
 	case queriesDir:
-		return vfs.queriesDirectories()
+		return vfs.queriesDirectories(tx)
 	}
 
 	path := vfs.splitPath(name)
 	switch path[0] {
 	case tagsDir:
-		return vfs.openTaggedEntryDir(path[1:])
+		return vfs.openTaggedEntryDir(tx, path[1:])
 	case queriesDir:
-		return vfs.openQueryEntryDir(path[1:])
+		return vfs.openQueryEntryDir(tx, path[1:])
 	}
 
 	return nil, fuse.ENOENT
@@ -314,13 +300,11 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	log.Infof(2, "BEGIN Readlink(%v)", name)
 	defer log.Infof(2, "END Readlink(%v)", name)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	if name == ".database" {
 		return vfs.readDatabaseFileLink()
@@ -329,7 +313,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	path := vfs.splitPath(name)
 	switch path[0] {
 	case tagsDir, queriesDir:
-		return vfs.readTaggedEntryLink(path[1:])
+		return vfs.readTaggedEntryLink(tx, path[1:])
 	}
 
 	return "", fuse.ENOENT
@@ -346,13 +330,11 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 	log.Infof(2, "BEGIN Rename(%v, %v)", oldName, newName)
 	defer log.Infof(2, "END Rename(%v, %v)", oldName, newName)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	oldPath := vfs.splitPath(oldName)
 	newPath := vfs.splitPath(newName)
@@ -368,7 +350,7 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 	oldTagName := oldPath[1]
 	newTagName := newPath[1]
 
-	tag, err := vfs.store.TagByName(oldTagName)
+	tag, err := vfs.store.TagByName(tx, oldTagName)
 	if err != nil {
 		log.Fatalf("could not retrieve tag '%v': %v", oldTagName, err)
 	}
@@ -376,11 +358,11 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 		return fuse.ENOENT
 	}
 
-	if _, err := vfs.store.RenameTag(tag.Id, newTagName); err != nil {
+	if _, err := vfs.store.RenameTag(tx, tag.Id, newTagName); err != nil {
 		log.Fatalf("could not rename tag '%v' to '%v': %v", oldTagName, newTagName, err)
 	}
 
-	if err := vfs.store.Commit(); err != nil {
+	if err := tx.Commit(); err != nil {
 		log.Fatalf("could not commit transaction: %v", err)
 	}
 
@@ -391,13 +373,11 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Rmdir(%v)", name)
 	defer log.Infof(2, "END Rmdir(%v)", name)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	path := vfs.splitPath(name)
 
@@ -409,7 +389,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 		}
 
 		tagName := path[1]
-		tag, err := vfs.store.TagByName(tagName)
+		tag, err := vfs.store.TagByName(tx, tagName)
 		if err != nil {
 			log.Fatalf("could not retrieve tag '%v': %v", tagName, err)
 		}
@@ -417,7 +397,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			return fuse.ENOENT
 		}
 
-		count, err := vfs.store.FileTagCountByTagId(tag.Id, false)
+		count, err := vfs.store.FileTagCountByTagId(tx, tag.Id, false)
 		if err != nil {
 			log.Fatalf("could not retrieve file-tag count for tag '%v': %v", tagName, err)
 		}
@@ -425,11 +405,11 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			return fuse.Status(syscall.ENOTEMPTY)
 		}
 
-		if err := vfs.store.DeleteTag(tag.Id); err != nil {
+		if err := vfs.store.DeleteTag(tx, tag.Id); err != nil {
 			log.Fatalf("could not delete tag '%v': %v", tagName, err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
+		if err := tx.Commit(); err != nil {
 			log.Fatalf("could not commit transaction: %v", err)
 		}
 
@@ -442,11 +422,11 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 
 		text := path[1]
 
-		if err := vfs.store.DeleteQuery(text); err != nil {
+		if err := vfs.store.DeleteQuery(tx, text); err != nil {
 			log.Fatalf("could not remove tag '%v': %v", name, err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
+		if err := tx.Commit(); err != nil {
 			log.Fatalf("could not commit transaction: %v", err)
 		}
 
@@ -492,13 +472,11 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 	log.Infof(2, "BEGIN Unlink(%v)", name)
 	defer log.Infof(2, "END Unlink(%v)", name)
 
-	vfs.locker.Lock()
-	defer vfs.locker.Unlock()
-
-	if err := vfs.store.Begin(); err != nil {
+	tx, err := vfs.store.Begin()
+	if err != nil {
 		log.Fatalf("could not begin transaction: %v", err)
 	}
-	defer vfs.store.Commit()
+	defer tx.Commit()
 
 	fileId := vfs.parseFileId(name)
 	if fileId == 0 {
@@ -506,7 +484,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 		return fuse.EPERM
 	}
 
-	file, err := vfs.store.File(fileId)
+	file, err := vfs.store.File(tx, fileId)
 	if err != nil {
 		log.Fatal("could not retrieve file '%v': %v", fileId, err)
 	}
@@ -529,7 +507,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			valueName = ""
 		}
 
-		tag, err := vfs.store.TagByName(tagName)
+		tag, err := vfs.store.TagByName(tx, tagName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -537,7 +515,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve tag '%v'.", tagName)
 		}
 
-		value, err := vfs.store.ValueByName(valueName)
+		value, err := vfs.store.ValueByName(tx, valueName)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -545,11 +523,11 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 			log.Fatalf("could not retrieve value '%v'.", valueName)
 		}
 
-		if err = vfs.store.DeleteFileTag(fileId, tag.Id, value.Id); err != nil {
+		if err = vfs.store.DeleteFileTag(tx, fileId, tag.Id, value.Id); err != nil {
 			log.Fatal(err)
 		}
 
-		if err := vfs.store.Commit(); err != nil {
+		if err := tx.Commit(); err != nil {
 			log.Fatalf("could not commit transaction: %v", err)
 		}
 
@@ -603,11 +581,11 @@ func (vfs FuseVfs) topFiles() ([]fuse.DirEntry, fuse.Status) {
 	return entries, fuse.OK
 }
 
-func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) tagDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status) {
 	log.Infof(2, "BEGIN tagDirectories")
 	defer log.Infof(2, "END tagDirectories")
 
-	tags, err := vfs.store.Tags()
+	tags, err := vfs.store.Tags(tx)
 	if err != nil {
 		log.Fatalf("Could not retrieve tags: %v", err)
 	}
@@ -624,11 +602,11 @@ func (vfs FuseVfs) tagDirectories() ([]fuse.DirEntry, fuse.Status) {
 	return entries, fuse.OK
 }
 
-func (vfs FuseVfs) queriesDirectories() ([]fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) queriesDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status) {
 	log.Infof(2, "BEGIN queriesDirectories")
 	defer log.Infof(2, "END queriesDirectories")
 
-	queries, err := vfs.store.Queries()
+	queries, err := vfs.store.Queries(tx)
 	if err != nil {
 		log.Fatalf("could not retrieve queries: %v", err)
 	}
@@ -649,7 +627,13 @@ func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
 	log.Infof(2, "BEGIN getTagsAttr")
 	defer log.Infof(2, "END getTagsAttr")
 
-	tagCount, err := vfs.store.TagCount()
+	tx, err := vfs.store.Begin()
+	if err != nil {
+		log.Fatalf("could not begin transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	tagCount, err := vfs.store.TagCount(tx)
 	if err != nil {
 		log.Fatalf("could not get tag count: %v", err)
 	}
@@ -689,8 +673,13 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		}
 	}
 
-	// tag directory
-	tagIds, err := vfs.tagNamesToIds(tagNames)
+	tx, err := vfs.store.Begin()
+	if err != nil {
+		log.Fatalf("could not begin transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	tagIds, err := vfs.tagNamesToIds(tx, tagNames)
 	if err != nil {
 		log.Fatalf("could not lookup tag IDs: %v.", err)
 	}
@@ -734,20 +723,26 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 		return nil, fuse.ENOENT
 	}
 
+	tx, err := vfs.store.Begin()
+	if err != nil {
+		log.Fatalf("could not begin transaction: %v", err)
+	}
+	defer tx.Commit()
+
 	tagNames := query.TagNames(expression)
-	tags, err := vfs.store.TagsByNames(tagNames)
+	tags, err := vfs.store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !containsTag(tags, tagName) {
 			return nil, fuse.ENOENT
 		}
 	}
 
-	q, err := vfs.store.Query(queryText)
+	q, err := vfs.store.Query(tx, queryText)
 	if err != nil {
 		log.Fatalf("could not retrieve query '%v': %v", queryText, err)
 	}
 	if q == nil {
-		_, err = vfs.store.AddQuery(queryText)
+		_, err = vfs.store.AddQuery(tx, queryText)
 		if err != nil {
 			log.Fatalf("could not add query '%v': %v", queryText, err)
 		}
@@ -758,7 +753,7 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) getDatabaseFileAttr() (*fuse.Attr, fuse.Status) {
-	databasePath := vfs.store.Db.Path
+	databasePath := vfs.store.DbPath
 
 	fileInfo, err := os.Stat(databasePath)
 	if err != nil {
@@ -771,7 +766,13 @@ func (vfs FuseVfs) getDatabaseFileAttr() (*fuse.Attr, fuse.Status) {
 }
 
 func (vfs FuseVfs) getFileEntryAttr(fileId entities.FileId) (*fuse.Attr, fuse.Status) {
-	file, err := vfs.store.File(fileId)
+	tx, err := vfs.store.Begin()
+	if err != nil {
+		log.Fatalf("could not begin transaction: %v", err)
+	}
+	defer tx.Commit()
+
+	file, err := vfs.store.File(tx, fileId)
 	if err != nil {
 		log.Fatalf("could not retrieve file #%v: %v", fileId, err)
 	}
@@ -793,12 +794,12 @@ func (vfs FuseVfs) getFileEntryAttr(fileId entities.FileId) (*fuse.Attr, fuse.St
 	return &fuse.Attr{Mode: fuse.S_IFLNK | 0755, Size: uint64(size), Mtime: uint64(modTime.Unix()), Mtimensec: uint32(modTime.Nanosecond())}, fuse.OK
 }
 
-func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.DirEntry, fuse.Status) {
 	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
 	expression := pathToExpression(path)
-	files, err := vfs.store.QueryFiles(expression, "", false, "name")
+	files, err := vfs.store.QueryFiles(tx, expression, "", false, "name")
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
@@ -809,7 +810,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	if lastPathElement[0] != '=' {
 		tagName := lastPathElement
 
-		valueNames, err = vfs.tagValueNamesForFiles(tagName, files)
+		valueNames, err = vfs.tagValueNamesForFiles(tx, tagName, files)
 		if err != nil {
 			log.Fatalf("could not retrieve values for '%v': %v", err)
 		}
@@ -817,7 +818,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 		valueNames = []string{}
 	}
 
-	furtherTagNames, err := vfs.tagNamesForFiles(files)
+	furtherTagNames, err := vfs.tagNamesForFiles(tx, files)
 	if err != nil {
 		log.Fatalf("could not retrieve further tags: %v", err)
 	}
@@ -841,7 +842,7 @@ func (vfs FuseVfs) openTaggedEntryDir(path []string) ([]fuse.DirEntry, fuse.Stat
 	return entries, fuse.OK
 }
 
-func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Status) {
+func (vfs FuseVfs) openQueryEntryDir(tx *storage.Tx, path []string) ([]fuse.DirEntry, fuse.Status) {
 	log.Infof(2, "BEGIN openQueryEntryDir(%v)", path)
 	defer log.Infof(2, "END openQueryEntryDir(%v)", path)
 
@@ -853,14 +854,14 @@ func (vfs FuseVfs) openQueryEntryDir(path []string) ([]fuse.DirEntry, fuse.Statu
 	}
 
 	tagNames := query.TagNames(expression)
-	tags, err := vfs.store.TagsByNames(tagNames)
+	tags, err := vfs.store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !containsTag(tags, tagName) {
 			return nil, fuse.ENOENT
 		}
 	}
 
-	files, err := vfs.store.QueryFiles(expression, "", false, "name")
+	files, err := vfs.store.QueryFiles(tx, expression, "", false, "name")
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
@@ -878,10 +879,10 @@ func (vfs FuseVfs) readDatabaseFileLink() (string, fuse.Status) {
 	log.Infof(2, "BEGIN readDatabaseFileLink()")
 	defer log.Infof(2, "END readDatabaseFileLink()")
 
-	return vfs.store.Db.Path, fuse.OK
+	return vfs.store.DbPath, fuse.OK
 }
 
-func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
+func (vfs FuseVfs) readTaggedEntryLink(tx *storage.Tx, path []string) (string, fuse.Status) {
 	log.Infof(2, "BEGIN readTaggedEntryLink(%v)", path)
 	defer log.Infof(2, "END readTaggedEntryLink(%v)", path)
 
@@ -892,7 +893,7 @@ func (vfs FuseVfs) readTaggedEntryLink(path []string) (string, fuse.Status) {
 		return "", fuse.ENOENT
 	}
 
-	file, err := vfs.store.File(fileId)
+	file, err := vfs.store.File(tx, fileId)
 	if err != nil {
 		log.Fatalf("could not find file %v in database.", fileId)
 	}
@@ -913,11 +914,11 @@ func (vfs FuseVfs) getLinkName(file *entities.File) string {
 	return linkName + suffix
 }
 
-func (vfs FuseVfs) tagNamesToIds(tagNames []string) (entities.TagIds, error) {
+func (vfs FuseVfs) tagNamesToIds(tx *storage.Tx, tagNames []string) (entities.TagIds, error) {
 	tagIds := make(entities.TagIds, len(tagNames))
 
 	for index, tagName := range tagNames {
-		tag, err := vfs.store.TagByName(tagName)
+		tag, err := vfs.store.TagByName(tx, tagName)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
@@ -931,8 +932,8 @@ func (vfs FuseVfs) tagNamesToIds(tagNames []string) (entities.TagIds, error) {
 	return tagIds, nil
 }
 
-func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) ([]string, error) {
-	tag, err := vfs.store.TagByName(tagName)
+func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files entities.Files) ([]string, error) {
+	tag, err := vfs.store.TagByName(tx, tagName)
 	if err != nil {
 		log.Fatalf("could not look up tag '%v': %v", tagName, err)
 	}
@@ -943,7 +944,7 @@ func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) (
 	valueNames := make([]string, 0, 10)
 
 	for _, file := range files {
-		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
+		fileTags, err := vfs.store.FileTagsByFileId(tx, file.Id, false)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
@@ -955,7 +956,7 @@ func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) (
 			}
 		}
 
-		values, err := vfs.store.ValuesByIds(valueIds)
+		values, err := vfs.store.ValuesByIds(tx, valueIds)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve values: %v", err)
 		}
@@ -968,11 +969,11 @@ func (vfs FuseVfs) tagValueNamesForFiles(tagName string, files entities.Files) (
 	return valueNames, nil
 }
 
-func (vfs FuseVfs) tagNamesForFiles(files entities.Files) ([]string, error) {
+func (vfs FuseVfs) tagNamesForFiles(tx *storage.Tx, files entities.Files) ([]string, error) {
 	tagNames := make([]string, 0, 10)
 
 	for _, file := range files {
-		fileTags, err := vfs.store.FileTagsByFileId(file.Id, false)
+		fileTags, err := vfs.store.FileTagsByFileId(tx, file.Id, false)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
@@ -982,7 +983,7 @@ func (vfs FuseVfs) tagNamesForFiles(files entities.Files) ([]string, error) {
 			tagIds[index] = fileTag.TagId
 		}
 
-		tags, err := vfs.store.TagsByIds(tagIds)
+		tags, err := vfs.store.TagsByIds(tx, tagIds)
 		if err != nil {
 			return nil, fmt.Errorf("could not retrieve tags: %v", err)
 		}

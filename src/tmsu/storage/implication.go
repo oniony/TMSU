@@ -17,22 +17,23 @@ package storage
 
 import (
 	"tmsu/entities"
+	"tmsu/storage/database"
 )
 
 // Retrieves the complete set of tag implications.
-func (storage *Storage) Implications() (entities.Implications, error) {
-	return storage.Db.Implications()
+func (storage *Storage) Implications(tx *Tx) (entities.Implications, error) {
+	return database.Implications(tx.tx)
 }
 
 // Retrieves the set of implications for the specified tags.
-func (storage *Storage) ImplicationsForTags(tagIds ...entities.TagId) (entities.Implications, error) {
+func (storage *Storage) ImplicationsForTags(tx *Tx, tagIds ...entities.TagId) (entities.Implications, error) {
 	resultantImplications := make(entities.Implications, 0)
 
 	impliedTagIds := make(entities.TagIds, len(tagIds))
 	copy(impliedTagIds, tagIds)
 
 	for len(impliedTagIds) > 0 {
-		implications, err := storage.Db.ImplicationsForTags(impliedTagIds)
+		implications, err := database.ImplicationsForTags(tx.tx, impliedTagIds)
 		if err != nil {
 			return nil, err
 		}
@@ -50,23 +51,23 @@ func (storage *Storage) ImplicationsForTags(tagIds ...entities.TagId) (entities.
 }
 
 // Adds the specified implication.
-func (storage Storage) AddImplication(tagId, impliedTagId entities.TagId) error {
-	return storage.Db.AddImplication(tagId, impliedTagId)
+func (storage Storage) AddImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
+	return database.AddImplication(tx.tx, tagId, impliedTagId)
 }
 
 // Updates implications featuring the specified tag.
-func (storage Storage) UpdateImplicationsForTagId(tagId, impliedTagId entities.TagId) error {
-	return storage.Db.UpdateImplicationsForTagId(tagId, impliedTagId)
+func (storage Storage) UpdateImplicationsForTagId(tx *Tx, tagId, impliedTagId entities.TagId) error {
+	return database.UpdateImplicationsForTagId(tx.tx, tagId, impliedTagId)
 }
 
 // Removes the specified implication
-func (storage Storage) RemoveImplication(tagId, impliedTagId entities.TagId) error {
-	return storage.Db.DeleteImplication(tagId, impliedTagId)
+func (storage Storage) RemoveImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
+	return database.DeleteImplication(tx.tx, tagId, impliedTagId)
 }
 
 // Removes implications featuring the specified tag.
-func (storage Storage) RemoveImplicationsForTagId(tagId entities.TagId) error {
-	return storage.Db.DeleteImplicationsForTagId(tagId)
+func (storage Storage) RemoveImplicationsForTagId(tx *Tx, tagId entities.TagId) error {
+	return database.DeleteImplicationsForTagId(tx.tx, tagId)
 }
 
 // unexported

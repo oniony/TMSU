@@ -22,11 +22,11 @@ import (
 )
 
 // The number of tags in the database.
-func (db *Database) TagCount() (uint, error) {
+func TagCount(tx *sql.Tx) (uint, error) {
 	sql := `SELECT count(1)
 			FROM tag`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -36,12 +36,12 @@ func (db *Database) TagCount() (uint, error) {
 }
 
 // The set of tags.
-func (db *Database) Tags() (entities.Tags, error) {
+func Tags(tx *sql.Tx) (entities.Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -51,12 +51,12 @@ func (db *Database) Tags() (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (db *Database) Tag(id entities.TagId) (*entities.Tag, error) {
+func Tag(tx *sql.Tx, id entities.TagId) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
 
-	rows, err := db.ExecQuery(sql, id)
+	rows, err := tx.Query(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -66,7 +66,7 @@ func (db *Database) Tag(id entities.TagId) (*entities.Tag, error) {
 }
 
 // Retrieves a specific set of tags.
-func (db *Database) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
+func TagsByIds(tx *sql.Tx, ids entities.TagIds) (entities.Tags, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id IN (?`
@@ -78,7 +78,7 @@ func (db *Database) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
 		params[index] = id
 	}
 
-	rows, err := db.ExecQuery(sql, params...)
+	rows, err := tx.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -93,12 +93,12 @@ func (db *Database) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func (db *Database) TagByName(name string) (*entities.Tag, error) {
+func TagByName(tx *sql.Tx, name string) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE name = ?`
 
-	rows, err := db.ExecQuery(sql, name)
+	rows, err := tx.Query(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -108,7 +108,7 @@ func (db *Database) TagByName(name string) (*entities.Tag, error) {
 }
 
 // Retrieves the set of named tags.
-func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
+func TagsByNames(tx *sql.Tx, names []string) (entities.Tags, error) {
 	if len(names) == 0 {
 		return make(entities.Tags, 0), nil
 	}
@@ -124,7 +124,7 @@ func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
 		params[index] = name
 	}
 
-	rows, err := db.ExecQuery(sql, params...)
+	rows, err := tx.Query(sql, params...)
 	if err != nil {
 		return nil, err
 	}
@@ -139,11 +139,11 @@ func (db *Database) TagsByNames(names []string) (entities.Tags, error) {
 }
 
 // Adds a tag.
-func (db *Database) InsertTag(name string) (*entities.Tag, error) {
+func InsertTag(tx *sql.Tx, name string) (*entities.Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
-	result, err := db.Exec(sql, name)
+	result, err := tx.Exec(sql, name)
 	if err != nil {
 		return nil, err
 	}
@@ -165,12 +165,12 @@ func (db *Database) InsertTag(name string) (*entities.Tag, error) {
 }
 
 // Renames a tag.
-func (db *Database) RenameTag(tagId entities.TagId, name string) (*entities.Tag, error) {
+func RenameTag(tx *sql.Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
 
-	result, err := db.Exec(sql, name, tagId)
+	result, err := tx.Exec(sql, name, tagId)
 	if err != nil {
 		return nil, err
 	}
@@ -187,11 +187,11 @@ func (db *Database) RenameTag(tagId entities.TagId, name string) (*entities.Tag,
 }
 
 // Deletes a tag.
-func (db *Database) DeleteTag(tagId entities.TagId) error {
+func DeleteTag(tx *sql.Tx, tagId entities.TagId) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
-	result, err := db.Exec(sql, tagId)
+	result, err := tx.Exec(sql, tagId)
 	if err != nil {
 		return err
 	}
@@ -208,14 +208,14 @@ func (db *Database) DeleteTag(tagId entities.TagId) error {
 }
 
 // Retrieves the usage of each tag
-func (db *Database) TagUsage() ([]entities.TagFileCount, error) {
+func TagUsage(tx *sql.Tx) ([]entities.TagFileCount, error) {
 	sql := `SELECT t.id, t.name, count(file_id)
             FROM file_tag ft, tag t
             WHERE ft.tag_id = t.id
             GROUP BY t.id
             ORDER BY t.name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}

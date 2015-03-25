@@ -88,21 +88,21 @@ func NewReport() *StatusReport {
 func statusExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 
-	if err := store.Begin(); err != nil {
+	tx, err := store.Begin()
+	if err != nil {
 		return err
 	}
-	defer store.Commit()
+	defer tx.Commit()
 
 	var report *StatusReport
-	var err error
 
 	if len(args) == 0 {
-		report, err = statusDatabase(store, dirOnly)
+		report, err = statusDatabase(store, tx, dirOnly)
 		if err != nil {
 			return err
 		}
 	} else {
-		report, err = statusPaths(store, args, dirOnly)
+		report, err = statusPaths(store, tx, args, dirOnly)
 		if err != nil {
 			return err
 		}
@@ -113,12 +113,12 @@ func statusExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func statusDatabase(store *storage.Storage, dirOnly bool) (*StatusReport, error) {
+func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
 
 	log.Info(2, "retrieving all files from database.")
 
-	files, err := store.Files("name")
+	files, err := store.Files(tx, "name")
 	if err != nil {
 		return nil, fmt.Errorf("could not retrieve files: %v", err)
 	}
@@ -147,7 +147,7 @@ func statusDatabase(store *storage.Storage, dirOnly bool) (*StatusReport, error)
 	return report, nil
 }
 
-func statusPaths(store *storage.Storage, paths []string, dirOnly bool) (*StatusReport, error) {
+func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly bool) (*StatusReport, error) {
 	report := NewReport()
 
 	for _, path := range paths {
@@ -156,7 +156,7 @@ func statusPaths(store *storage.Storage, paths []string, dirOnly bool) (*StatusR
 			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		file, err := store.FileByPath(absPath)
+		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
 			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
@@ -170,7 +170,7 @@ func statusPaths(store *storage.Storage, paths []string, dirOnly bool) (*StatusR
 		if !dirOnly {
 			log.Infof(2, "%v: retrieving files from database.", path)
 
-			files, err := store.FilesByDirectory(absPath)
+			files, err := store.FilesByDirectory(tx, absPath)
 			if err != nil {
 				return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
 			}

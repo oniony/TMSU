@@ -16,6 +16,7 @@
 package storage
 
 import (
+	"database/sql"
 	"fmt"
 	"path/filepath"
 	"tmsu/common/log"
@@ -23,7 +24,8 @@ import (
 )
 
 type Storage struct {
-	Db       *database.Database
+	db       *sql.DB
+	DbPath   string
 	RootPath string
 }
 
@@ -40,28 +42,43 @@ func OpenAt(path string) (*Storage, error) {
 
 	log.Infof(2, "files are stored relative to root path '%v'", rootPath)
 
-	return &Storage{db, rootPath}, nil
+	return &Storage{db, path, rootPath}, nil
 }
 
-func (storage *Storage) Begin() error {
-	return storage.Db.Begin()
-}
+func (storage *Storage) Begin() (*Tx, error) {
+	tx, err := storage.db.Begin()
+	if err != nil {
+		return nil, err
+	}
 
-func (storage *Storage) Commit() error {
-	return storage.Db.Commit()
-}
-
-func (storage *Storage) Rollback() error {
-	return storage.Db.Rollback()
+	return &Tx{tx}, nil
 }
 
 func (storage *Storage) Close() error {
-	err := storage.Db.Close()
+	if storage.db == nil {
+		return nil
+	}
+
+	err := storage.db.Close()
 	if err != nil {
 		return fmt.Errorf("could not close database: %v", err)
 	}
 
+	storage.db = nil
+
 	return nil
+}
+
+type Tx struct {
+	tx *sql.Tx
+}
+
+func (tx *Tx) Commit() error {
+	return tx.tx.Commit()
+}
+
+func (tx *Tx) Rollback() error {
+	return tx.tx.Rollback()
 }
 
 // unexported

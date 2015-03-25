@@ -27,11 +27,11 @@ import (
 )
 
 // Retrieves the total number of tracked files.
-func (db *Database) FileCount() (uint, error) {
+func FileCount(tx *sql.Tx) (uint, error) {
 	sql := `SELECT count(1)
 			FROM file`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return 0, err
 	}
@@ -41,14 +41,14 @@ func (db *Database) FileCount() (uint, error) {
 }
 
 // The complete set of tracked files.
-func (db *Database) Files(sort string) (entities.Files, error) {
+func Files(tx *sql.Tx, sort string) (entities.Files, error) {
 	builder := NewBuilder()
 	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
                        FROM file `)
 
 	buildSort(sort, builder)
 
-	rows, err := db.ExecQuery(builder.Sql)
+	rows, err := tx.Query(builder.Sql)
 	if err != nil {
 		return nil, err
 	}
@@ -58,12 +58,12 @@ func (db *Database) Files(sort string) (entities.Files, error) {
 }
 
 // Retrieves a specific file.
-func (db *Database) File(id entities.FileId) (*entities.File, error) {
+func File(tx *sql.Tx, id entities.FileId) (*entities.File, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE id = ?`
 
-	rows, err := db.ExecQuery(sql, id)
+	rows, err := tx.Query(sql, id)
 	if err != nil {
 		return nil, err
 	}
@@ -73,7 +73,7 @@ func (db *Database) File(id entities.FileId) (*entities.File, error) {
 }
 
 // Retrieves the file with the specified path.
-func (db *Database) FileByPath(path string) (*entities.File, error) {
+func FileByPath(tx *sql.Tx, path string) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -81,7 +81,7 @@ func (db *Database) FileByPath(path string) (*entities.File, error) {
 	        FROM file
 	        WHERE directory = ? AND name = ?`
 
-	rows, err := db.ExecQuery(sql, directory, name)
+	rows, err := tx.Query(sql, directory, name)
 	if err != nil {
 		return nil, err
 	}
@@ -91,7 +91,7 @@ func (db *Database) FileByPath(path string) (*entities.File, error) {
 }
 
 // Retrieves all files that are under the specified directory.
-func (db *Database) FilesByDirectory(path string) (entities.Files, error) {
+func FilesByDirectory(tx *sql.Tx, path string) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE directory = ? OR directory LIKE ?
@@ -99,7 +99,7 @@ func (db *Database) FilesByDirectory(path string) (entities.Files, error) {
 
 	path = filepath.Clean(path)
 
-	rows, err := db.ExecQuery(sql, path, filepath.Join(path, "%"))
+	rows, err := tx.Query(sql, path, filepath.Join(path, "%"))
 	if err != nil {
 		return nil, err
 	}
@@ -109,12 +109,12 @@ func (db *Database) FilesByDirectory(path string) (entities.Files, error) {
 }
 
 // Retrieves the number of files with the specified fingerprint.
-func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) (uint, error) {
+func FileCountByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (uint, error) {
 	sql := `SELECT count(id)
             FROM file
             WHERE fingerprint = ?`
 
-	rows, err := db.ExecQuery(sql, string(fingerprint))
+	rows, err := tx.Query(sql, string(fingerprint))
 	if err != nil {
 		return 0, err
 	}
@@ -124,13 +124,13 @@ func (db *Database) FileCountByFingerprint(fingerprint fingerprint.Fingerprint) 
 }
 
 // Retrieves the set of files with the specified fingerprint.
-func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (entities.Files, error) {
+func FilesByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE fingerprint = ?
 	        ORDER BY directory || '/' || name`
 
-	rows, err := db.ExecQuery(sql, string(fingerprint))
+	rows, err := tx.Query(sql, string(fingerprint))
 	if err != nil {
 		return nil, err
 	}
@@ -140,13 +140,13 @@ func (db *Database) FilesByFingerprint(fingerprint fingerprint.Fingerprint) (ent
 }
 
 // Retrieves the set of untagged files.
-func (db *Database) UntaggedFiles() (entities.Files, error) {
+func UntaggedFiles(tx *sql.Tx) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE id NOT IN (SELECT distinct(file_id)
                              FROM file_tag)`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -156,10 +156,10 @@ func (db *Database) UntaggedFiles() (entities.Files, error) {
 }
 
 // Retrieves the count of files matching the specified query and matching the specified path.
-func (db *Database) QueryFileCount(expression query.Expression, path string) (uint, error) {
+func QueryFileCount(tx *sql.Tx, expression query.Expression, path string) (uint, error) {
 	builder := buildCountQuery(expression, path)
 
-	rows, err := db.ExecQuery(builder.Sql, builder.Params...)
+	rows, err := tx.Query(builder.Sql, builder.Params...)
 	if err != nil {
 		return 0, err
 	}
@@ -169,9 +169,9 @@ func (db *Database) QueryFileCount(expression query.Expression, path string) (ui
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func (db *Database) QueryFiles(expression query.Expression, path, sort string) (entities.Files, error) {
+func QueryFiles(tx *sql.Tx, expression query.Expression, path, sort string) (entities.Files, error) {
 	builder := buildQuery(expression, path, sort)
-	rows, err := db.ExecQuery(builder.Sql, builder.Params...)
+	rows, err := tx.Query(builder.Sql, builder.Params...)
 	if err != nil {
 		return nil, err
 	}
@@ -181,7 +181,7 @@ func (db *Database) QueryFiles(expression query.Expression, path, sort string) (
 }
 
 // Retrieves the sets of duplicate files within the database.
-func (db *Database) DuplicateFiles() ([]entities.Files, error) {
+func DuplicateFiles(tx *sql.Tx) ([]entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE fingerprint IN (
@@ -193,7 +193,7 @@ func (db *Database) DuplicateFiles() ([]entities.Files, error) {
             )
             ORDER BY fingerprint, directory || '/' || name`
 
-	rows, err := db.ExecQuery(sql)
+	rows, err := tx.Query(sql)
 	if err != nil {
 		return nil, err
 	}
@@ -240,14 +240,14 @@ func (db *Database) DuplicateFiles() ([]entities.Files, error) {
 }
 
 // Adds a file to the database.
-func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func InsertFile(tx *sql.Tx, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
 	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
 	        VALUES (?, ?, ?, ?, ?, ?)`
 
-	result, err := db.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
+	result, err := tx.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
 	if err != nil {
 		return nil, err
 	}
@@ -269,7 +269,7 @@ func (db *Database) InsertFile(path string, fingerprint fingerprint.Fingerprint,
 }
 
 // Updates a file in the database.
-func (db *Database) UpdateFile(fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func UpdateFile(tx *sql.Tx, fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -277,7 +277,7 @@ func (db *Database) UpdateFile(fileId entities.FileId, path string, fingerprint 
 	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?, is_dir = ?
 	        WHERE id = ?`
 
-	result, err := db.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
+	result, err := tx.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
 	if err != nil {
 		return nil, err
 	}
@@ -294,11 +294,11 @@ func (db *Database) UpdateFile(fileId entities.FileId, path string, fingerprint 
 }
 
 // Removes a file from the database.
-func (db *Database) DeleteFile(fileId entities.FileId) error {
+func DeleteFile(tx *sql.Tx, fileId entities.FileId) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
-	result, err := db.Exec(sql, fileId)
+	result, err := tx.Exec(sql, fileId)
 	if err != nil {
 		return err
 	}
@@ -318,7 +318,7 @@ func (db *Database) DeleteFile(fileId entities.FileId) error {
 }
 
 // Deletes the specified files if they are untagged
-func (db *Database) DeleteUntaggedFiles(fileIds entities.FileIds) error {
+func DeleteUntaggedFiles(tx *sql.Tx, fileIds entities.FileIds) error {
 	if len(fileIds) == 0 {
 		return nil
 	}
@@ -339,7 +339,7 @@ func (db *Database) DeleteUntaggedFiles(fileIds entities.FileIds) error {
 		params[len(fileIds)+index] = fileId
 	}
 
-	_, err := db.Exec(sql, params...)
+	_, err := tx.Exec(sql, params...)
 	if err != nil {
 		return err
 	}
@@ -410,11 +410,7 @@ func buildQuery(expression query.Expression, path, sort string) *SqlBuilder {
 func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
 	switch exp := expression.(type) {
 	case query.TagExpression:
-		builder.AppendSql(`id IN (SELECT file_id
-FROM file_tag
-WHERE tag_id = (SELECT id
-                FROM tag
-                WHERE name = `)
+		builder.AppendSql(`id IN (SELECT file_id FROM file_tag WHERE tag_id = (SELECT id FROM tag WHERE name = `)
 		builder.AppendParam(exp.Name)
 		builder.AppendSql(`))`)
 	case query.ComparisonExpression:
@@ -426,16 +422,9 @@ WHERE tag_id = (SELECT id
 			valueExpression = "name"
 		}
 
-		builder.AppendSql(`id IN (SELECT file_id
-FROM file_tag
-WHERE tag_id = (SELECT id
-                FROM tag
-                WHERE name = `)
+		builder.AppendSql(`id IN (SELECT file_id FROM file_tag WHERE tag_id = (SELECT id FROM tag WHERE name = `)
 		builder.AppendParam(exp.Tag.Name)
-		builder.AppendSql(`)
-AND value_id IN (SELECT id
-                 FROM value
-                 WHERE ` + valueExpression + ` ` + exp.Operator + ` `)
+		builder.AppendSql(`) AND value_id IN (SELECT id FROM value WHERE ` + valueExpression + ` ` + exp.Operator + ` `)
 		builder.AppendParam(exp.Value.Name)
 		builder.AppendSql(`))`)
 	case query.NotExpression:

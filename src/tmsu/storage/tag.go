@@ -19,69 +19,70 @@ import (
 	"errors"
 	"fmt"
 	"tmsu/entities"
+	"tmsu/storage/database"
 	"unicode"
 )
 
 // The number of tags in the database.
-func (storage *Storage) TagCount() (uint, error) {
-	return storage.Db.TagCount()
+func (storage *Storage) TagCount(tx *Tx) (uint, error) {
+	return database.TagCount(tx.tx)
 }
 
 // The set of tags.
-func (storage *Storage) Tags() (entities.Tags, error) {
-	return storage.Db.Tags()
+func (storage *Storage) Tags(tx *Tx) (entities.Tags, error) {
+	return database.Tags(tx.tx)
 }
 
 // Retrieves a specific tag.
-func (storage Storage) Tag(id entities.TagId) (*entities.Tag, error) {
-	return storage.Db.Tag(id)
+func (storage Storage) Tag(tx *Tx, id entities.TagId) (*entities.Tag, error) {
+	return database.Tag(tx.tx, id)
 }
 
 // Retrieves a specific set of tags.
-func (storage Storage) TagsByIds(ids entities.TagIds) (entities.Tags, error) {
-	return storage.Db.TagsByIds(ids)
+func (storage Storage) TagsByIds(tx *Tx, ids entities.TagIds) (entities.Tags, error) {
+	return database.TagsByIds(tx.tx, ids)
 }
 
 // Retrieves a specific tag.
-func (storage Storage) TagByName(name string) (*entities.Tag, error) {
-	return storage.Db.TagByName(name)
+func (storage Storage) TagByName(tx *Tx, name string) (*entities.Tag, error) {
+	return database.TagByName(tx.tx, name)
 }
 
 // Retrieves the set of named tags.
-func (storage Storage) TagsByNames(names []string) (entities.Tags, error) {
-	return storage.Db.TagsByNames(names)
+func (storage Storage) TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
+	return database.TagsByNames(tx.tx, names)
 }
 
 // Adds a tag.
-func (storage *Storage) AddTag(name string) (*entities.Tag, error) {
+func (storage *Storage) AddTag(tx *Tx, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
 
-	return storage.Db.InsertTag(name)
+	return database.InsertTag(tx.tx, name)
 }
 
 // Renames a tag.
-func (storage Storage) RenameTag(tagId entities.TagId, name string) (*entities.Tag, error) {
+func (storage Storage) RenameTag(tx *Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
 
-	return storage.Db.RenameTag(tagId, name)
+	return database.RenameTag(tx.tx, tagId, name)
 }
 
 // Copies a tag.
-func (storage Storage) CopyTag(sourceTagId entities.TagId, name string) (*entities.Tag, error) {
+func (storage Storage) CopyTag(tx *Tx, sourceTagId entities.TagId, name string) (*entities.Tag, error) {
 	if err := validateTagName(name); err != nil {
 		return nil, err
 	}
 
-	tag, err := storage.Db.InsertTag(name)
+	tag, err := database.InsertTag(tx.tx, name)
 	if err != nil {
 		return nil, fmt.Errorf("could not create tag '%v': %v", name, err)
 	}
 
-	err = storage.Db.CopyFileTags(sourceTagId, tag.Id)
+	err = database.CopyFileTags(tx.tx, sourceTagId, tag.Id)
 	if err != nil {
 		return nil, fmt.Errorf("could not copy file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
 	}
@@ -90,13 +91,13 @@ func (storage Storage) CopyTag(sourceTagId entities.TagId, name string) (*entiti
 }
 
 // Deletes a tag.
-func (storage Storage) DeleteTag(tagId entities.TagId) error {
-	err := storage.DeleteFileTagsByTagId(tagId)
+func (storage Storage) DeleteTag(tx *Tx, tagId entities.TagId) error {
+	err := storage.DeleteFileTagsByTagId(tx, tagId)
 	if err != nil {
 		return err
 	}
 
-	err = storage.Db.DeleteTag(tagId)
+	err = database.DeleteTag(tx.tx, tagId)
 	if err != nil {
 		return fmt.Errorf("could not delete tag '%v': %v", tagId, err)
 	}
@@ -105,8 +106,8 @@ func (storage Storage) DeleteTag(tagId entities.TagId) error {
 }
 
 // Retrieves the tag usage.
-func (storage Storage) TagUsage() ([]entities.TagFileCount, error) {
-	return storage.Db.TagUsage()
+func (storage Storage) TagUsage(tx *Tx) ([]entities.TagFileCount, error) {
+	return database.TagUsage(tx.tx)
 }
 
 // unexported

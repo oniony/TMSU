@@ -98,6 +98,7 @@ v0.6 (in development)
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
   * Performance improvements to the virtual filesystem.
+  * Fixed 'too many SQL variables' when merging tags applied to lots of files.
 
 v0.5.2
 ------

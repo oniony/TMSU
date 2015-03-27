@@ -22,7 +22,7 @@ import (
 )
 
 // Retrieves the complete set of tag implications.
-func Implications(tx *sql.Tx) (entities.Implications, error) {
+func Implications(tx *Tx) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id = t1.id
@@ -44,7 +44,7 @@ func Implications(tx *sql.Tx) (entities.Implications, error) {
 }
 
 // Retrieves the set of tags implied by the specified tags.
-func ImplicationsForTags(tx *sql.Tx, tagIds entities.TagIds) (entities.Implications, error) {
+func ImplicationsForTags(tx *Tx, tagIds entities.TagIds) (entities.Implications, error) {
 	sql := `SELECT t1.id, t1.name, t2.id, t2.name
             FROM implication, tag t1, tag t2
             WHERE implication.tag_id IN (?`
@@ -73,7 +73,7 @@ func ImplicationsForTags(tx *sql.Tx, tagIds entities.TagIds) (entities.Implicati
 }
 
 // Updates implications featuring the specified tag.
-func UpdateImplicationsForTagId(tx *sql.Tx, implyingTagId, impliedTagId entities.TagId) error {
+func UpdateImplicationsForTagId(tx *Tx, implyingTagId, impliedTagId entities.TagId) error {
 	// prevent a tag implying itself
 
 	sql := `DELETE from implication
@@ -107,7 +107,7 @@ func UpdateImplicationsForTagId(tx *sql.Tx, implyingTagId, impliedTagId entities
 }
 
 // Adds the specified implications
-func AddImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
+func AddImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
 	sql := `INSERT OR IGNORE INTO implication (tag_id, implied_tag_id)
 	        VALUES (?1, ?2)`
 
@@ -120,7 +120,7 @@ func AddImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
 }
 
 // Deletes the specified implications
-func DeleteImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
+func DeleteImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 AND implied_tag_id = ?2`
 
@@ -144,7 +144,7 @@ func DeleteImplication(tx *sql.Tx, tagId, impliedTagId entities.TagId) error {
 }
 
 // Deletes implications featuring the specified tag.
-func DeleteImplicationsForTagId(tx *sql.Tx, tagId entities.TagId) error {
+func DeleteImplicationsForTagId(tx *Tx, tagId entities.TagId) error {
 	sql := `DELETE FROM implication
             WHERE tag_id = ?1 OR implied_tag_id = ?1`
 

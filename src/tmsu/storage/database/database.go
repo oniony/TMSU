@@ -24,8 +24,12 @@ import (
 	"tmsu/common/log"
 )
 
+type Database struct {
+	db *sql.DB
+}
+
 // Opens the database at the specified path
-func OpenAt(path string) (*sql.DB, error) {
+func OpenAt(path string) (*Database, error) {
 	log.Infof(2, "opening database at '%v'.", path)
 
 	_, err := os.Stat(path)
@@ -50,7 +54,7 @@ func OpenAt(path string) (*sql.DB, error) {
 		return nil, DatabaseTransactionError{path, err}
 	}
 
-	if err := Upgrade(tx); err != nil {
+	if err := upgrade(tx); err != nil {
 		return nil, err
 	}
 
@@ -58,7 +62,50 @@ func OpenAt(path string) (*sql.DB, error) {
 		return nil, DatabaseTransactionError{path, err}
 	}
 
-	return db, nil
+	return &Database{db}, nil
+}
+
+func (database *Database) Close() error {
+	return database.db.Close()
+}
+
+func (database *Database) Begin() (*Tx, error) {
+	tx, err := database.db.Begin()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Tx{tx}, nil
+}
+
+type Tx struct {
+	tx *sql.Tx
+}
+
+func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
+	log.Infof(3, query)
+	log.Infof(3, "Params: %v", args)
+
+	return tx.tx.Exec(query, args...)
+}
+
+func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
+	log.Infof(3, query)
+	log.Infof(3, "Params: %v", args)
+
+	return tx.tx.Query(query, args...)
+}
+
+func (tx *Tx) Commit() error {
+	log.Infof(2, "Committing transaction")
+
+	return tx.tx.Commit()
+}
+
+func (tx *Tx) Rollback() error {
+	log.Infof(2, "Rolling back transaction")
+
+	return tx.tx.Rollback()
 }
 
 // unexported

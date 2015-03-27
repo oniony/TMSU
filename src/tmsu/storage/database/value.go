@@ -22,7 +22,7 @@ import (
 )
 
 // Retrieves the count of values.
-func ValueCount(tx *sql.Tx) (uint, error) {
+func ValueCount(tx *Tx) (uint, error) {
 	sql := `SELECT count(1)
             FROM value`
 
@@ -36,7 +36,7 @@ func ValueCount(tx *sql.Tx) (uint, error) {
 }
 
 // Retrieves the complete set of values.
-func Values(tx *sql.Tx) (entities.Values, error) {
+func Values(tx *Tx) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             ORDER BY name`
@@ -51,7 +51,7 @@ func Values(tx *sql.Tx) (entities.Values, error) {
 }
 
 // Retrieves a specific value.
-func Value(tx *sql.Tx, id entities.ValueId) (*entities.Value, error) {
+func Value(tx *Tx, id entities.ValueId) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id = ?`
@@ -66,7 +66,7 @@ func Value(tx *sql.Tx, id entities.ValueId) (*entities.Value, error) {
 }
 
 // Retrieves a specific set of values.
-func ValuesByIds(tx *sql.Tx, ids entities.ValueIds) (entities.Values, error) {
+func ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Values, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE id IN (?`
@@ -93,7 +93,7 @@ func ValuesByIds(tx *sql.Tx, ids entities.ValueIds) (entities.Values, error) {
 }
 
 // Retrieves the set of unused values.
-func UnusedValues(tx *sql.Tx) (entities.Values, error) {
+func UnusedValues(tx *Tx) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             WHERE id NOT IN (SELECT distinct(value_id)
@@ -109,7 +109,7 @@ func UnusedValues(tx *sql.Tx) (entities.Values, error) {
 }
 
 // Retrieves a specific value by name.
-func ValueByName(tx *sql.Tx, name string) (*entities.Value, error) {
+func ValueByName(tx *Tx, name string) (*entities.Value, error) {
 	sql := `SELECT id, name
 	        FROM value
 	        WHERE name = ?`
@@ -124,7 +124,7 @@ func ValueByName(tx *sql.Tx, name string) (*entities.Value, error) {
 }
 
 // Retrieves the set of values with the specified names.
-func ValuesByNames(tx *sql.Tx, names []string) (entities.Values, error) {
+func ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
 	if len(names) == 0 {
 		return make(entities.Values, 0), nil
 	}
@@ -155,7 +155,7 @@ func ValuesByNames(tx *sql.Tx, names []string) (entities.Values, error) {
 }
 
 // Retrieves the set of values for the specified tag.
-func ValuesByTagId(tx *sql.Tx, tagId entities.TagId) (entities.Values, error) {
+func ValuesByTagId(tx *Tx, tagId entities.TagId) (entities.Values, error) {
 	sql := `SELECT id, name
             FROM value
             WHERE id IN (
@@ -174,7 +174,7 @@ func ValuesByTagId(tx *sql.Tx, tagId entities.TagId) (entities.Values, error) {
 }
 
 // Adds a value.
-func InsertValue(tx *sql.Tx, name string) (*entities.Value, error) {
+func InsertValue(tx *Tx, name string) (*entities.Value, error) {
 	sql := `INSERT INTO value (name)
 	        VALUES (?)`
 
@@ -200,7 +200,7 @@ func InsertValue(tx *sql.Tx, name string) (*entities.Value, error) {
 }
 
 // Deletes a value.
-func DeleteValue(tx *sql.Tx, valueId entities.ValueId) error {
+func DeleteValue(tx *Tx, valueId entities.ValueId) error {
 	sql := `DELETE FROM value
 	        WHERE id = ?`
 
@@ -224,30 +224,18 @@ func DeleteValue(tx *sql.Tx, valueId entities.ValueId) error {
 }
 
 // Deletes all unused values.
-func DeleteUnusedValues(tx *sql.Tx, valueIds entities.ValueIds) error {
-	if len(valueIds) == 0 {
-		return nil
-	}
+func DeleteUnusedValues(tx *Tx, valueIds entities.ValueIds) error {
+	for _, valueId := range valueIds {
+		sql := `DELETE FROM value
+                WHERE id = ?1
+                AND (SELECT count(1)
+                     FROM file_tag
+                     WHERE value_id = ?1) == 0`
 
-	sql := `DELETE FROM value
-            WHERE id IN (?`
-	sql += strings.Repeat(",?", len(valueIds)-1)
-	sql += `)
-            AND id NOT IN (SELECT distinct(value_id)
-                           FROM file_tag
-                           WHERE id IN (?`
-	sql += strings.Repeat(",?", len(valueIds)-1)
-	sql += "))"
-
-	params := make([]interface{}, len(valueIds)*2)
-	for index, valueId := range valueIds {
-		params[index] = valueId
-		params[len(valueIds)+index] = valueId
-	}
-
-	_, err := tx.Exec(sql, params...)
-	if err != nil {
-		return nil
+		_, err := tx.Exec(sql, valueId)
+		if err != nil {
+			return nil
+		}
 	}
 
 	return nil

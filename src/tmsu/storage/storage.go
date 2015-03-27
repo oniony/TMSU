@@ -16,7 +16,6 @@
 package storage
 
 import (
-	"database/sql"
 	"fmt"
 	"path/filepath"
 	"tmsu/common/log"
@@ -24,7 +23,7 @@ import (
 )
 
 type Storage struct {
-	db       *sql.DB
+	db       *database.Database
 	DbPath   string
 	RootPath string
 }
@@ -70,7 +69,7 @@ func (storage *Storage) Close() error {
 }
 
 type Tx struct {
-	tx *sql.Tx
+	tx *database.Tx
 }
 
 func (tx *Tx) Commit() error {

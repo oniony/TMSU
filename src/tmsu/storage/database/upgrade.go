@@ -23,7 +23,9 @@ import (
 	"tmsu/common/log"
 )
 
-func Upgrade(tx *sql.Tx) error {
+// unexported
+
+func upgrade(tx *sql.Tx) error {
 	version := schemaVersion(tx)
 
 	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
@@ -57,8 +59,6 @@ func Upgrade(tx *sql.Tx) error {
 
 	return nil
 }
-
-// unexported
 
 func renameFingerprintAlgorithmSetting(tx *sql.Tx) error {
 	_, err := tx.Exec(`UPDATE setting

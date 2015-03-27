@@ -19,7 +19,6 @@ import (
 	"database/sql"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"time"
 	"tmsu/common/fingerprint"
 	"tmsu/entities"
@@ -27,7 +26,7 @@ import (
 )
 
 // Retrieves the total number of tracked files.
-func FileCount(tx *sql.Tx) (uint, error) {
+func FileCount(tx *Tx) (uint, error) {
 	sql := `SELECT count(1)
 			FROM file`
 
@@ -41,7 +40,7 @@ func FileCount(tx *sql.Tx) (uint, error) {
 }
 
 // The complete set of tracked files.
-func Files(tx *sql.Tx, sort string) (entities.Files, error) {
+func Files(tx *Tx, sort string) (entities.Files, error) {
 	builder := NewBuilder()
 	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
                        FROM file `)
@@ -58,7 +57,7 @@ func Files(tx *sql.Tx, sort string) (entities.Files, error) {
 }
 
 // Retrieves a specific file.
-func File(tx *sql.Tx, id entities.FileId) (*entities.File, error) {
+func File(tx *Tx, id entities.FileId) (*entities.File, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE id = ?`
@@ -73,7 +72,7 @@ func File(tx *sql.Tx, id entities.FileId) (*entities.File, error) {
 }
 
 // Retrieves the file with the specified path.
-func FileByPath(tx *sql.Tx, path string) (*entities.File, error) {
+func FileByPath(tx *Tx, path string) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -91,7 +90,7 @@ func FileByPath(tx *sql.Tx, path string) (*entities.File, error) {
 }
 
 // Retrieves all files that are under the specified directory.
-func FilesByDirectory(tx *sql.Tx, path string) (entities.Files, error) {
+func FilesByDirectory(tx *Tx, path string) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE directory = ? OR directory LIKE ?
@@ -109,7 +108,7 @@ func FilesByDirectory(tx *sql.Tx, path string) (entities.Files, error) {
 }
 
 // Retrieves the number of files with the specified fingerprint.
-func FileCountByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (uint, error) {
+func FileCountByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (uint, error) {
 	sql := `SELECT count(id)
             FROM file
             WHERE fingerprint = ?`
@@ -124,7 +123,7 @@ func FileCountByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (ui
 }
 
 // Retrieves the set of files with the specified fingerprint.
-func FilesByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (entities.Files, error) {
+func FilesByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 	        FROM file
 	        WHERE fingerprint = ?
@@ -140,7 +139,7 @@ func FilesByFingerprint(tx *sql.Tx, fingerprint fingerprint.Fingerprint) (entiti
 }
 
 // Retrieves the set of untagged files.
-func UntaggedFiles(tx *sql.Tx) (entities.Files, error) {
+func UntaggedFiles(tx *Tx) (entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE id NOT IN (SELECT distinct(file_id)
@@ -156,7 +155,7 @@ func UntaggedFiles(tx *sql.Tx) (entities.Files, error) {
 }
 
 // Retrieves the count of files matching the specified query and matching the specified path.
-func QueryFileCount(tx *sql.Tx, expression query.Expression, path string) (uint, error) {
+func QueryFileCount(tx *Tx, expression query.Expression, path string) (uint, error) {
 	builder := buildCountQuery(expression, path)
 
 	rows, err := tx.Query(builder.Sql, builder.Params...)
@@ -169,7 +168,7 @@ func QueryFileCount(tx *sql.Tx, expression query.Expression, path string) (uint,
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func QueryFiles(tx *sql.Tx, expression query.Expression, path, sort string) (entities.Files, error) {
+func QueryFiles(tx *Tx, expression query.Expression, path, sort string) (entities.Files, error) {
 	builder := buildQuery(expression, path, sort)
 	rows, err := tx.Query(builder.Sql, builder.Params...)
 	if err != nil {
@@ -181,7 +180,7 @@ func QueryFiles(tx *sql.Tx, expression query.Expression, path, sort string) (ent
 }
 
 // Retrieves the sets of duplicate files within the database.
-func DuplicateFiles(tx *sql.Tx) ([]entities.Files, error) {
+func DuplicateFiles(tx *Tx) ([]entities.Files, error) {
 	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
             FROM file
             WHERE fingerprint IN (
@@ -240,7 +239,7 @@ func DuplicateFiles(tx *sql.Tx) ([]entities.Files, error) {
 }
 
 // Adds a file to the database.
-func InsertFile(tx *sql.Tx, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func InsertFile(tx *Tx, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -269,7 +268,7 @@ func InsertFile(tx *sql.Tx, path string, fingerprint fingerprint.Fingerprint, mo
 }
 
 // Updates a file in the database.
-func UpdateFile(tx *sql.Tx, fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
+func UpdateFile(tx *Tx, fileId entities.FileId, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
@@ -294,7 +293,7 @@ func UpdateFile(tx *sql.Tx, fileId entities.FileId, path string, fingerprint fin
 }
 
 // Removes a file from the database.
-func DeleteFile(tx *sql.Tx, fileId entities.FileId) error {
+func DeleteFile(tx *Tx, fileId entities.FileId) error {
 	sql := `DELETE FROM file
 	        WHERE id = ?`
 
@@ -318,30 +317,18 @@ func DeleteFile(tx *sql.Tx, fileId entities.FileId) error {
 }
 
 // Deletes the specified files if they are untagged
-func DeleteUntaggedFiles(tx *sql.Tx, fileIds entities.FileIds) error {
-	if len(fileIds) == 0 {
-		return nil
-	}
+func DeleteUntaggedFiles(tx *Tx, fileIds entities.FileIds) error {
+	for _, fileId := range fileIds {
+		sql := `DELETE FROM file
+                WHERE id = ?1
+                AND (SELECT count(1)
+                     FROM file_tag
+                     WHERE file_id = ?1) == 0`
 
-	sql := `DELETE FROM file
-            WHERE id IN (?`
-	sql += strings.Repeat(",?", len(fileIds)-1)
-	sql += `)
-            AND id NOT IN (SELECT distinct(file_id)
-                           FROM file_tag
-                           WHERE id IN (?`
-	sql += strings.Repeat(",?", len(fileIds)-1)
-	sql += "))"
-
-	params := make([]interface{}, len(fileIds)*2)
-	for index, fileId := range fileIds {
-		params[index] = fileId
-		params[len(fileIds)+index] = fileId
-	}
-
-	_, err := tx.Exec(sql, params...)
-	if err != nil {
-		return err
+		_, err := tx.Exec(sql, fileId)
+		if err != nil {
+			return err
+		}
 	}
 
 	return nil

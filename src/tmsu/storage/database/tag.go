@@ -22,7 +22,7 @@ import (
 )
 
 // The number of tags in the database.
-func TagCount(tx *sql.Tx) (uint, error) {
+func TagCount(tx *Tx) (uint, error) {
 	sql := `SELECT count(1)
 			FROM tag`
 
@@ -36,7 +36,7 @@ func TagCount(tx *sql.Tx) (uint, error) {
 }
 
 // The set of tags.
-func Tags(tx *sql.Tx) (entities.Tags, error) {
+func Tags(tx *Tx) (entities.Tags, error) {
 	sql := `SELECT id, name
             FROM tag
             ORDER BY name`
@@ -51,7 +51,7 @@ func Tags(tx *sql.Tx) (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func Tag(tx *sql.Tx, id entities.TagId) (*entities.Tag, error) {
+func Tag(tx *Tx, id entities.TagId) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id = ?`
@@ -66,7 +66,7 @@ func Tag(tx *sql.Tx, id entities.TagId) (*entities.Tag, error) {
 }
 
 // Retrieves a specific set of tags.
-func TagsByIds(tx *sql.Tx, ids entities.TagIds) (entities.Tags, error) {
+func TagsByIds(tx *Tx, ids entities.TagIds) (entities.Tags, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE id IN (?`
@@ -93,7 +93,7 @@ func TagsByIds(tx *sql.Tx, ids entities.TagIds) (entities.Tags, error) {
 }
 
 // Retrieves a specific tag.
-func TagByName(tx *sql.Tx, name string) (*entities.Tag, error) {
+func TagByName(tx *Tx, name string) (*entities.Tag, error) {
 	sql := `SELECT id, name
 	        FROM tag
 	        WHERE name = ?`
@@ -108,7 +108,7 @@ func TagByName(tx *sql.Tx, name string) (*entities.Tag, error) {
 }
 
 // Retrieves the set of named tags.
-func TagsByNames(tx *sql.Tx, names []string) (entities.Tags, error) {
+func TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
 	if len(names) == 0 {
 		return make(entities.Tags, 0), nil
 	}
@@ -139,7 +139,7 @@ func TagsByNames(tx *sql.Tx, names []string) (entities.Tags, error) {
 }
 
 // Adds a tag.
-func InsertTag(tx *sql.Tx, name string) (*entities.Tag, error) {
+func InsertTag(tx *Tx, name string) (*entities.Tag, error) {
 	sql := `INSERT INTO tag (name)
 	        VALUES (?)`
 
@@ -165,7 +165,7 @@ func InsertTag(tx *sql.Tx, name string) (*entities.Tag, error) {
 }
 
 // Renames a tag.
-func RenameTag(tx *sql.Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
+func RenameTag(tx *Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
 	sql := `UPDATE tag
 	        SET name = ?
 	        WHERE id = ?`
@@ -187,7 +187,7 @@ func RenameTag(tx *sql.Tx, tagId entities.TagId, name string) (*entities.Tag, er
 }
 
 // Deletes a tag.
-func DeleteTag(tx *sql.Tx, tagId entities.TagId) error {
+func DeleteTag(tx *Tx, tagId entities.TagId) error {
 	sql := `DELETE FROM tag
 	        WHERE id = ?`
 
@@ -208,7 +208,7 @@ func DeleteTag(tx *sql.Tx, tagId entities.TagId) error {
 }
 
 // Retrieves the usage of each tag
-func TagUsage(tx *sql.Tx) ([]entities.TagFileCount, error) {
+func TagUsage(tx *Tx) ([]entities.TagFileCount, error) {
 	sql := `SELECT t.id, t.name, count(file_id)
             FROM file_tag ft, tag t
             WHERE ft.tag_id = t.id

@@ -21,7 +21,7 @@ import (
 )
 
 // The complete set of queries.
-func Queries(tx *sql.Tx) (entities.Queries, error) {
+func Queries(tx *Tx) (entities.Queries, error) {
 	sql := `SELECT text
 	        FROM query
 	        ORDER BY text`
@@ -36,7 +36,7 @@ func Queries(tx *sql.Tx) (entities.Queries, error) {
 }
 
 // Retrieves the specified query.
-func Query(tx *sql.Tx, text string) (*entities.Query, error) {
+func Query(tx *Tx, text string) (*entities.Query, error) {
 	sql := `SELECT 1
             FROM query
             WHERE text = ?`
@@ -51,7 +51,7 @@ func Query(tx *sql.Tx, text string) (*entities.Query, error) {
 }
 
 // Adds a query to the database.
-func InsertQuery(tx *sql.Tx, text string) (*entities.Query, error) {
+func InsertQuery(tx *Tx, text string) (*entities.Query, error) {
 	sql := `INSERT INTO query (text)
 	        VALUES (?)`
 
@@ -72,7 +72,7 @@ func InsertQuery(tx *sql.Tx, text string) (*entities.Query, error) {
 }
 
 // Removes a query from the database.
-func DeleteQuery(tx *sql.Tx, text string) error {
+func DeleteQuery(tx *Tx, text string) error {
 	sql := `DELETE FROM query
 	        WHERE text = ?`
 

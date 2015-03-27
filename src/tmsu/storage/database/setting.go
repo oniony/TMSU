@@ -21,7 +21,7 @@ import (
 )
 
 // The complete set of settings.
-func Settings(tx *sql.Tx) (entities.Settings, error) {
+func Settings(tx *Tx) (entities.Settings, error) {
 	sql := `SELECT name, value
 	        FROM setting
 	        ORDER BY name`
@@ -40,7 +40,7 @@ func Settings(tx *sql.Tx) (entities.Settings, error) {
 	return settings, nil
 }
 
-func Setting(tx *sql.Tx, name string) (*entities.Setting, error) {
+func Setting(tx *Tx, name string) (*entities.Setting, error) {
 	sql := `SELECT name, value
             FROM setting
             WHERE name = ?`
@@ -59,7 +59,7 @@ func Setting(tx *sql.Tx, name string) (*entities.Setting, error) {
 	return setting, nil
 }
 
-func UpdateSetting(tx *sql.Tx, name, value string) (*entities.Setting, error) {
+func UpdateSetting(tx *Tx, name, value string) (*entities.Setting, error) {
 	sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
 
 	result, err := tx.Exec(sql, name, value)

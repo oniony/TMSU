@@ -103,7 +103,7 @@ func summary(colour bool) {
 			synopsis = ansi.Strip(synopsis)
 		}
 
-		line := fmt.Sprintf("  %-*v  %v", maxWidth, command.Name, synopsis)
+		line := fmt.Sprintf("  %-*v   %v", maxWidth, command.Name, synopsis)
 
 		if command.Hidden && colour {
 			line = ansi.Yellow(line)
@@ -229,7 +229,7 @@ func printOptions(options []Option) {
 	}
 
 	for _, option := range options {
-		line := fmt.Sprintf("  %-2v %-*v  %v", option.ShortName, maxWidth, option.LongName, option.Description)
+		line := fmt.Sprintf("  %-2v %-*v   %v", option.ShortName, maxWidth, option.LongName, option.Description)
 		terminal.PrintWrapped(line)
 	}
 }

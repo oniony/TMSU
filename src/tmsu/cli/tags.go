@@ -46,7 +46,8 @@ See the 'imply' subcommand for more information on implied tags.`,
 		"$ tmsu tags --count tralala.mp3"},
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
-		{"--explicit", "-e", "do not show implied tags", false, ""}},
+		{"--explicit", "-e", "do not show implied tags", false, ""},
+		{"--name", "-n", "always print the file name", false, ""}},
 	Exec: tagsExec,
 }
 
@@ -54,6 +55,7 @@ func tagsExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
+	printPath := options.HasOption("--name")
 	colour, err := useColour(options)
 	if err != nil {
 		return err
@@ -69,7 +71,7 @@ func tagsExec(store *storage.Storage, options Options, args []string) error {
 		return listAllTags(store, tx, showCount, onePerLine, colour)
 	}
 
-	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, colour)
+	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour)
 }
 
 func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, colour bool) error {
@@ -105,9 +107,9 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, 
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, colour bool) error {
+func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour bool) error {
 	wereErrors := false
-	printPath := len(paths) > 1 || terminal.Width() == 0
+	printPath = printPath || len(paths) > 1 || stdoutIsPipe()
 
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)

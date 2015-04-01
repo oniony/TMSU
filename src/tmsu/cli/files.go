@@ -46,7 +46,6 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		`$ tmsu files "year < 2015" # tagged 'year' with values under '2015'`,
 		`$ tmsu files year lt 2015  # same query but using textual operator`,
 		`$ tmsu files year  # tagged 'year' (any or no value)`,
-		`$ tmsu files --top music  # don't list individual files if directory is tagged`,
 		`$ tmsu files --path=/home/bob music  # tagged 'music' under /home/bob`},
 	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},

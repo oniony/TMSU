@@ -35,6 +35,18 @@ type tagValuePair struct {
 	ValueId entities.ValueId
 }
 
+func stdoutIsPipe() bool {
+	stat, err := os.Stdout.Stat()
+	if err != nil {
+		return false
+	}
+	if stat.Mode()&os.ModeNamedPipe != 0 {
+		return true
+	}
+
+	return false
+}
+
 func useColour(options Options) (bool, error) {
 	when := "auto"
 	if options.HasOption("--color") {

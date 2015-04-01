@@ -99,6 +99,8 @@ v0.6 (in development)
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
   * Performance improvements to the virtual filesystem.
   * Fixed 'too many SQL variables' when merging tags applied to lots of files.
+  * Added --name option to 'tags' to force printing of name even if there is
+    only a single file argument, which is useful when using xargs.
 
 v0.5.2
 ------

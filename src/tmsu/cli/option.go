@@ -67,13 +67,13 @@ type OptionParser struct {
 	commandByName map[string]*Command
 }
 
-func NewOptionParser(globalOptions Options, commandByName map[string]*Command) *OptionParser {
-	parser := OptionParser{globalOptions, commandByName}
+func NewOptionParser(globalOptions Options, commands []*Command) *OptionParser {
+	parser := OptionParser{globalOptions, buildCommandByNameMap(commands)}
 	return &parser
 }
 
-func (parser *OptionParser) Parse(args ...string) (commandName string, options Options, arguments []string, err error) {
-	commandName = ""
+func (parser *OptionParser) Parse(args ...string) (command *Command, options Options, arguments []string, err error) {
+	commandName := ""
 	options = make(Options, 0)
 	arguments = make([]string, 0)
 
@@ -120,7 +120,8 @@ func (parser *OptionParser) Parse(args ...string) (commandName string, options O
 				if commandName == "" {
 					commandName = arg
 
-					command, ok := parser.commandByName[commandName]
+					var ok bool
+					command, ok = parser.commandByName[commandName]
 					if ok {
 						possibleOptions = append(possibleOptions, command.Options...)
 					}
@@ -135,6 +136,20 @@ func (parser *OptionParser) Parse(args ...string) (commandName string, options O
 }
 
 // unexported
+
+func buildCommandByNameMap(commands []*Command) map[string]*Command {
+	commandByName := make(map[string]*Command)
+
+	for _, command := range commands {
+		commandByName[command.Name] = command
+
+		for _, alias := range command.Aliases {
+			commandByName[alias] = command
+		}
+	}
+
+	return commandByName
+}
 
 func lookupOption(options Options, name string) *Option {
 	for _, option := range options {

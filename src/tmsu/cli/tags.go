@@ -109,7 +109,7 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, 
 
 func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour bool) error {
 	wereErrors := false
-	printPath = printPath || len(paths) > 1 || stdoutIsPipe()
+	printPath = printPath || len(paths) > 1 || !stdoutIsCharDevice()
 
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)

@@ -20,14 +20,14 @@ import (
 )
 
 func TestParseVanillaArguments(test *testing.T) {
-	parser := NewOptionParser(Options{}, make(map[string]*Command))
+	parser := NewOptionParser(Options{}, []*Command{&Command{Name: "a"}})
 
-	commandName, options, arguments, err := parser.Parse("a", "b", "c")
+	command, options, arguments, err := parser.Parse("a", "b", "c")
 	if err != nil {
 		test.Fatal(err)
 	}
-	if commandName != "a" {
-		test.Fatalf("Expected command name of 'a' but was '%v'.", commandName)
+	if command.Name != "a" {
+		test.Fatalf("Expected command name of 'a' but was '%v'.", command.Name)
 	}
 	if len(options) != 0 {
 		test.Fatalf("Expected zero options but were %v.", len(options))
@@ -41,9 +41,9 @@ func TestParseVanillaArguments(test *testing.T) {
 }
 
 func TestParseGlobalOptions(test *testing.T) {
-	parser := NewOptionParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, make(map[string]*Command))
+	parser := NewOptionParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, []*Command{&Command{Name: "a"}})
 
-	commandName, options, arguments, err := parser.Parse("--verbose", "a", "b")
+	command, options, arguments, err := parser.Parse("--verbose", "a", "b")
 	if err != nil {
 		test.Fatal(err)
 	}
@@ -56,8 +56,8 @@ func TestParseGlobalOptions(test *testing.T) {
 	if options[0].ShortName != "-v" {
 		test.Fatalf("Expected option short name of '-v' but was '%v'.", globalOptions[0])
 	}
-	if commandName != "a" {
-		test.Fatalf("Expected command name of 'a' but was '%v'.", commandName)
+	if command.Name != "a" {
+		test.Fatalf("Expected command name of 'a' but was '%v'.", command.Name)
 	}
 	if len(arguments) != 1 {
 		test.Fatalf("Expected one argument but were %v.", len(arguments))
@@ -68,7 +68,7 @@ func TestParseGlobalOptions(test *testing.T) {
 }
 
 func TestInvalidGlobalOption(test *testing.T) {
-	parser := NewOptionParser(Options{}, make(map[string]*Command))
+	parser := NewOptionParser(Options{}, []*Command{})
 
 	_, _, _, err := parser.Parse("--invalid", "a", "b")
 

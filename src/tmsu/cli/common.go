@@ -35,12 +35,12 @@ type tagValuePair struct {
 	ValueId entities.ValueId
 }
 
-func stdoutIsPipe() bool {
+func stdoutIsCharDevice() bool {
 	stat, err := os.Stdout.Stat()
 	if err != nil {
 		return false
 	}
-	if stat.Mode()&os.ModeNamedPipe != 0 {
+	if stat.Mode()&os.ModeCharDevice != 0 {
 		return true
 	}
 

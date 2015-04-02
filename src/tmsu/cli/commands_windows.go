@@ -17,23 +17,23 @@
 
 package cli
 
-var commands = map[string]*Command{
-	"config":   &ConfigCommand,
-	"copy":     &CopyCommand,
-	"delete":   &DeleteCommand,
-	"dupes":    &DupesCommand,
-	"files":    &FilesCommand,
-	"help":     &HelpCommand,
-	"imply":    &ImplyCommand,
-	"init":     &InitCommand,
-	"merge":    &MergeCommand,
-	"rename":   &RenameCommand,
-	"repair":   &RepairCommand,
-	"stats":    &StatsCommand,
-	"status":   &StatusCommand,
-	"tag":      &TagCommand,
-	"tags":     &TagsCommand,
-	"untag":    &UntagCommand,
-	"untagged": &UntaggedCommand,
-	"values":   &ValuesCommand,
-	"version":  &VersionCommand}
+var commands = *Command{
+	&ConfigCommand,
+	&CopyCommand,
+	&DeleteCommand,
+	&DupesCommand,
+	&FilesCommand,
+	&HelpCommand,
+	&ImplyCommand,
+	&InitCommand,
+	&MergeCommand,
+	&RenameCommand,
+	&RepairCommand,
+	&InfoCommand,
+	&StatusCommand,
+	&TagCommand,
+	&TagsCommand,
+	&UntagCommand,
+	&UntaggedCommand,
+	&ValuesCommand,
+	&VersionCommand}

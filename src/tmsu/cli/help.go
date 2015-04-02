@@ -36,7 +36,7 @@ var HelpCommand = Command{
 	Exec:        helpExec,
 }
 
-var helpCommands map[string]*Command
+var helpCommands []*Command
 var colorizeRegexp = regexp.MustCompile(`'\S+'`)
 
 func helpExec(store *storage.Storage, options Options, args []string) error {
@@ -82,18 +82,11 @@ func summary(colour bool) {
 	fmt.Println()
 
 	var maxWidth int
-	commandNames := make([]string, 0, len(helpCommands))
 	for _, command := range helpCommands {
-		commandName := command.Name
-		maxWidth = int(math.Max(float64(maxWidth), float64(len(commandName))))
-		commandNames = append(commandNames, commandName)
+		maxWidth = int(math.Max(float64(maxWidth), float64(len(command.Name))))
 	}
 
-	sort.Strings(commandNames)
-
-	for _, commandName := range commandNames {
-		command, _ := helpCommands[commandName]
-
+	for _, command := range helpCommands {
 		if command.Hidden && log.Verbosity < 2 {
 			continue
 		}
@@ -143,6 +136,23 @@ func listCommands() {
 	for _, commandName := range commandNames {
 		fmt.Println(commandName)
 	}
+}
+
+func findCommand(commands []*Command, commandName string) *Command {
+	for _, command := range commands {
+		if command.Name == commandName {
+			return command
+		}
+
+		for _, alias := range command.Aliases {
+			if alias == commandName {
+				return command
+			}
+		}
+
+	}
+
+	return nil
 }
 
 func describeCommand(commandName string, colour bool) {

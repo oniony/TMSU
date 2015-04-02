@@ -29,16 +29,16 @@ func Run() {
 	helpCommands = commands
 
 	parser := NewOptionParser(globalOptions, commands)
-	commandName, options, arguments, err := parser.Parse(os.Args[1:]...)
+	command, options, arguments, err := parser.Parse(os.Args[1:]...)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	switch {
 	case options.HasOption("--version"):
-		commandName = "version"
-	case options.HasOption("--help"), commandName == "":
-		commandName = "help"
+		// find version command
+	case options.HasOption("--help"), command == nil:
+		// find help command
 	}
 
 	log.Verbosity = options.Count("--verbose") + 1
@@ -61,7 +61,7 @@ func Run() {
 		log.Fatalf("could not open storage: %v", err)
 	}
 
-	if err = processCommand(store, commandName, options, arguments); err != nil {
+	if err = processCommand(store, command, options, arguments); err != nil {
 		if err != errBlank {
 			log.Warn(err.Error())
 		}
@@ -129,35 +129,9 @@ func findDatabaseInPath() (string, error) {
 	}
 }
 
-func processCommand(store *storage.Storage, commandName string, options Options, arguments []string) error {
-	command := findCommand(commands, commandName)
-	if command == nil {
-		return fmt.Errorf("invalid command '%v'.", commandName)
-	}
-
+func processCommand(store *storage.Storage, command *Command, options Options, arguments []string) error {
 	if err := command.Exec(store, options, arguments); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-func findCommand(commands map[string]*Command, commandName string) *Command {
-	command := commands[commandName]
-	if command != nil {
-		return command
-	}
-
-	for _, command := range commands {
-		if command.Aliases == nil {
-			continue
-		}
-
-		for _, alias := range command.Aliases {
-			if alias == commandName {
-				return command
-			}
-		}
 	}
 
 	return nil

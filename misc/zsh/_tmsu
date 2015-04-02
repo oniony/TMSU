@@ -270,8 +270,10 @@ _tmsu_cmd_repair() {
     && ret=0
 }
 
-_tmsu_cmd_stats() {
-    _arguments -s -w ''{--usage,-u}'[show tag usage breakdown]' \
+_tmsu_cmd_info() {
+    _arguments -s -w ''{--stats,-s}'[show statistics]' \
+                     ''{--usage,-u}'[show tag usage breakdown]' \
+
     && ret=0
 }
 

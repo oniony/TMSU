@@ -18,6 +18,8 @@ package cli
 import (
 	"fmt"
 	"math"
+	"os"
+	"strconv"
 	"tmsu/common/terminal/ansi"
 	"tmsu/storage"
 )
@@ -48,8 +50,7 @@ func infoExec(store *storage.Storage, options Options, args []string) error {
 	}
 	defer tx.Commit()
 
-	printInfo("Database", store.DbPath, colour)
-	printInfo("Root path", store.RootPath, colour)
+	showBasic(store, tx, colour)
 
 	if stats {
 		showStatistics(store, tx, colour)
@@ -61,12 +62,18 @@ func infoExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func printInfo(name string, value string, colour bool) {
-	if colour {
-		value = ansi.Green(value)
+func showBasic(store *storage.Storage, tx *storage.Tx, colour bool) error {
+	printInfo("Database", store.DbPath, colour)
+	printInfo("Root path", store.RootPath, colour)
+
+	stat, err := os.Stat(store.DbPath)
+	if err != nil {
+		return err
 	}
 
-	fmt.Printf("%v: %v\n", name, value)
+	printInfo("Size", stat.Size(), colour)
+
+	return nil
 }
 
 func showStatistics(store *storage.Storage, tx *storage.Tx, colour bool) error {
@@ -101,14 +108,12 @@ func showStatistics(store *storage.Storage, tx *storage.Tx, colour bool) error {
 	}
 
 	fmt.Println()
-	fmt.Printf("Tags: %v\n", tagCount)
-	fmt.Printf("Values: %v\n", valueCount)
-	fmt.Printf("Files: %v\n", fileCount)
-	fmt.Printf("Taggings: %v\n", fileTagCount)
-	fmt.Println()
-
-	fmt.Printf("Mean tags per file: %1.2f\n", averageTagsPerFile)
-	fmt.Printf("Mean files per tag: %1.2f\n", averageFilesPerTag)
+	printInfo("Tags", tagCount, colour)
+	printInfo("Values", valueCount, colour)
+	printInfo("Files", fileCount, colour)
+	printInfo("Taggings", fileTagCount, colour)
+	printInfof("Mean tags per file", "%1.2f", averageTagsPerFile, colour)
+	printInfof("Mean files per tag", "%1.2f", averageFilesPerTag, colour)
 
 	return nil
 }
@@ -134,8 +139,25 @@ func showUsage(store *storage.Storage, tx *storage.Tx, colour bool) error {
 
 	fmt.Println()
 	for _, tagUsage := range tagUsages {
-		fmt.Printf("  %*s %*v\n", -maxLength, tagUsage.Name, maxCountWidth, tagUsage.FileCount)
+		fileCount := strconv.FormatUint(uint64(tagUsage.FileCount), 10)
+		if colour {
+			fileCount = ansi.Yellow(fileCount)
+		}
+
+		fmt.Printf("  %*s %*v\n", -maxLength, tagUsage.Name, maxCountWidth, fileCount)
 	}
 
 	return nil
+}
+
+func printInfo(name string, value interface{}, colour bool) {
+	printInfof(name, "%v", value, colour)
+}
+
+func printInfof(name, format string, value interface{}, colour bool) {
+	if colour {
+		format = ansi.Green(format)
+	}
+
+	fmt.Printf("%v: "+format+"\n", name, value)
 }

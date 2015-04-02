@@ -240,6 +240,13 @@ _tmsu_cmd_imply() {
     && ret=0
 }
 
+_tmsu_cmd_info() {
+    _arguments -s -w ''{--stats,-s}'[show statistics]' \
+                     ''{--usage,-u}'[show tag usage breakdown]' \
+
+    && ret=0
+}
+
 _tmsu_cmd_init() {
     _arguments -s -w '*:file:_files' && ret=0
 }
@@ -267,13 +274,6 @@ _tmsu_cmd_repair() {
 	                 ''{--manual,-m}'[manually relocate files]' \
 	                 ''--rationalize'[remove explicit taggings where an implicit tagging exists]' \
 	                 '*:file:_files' \
-    && ret=0
-}
-
-_tmsu_cmd_info() {
-    _arguments -s -w ''{--stats,-s}'[show statistics]' \
-                     ''{--usage,-u}'[show tag usage breakdown]' \
-
     && ret=0
 }
 

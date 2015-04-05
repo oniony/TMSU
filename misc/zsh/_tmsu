@@ -243,7 +243,6 @@ _tmsu_cmd_imply() {
 _tmsu_cmd_info() {
     _arguments -s -w ''{--stats,-s}'[show statistics]' \
                      ''{--usage,-u}'[show tag usage breakdown]' \
-
     && ret=0
 }
 

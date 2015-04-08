@@ -36,9 +36,9 @@ func Run() {
 
 	switch {
 	case options.HasOption("--version"):
-		// find version command
+		command = findCommand(commands, "version")
 	case options.HasOption("--help"), command == nil:
-		// find help command
+		command = findCommand(commands, "help")
 	}
 
 	log.Verbosity = options.Count("--verbose") + 1
@@ -127,6 +127,23 @@ func findDatabaseInPath() (string, error) {
 			return "", err
 		}
 	}
+}
+
+func findCommand(commands []*Command, commandName string) *Command {
+	for _, command := range commands {
+		if command.Name == commandName {
+			return command
+		}
+
+		for _, alias := range command.Aliases {
+			if alias == commandName {
+				return command
+			}
+		}
+
+	}
+
+	return nil
 }
 
 func processCommand(store *storage.Storage, command *Command, options Options, arguments []string) error {

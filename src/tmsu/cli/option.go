@@ -124,6 +124,8 @@ func (parser *OptionParser) Parse(args ...string) (command *Command, options Opt
 					command, ok = parser.commandByName[commandName]
 					if ok {
 						possibleOptions = append(possibleOptions, command.Options...)
+					} else {
+						err = fmt.Errorf("invalid subcommand '%v'", commandName)
 					}
 				} else {
 					arguments = append(arguments, arg)

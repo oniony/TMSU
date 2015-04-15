@@ -35,7 +35,7 @@ dist: compile
 	cp README.md $(DIST_DIR)
 	cp COPYING.md $(DIST_DIR)
 	@mkdir -p $(DIST_DIR)/bin
-	cp misc/bin/mount.tmsu $(DIST_DIR)/bin/
+	cp misc/bin/* $(DIST_DIR)/bin/
 	@mkdir -p $(DIST_DIR)/man
 	gzip -fc misc/man/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
 	@mkdir -p $(DIST_DIR)/misc/zsh
@@ -47,6 +47,8 @@ install:
 	cp bin/tmsu $(INSTALL_DIR)
 	@echo "* Installing 'mount' command support"
 	cp misc/bin/mount.tmsu $(MOUNT_INSTALL_DIR)
+	@echo "* Installing scripts"
+	cp misc/bin/tmsu-* $(INSTALL_DIR)
 	@echo "* Installing man page"
 	mkdir -p $(MAN_INSTALL_DIR)
 	gzip -fc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz

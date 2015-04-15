@@ -1,0 +1,16 @@
+#!/bin/sh
+
+usage="\
+Delete a file in the filesystem and TMSU
+
+Usage: $0 FILE..."
+
+if test $# -lt 1; then
+    echo "${usage}" 1>&2
+    exit 1
+fi
+
+while test $# -gt 0; do
+    tmsu untag --all $1 && rm $1
+    shift
+done

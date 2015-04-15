@@ -253,7 +253,7 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 		return fmt.Errorf("%v: could not retrieve file: %v", fromPath, err)
 	}
 	if file == nil {
-		return fmt.Errorf("%v: path is not tagged")
+		return fmt.Errorf("%v: path is not tagged", fromPath)
 	}
 
 	fileTags, err := store.FileTagsByFileId(tx, file.Id, true)

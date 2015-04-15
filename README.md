@@ -103,6 +103,12 @@ v0.6 (in development)
     only a single file argument, which is useful when using xargs.
   * Replaced 'stats' command with 'info' command (with --stats and --usage
     options for tag statics and usage counts respectively).
+  * Included a set of scripts for performing filesystem operations whilst
+    keeping the TMSU database up to date. If you wish to use these scripts
+    I recommend you alias them to simpler names, e.g. 'trm'.
+    - tmsu-rm!    Removes files from the filesystem and TMSU
+    - tmsu-mv!    Moves a file in the filesystem and updates TMSU
+    - tmsu-merge! Merges files (deleting all but the last)
 
 v0.5.2
 ------

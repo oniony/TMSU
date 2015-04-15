@@ -157,7 +157,7 @@ _tmsu_files() {
 
     _call_program tmsu tmsu $db files | while read -A file
     do
-        file_list+=$file:s/\.\///
+        file_list+=$file
     done
 
     _describe -t files 'files' file_list

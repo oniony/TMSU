@@ -1,0 +1,19 @@
+#!/bin/sh
+
+usage="\
+Merges two or more files
+
+Each FILE's tags are applied to DESTFILE before being deleted from the filesystem.
+
+Usage: $0 FILE... DESTFILE"
+
+if test $# -lt 2; then
+    echo "${usage}" 1>&2
+    exit 1
+fi
+
+eval last=\${$#}
+while test $# -gt 1; do
+    tmsu tag --from $1 $last && tmsu-fs-rm $1
+    shift
+done

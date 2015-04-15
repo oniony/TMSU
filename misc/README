@@ -1,5 +1,9 @@
-bin         Supporting binaries.
-db-upgrade  Database upgrade scripts.
-ebnf        Extended Backus-Naur Form file for the TMSU query language.
-man         Man page.
-zsh         Command completion for the shell Zsh.
+bin                 Supporting executables
+    mount.tmsu      Support for 'mount' command
+    tmsu-unsafe-rm  Delete a file on the filesystem and remove it from TMSU
+    tmsu-unsafe-mv  Move a file and update the path in TMSU
+    tmsu-unsafe-mf  Merges two files by deleting the first and applying its tags to the second
+db-upgrade          Database upgrade scripts
+ebnf                Extended Backus-Naur Form file for the TMSU query language
+man                 Man page
+zsh                 Command completion for the shell Zsh

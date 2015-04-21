@@ -1,6 +1,6 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
-[ ![Build status](https://codeship.com/projects/ad81c060-5f0e-0132-2efc-3643fcd47fc7/status?branch=master)](https://codeship.com/projects/51490)
+[![Build Status](https://drone.io/github.com/oniony/TMSU/status.png)](https://drone.io/github.com/oniony/TMSU/latest)
 
 Overview
 ========
@@ -106,9 +106,9 @@ v0.6 (in development)
   * Included a set of scripts for performing filesystem operations whilst
     keeping the TMSU database up to date. If you wish to use these scripts
     I recommend you alias them to simpler names, e.g. 'trm'.
-    - tmsu-rm!    Removes files from the filesystem and TMSU
-    - tmsu-mv!    Moves a file in the filesystem and updates TMSU
-    - tmsu-merge! Merges files (deleting all but the last)
+    - tmsu-fs-rm     Removes files from the filesystem and TMSU
+    - tmsu-fs-mv     Moves a file in the filesystem and updates TMSU
+    - tmsu-fs-merge  Merges files (deleting all but the last)
 
 v0.5.2
 ------

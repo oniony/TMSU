@@ -1,8 +1,8 @@
 bin                 Supporting executables
     mount.tmsu      Support for 'mount' command
-    tmsu-unsafe-rm  Delete a file on the filesystem and remove it from TMSU
-    tmsu-unsafe-mv  Move a file and update the path in TMSU
-    tmsu-unsafe-mf  Merges two files by deleting the first and applying its tags to the second
+    tmsu-fs-rm      Delete a file on the filesystem and remove it from TMSU
+    tmsu-fs-mv      Move a file and update the path in TMSU
+    tmsu-fs-merge   Merges two files by deleting the first and applying its tags to the second
 db-upgrade          Database upgrade scripts
 ebnf                Extended Backus-Naur Form file for the TMSU query language
 man                 Man page

@@ -3,7 +3,7 @@
 usage="\
 Delete a file in the filesystem and TMSU
 
-Usage: $0 FILE..."
+Usage: $(basename $0) FILE..."
 
 if test $# -lt 1; then
     echo "${usage}" 1>&2

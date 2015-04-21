@@ -5,7 +5,7 @@ Merges two or more files
 
 Each FILE's tags are applied to DESTFILE before being deleted from the filesystem.
 
-Usage: $0 FILE... DESTFILE"
+Usage: $(basename $0) FILE... DESTFILE"
 
 if test $# -lt 2; then
     echo "${usage}" 1>&2

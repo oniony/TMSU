@@ -62,11 +62,11 @@ func Infof(verbosity uint, format string, values ...interface{}) {
 
 func log(dest io.Writer, values ...interface{}) {
 	if Verbosity > 1 {
-		fmt.Printf("%v: ", time.Now())
+		fmt.Fprintf(dest, "%v: ", time.Now())
 	}
 
-	fmt.Printf("tmsu: ")
-	fmt.Println(values...)
+	fmt.Fprintf(dest, "tmsu: ")
+	fmt.Fprintln(dest, values...)
 }
 
 func logf(dest io.Writer, format string, values ...interface{}) {

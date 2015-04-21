@@ -3,7 +3,7 @@
 usage="\
 Moves a file in the filesystem and updates the path in TMSU
 
-Usage: $0 SRCFILE DESTFILE"
+Usage: $(basename $0) SRCFILE DESTFILE"
 
 if test $# -ne 2; then
     echo "${usage}" 1>&2

@@ -28,6 +28,11 @@ Or you can apply tags to multiple files:
 You can query for files with or without particular tags:
 
     $ tmsu files fruit and not still-life
+
+Mount the virtual filesystem to an empty directory:
+
+    $ mkdir mp
+    $ tmsu mount mp
     
 A subcommand overview and detail on how to use each subcommand is available via the
 integrated help:

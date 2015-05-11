@@ -14,6 +14,6 @@ fi
 
 eval last=\${$#}
 while test $# -gt 1; do
-    tmsu tag --from $1 $last && tmsu-fs-rm $1
+    tmsu tag --from "$1" "$last" && tmsu-fs-rm "$1"
     shift
 done

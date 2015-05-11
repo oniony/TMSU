@@ -10,4 +10,4 @@ if test $# -ne 2; then
     exit 1
 fi
 
-mv $1 $2 && tmsu repair --manual $1 $2
+mv "$1" "$2" && tmsu repair --manual "$1" "$2"

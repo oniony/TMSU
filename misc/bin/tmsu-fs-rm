@@ -11,6 +11,6 @@ if test $# -lt 1; then
 fi
 
 while test $# -gt 0; do
-    tmsu untag --all $1 && rm $1
+    tmsu untag --all "$1" && rm "$1"
     shift
 done

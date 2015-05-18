@@ -17,7 +17,6 @@ package cli
 
 import (
 	"fmt"
-	"tmsu/api"
 	"tmsu/common/log"
 	"tmsu/storage"
 )
@@ -48,18 +47,30 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 	}
 	defer tx.Commit()
 
+	sourceTag, err := store.TagByName(tx, sourceTagName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
+	}
+	if sourceTag == nil {
+		return fmt.Errorf("no such tag '%v'", sourceTagName)
+	}
+
 	wereErrors := false
 	for _, destTagName := range destTagNames {
+		destTag, err := store.TagByName(tx, destTagName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
+		}
+		if destTag != nil {
+			log.Warnf("a tag with name '%v' already exists.", destTagName)
+			wereErrors = true
+			continue
+		}
+
 		log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
-		if err := api.CopyTag(store, tx, sourceTagName, destTagName); err != nil {
-			switch err.(type) {
-			case api.TagAlreadyExists:
-				log.Warnf(err.Error())
-				wereErrors = true
-			default:
-				return err
-			}
+		if _, err = store.CopyTag(tx, sourceTag.Id, destTagName); err != nil {
+			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
 		}
 	}
 

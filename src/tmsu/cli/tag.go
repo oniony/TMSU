@@ -131,44 +131,23 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func createTags(store *storage.Storage, tx *storage.Tx, tagArgs []string) error {
+func createTags(store *storage.Storage, tx *storage.Tx, tagNames []string) error {
 	wereErrors := false
-	for _, tagArg := range tagArgs {
-		tagName, valueName := parseTagArg(tagArg)
-
+	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return fmt.Errorf("could not check if tag '%v' exists: %v", tagName, err)
 		}
 
 		if tag == nil {
-			log.Infof(2, "adding tag '%v'", tagName)
+			log.Infof(2, "adding tag '%v'.", tagName)
 
-			if _, err := store.AddTag(tx, tagName); err != nil {
+			_, err := store.AddTag(tx, tagName)
+			if err != nil {
 				return fmt.Errorf("could not add tag '%v': %v", tagName, err)
 			}
-		} else if valueName == "" {
-			log.Warnf("tag '%v' already exists", tagName)
-			wereErrors = true
-		}
-
-		if valueName == "" {
-			continue
-		}
-
-		value, err := store.ValueByName(tx, valueName)
-		if err != nil {
-			return fmt.Errorf("could not check if value '%v' exists: %v", valueName, err)
-		}
-
-		if value == nil {
-			log.Infof(2, "adding value '%v'", valueName)
-
-			if _, err := store.AddValue(tx, valueName); err != nil {
-				return fmt.Errorf("could not add value '%v': %v", valueName, err)
-			}
 		} else {
-			log.Warnf("value '%v' already exists", valueName)
+			log.Warnf("tag '%v' already exists", tagName)
 			wereErrors = true
 		}
 	}
@@ -178,20 +157,6 @@ func createTags(store *storage.Storage, tx *storage.Tx, tagArgs []string) error 
 	}
 
 	return nil
-}
-
-func parseTagArg(tagArg string) (tagName string, valueName string) {
-	index := strings.Index(tagArg, "=")
-
-	switch index {
-	case -1, 0:
-		tagName = tagArg
-	default:
-		tagName = tagArg[0:index]
-		valueName = tagArg[index+1 : len(tagArg)]
-	}
-
-	return
 }
 
 func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, explicit, recursive, force bool) error {
@@ -205,7 +170,17 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 	wereErrors := false
 	tagValuePairs := make([]tagValuePair, 0, 10)
 	for _, tagArg := range tagArgs {
-		tagName, valueName := parseTagArg(tagArg)
+		var tagName, valueName string
+		index := strings.Index(tagArg, "=")
+
+		switch index {
+		case -1, 0:
+			tagName = tagArg
+		default:
+			tagName = tagArg[0:index]
+			valueName = tagArg[index+1 : len(tagArg)]
+		}
+
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return err

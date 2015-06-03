@@ -199,6 +199,31 @@ func InsertValue(tx *Tx, name string) (*entities.Value, error) {
 	return &entities.Value{entities.ValueId(id), name}, nil
 }
 
+// Renames a value.
+func RenameValue(tx *Tx, valueId entities.ValueId, newName string) (*entities.Value, error) {
+	sql := `UPDATE value
+            SET name = ?
+            WHERE id = ?`
+
+	result, err := tx.Exec(sql, newName, valueId)
+	if err != nil {
+		return nil, err
+	}
+
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return nil, err
+	}
+	if rowsAffected == 0 {
+		return nil, NoSuchValueError{valueId}
+	}
+	if rowsAffected > 1 {
+		panic("expected only one row to be affected.")
+	}
+
+	return &entities.Value{valueId, newName}, nil
+}
+
 // Deletes a value.
 func DeleteValue(tx *Tx, valueId entities.ValueId) error {
 	sql := `DELETE FROM value

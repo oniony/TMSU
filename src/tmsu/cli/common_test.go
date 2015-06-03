@@ -62,13 +62,28 @@ func expectTags(test *testing.T, store *storage.Storage, tx *storage.Tx, file *e
 	if len(fileTags) != len(tags) {
 		test.Fatalf("File '%v' has %v tags but expected %v.", file.Path(), len(fileTags), len(tags))
 	}
-	for index, filetag := range fileTags {
+	for index, fileTag := range fileTags {
 		tag := tags[index]
 
-		if filetag.TagId != tag.Id {
-			test.Fatal("File '%v' is tagged %v but expected %v.", file.Path(), filetag.TagId, tag.Id)
+		if fileTag.TagId != tag.Id {
+			test.Fatal("File '%v' is tagged %v but expected %v.", file.Path(), fileTag.TagId, tag.Id)
 		}
 	}
+}
+
+func expectValue(test *testing.T, store *storage.Storage, tx *storage.Tx, file *entities.File, tag *entities.Tag, value *entities.Value) {
+	fileTags, err := store.FileTagsByFileId(tx, file.Id, true)
+	if err != nil {
+		test.Fatal(err)
+	}
+
+	for _, fileTag := range fileTags {
+		if fileTag.TagId == tag.Id && fileTag.ValueId == value.Id {
+			return
+		}
+	}
+
+	test.Fatal("File '%v' is not tagged with tag %v and value %v.", file.Path(), tag.Id, value.Id)
 }
 
 func createFile(path string, contents string) error {

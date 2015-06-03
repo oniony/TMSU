@@ -114,6 +114,8 @@ v0.6 (in development)
     - tmsu-fs-rm     Removes files from the filesystem and TMSU
     - tmsu-fs-mv     Moves a file in the filesystem and updates TMSU
     - tmsu-fs-merge  Merges files (deleting all but the last)
+  * Tag values can now be renamed using the new --value option on the 'rename'
+    command.
 
 v0.5.2
 ------

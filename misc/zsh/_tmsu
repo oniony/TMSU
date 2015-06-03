@@ -262,7 +262,19 @@ _tmsu_cmd_mount() {
 }
 
 _tmsu_cmd_rename() {
-	_arguments -s -w '1:tag:_tmsu_tags' && ret=0
+	_arguments -s -w ''--value'[rename a value]' \
+                     '1:: :-> items'\
+    && ret=0
+
+	case $state in
+        (items)
+            if (( ${+opt_args[--value]} ))
+            then
+                _wanted values expl 'values' _tmsu_values
+            else
+                _wanted tags expl 'tags' _tmsu_tags
+            fi
+    esac
 }
 
 _tmsu_cmd_repair() {

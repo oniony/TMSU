@@ -76,6 +76,15 @@ func (storage *Storage) AddValue(tx *Tx, name string) (*entities.Value, error) {
 	return database.InsertValue(tx.tx, name)
 }
 
+// Renames a value.
+func (storage *Storage) RenameValue(tx *Tx, valueId entities.ValueId, newName string) (*entities.Value, error) {
+	if err := validateValueName(newName); err != nil {
+		return nil, err
+	}
+
+	return database.RenameValue(tx.tx, valueId, newName)
+}
+
 // Deletes a value.
 func (storage *Storage) DeleteValue(tx *Tx, valueId entities.ValueId) error {
 	fileTags, err := storage.FileTagsByValueId(tx, valueId)

@@ -29,7 +29,7 @@ var DeleteCommand = Command{
 	Description: `Permanently deletes the TAGs specified.`,
 	Examples: []string{"$ tmsu delete pineapple",
 		"$ tmsu delete red green blue"},
-	Options: Options{},
+	Options: Options{Option{"--value", "", "delete a value", false, ""}},
 	Exec:    deleteExec,
 }
 
@@ -44,8 +44,18 @@ func deleteExec(store *storage.Storage, options Options, args []string) error {
 	}
 	defer tx.Commit()
 
+	if options.HasOption("--value") {
+		err = deleteValue(store, tx, args)
+	} else {
+		err = deleteTag(store, tx, args)
+	}
+
+	return err
+}
+
+func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) error {
 	wereErrors := false
-	for _, tagName := range args {
+	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
@@ -59,6 +69,32 @@ func deleteExec(store *storage.Storage, options Options, args []string) error {
 		err = store.DeleteTag(tx, tag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
+		}
+	}
+
+	if wereErrors {
+		return errBlank
+	}
+
+	return nil
+}
+
+func deleteValue(store *storage.Storage, tx *storage.Tx, valueNames []string) error {
+	wereErrors := false
+	for _, valueName := range valueNames {
+		value, err := store.ValueByName(tx, valueName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
+		}
+		if value == nil {
+			log.Warnf("no such value '%v'.", valueName)
+			wereErrors = true
+			continue
+		}
+
+		err = store.DeleteValue(tx, value.Id)
+		if err != nil {
+			return fmt.Errorf("could not delete value '%v': %v", valueName, err)
 		}
 	}
 

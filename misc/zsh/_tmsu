@@ -208,7 +208,19 @@ _tmsu_cmd_copy() {
 }
 
 _tmsu_cmd_delete() {
-	_arguments -s -w '*:tag:_tmsu_tags' && ret=0
+	_arguments -s -w ''--value'[delete a value]' \
+                     '1:: :-> items'\
+    && ret=0
+
+	case $state in
+        (items)
+            if (( ${+opt_args[--value]} ))
+            then
+                _wanted values expl 'values' _tmsu_values
+            else
+                _wanted tags expl 'tags' _tmsu_tags
+            fi
+    esac
 }
 
 _tmsu_cmd_dupes() {

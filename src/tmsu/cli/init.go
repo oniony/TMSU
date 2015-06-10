@@ -53,7 +53,7 @@ func initExec(store *storage.Storage, options Options, args []string) error {
 	wereErrors := false
 	for _, path := range paths {
 		if err := initializeDatabase(path); err != nil {
-			log.Warnf("%v: could not initialize database", path, err)
+			log.Warnf("%v: could not initialize database: %v", path, err)
 			wereErrors = true
 		}
 	}

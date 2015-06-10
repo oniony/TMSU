@@ -209,7 +209,7 @@ _tmsu_cmd_copy() {
 
 _tmsu_cmd_delete() {
 	_arguments -s -w ''--value'[delete a value]' \
-                     '1:: :-> items'\
+                     '*:: :-> items'\
     && ret=0
 
 	case $state in

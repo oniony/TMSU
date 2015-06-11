@@ -109,7 +109,17 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	tags, err := store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !tags.ContainsName(tagName) {
-			log.Warnf("no such tag '%v'.", tagName)
+			log.Warnf("no such tag '%v'", tagName)
+			wereErrors = true
+			continue
+		}
+	}
+
+	valueNames := query.ValueNames(expression)
+	values, err := store.ValuesByNames(tx, valueNames)
+	for _, valueName := range valueNames {
+		if !values.ContainsName(valueName) {
+			log.Warnf("no such value '%v'", valueName)
 			wereErrors = true
 			continue
 		}

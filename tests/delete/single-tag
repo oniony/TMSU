@@ -3,15 +3,12 @@
 # test
 
 tmsu tag --force /tmp/tmsu/somefile aubergine >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu copy aubergine eggplant solanum-melongena >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files eggplant >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files solanum-melongena >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete aubergine >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files aubergine >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/somefile
-/tmp/tmsu/somefile
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -19,6 +16,7 @@ fi
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
+tmsu: no such tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

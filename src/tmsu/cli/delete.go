@@ -61,7 +61,7 @@ func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) error 
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
 		}
 		if tag == nil {
-			log.Warnf("no such tag '%v'.", tagName)
+			log.Warnf("no such tag '%v'", tagName)
 			wereErrors = true
 			continue
 		}
@@ -87,7 +87,7 @@ func deleteValue(store *storage.Storage, tx *storage.Tx, valueNames []string) er
 			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
 		}
 		if value == nil {
-			log.Warnf("no such value '%v'.", valueName)
+			log.Warnf("no such value '%v'", valueName)
 			wereErrors = true
 			continue
 		}

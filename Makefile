@@ -17,26 +17,29 @@ export GOPATH:=$(GOPATH):$(PWD)
 all: clean compile dist test
 
 clean:
+	@echo "* Cleaning"
 	go clean tmsu
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 compile:
+	@echo "* Compiling"
 	@mkdir -p bin
 	go build -o bin/tmsu tmsu
 
-test: unit-tests integration-tests
+test: unit-test integration-test
 
 unit-test:
-	@echo Unit tests
+	@echo "* Running unit tests"
 	go test tmsu/...
 
 integration-test:
-	@echo Integration tests
+	@echo "* Running integration tests"
 	@cd tests && ./run-all
 
 dist: compile
+	@echo "* Packaging distributable"
 	@mkdir -p $(DIST_DIR)
 	cp -R bin $(DIST_DIR)
 	cp README.md $(DIST_DIR)

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+for testcase in $( find . -mindepth 2 -perm /+x ); do
+    ./run-one $testcase
+done

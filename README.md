@@ -116,6 +116,7 @@ v0.6 (in development)
     - tmsu-fs-merge  Merges files (deleting all but the last)
   * Tag values can now be renamed or delete using the new --value option on the
     'rename' and 'delete' commands.
+  * Added integration tests covering CLI.
 
 v0.5.2
 ------

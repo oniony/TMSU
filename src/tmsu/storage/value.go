@@ -132,31 +132,31 @@ var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unic
 func validateValueName(valueName string) error {
 	switch valueName {
 	case "":
-		return errors.New("tag value cannot be empty.")
+		return errors.New("tag value cannot be empty")
 	case ".", "..":
-		return errors.New("tag value cannot be '.' or '..'.") // cannot be used in the VFS
+		return errors.New("tag value cannot be '.' or '..'") // cannot be used in the VFS
 	case "and", "AND", "or", "OR", "not", "NOT":
-		return errors.New("tag value cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
+		return errors.New("tag value cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
 	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
-		return errors.New("tag value cannot be a comparison operator: 'eq', 'ne', 'lt', 'gt', 'le' or 'ge'.") // used in query language
+		return errors.New("tag value cannot be a comparison operator: 'eq', 'ne', 'lt', 'gt', 'le' or 'ge'") // used in query language
 	}
 
 	for _, ch := range valueName {
 		switch ch {
 		case '(', ')':
-			return errors.New("tag value cannot contain parentheses: '(' or ')'.") // used in query language
+			return errors.New("tag value cannot contain parentheses: '(' or ')'") // used in query language
 		case ',':
-			return errors.New("tag value cannot contain comma: ','.") // reserved for tag delimiter
+			return errors.New("tag value cannot contain comma: ','") // reserved for tag delimiter
 		case '=', '!', '<', '>':
-			return errors.New("tag value cannot contain a comparison operator: '=', '!', '<' or '>'.") // reserved for tag values
+			return errors.New("tag value cannot contain a comparison operator: '=', '!', '<' or '>'") // reserved for tag values
 		case ' ', '\t':
-			return errors.New("tag value cannot contain space or tab.") // used as tag delimiter
+			return errors.New("tag value cannot contain space or tab") // used as tag delimiter
 		case '/':
-			return errors.New("tag value cannot contain slash: '/'.") // cannot be used in the VFS
+			return errors.New("tag value cannot contain slash: '/'") // cannot be used in the VFS
 		}
 
 		if !unicode.IsOneOf(validValueChars, ch) {
-			return fmt.Errorf("tag value cannot contain '%c'.", ch)
+			return fmt.Errorf("tag value cannot contain '%c'", ch)
 		}
 	}
 

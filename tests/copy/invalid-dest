@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag --force /tmp/tmsu/somefile aubergine >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu copy aubergine egg/plant >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stdout - </dev/null
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+tmsu: could not copy tag 'aubergine' to 'egg/plant': tag names cannot contain slash: '/'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

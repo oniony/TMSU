@@ -100,7 +100,7 @@ func createTag(store *storage.Storage, tx *storage.Tx, tagName string) (*entitie
 		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
 	}
 
-	log.Warnf("New tag '%v'.", tagName)
+	log.Warnf("new tag '%v'", tagName)
 
 	return tag, nil
 }
@@ -111,7 +111,7 @@ func createValue(store *storage.Storage, tx *storage.Tx, valueName string) (*ent
 		return nil, err
 	}
 
-	log.Warnf("New value '%v'.", valueName)
+	log.Warnf("new value '%v'", valueName)
 
 	return value, nil
 }

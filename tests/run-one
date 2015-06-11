@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+if [[ -z $1 ]]; then
+    echo "testcase path not specified" >&2
+    exit 1
+fi
+
+# create the database
+rm -r /tmp/tmsu 2>/dev/null
+mkdir -p /tmp/tmsu
+export TMSU_DB=/tmp/tmsu/db
+tmsu info >/dev/null 2>/dev/null
+
+# run the testcase
+./$1
+export RC=$?
+
+# report result
+echo -n "$1 "
+if [[ $RC -eq 0 ]]; then
+    echo "[PASS]"
+else
+    echo "[FAIL]"
+fi

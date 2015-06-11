@@ -26,8 +26,15 @@ compile:
 	@mkdir -p bin
 	go build -o bin/tmsu tmsu
 
-test: compile
+test: unit-tests integration-tests
+
+unit-test:
+	@echo Unit tests
 	go test tmsu/...
+
+integration-test:
+	@echo Integration tests
+	@cd tests && ./run-all
 
 dist: compile
 	@mkdir -p $(DIST_DIR)

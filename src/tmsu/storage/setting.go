@@ -20,12 +20,11 @@ import (
 	"tmsu/storage/database"
 )
 
-var defaultSettings = map[string]string{
-	"autoCreateTags":                "yes",
-	"autoCreateValues":              "yes",
-	"fileFingerprintAlgorithm":      "dynamic:SHA256",
-	"directoryFingerprintAlgorithm": "none",
-}
+var defaultSettings = entities.Settings{
+	&entities.Setting{"autoCreateTags", "yes"},
+	&entities.Setting{"autoCreateValues", "yes"},
+	&entities.Setting{"directoryFingerprintAlgorithm", "none"},
+	&entities.Setting{"fileFingerprintAlgorithm", "dynamic:SHA256"}}
 
 // The complete set of settings.
 func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
@@ -35,9 +34,9 @@ func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
 	}
 
 	// enrich with defaults
-	for name, value := range defaultSettings {
-		if !settings.ContainsName(name) {
-			settings = append(settings, &entities.Setting{name, value})
+	for _, defaultSetting := range defaultSettings {
+		if !settings.ContainsName(defaultSetting.Name) {
+			settings = append(settings, defaultSetting)
 		}
 	}
 
@@ -50,11 +49,7 @@ func (storage *Storage) Setting(tx *Tx, name string) (*entities.Setting, error) 
 		return nil, err
 	}
 	if setting == nil {
-		value, ok := defaultSettings[name]
-		if !ok {
-			return nil, nil
-		}
-
+		value := defaultSettings.Value(name)
 		setting = &entities.Setting{name, value}
 	}
 

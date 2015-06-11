@@ -62,7 +62,7 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
 		}
 		if destTag != nil {
-			log.Warnf("a tag with name '%v' already exists.", destTagName)
+			log.Warnf("a tag with name '%v' already exists", destTagName)
 			wereErrors = true
 			continue
 		}

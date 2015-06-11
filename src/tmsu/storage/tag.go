@@ -117,35 +117,35 @@ var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicod
 func validateTagName(tagName string) error {
 	switch tagName {
 	case "":
-		return errors.New("tag name cannot be empty.")
+		return errors.New("tag name cannot be empty")
 	case ".", "..":
-		return errors.New("tag name cannot be '.' or '..'.") // cannot be used in the VFS
+		return errors.New("tag name cannot be '.' or '..'") // cannot be used in the VFS
 	case "and", "AND", "or", "OR", "not", "NOT":
-		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'.") // used in query language
+		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
 	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
-		return errors.New("tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'.") // used in query language
+		return errors.New("tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'") // used in query language
 	}
 
 	if tagName[0] == '-' {
-		return errors.New("tag name cannot start with a minus: '-'.") // used in query language
+		return errors.New("tag name cannot start with a minus: '-'") // used in query language
 	}
 
 	for _, ch := range tagName {
 		switch ch {
 		case '(', ')':
-			return errors.New("tag names cannot contain parentheses: '(' or ')'.") // used in query language
+			return errors.New("tag names cannot contain parentheses: '(' or ')'") // used in query language
 		case ',':
-			return errors.New("tag names cannot contain comma: ','.") // reserved for tag delimiter
+			return errors.New("tag names cannot contain comma: ','") // reserved for tag delimiter
 		case '=', '!', '<', '>':
-			return errors.New("tag names cannot contain a comparison operator: '=', '!', '<' or '>'.") // reserved for tag values
+			return errors.New("tag names cannot contain a comparison operator: '=', '!', '<' or '>'") // reserved for tag values
 		case ' ', '\t':
-			return errors.New("tag names cannot contain space or tab.") // used as tag delimiter
+			return errors.New("tag names cannot contain space or tab") // used as tag delimiter
 		case '/':
-			return errors.New("tag names cannot contain slash: '/'.") // cannot be used in the VFS
+			return errors.New("tag names cannot contain slash: '/'") // cannot be used in the VFS
 		}
 
 		if !unicode.IsOneOf(validTagChars, ch) {
-			return fmt.Errorf("tag names cannot contain '%c'.", ch)
+			return fmt.Errorf("tag names cannot contain '%c'", ch)
 		}
 	}
 

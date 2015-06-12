@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag --force --from=/some/file /other/file    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: /some/file: path is not tagged
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

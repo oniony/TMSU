@@ -9,17 +9,17 @@ tmsu files eggplant                                       >>/tmp/tmsu/stdout 2>>
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
-EOF
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
 tmsu: new tag 'eggplant'
 tmsu: no such tag 'aubergine'
 tmsu: no such tag 'eggplant'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

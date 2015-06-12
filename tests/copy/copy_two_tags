@@ -10,17 +10,17 @@ tmsu files solanum-melongena                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/somefile
-/tmp/tmsu/somefile
-/tmp/tmsu/somefile
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/somefile
+/tmp/tmsu/somefile
+/tmp/tmsu/somefile
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

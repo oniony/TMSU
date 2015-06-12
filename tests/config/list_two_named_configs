@@ -6,15 +6,15 @@ tmsu config directoryFingerprintAlgorithm autoCreateTags    >|/tmp/tmsu/stdout 2
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
-directoryFingerprintAlgorithm=none
-autoCreateTags=yes
-EOF
+diff /tmp/tmsu/stderr - </dev/null
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - </dev/null
+diff /tmp/tmsu/stdout - <<EOF
+directoryFingerprintAlgorithm=none
+autoCreateTags=yes
+EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

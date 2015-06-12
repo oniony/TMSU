@@ -9,12 +9,6 @@ tmsu files country=Iceland                                       >>/tmp/tmsu/std
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
-EOF
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'year'
 tmsu: new value '2015'
@@ -22,6 +16,12 @@ tmsu: new tag 'country'
 tmsu: new value 'Iceland'
 tmsu: no such value '2015'
 tmsu: no such value 'Iceland'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -8,16 +8,16 @@ tmsu files year=2015                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'year'
+tmsu: new value '2015'
+tmsu: no such value '2015'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'year'
-tmsu: new value '2015'
-tmsu: no such value '2015'
+diff /tmp/tmsu/stdout - <<EOF
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

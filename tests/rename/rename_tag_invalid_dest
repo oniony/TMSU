@@ -7,15 +7,15 @@ tmsu rename aubergine egg/plant                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu
 
 # verify
 
-diff /tmp/tmsu/stdout - </dev/null
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
-
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
 tmsu: could not rename tag 'aubergine' to 'egg/plant': tag names cannot contain slash: '/'
 EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - </dev/null
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

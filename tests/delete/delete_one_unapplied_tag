@@ -2,21 +2,20 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --create aubergine                      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu delete aubergine                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files aubergine                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
-diff /tmp/tmsu/stdout - <<EOF
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: no such tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
-tmsu: no such tag 'aubergine'
+diff /tmp/tmsu/stdout - <<EOF
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

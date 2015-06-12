@@ -7,12 +7,12 @@ tmsu config autoCreateTags       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
-diff /tmp/tmsu/stdout - <<<no
+diff /tmp/tmsu/stderr - </dev/null
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - </dev/null
+diff /tmp/tmsu/stdout - <<<no
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

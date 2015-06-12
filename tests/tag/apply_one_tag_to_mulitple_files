@@ -1,0 +1,23 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag --force --tags="aubergine" /some/file /other/file    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tags --explicit /some/file /other/file                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+/some/file: aubergine
+/other/file: aubergine
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

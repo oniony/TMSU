@@ -3,20 +3,20 @@
 # test
 
 tmsu tag --force /tmp/tmsu/somefile aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu copy aubergine eggplant                              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu rename aubergine eggplant                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
-
-diff /tmp/tmsu/stdout - </dev/null
-if [[ $? -ne 0 ]]; then
-    exit 1
-fi
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
 tmsu: new tag 'eggplant'
-tmsu: a tag with name 'eggplant' already exists
+tmsu: tag 'eggplant' already exists
 EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - </dev/null
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

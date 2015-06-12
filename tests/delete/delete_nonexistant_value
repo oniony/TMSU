@@ -6,14 +6,14 @@ tmsu delete --value 2015    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
-diff /tmp/tmsu/stdout - </dev/null
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: no such value '2015'
+EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stderr - <<EOF
-tmsu: no such value '2015'
-EOF
+diff /tmp/tmsu/stdout - </dev/null
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

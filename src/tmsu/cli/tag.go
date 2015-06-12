@@ -144,7 +144,7 @@ func createTags(store *storage.Storage, tx *storage.Tx, tagNames []string) error
 
 			_, err := store.AddTag(tx, tagName)
 			if err != nil {
-				return fmt.Errorf("could not add tag '%v': %v", tagName, err)
+				return fmt.Errorf("could not create tag '%v': %v", tagName, err)
 			}
 		} else {
 			log.Warnf("tag '%v' already exists", tagName)

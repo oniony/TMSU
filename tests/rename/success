@@ -2,10 +2,10 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile aubergine >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu rename aubergine eggplant >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files aubergine >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files eggplant >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag --force /tmp/tmsu/somefile aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu rename aubergine eggplant                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files aubergine                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files eggplant                              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

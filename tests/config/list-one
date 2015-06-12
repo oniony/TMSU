@@ -2,7 +2,7 @@
 
 # test
 
-tmsu config autoCreateTags >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu config autoCreateTags    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 

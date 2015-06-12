@@ -2,7 +2,7 @@
 
 # test
 
-tmsu config >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu config    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 

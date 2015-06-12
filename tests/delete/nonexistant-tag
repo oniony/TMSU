@@ -2,7 +2,7 @@
 
 # test
 
-tmsu delete aubergine >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete aubergine    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

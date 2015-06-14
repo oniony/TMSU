@@ -5,7 +5,8 @@ if [[ -z $1 ]]; then
     exit 1
 fi
 
-export PATH=$(basename $_)/bin:$PATH
+export PATH=$(basename $_)/../bin:$PATH
+echo $PATH
 
 for testcase in $@; do
     # clean slate

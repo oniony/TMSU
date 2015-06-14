@@ -6,7 +6,6 @@ if [[ -z $1 ]]; then
 fi
 
 export PATH=$(dirname $_)/../bin:$PATH
-echo $PATH
 
 for testcase in $@; do
     # clean slate

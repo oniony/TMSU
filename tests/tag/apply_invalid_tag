@@ -2,8 +2,8 @@
 
 # test
 
-tmsu tag --force /some/file au/bergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tags --explicit                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 au/bergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tags --explicit /tmp/tmsu/file1   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -15,6 +15,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file1:
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

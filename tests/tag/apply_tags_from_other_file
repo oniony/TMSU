@@ -2,9 +2,9 @@
 
 # test
 
-tmsu tag --force /some/file aubergine potato      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag --force --from=/some/file /other/file    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags /other/file                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 aubergine potato          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --from=/tmp/tmsu/file1 /tmp/tmsu/file2    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1 /tmp/tmsu/file2          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -17,7 +17,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/other/file: aubergine potato
+/tmp/tmsu/file1: aubergine potato
+/tmp/tmsu/file2: aubergine potato
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

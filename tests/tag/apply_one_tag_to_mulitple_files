@@ -2,8 +2,8 @@
 
 # test
 
-tmsu tag --force --tags="aubergine" /some/file /other/file    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tags --explicit /some/file /other/file                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/file2    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tags --explicit /tmp/tmsu/file1 /tmp/tmsu/file2           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -15,8 +15,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/some/file: aubergine
-/other/file: aubergine
+/tmp/tmsu/file1: aubergine
+/tmp/tmsu/file2: aubergine
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

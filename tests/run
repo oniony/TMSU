@@ -6,11 +6,20 @@ if [[ -z $1 ]]; then
 fi
 
 for testcase in $@; do
-    # (re)create the database
+    # clean slate
     rm -r /tmp/tmsu 2>/dev/null
     mkdir -p /tmp/tmsu
+
+    # (re)create the database
     export TMSU_DB=/tmp/tmsu/db
     tmsu info >/dev/null 2>/dev/null
+
+    # create test items
+    echo 1 >/tmp/tmsu/file1
+    echo 2 >/tmp/tmsu/file2
+    echo 1 >/tmp/tmsu/file3dupe1
+    mkdir /tmp/tmsu/dir3
+    echo 1 >/tmp/tmsu/dir3/dir3file1
 
     # run the testcase
     ./$testcase
@@ -20,7 +29,9 @@ for testcase in $@; do
     echo -n "$testcase "
     if [[ $RC -eq 0 ]]; then
         echo "[PASS]"
+        exit 0
     else
         echo "[FAIL]"
+        exit 1
     fi
 done

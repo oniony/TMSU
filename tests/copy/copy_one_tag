@@ -2,10 +2,10 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu copy aubergine eggplant                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files aubergine                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files eggplant                              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu copy aubergine eggplant          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files aubergine                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files eggplant                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -17,8 +17,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/somefile
-/tmp/tmsu/somefile
+/tmp/tmsu/file1
+/tmp/tmsu/file1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

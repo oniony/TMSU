@@ -2,10 +2,10 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile year=2015    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu rename --value 2015 2016                    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files year=2015                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files year=2016                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 year=2015    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu rename --value 2015 2016         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files year=2015                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files year=2016                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -19,7 +19,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/somefile
+/tmp/tmsu/file1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

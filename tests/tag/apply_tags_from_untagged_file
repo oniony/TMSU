@@ -2,12 +2,12 @@
 
 # test
 
-tmsu tag --force --from=/some/file /other/file    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag --from=/tmp/tmsu/file1 /tmp/tmsu/file2    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: /some/file: path is not tagged
+tmsu: /tmp/tmsu/file1: path is not tagged
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

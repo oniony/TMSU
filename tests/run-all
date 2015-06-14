@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+export RC=0
 for testcase in $( find . -mindepth 2 -perm /+x ); do
     ./run $testcase
+    export RC=$(( $RC + $? ))
 done
+
+exit $RC

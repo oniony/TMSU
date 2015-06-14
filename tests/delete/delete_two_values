@@ -2,10 +2,10 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile year=2015 country=Iceland    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu delete --value 2015 Iceland                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files year=2015                                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files country=Iceland                                       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 year=2015 country=Iceland    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu delete --value 2015 Iceland                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files year=2015                                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files country=Iceland                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

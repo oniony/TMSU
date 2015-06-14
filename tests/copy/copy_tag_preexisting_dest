@@ -2,8 +2,9 @@
 
 # test
 
-tmsu tag --force /tmp/tmsu/somefile aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu copy aubergine eggplant                              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu copy aubergine eggplant                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -16,7 +17,9 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stdout - </dev/null
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file1: aubergine eggplant
+EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

@@ -18,8 +18,8 @@ for testcase in $@; do
     echo 1 >/tmp/tmsu/file1
     echo 2 >/tmp/tmsu/file2
     echo 1 >/tmp/tmsu/file3dupe1
-    mkdir /tmp/tmsu/dir3
-    echo 1 >/tmp/tmsu/dir3/dir3file1
+    mkdir /tmp/tmsu/dir1
+    echo 1 >/tmp/tmsu/dir1/file1
 
     # run the testcase
     ./$testcase

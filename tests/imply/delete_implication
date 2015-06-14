@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu imply aubergine vegetable             >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu imply                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr  
+tmsu imply --delete aubergine vegetable    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr  
+tmsu imply                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr  
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+tmsu: new tag 'vegetable'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+aubergine => vegetable
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

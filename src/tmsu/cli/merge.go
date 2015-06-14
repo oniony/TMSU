@@ -55,7 +55,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 	wereErrors := false
 	for _, sourceTagName := range args[0 : len(args)-1] {
 		if sourceTagName == destTagName {
-			log.Warnf("cannot merge tag '%v' into itself.", sourceTagName)
+			log.Warnf("cannot merge tag '%v' into itself", sourceTagName)
 			wereErrors = true
 			continue
 		}
@@ -65,7 +65,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
 		}
 		if sourceTag == nil {
-			log.Warnf("no such tag '%v'.", sourceTagName)
+			log.Warnf("no such tag '%v'", sourceTagName)
 			wereErrors = true
 			continue
 		}

@@ -3,6 +3,7 @@
 # test
 
 tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/file3dupe1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --recursive /tmp/tmsu/dir1 aubergine                       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu dupes                                                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
@@ -15,7 +16,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-Set of 2 duplicates:
+Set of 3 duplicates:
+  /tmp/tmsu/dir1/file1
   /tmp/tmsu/file1
   /tmp/tmsu/file3dupe1
 EOF

@@ -5,6 +5,8 @@ if [[ -z $1 ]]; then
     exit 1
 fi
 
+export PATH=$(basename $_)/bin:$PATH
+
 for testcase in $@; do
     # clean slate
     rm -r /tmp/tmsu 2>/dev/null

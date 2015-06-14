@@ -1,12 +1,14 @@
 #!/usr/bin/env bash
 
+#TODO the sort below should not be necessary
+
 # test
 
 tmsu tag --recursive /tmp/tmsu/dir1 aubergine               >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/dir1 /tmp/tmsu/dir1/file1    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu untag --recursive /tmp/tmsu/dir1 aubergine             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/dir1 /tmp/tmsu/dir1/file1    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu untagged /tmp/tmsu/dir1                                >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu untagged /tmp/tmsu/dir1 | sort                         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -24,6 +26,7 @@ diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/dir1/file1:
 /tmp/tmsu/dir1
 /tmp/tmsu/dir1/file1
+/tmp/tmsu/dir1/file2
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

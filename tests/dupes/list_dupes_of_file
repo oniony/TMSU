@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag --tags="aubergine" /tmp/tmsu/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu dupes /tmp/tmsu/file3dupe1                >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file1
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

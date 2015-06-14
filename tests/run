@@ -16,12 +16,8 @@ for testcase in $@; do
     export TMSU_DB=/tmp/tmsu/db
     tmsu info >/dev/null 2>/dev/null
 
-    # create test items
-    echo 1 >/tmp/tmsu/file1
-    echo 2 >/tmp/tmsu/file2
-    echo 1 >/tmp/tmsu/file3dupe1
-    mkdir /tmp/tmsu/dir1
-    echo 1 >/tmp/tmsu/dir1/file1
+    # run set-up
+    ./setup
 
     # run the testcase
     ./$testcase

@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag /tmp/tmsu/file1 aubergine                       >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+mv /tmp/tmsu/file1 /tmp/tmsu/file1b                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu repair --manual /tmp/tmsu/file1 /tmp/tmsu/file1b    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1 /tmp/tmsu/file1b               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+tmsu: /tmp/tmsu/file1: no such file
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file1b: aubergine
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

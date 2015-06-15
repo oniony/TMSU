@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag --tags="aubergine" /tmp/tmsu/file4 /tmp/tmsu/dir1/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+rm /tmp/tmsu/file4 /tmp/tmsu/dir1/file1                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu repair --remove --path=/tmp/tmsu/dir1                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file4 /tmp/tmsu/dir1/file1                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+tmsu: /tmp/tmsu/dir1/file1: no such file
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/dir1/file1: removed
+/tmp/tmsu/file4: aubergine
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

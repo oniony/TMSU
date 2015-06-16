@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu tag /tmp/tmsu/file1 aubergine=good    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu info --stats                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+tmsu: new value 'good'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff -I "^Size" /tmp/tmsu/stdout - <<EOF
+Database: /tmp/tmsu/db
+Root path: /
+
+Tags: 1
+Values: 1
+Files: 1
+Taggings: 1
+Mean tags per file: 1.00
+Mean files per tag: 1.00
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+
+# setup
+
+tmsu tag /tmp/tmsu/file1 vegetable=aubergine        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file2 vegetable=potato           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/dir1/file1 vegetable=brocolli    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# test
+
+tmsu merge --value aubergine potato brocolli        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+tmsu values                                         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files vegetable=brocolli                       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'vegetable'
+tmsu: new value 'aubergine'
+tmsu: new value 'potato'
+tmsu: new value 'brocolli'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+brocolli
+/tmp/tmsu/dir1/file1
+/tmp/tmsu/file1
+/tmp/tmsu/file2
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

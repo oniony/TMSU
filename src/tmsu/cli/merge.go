@@ -28,7 +28,7 @@ var MergeCommand = Command{
 	Description: `Merges TAGs into tag DEST resulting in a single tag of name DEST.`,
 	Examples: []string{`$ tmsu merge cehese cheese`,
 		`$ tmsu merge outdoors outdoor outside`},
-	Options: Options{},
+	Options: Options{Option{"--value", "", "merge values", false, ""}},
 	Exec:    mergeExec,
 }
 
@@ -43,7 +43,19 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 	}
 	defer tx.Commit()
 
-	destTagName := args[len(args)-1]
+	sourceNames := args[0 : len(args)-1]
+	destName := args[len(args)-1]
+
+	if options.HasOption("--value") {
+		err = mergeValues(store, tx, sourceNames, destName)
+	} else {
+		err = mergeTags(store, tx, sourceNames, destName)
+	}
+
+	return err
+}
+
+func mergeTags(store *storage.Storage, tx *storage.Tx, sourceTagNames []string, destTagName string) error {
 	destTag, err := store.TagByName(tx, destTagName)
 	if err != nil {
 		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
@@ -53,7 +65,7 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 	}
 
 	wereErrors := false
-	for _, sourceTagName := range args[0 : len(args)-1] {
+	for _, sourceTagName := range sourceTagNames {
 		if sourceTagName == destTagName {
 			log.Warnf("cannot merge tag '%v' into itself", sourceTagName)
 			wereErrors = true
@@ -91,6 +103,64 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 		err = store.DeleteTag(tx, sourceTag.Id)
 		if err != nil {
 			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err)
+		}
+	}
+
+	if wereErrors {
+		return errBlank
+	}
+
+	return nil
+}
+
+func mergeValues(store *storage.Storage, tx *storage.Tx, sourceValueNames []string, destValueName string) error {
+	destValue, err := store.ValueByName(tx, destValueName)
+	if err != nil {
+		return fmt.Errorf("could not retrieve value '%v': %v", destValueName, err)
+	}
+	if destValue == nil {
+		return fmt.Errorf("no such value '%v'", destValueName)
+	}
+
+	wereErrors := false
+	for _, sourceValueName := range sourceValueNames {
+		if sourceValueName == destValueName {
+			log.Warnf("cannot merge value '%v' into itself", sourceValueName)
+			wereErrors = true
+			continue
+		}
+
+		sourceValue, err := store.ValueByName(tx, sourceValueName)
+		if err != nil {
+			return fmt.Errorf("could not retrieve value '%v': %v", sourceValueName, err)
+		}
+		if sourceValue == nil {
+			log.Warnf("no such value '%v'", sourceValueName)
+			wereErrors = true
+			continue
+		}
+
+		log.Infof(2, "finding files tagged with value '%v'.", sourceValueName)
+
+		fileTags, err := store.FileTagsByValueId(tx, sourceValue.Id)
+		if err != nil {
+			return fmt.Errorf("could not retrieve files for value '%v': %v", sourceValueName, err)
+		}
+
+		log.Infof(2, "applying value '%v' to these files.", destValueName)
+
+		for _, fileTag := range fileTags {
+			_, err = store.AddFileTag(tx, fileTag.FileId, fileTag.TagId, destValue.Id)
+			if err != nil {
+				return fmt.Errorf("could not apply value '%v' to file #%v: %v", destValueName, fileTag.FileId, err)
+			}
+		}
+
+		log.Infof(2, "deleting value '%v'.", sourceValueName)
+
+		err = store.DeleteValue(tx, sourceValue.Id)
+		if err != nil {
+			return fmt.Errorf("could not delete value '%v': %v", sourceValueName, err)
 		}
 	}
 

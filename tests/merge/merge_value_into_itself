@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+
+# setup
+
+tmsu tag /tmp/tmsu/file1 vegetable=aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
+tmsu merge --value aubergine aubergine          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+tmsu values                                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'vegetable'
+tmsu: new value 'aubergine'
+tmsu: cannot merge value 'aubergine' into itself
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+aubergine
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 year=2015    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
 tmsu rename --value 2015 20/16        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

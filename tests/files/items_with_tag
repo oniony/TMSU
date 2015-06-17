@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu tag /tmp/tmsu/file2 potato       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# test
+
 tmsu files aubergine                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

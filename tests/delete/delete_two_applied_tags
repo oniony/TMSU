@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
 tmsu delete aubergine eggplant                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files aubergine                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files eggplant                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
+
+tmsu files aubergine                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files eggplant                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'

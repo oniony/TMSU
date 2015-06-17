@@ -4,9 +4,10 @@
 
 tmsu imply aubergine vegetable    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu imply vegetable food         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu imply                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
+
+tmsu imply                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'

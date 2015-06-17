@@ -1,0 +1,35 @@
+#!/usr/bin/env bash
+
+# setup
+
+tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file2 aubergine    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file4 aubergine    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/dir1 aubergine     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+rm /tmp/tmsu/file2
+echo eggplant >>/tmp/tmsu/file4
+
+# test
+
+tmsu status                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'aubergine'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+T /tmp/tmsu/dir1
+T /tmp/tmsu/file1
+M /tmp/tmsu/file4
+! /tmp/tmsu/file2
+U /tmp/tmsu/dir1/file2
+U /tmp/tmsu/dir1/file1
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

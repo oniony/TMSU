@@ -2,23 +2,24 @@
 
 # setup
 
-tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 aubergine potato    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu files --file aubergine                                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags --count /tmp/tmsu/file1            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
+tmsu: new tag 'potato'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/file1
+/tmp/tmsu/file1: 2
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

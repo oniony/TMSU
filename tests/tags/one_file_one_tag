@@ -6,19 +6,20 @@ tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu rename aubergine egg/plant       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
-tmsu: could not rename tag 'aubergine' to 'egg/plant': tag names cannot contain slash: '/'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff /tmp/tmsu/stdout - </dev/null
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file1: aubergine
+EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi

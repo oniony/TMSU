@@ -2,12 +2,11 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file2 potato       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 aubergine potato    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu files --count aubergine          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1                    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -20,7 +19,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-1
+/tmp/tmsu/file1: aubergine potato
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -36,7 +36,7 @@ unit-test:
 
 integration-test:
 	@echo "* Running integration tests"
-	@cd tests && ./run-all
+	@cd tests && ./runall
 
 dist: compile
 	@echo "* Packaging distributable"

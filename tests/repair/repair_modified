@@ -1,9 +1,12 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 aubergine     >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 echo horseradish >>/tmp/tmsu/file1
+
+# test
+
 tmsu repair /tmp/tmsu                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

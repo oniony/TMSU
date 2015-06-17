@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file4 aubergine     >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 rm /tmp/tmsu/file4                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# test
+
 tmsu repair /tmp/tmsu                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags /tmp/tmsu/file4              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
+
+tmsu tags /tmp/tmsu/file4              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'

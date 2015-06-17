@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 
 # test
-
 tmsu tag /tmp/tmsu/file1 aubergine=good    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
 tmsu info --usage                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

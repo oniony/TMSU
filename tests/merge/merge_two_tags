@@ -1,14 +1,18 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu tag /tmp/tmsu/file2 potato       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# test
+
 tmsu merge aubergine potato           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu files potato                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
+
+tmsu tags                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files potato                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'

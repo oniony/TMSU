@@ -1,8 +1,11 @@
 #!/usr/bin/env bash
 
-# test
+# setup
 
 tmsu tag --tags="aubergine" /tmp/tmsu/file2 /tmp/tmsu/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
 tmsu files --sort=name aubergine                               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files --sort=id aubergine                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 

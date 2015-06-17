@@ -2,13 +2,17 @@
 
 #TODO ideally this case would be handled explicitly with more specific error message (like 'merge a a')
 
-# test
+# setup
 
 tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# test
+
 tmsu copy aubergine aubergine         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
+
+tmsu tags                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'

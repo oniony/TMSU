@@ -19,6 +19,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"sort"
 	"strings"
 	"tmsu/common/log"
 	"tmsu/common/path"
@@ -274,6 +275,8 @@ func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
 		if err != nil {
 			return fmt.Errorf("%v: could not read directory listing: %v", searchPath, err)
 		}
+
+		sort.Strings(dirNames)
 
 		for _, dirName := range dirNames {
 			dirPath := filepath.Join(searchPath, dirName)

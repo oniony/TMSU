@@ -24,8 +24,8 @@ fi
 
 diff /tmp/tmsu/stdout - <<EOF
 T /tmp/tmsu/dir1
-U /tmp/tmsu/dir1/file2
 U /tmp/tmsu/dir1/file1
+U /tmp/tmsu/dir1/file2
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

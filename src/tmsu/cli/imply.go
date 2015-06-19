@@ -34,7 +34,8 @@ It is possible that a file may end up with the same tag applied explicitly and b
 
 The 'tags' subcommand can be used to identify which tags applied to a file are implied.`,
 	Examples: []string{`$ tmsu imply mp3 music`,
-		`$ tmsu imply\nmp3 => music`,
+		`$ tmsu imply
+mp3 => music`,
 		`$ tmsu imply --delete mp3 music`},
 	Options: Options{Option{"--delete", "-d", "deletes the tag implication", false, ""}},
 	Exec:    implyExec,

@@ -84,12 +84,12 @@ func (err NoSuchFileTagError) Error() string {
 }
 
 type NoSuchImplicationError struct {
-	TagId        entities.TagId
-	ImpliedTagId entities.TagId
+	TagValuePair        entities.TagValuePair
+	ImpliedTagValuePair entities.TagValuePair
 }
 
 func (err NoSuchImplicationError) Error() string {
-	return fmt.Sprintf("no such implication where tag #%v implies tag #%v", err.TagId, err.ImpliedTagId)
+	return fmt.Sprintf("no such implication where #%v implies #%v", err.TagValuePair, err.ImpliedTagValuePair)
 }
 
 type NoSuchSettingError struct {

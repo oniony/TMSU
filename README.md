@@ -99,6 +99,10 @@ Release Notes
 v0.6 (in development)
 ----
 
+  *Note: this release changes the database schema by adding additional columns
+  to the 'implication' table. TMSU will automatically upgrade your database
+  upon first use but you may wish to take a backup beforehand.*
+
   * Added --force option to 'tag' command to allow tagging of missing or
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
@@ -114,8 +118,10 @@ v0.6 (in development)
     - tmsu-fs-rm     Removes files from the filesystem and TMSU
     - tmsu-fs-mv     Moves a file in the filesystem and updates TMSU
     - tmsu-fs-merge  Merges files (deleting all but the last)
-  * Tag values can now be renamed or delete using the new --value option on the
-    'rename' and 'delete' commands.
+  * Tag values can now be renamed, deleted and merged using the new --value
+    option on the corresponding subcommands.
+  * Tag values can now be used in implications. However implied values do
+    not yet work properly in comparisons using the <, <=, > or >= operators.
   * Added integration tests covering CLI.
 
 v0.5.2

@@ -10,12 +10,11 @@ tmsu delete --value 2015              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
-tmsu files year=2015                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu values                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'year'
 tmsu: new value '2015'
-tmsu: no such value '2015'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

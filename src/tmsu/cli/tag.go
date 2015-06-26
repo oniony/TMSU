@@ -44,6 +44,8 @@ Tag names may consist of one or more letter, number, punctuation and symbol char
 
 Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
 
+Tags will not be applied if they are already implied by tag implications. This behaviour can be overriden with the --explicit option. See the 'imply' subcommand for more information.
+
 If a single argument of - is passed, TMSU will read lines from standard input in the format 'FILE TAG[=VALUE]...'.`,
 	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
@@ -167,55 +169,9 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 		return err
 	}
 
-	wereErrors := false
-	tagValuePairs := make([]tagValuePair, 0, 10)
-	for _, tagArg := range tagArgs {
-		var tagName, valueName string
-		index := strings.Index(tagArg, "=")
-
-		switch index {
-		case -1, 0:
-			tagName = tagArg
-		default:
-			tagName = tagArg[0:index]
-			valueName = tagArg[index+1 : len(tagArg)]
-		}
-
-		tag, err := store.TagByName(tx, tagName)
-		if err != nil {
-			return err
-		}
-		if tag == nil {
-			if settings.AutoCreateTags() {
-				tag, err = createTag(store, tx, tagName)
-				if err != nil {
-					return err
-				}
-			} else {
-				log.Warnf("no such tag '%v'.", tagName)
-				wereErrors = true
-				continue
-			}
-		}
-
-		value, err := store.ValueByName(tx, valueName)
-		if err != nil {
-			return err
-		}
-		if value == nil {
-			if settings.AutoCreateValues() {
-				value, err = createValue(store, tx, valueName)
-				if err != nil {
-					return err
-				}
-			} else {
-				log.Warnf("no such value '%v'.", valueName)
-				wereErrors = true
-				continue
-			}
-		}
-
-		tagValuePairs = append(tagValuePairs, tagValuePair{tag.Id, value.Id})
+	tagValuePairs, warnings, err := parseTagValuePairs(tagArgs, store, tx, settings)
+	if err != nil {
+		return err
 	}
 
 	for _, path := range paths {
@@ -223,17 +179,17 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 			switch {
 			case os.IsPermission(err):
 				log.Warnf("%v: permisison denied", path)
-				wereErrors = true
+				warnings = true
 			case os.IsNotExist(err):
 				log.Warnf("%v: no such file", path)
-				wereErrors = true
+				warnings = true
 			default:
 				return fmt.Errorf("%v: could not stat file: %v", path, err)
 			}
 		}
 	}
 
-	if wereErrors {
+	if warnings {
 		return errBlank
 	}
 
@@ -261,9 +217,9 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 		return fmt.Errorf("%v: could not retrieve filetags: %v", fromPath, err)
 	}
 
-	tagValuePairs := make([]tagValuePair, len(fileTags))
+	tagValuePairs := make([]entities.TagValuePair, len(fileTags))
 	for index, fileTag := range fileTags {
-		tagValuePairs[index] = tagValuePair{fileTag.TagId, fileTag.ValueId}
+		tagValuePairs[index] = entities.TagValuePair{fileTag.TagId, fileTag.ValueId}
 	}
 
 	wereErrors := false
@@ -289,7 +245,7 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 	return nil
 }
 
-func tagPath(store *storage.Storage, tx *storage.Tx, path string, tagValuePairs []tagValuePair, explicit, recursive, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagPath(store *storage.Storage, tx *storage.Tx, path string, tagValuePairs []entities.TagValuePair, explicit, recursive, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -385,7 +341,7 @@ func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explic
 	return nil
 }
 
-func tagRecursively(store *storage.Storage, tx *storage.Tx, path string, tagValuePairs []tagValuePair, explicit, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
+func tagRecursively(store *storage.Storage, tx *storage.Tx, path string, tagValuePairs []entities.TagValuePair, explicit, force bool, fileFingerprintAlg, dirFingerprintAlg string) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -426,7 +382,7 @@ func addFile(store *storage.Storage, tx *storage.Tx, path string, modTime time.T
 	return file, nil
 }
 
-func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tx *storage.Tx, tagValuePairs []tagValuePair, file *entities.File) ([]tagValuePair, error) {
+func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tx *storage.Tx, tagValuePairs []entities.TagValuePair, file *entities.File) ([]entities.TagValuePair, error) {
 	log.Infof(2, "%v: determining existing file-tags", file.Path())
 
 	existingFileTags, err := store.FileTagsByFileId(tx, file.Id, false)
@@ -436,25 +392,20 @@ func removeAlreadyAppliedTagValuePairs(store *storage.Storage, tx *storage.Tx, t
 
 	log.Infof(2, "%v: determining implied tags", file.Path())
 
-	tagIds := make(entities.TagIds, len(tagValuePairs))
-	for index, tagValuePair := range tagValuePairs {
-		tagIds[index] = tagValuePair.TagId
-	}
-
-	newlyImpliedTags, err := store.ImplicationsForTags(tx, tagIds...)
+	newImplications, err := store.ImplicationsFor(tx, tagValuePairs...)
 	if err != nil {
 		return nil, fmt.Errorf("%v: could not determine implied tags: %v", file.Path(), err)
 	}
 
 	log.Infof(2, "%v: revising set of tags to apply", file.Path())
 
-	revisedTagValuePairs := make([]tagValuePair, 0, len(tagValuePairs))
+	revisedTagValuePairs := make([]entities.TagValuePair, 0, len(tagValuePairs))
 	for _, tagValuePair := range tagValuePairs {
-		if existingFileTags.Contains(tagValuePair.TagId, tagValuePair.ValueId) {
+		if existingFileTags.Contains(tagValuePair) {
 			continue
 		}
 
-		if tagValuePair.ValueId == 0 && newlyImpliedTags.Implies(tagValuePair.TagId) {
+		if newImplications.Implies(tagValuePair) {
 			continue
 		}
 

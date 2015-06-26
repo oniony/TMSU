@@ -79,12 +79,12 @@ func (storage Storage) CopyTag(tx *Tx, sourceTagId entities.TagId, name string) 
 
 	tag, err := database.InsertTag(tx.tx, name)
 	if err != nil {
-		return nil, fmt.Errorf("could not create tag '%v': %v", name, err)
+		return nil, err
 	}
 
 	err = database.CopyFileTags(tx.tx, sourceTagId, tag.Id)
 	if err != nil {
-		return nil, fmt.Errorf("could not copy file tags for tag #%v to tag '%v': %v", sourceTagId, name, err)
+		return nil, err
 	}
 
 	return tag, nil
@@ -92,14 +92,16 @@ func (storage Storage) CopyTag(tx *Tx, sourceTagId entities.TagId, name string) 
 
 // Deletes a tag.
 func (storage Storage) DeleteTag(tx *Tx, tagId entities.TagId) error {
-	err := storage.DeleteFileTagsByTagId(tx, tagId)
-	if err != nil {
+	if err := storage.DeleteFileTagsByTagId(tx, tagId); err != nil {
 		return err
 	}
 
-	err = database.DeleteTag(tx.tx, tagId)
-	if err != nil {
-		return fmt.Errorf("could not delete tag '%v': %v", tagId, err)
+	if err := storage.DeleteImplicationsByTagId(tx, tagId); err != nil {
+		return err
+	}
+
+	if err := database.DeleteTag(tx.tx, tagId); err != nil {
+		return err
 	}
 
 	return nil

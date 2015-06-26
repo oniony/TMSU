@@ -31,7 +31,7 @@ func (storage *Storage) FileTagExists(tx *Tx, fileId entities.FileId, tagId enti
 		return false, err
 	}
 
-	return fileTags.Contains(tagId, valueId), nil
+	return fileTags.Contains(entities.TagValuePair{tagId, valueId}), nil
 }
 
 // Retrieves the total count of file tags in the database.
@@ -100,7 +100,7 @@ func (storage *Storage) FileTagsByValueId(tx *Tx, valueId entities.ValueId) (ent
 	return database.FileTagsByValueId(tx.tx, valueId)
 }
 
-// Retrieves the file tags with the specified file ID.
+// Retrieves the file tags for the specified file ID.
 func (storage *Storage) FileTagsByFileId(tx *Tx, fileId entities.FileId, explicitOnly bool) (entities.FileTags, error) {
 	fileTags, err := database.FileTagsByFileId(tx.tx, fileId)
 	if err != nil {
@@ -192,6 +192,28 @@ func (storage *Storage) DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) erro
 	return nil
 }
 
+// Deletes all of the file tags for the specified value.
+func (storage *Storage) DeleteFileTagsByValueId(tx *Tx, valueId entities.ValueId) error {
+	fileTags, err := database.FileTagsByValueId(tx.tx, valueId)
+	if err != nil {
+		return err
+	}
+
+	if err := database.DeleteFileTagsByValueId(tx.tx, valueId); err != nil {
+		return err
+	}
+
+	if err := storage.DeleteUntaggedFiles(tx, fileTags.FileIds()); err != nil {
+		return err
+	}
+
+	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Copies file tags from one tag to another.
 func (storage *Storage) CopyFileTags(tx *Tx, sourceTagId, destTagId entities.TagId) error {
 	return database.CopyFileTags(tx.tx, sourceTagId, destTagId)
@@ -200,29 +222,28 @@ func (storage *Storage) CopyFileTags(tx *Tx, sourceTagId, destTagId entities.Tag
 // unexported
 
 func (storage *Storage) addImpliedFileTags(tx *Tx, fileTags entities.FileTags) (entities.FileTags, error) {
-	tagIds := make(entities.TagIds, 0, len(fileTags))
+	tagValuePairs := make(entities.TagValuePairs, 0, len(fileTags))
 	for _, fileTag := range fileTags {
-		tagIds = append(tagIds, fileTag.TagId)
+		tagValuePairs = append(tagValuePairs, entities.TagValuePair{fileTag.TagId, fileTag.ValueId})
 	}
 
-	implications, err := storage.ImplicationsForTags(tx, tagIds...)
-	if err != nil {
-		return nil, err
-	}
-
+	// WARN: this cannot use 'range' as fileTags is expanded within the loop
 	for index := 0; index < len(fileTags); index++ {
 		fileTag := fileTags[index]
 
+		implications, err := storage.ImplicationsFor(tx, fileTag.TagValuePair())
+		if err != nil {
+			return nil, err
+		}
+
 		for _, implication := range implications {
-			if implication.ImplyingTag.Id == fileTag.TagId {
-				//TODO consider values in implied tags
-				impliedFileTag := fileTags.Find(fileTag.FileId, implication.ImpliedTag.Id, 0)
-				if impliedFileTag != nil {
-					impliedFileTag.Implicit = true
-				} else {
-					impliedFileTag := entities.FileTag{fileTag.FileId, implication.ImpliedTag.Id, 0, false, true}
-					fileTags = append(fileTags, &impliedFileTag)
-				}
+			impliedFileTag := fileTags.Find(fileTag.FileId, implication.ImpliedTag.Id, implication.ImpliedValue.Id)
+			if impliedFileTag != nil {
+				impliedFileTag.Implicit = true
+			} else {
+				impliedFileTag := entities.FileTag{fileTag.FileId, implication.ImpliedTag.Id, implication.ImpliedValue.Id, false, true}
+
+				fileTags = append(fileTags, &impliedFileTag)
 			}
 		}
 	}

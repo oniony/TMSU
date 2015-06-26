@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+
+# setup
+
+tmsu tag --tags="year=2015" /tmp/tmsu/file1 /tmp/tmsu/file2    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --tags="month=June" /tmp/tmsu/file1                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag --tags="month=July" /tmp/tmsu/file2                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# test
+
+tmsu files "year = 2015 and month != June"                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'year'
+tmsu: new value '2015'
+tmsu: new tag 'month'
+tmsu: new value 'June'
+tmsu: new value 'July'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+/tmp/tmsu/file2
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

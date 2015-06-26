@@ -17,7 +17,6 @@ package database
 
 import (
 	"database/sql"
-	"fmt"
 	_ "github.com/mattn/go-sqlite3"
 	"tmsu/common"
 	"tmsu/common/log"
@@ -52,6 +51,11 @@ func upgrade(tx *sql.Tx) error {
 			return err
 		}
 	}
+	if version.LessThan(common.Version{0, 6, 0}) {
+		if err := recreateImplicationTable(tx); err != nil {
+			return err
+		}
+	}
 
 	if err := updateSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
@@ -61,12 +65,33 @@ func upgrade(tx *sql.Tx) error {
 }
 
 func renameFingerprintAlgorithmSetting(tx *sql.Tx) error {
-	_, err := tx.Exec(`UPDATE setting
+	if _, err := tx.Exec(`UPDATE setting
                           SET name = 'fileFingerprintAlgorithm'
-                          WHERE name = 'fingerprintAlgorithm'`)
+                          WHERE name = 'fingerprintAlgorithm'`); err != nil {
+		return err
+	}
 
-	if err != nil {
-		return fmt.Errorf("could not upgrade database: %v", err)
+	return nil
+}
+
+func recreateImplicationTable(tx *sql.Tx) error {
+	if _, err := tx.Exec(`ALTER TABLE implication
+                          RENAME TO implication_old`); err != nil {
+		return err
+	}
+
+	if err := createImplicationTable(tx); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(`INSERT INTO implication
+                          SELECT tag_id, 0, implied_tag_id, 0
+                          FROM implication_old`); err != nil {
+		return err
+	}
+
+	if _, err := tx.Exec(`DROP TABLE implication_old`); err != nil {
+		return err
 	}
 
 	return nil

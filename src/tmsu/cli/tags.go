@@ -196,7 +196,7 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 		return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", fileId, err)
 	}
 
-	tagNames := make([]string, len(fileTags))
+	taggings := make([]string, len(fileTags))
 
 	for index, fileTag := range fileTags {
 		tag, err := store.Tag(tx, fileTag.TagId)
@@ -207,9 +207,9 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
 		}
 
-		var tagName string
+		var tagging string
 		if fileTag.ValueId == 0 {
-			tagName = tag.Name
+			tagging = tag.Name
 		} else {
 			value, err := store.Value(tx, fileTag.ValueId)
 			if err != nil {
@@ -219,23 +219,23 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 				return nil, fmt.Errorf("value '%v' does not exist", fileTag.ValueId)
 			}
 
-			tagName = tag.Name + "=" + value.Name
+			tagging = tag.Name + "=" + value.Name
 		}
 
 		if colour {
 			if fileTag.Implicit {
 				if fileTag.Explicit {
-					tagName = ansi.Yellow(tagName)
+					tagging = ansi.Yellow(tagging)
 				} else {
-					tagName = ansi.Cyan(tagName)
+					tagging = ansi.Cyan(tagging)
 				}
 			}
 		}
 
-		tagNames[index] = tagName
+		taggings[index] = tagging
 	}
 
-	ansi.Sort(tagNames)
+	ansi.Sort(taggings)
 
-	return tagNames, nil
+	return taggings, nil
 }

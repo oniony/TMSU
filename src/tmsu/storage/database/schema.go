@@ -24,7 +24,7 @@ import (
 
 // unexported
 
-var latestSchemaVersion = common.Version{0, 5, 0}
+var latestSchemaVersion = common.Version{0, 6, 0}
 
 func schemaVersion(tx *sql.Tx) common.Version {
 	sql := `SELECT major, minor, patch
@@ -224,8 +224,10 @@ func createFileTagTable(tx *sql.Tx) error {
 func createImplicationTable(tx *sql.Tx) error {
 	sql := `CREATE TABLE IF NOT EXISTS implication (
                 tag_id INTEGER NOT NULL,
+                value_id INTEGER NOT NULL,
                 implied_tag_id INTEGER NOT NULL,
-                PRIMARY KEY (tag_id, implied_tag_id)
+                implied_value_id INTEGER NOT NULL,
+                PRIMARY KEY (tag_id, value_id, implied_tag_id, implied_value_id)
             )`
 
 	if _, err := tx.Exec(sql); err != nil {

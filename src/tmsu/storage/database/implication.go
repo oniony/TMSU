@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// 2011-2015 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -17,17 +17,22 @@ package database
 
 import (
 	"database/sql"
-	"strings"
 	"tmsu/entities"
 )
 
 // Retrieves the complete set of tag implications.
 func Implications(tx *Tx) (entities.Implications, error) {
-	sql := `SELECT t1.id, t1.name, t2.id, t2.name
-            FROM implication, tag t1, tag t2
-            WHERE implication.tag_id = t1.id
-            AND implication.implied_tag_id = t2.id
-            ORDER BY t1.name, t2.name`
+	sql := `
+SELECT tag.id, tag.name,
+       value.id, value.name,
+	   implied_tag.id, implied_tag.name,
+	   implied_value.id, implied_value.name
+FROM implication
+INNER JOIN tag tag ON implication.tag_id = tag.id
+LEFT OUTER JOIN value value ON implication.value_id = value.id
+INNER JOIN tag implied_tag ON implication.implied_tag_id = implied_tag.id
+LEFT OUTER JOIN value implied_value ON implication.implied_value_id = implied_value.id
+ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -43,20 +48,34 @@ func Implications(tx *Tx) (entities.Implications, error) {
 	return implications, nil
 }
 
-// Retrieves the set of tags implied by the specified tags.
-func ImplicationsForTags(tx *Tx, tagIds entities.TagIds) (entities.Implications, error) {
-	sql := `SELECT t1.id, t1.name, t2.id, t2.name
-            FROM implication, tag t1, tag t2
-            WHERE implication.tag_id IN (?`
-	sql += strings.Repeat(",?", len(tagIds)-1)
-	sql += `)
-	        AND implication.tag_id = t1.id
-	        AND implication.implied_tag_id = t2.id`
+// Retrieves the set of implications by the specified tag and value pairs.
+func ImplicationsFor(tx *Tx, tagValuePairs entities.TagValuePairs) (entities.Implications, error) {
+	sql := `
+SELECT tag.id, tag.name,
+       value.id, value.name,
+       implied_tag.id, implied_tag.name,
+       implied_value.id, implied_value.name
+FROM implication
+INNER JOIN tag tag ON implication.tag_id = tag.id
+LEFT OUTER JOIN value value ON implication.value_id = value.id
+INNER JOIN tag implied_tag ON implication.implied_tag_id = implied_tag.id
+LEFT OUTER JOIN value implied_value ON implication.implied_value_id = implied_value.id
+WHERE `
 
-	params := make([]interface{}, len(tagIds))
-	for index, tagId := range tagIds {
-		params[index] = tagId
+	params := make([]interface{}, len(tagValuePairs)*2)
+	for index, tagValuePair := range tagValuePairs {
+		if index > 0 {
+			sql += "   OR "
+		}
+
+		sql += "(implication.tag_id = ? AND implication.value_id = ?)"
+
+		params[index*2] = tagValuePair.TagId
+		params[index*2+1] = tagValuePair.ValueId
 	}
+
+	sql += `
+ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 
 	rows, err := tx.Query(sql, params...)
 	if err != nil {
@@ -72,46 +91,13 @@ func ImplicationsForTags(tx *Tx, tagIds entities.TagIds) (entities.Implications,
 	return implications, nil
 }
 
-// Updates implications featuring the specified tag.
-func UpdateImplicationsForTagId(tx *Tx, implyingTagId, impliedTagId entities.TagId) error {
-	// prevent a tag implying itself
-
-	sql := `DELETE from implication
-            WHERE (tag_id = ?1 AND implied_tag_id = ?2)
-            OR (tag_id = ?2 AND implied_tag_id = ?1)`
-
-	_, err := tx.Exec(sql, implyingTagId, impliedTagId)
-	if err != nil {
-		return err
-	}
-
-	sql = `UPDATE implication
-           SET tag_id = ?2
-           WHERE tag_id = ?1`
-
-	_, err = tx.Exec(sql, implyingTagId, impliedTagId)
-	if err != nil {
-		return err
-	}
-
-	sql = `UPDATE implication
-           SET implied_tag_id = ?2
-           WHERE implied_tag_id = ?1`
-
-	_, err = tx.Exec(sql, implyingTagId, impliedTagId)
-	if err != nil {
-		return err
-	}
-
-	return nil
-}
-
 // Adds the specified implications
-func AddImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
-	sql := `INSERT OR IGNORE INTO implication (tag_id, implied_tag_id)
-	        VALUES (?1, ?2)`
+func AddImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
+	sql := `
+INSERT OR IGNORE INTO implication (tag_id, value_id, implied_tag_id, implied_value_id)
+VALUES (?1, ?2, ?3, ?4)`
 
-	_, err := tx.Exec(sql, tagId, impliedTagId)
+	_, err := tx.Exec(sql, tagValuePair.TagId, tagValuePair.ValueId, impliedTagValuePair.TagId, impliedTagValuePair.ValueId)
 	if err != nil {
 		return err
 	}
@@ -119,12 +105,16 @@ func AddImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
 	return nil
 }
 
-// Deletes the specified implications
-func DeleteImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
-	sql := `DELETE FROM implication
-            WHERE tag_id = ?1 AND implied_tag_id = ?2`
+// Deletes the specified implication
+func DeleteImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
+	sql := `
+DELETE FROM implication
+WHERE tag_id = ?1 AND
+      value_id = ?2 AND
+      implied_tag_id = ?3 AND
+      implied_value_id = ?4`
 
-	result, err := tx.Exec(sql, tagId, impliedTagId)
+	result, err := tx.Exec(sql, tagValuePair.TagId, tagValuePair.ValueId, impliedTagValuePair.TagId, impliedTagValuePair.ValueId)
 	if err != nil {
 		return err
 	}
@@ -134,7 +124,7 @@ func DeleteImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
 		return err
 	}
 	if rowsAffected == 0 {
-		return NoSuchImplicationError{tagId, impliedTagId}
+		return NoSuchImplicationError{tagValuePair, impliedTagValuePair}
 	}
 	if rowsAffected > 1 {
 		panic("expected exactly one row to be affected")
@@ -143,12 +133,27 @@ func DeleteImplication(tx *Tx, tagId, impliedTagId entities.TagId) error {
 	return nil
 }
 
-// Deletes implications featuring the specified tag.
-func DeleteImplicationsForTagId(tx *Tx, tagId entities.TagId) error {
-	sql := `DELETE FROM implication
-            WHERE tag_id = ?1 OR implied_tag_id = ?1`
+// Deletes implications for the specified tag id
+func DeleteImplicationsByTagId(tx *Tx, tagId entities.TagId) error {
+	sql := `
+DELETE FROM implication
+WHERE tag_id = ?1 OR implied_tag_id = ?1`
 
 	_, err := tx.Exec(sql, tagId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Deletes implications for the specified value id
+func DeleteImplicationsByValueId(tx *Tx, valueId entities.ValueId) error {
+	sql := `
+DELETE FROM implication
+WHERE value_id = ?1 OR implied_value_id = ?1`
+
+	_, err := tx.Exec(sql, valueId)
 	if err != nil {
 		return err
 	}
@@ -168,14 +173,38 @@ func readImplication(rows *sql.Rows) (*entities.Implication, error) {
 
 	var implyingTagId entities.TagId
 	var implyingTagName string
+	var implyingValueId *entities.ValueId
+	var implyingValueName *string
 	var impliedTagId entities.TagId
 	var impliedTagName string
-	err := rows.Scan(&implyingTagId, &implyingTagName, &impliedTagId, &impliedTagName)
+	var impliedValueId *entities.ValueId
+	var impliedValueName *string
+	err := rows.Scan(&implyingTagId,
+		&implyingTagName,
+		&implyingValueId,
+		&implyingValueName,
+		&impliedTagId,
+		&impliedTagName,
+		&impliedValueId,
+		&impliedValueName)
 	if err != nil {
 		return nil, err
 	}
 
-	return &entities.Implication{entities.Tag{implyingTagId, implyingTagName}, entities.Tag{impliedTagId, impliedTagName}}, nil
+	var implyingValue entities.Value
+	if implyingValueId != nil {
+		implyingValue = entities.Value{*implyingValueId, *implyingValueName}
+	}
+
+	var impliedValue entities.Value
+	if impliedValueId != nil {
+		impliedValue = entities.Value{*impliedValueId, *impliedValueName}
+	}
+
+	return &entities.Implication{entities.Tag{implyingTagId, implyingTagName},
+		implyingValue,
+		entities.Tag{impliedTagId, impliedTagName},
+		impliedValue}, nil
 }
 
 func readImplications(rows *sql.Rows, implications entities.Implications) (entities.Implications, error) {

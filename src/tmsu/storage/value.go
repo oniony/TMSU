@@ -87,18 +87,13 @@ func (storage *Storage) RenameValue(tx *Tx, valueId entities.ValueId, newName st
 
 // Deletes a value.
 func (storage *Storage) DeleteValue(tx *Tx, valueId entities.ValueId) error {
-	fileTags, err := storage.FileTagsByValueId(tx, valueId)
-	if err != nil {
+	if err := storage.DeleteFileTagsByValueId(tx, valueId); err != nil {
 		return err
 	}
 
-	for _, fileTag := range fileTags {
-		if err := database.DeleteFileTag(tx.tx, fileTag.FileId, fileTag.TagId, fileTag.ValueId); err != nil {
-			return err
-		}
-	}
+	// deleting the file-tags automatically deletes the value
 
-	return database.DeleteValue(tx.tx, valueId)
+	return storage.DeleteImplicationsByValueId(tx, valueId)
 }
 
 // Deletes the value if it is unused.

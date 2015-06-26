@@ -23,11 +23,15 @@ type FileTag struct {
 	Implicit bool
 }
 
+func (fileTag FileTag) TagValuePair() TagValuePair {
+	return TagValuePair{fileTag.TagId, fileTag.ValueId}
+}
+
 type FileTags []*FileTag
 
-func (fileTags FileTags) Contains(tagId TagId, valueId ValueId) bool {
+func (fileTags FileTags) Contains(tagValuePair TagValuePair) bool {
 	for _, fileTag := range fileTags {
-		if fileTag.TagId == tagId && fileTag.ValueId == valueId {
+		if fileTag.TagId == tagValuePair.TagId && fileTag.ValueId == tagValuePair.ValueId {
 			return true
 		}
 	}

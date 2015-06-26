@@ -67,7 +67,7 @@ _tmsu_tag_values() {
     local line
 
     local tagName=${PREFIX%%=*}
-    _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
+    _call_program tmsu tmsu $db values 2>/dev/null | \
     while read -A line
     do
         value_list+=$tagName=$line[1]
@@ -248,7 +248,7 @@ _tmsu_cmd_help() {
 
 _tmsu_cmd_imply() {
     _arguments -s -w ''{--delete,-d}'[deletes the tag implication]' \
-                     '*:tag:_tmsu_tags' \
+                     '*:tags:_tmsu_tags_with_values' \
     && ret=0
 }
 

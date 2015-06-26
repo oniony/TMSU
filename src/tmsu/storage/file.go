@@ -103,22 +103,6 @@ func (storage *Storage) UntaggedFiles(tx *Tx) (entities.Files, error) {
 	return files, err
 }
 
-// Retrieves the count of files with the specified tags and matching the specified path.
-func (storage *Storage) FileCountWithTags(tx *Tx, tagNames []string, path string, explicitOnly bool) (uint, error) {
-	expression := query.HasAll(tagNames)
-
-	if !explicitOnly {
-		var err error
-		expression, err = storage.addImpliedTags(tx, expression)
-		if err != nil {
-			return 0, err
-		}
-	}
-
-	relPath := storage.relPath(path)
-	return database.QueryFileCount(tx.tx, expression, relPath)
-}
-
 // Retrieves the count of files that match the specified query and matching the specified path.
 func (storage *Storage) QueryFileCount(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
 	if !explicitOnly {
@@ -233,70 +217,75 @@ func (storage *Storage) addImpliedTags(tx *Tx, expression query.Expression) (que
 		fmt.Errorf("could not retrieve tag implications: %v", err)
 	}
 
-	impliersByTag := make(map[string][]string, len(implications))
-	for _, implication := range implications {
-		impliers, ok := impliersByTag[implication.ImpliedTag.Name]
-		if !ok {
-			impliers = make([]string, 0, 1)
-		}
-
-		impliersByTag[implication.ImpliedTag.Name] = append(impliers, implication.ImplyingTag.Name)
-	}
-
-	return storage.addImpliedTagsRecursive(expression, impliersByTag), nil
+	return storage.addImpliedTagsRecursive(expression, implications), nil
 }
 
-func (storage *Storage) addImpliedTagsRecursive(expression query.Expression, impliersByTag map[string][]string) query.Expression {
+func (storage *Storage) addImpliedTagsRecursive(expression query.Expression, implications entities.Implications) query.Expression {
 	switch typedExpression := expression.(type) {
 	case query.OrExpression:
-		typedExpression.LeftOperand = storage.addImpliedTagsRecursive(typedExpression.LeftOperand, impliersByTag)
-		typedExpression.RightOperand = storage.addImpliedTagsRecursive(typedExpression.RightOperand, impliersByTag)
+		typedExpression.LeftOperand = storage.addImpliedTagsRecursive(typedExpression.LeftOperand, implications)
+		typedExpression.RightOperand = storage.addImpliedTagsRecursive(typedExpression.RightOperand, implications)
 		return typedExpression
 	case query.AndExpression:
-		typedExpression.LeftOperand = storage.addImpliedTagsRecursive(typedExpression.LeftOperand, impliersByTag)
-		typedExpression.RightOperand = storage.addImpliedTagsRecursive(typedExpression.RightOperand, impliersByTag)
+		typedExpression.LeftOperand = storage.addImpliedTagsRecursive(typedExpression.LeftOperand, implications)
+		typedExpression.RightOperand = storage.addImpliedTagsRecursive(typedExpression.RightOperand, implications)
 		return typedExpression
 	case query.NotExpression:
-		typedExpression.Operand = storage.addImpliedTagsRecursive(typedExpression.Operand, impliersByTag)
+		typedExpression.Operand = storage.addImpliedTagsRecursive(typedExpression.Operand, implications)
 		return typedExpression
 	case query.TagExpression:
-		return applyImplicationsForTag(typedExpression, impliersByTag)
-	case query.ValueExpression, query.EmptyExpression, query.ComparisonExpression:
+		return applyImplicationsForTag(typedExpression, implications)
+	case query.ComparisonExpression:
+		// left is tag, right is value
+		return applyImplicationsForComparison(typedExpression, implications)
+	case query.EmptyExpression:
 		return expression
 	default:
 		panic(fmt.Sprintf("unsupported expression type '%T'.", typedExpression))
 	}
 }
 
-func applyImplicationsForTag(tagExpression query.TagExpression, impliersByTag map[string][]string) query.Expression {
-	implyingTags, ok := impliersByTag[tagExpression.Name]
-	if !ok {
-		return tagExpression
+func applyImplicationsForTag(tagExpression query.TagExpression, implications entities.Implications) query.Expression {
+	return applyImplicationsForTagAndValue(tagExpression, tagExpression.Name, "", implications)
+}
+
+func applyImplicationsForComparison(comparisonExpression query.ComparisonExpression, implications entities.Implications) query.Expression {
+	//TODO only implication identified for equality
+	if comparisonExpression.Operator != "=" {
+		return comparisonExpression
 	}
 
-	var expression query.Expression = tagExpression
+	return applyImplicationsForTagAndValue(comparisonExpression, comparisonExpression.Tag.Name, comparisonExpression.Value.Name, implications)
+}
 
-	for index := 0; index < len(implyingTags); index++ {
-		implyingTag := implyingTags[index]
+func applyImplicationsForTagAndValue(expression query.Expression, tagName, valueName string, implications entities.Implications) query.Expression {
+	relevantImplications := implications.ThatImply(tagName, valueName)
 
-		expression = query.OrExpression{expression, query.TagExpression{implyingTag}}
+	// WARN: this cannot use 'range' as 'implyingImplications' is expanded in the loop
+	for index := 0; index < len(relevantImplications); index++ {
+		relevantImplication := relevantImplications[index]
 
-		for _, furtherImplyingTag := range impliersByTag[implyingTag] {
-			if furtherImplyingTag != tagExpression.Name && !containsTagName(implyingTags, furtherImplyingTag) {
-				implyingTags = append(implyingTags, furtherImplyingTag)
+		tagExpression := query.TagExpression{relevantImplication.ImplyingTag.Name}
+
+		if relevantImplication.ImplyingValue.Id != 0 {
+			valueExpression := query.ValueExpression{relevantImplication.ImplyingValue.Name}
+			comparisonExpression := query.ComparisonExpression{tagExpression, "=", valueExpression}
+			expression = query.OrExpression{expression, comparisonExpression}
+		} else {
+			expression = query.OrExpression{expression, tagExpression}
+		}
+
+		furtherImplications := implications.ThatImply(relevantImplication.ImplyingTag.Name, relevantImplication.ImplyingValue.Name)
+		for _, furtherImplication := range furtherImplications {
+			predicate := func(implication entities.Implication) bool {
+				return implication.ImplyingTag.Id == furtherImplication.ImplyingTag.Id && implication.ImplyingValue.Id == furtherImplication.ImplyingValue.Id
+			}
+
+			if !relevantImplications.Any(predicate) {
+				relevantImplications = append(relevantImplications, furtherImplication)
 			}
 		}
 	}
 
 	return expression
-}
-
-func containsTagName(tagNames []string, tagName string) bool {
-	for _, tn := range tagNames {
-		if tn == tagName {
-			return true
-		}
-	}
-
-	return false
 }

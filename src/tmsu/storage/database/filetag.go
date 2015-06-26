@@ -225,6 +225,19 @@ func DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) error {
 	return nil
 }
 
+// Removes all of the file tags for the specified value.
+func DeleteFileTagsByValueId(tx *Tx, valueId entities.ValueId) error {
+	sql := `DELETE FROM file_tag
+	        WHERE value_id = ?`
+
+	_, err := tx.Exec(sql, valueId)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 // Copies file tags from one tag to another.
 func CopyFileTags(tx *Tx, sourceTagId entities.TagId, destTagId entities.TagId) error {
 	sql := `INSERT INTO file_tag (file_id, tag_id, value_id)

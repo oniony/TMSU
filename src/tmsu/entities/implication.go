@@ -16,15 +16,59 @@
 package entities
 
 type Implication struct {
-	ImplyingTag Tag
-	ImpliedTag  Tag
+	ImplyingTag   Tag
+	ImplyingValue Value
+	ImpliedTag    Tag
+	ImpliedValue  Value
+}
+
+func (implication Implication) ImplyingTagValuePair() TagValuePair {
+	return TagValuePair{implication.ImplyingTag.Id, implication.ImplyingValue.Id}
+}
+
+func (implication Implication) ImpliedTagValuePair() TagValuePair {
+	return TagValuePair{implication.ImpliedTag.Id, implication.ImpliedValue.Id}
 }
 
 type Implications []*Implication
 
-func (implications Implications) Implies(tagId TagId) bool {
+func (implications Implications) Any(predicate func(Implication) bool) bool {
 	for _, implication := range implications {
-		if implication.ImpliedTag.Id == tagId {
+		if predicate(*implication) {
+			return true
+		}
+	}
+
+	return false
+}
+
+func (implications Implications) ImpliedByPair(tagValuePair TagValuePair) Implications {
+	result := make(Implications, 0, 10)
+
+	for _, implication := range implications {
+		if implication.ImplyingTag.Id == tagValuePair.TagId && implication.ImplyingValue.Id == tagValuePair.ValueId {
+			result = append(result, implication)
+		}
+	}
+
+	return result
+}
+
+func (implications Implications) ThatImply(tagName, valueName string) Implications {
+	result := make(Implications, 0, 10)
+
+	for _, implication := range implications {
+		if implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name == valueName {
+			result = append(result, implication)
+		}
+	}
+
+	return result
+}
+
+func (implications Implications) Implies(tagValuePair TagValuePair) bool {
+	for _, implication := range implications {
+		if implication.ImpliedTag.Id == tagValuePair.TagId && implication.ImpliedValue.Id == tagValuePair.ValueId {
 			return true
 		}
 	}

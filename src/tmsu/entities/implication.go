@@ -42,23 +42,11 @@ func (implications Implications) Any(predicate func(Implication) bool) bool {
 	return false
 }
 
-func (implications Implications) ImpliedByPair(tagValuePair TagValuePair) Implications {
+func (implications Implications) Where(predicate func(Implication) bool) Implications {
 	result := make(Implications, 0, 10)
 
 	for _, implication := range implications {
-		if implication.ImplyingTag.Id == tagValuePair.TagId && implication.ImplyingValue.Id == tagValuePair.ValueId {
-			result = append(result, implication)
-		}
-	}
-
-	return result
-}
-
-func (implications Implications) ThatImply(tagName, valueName string) Implications {
-	result := make(Implications, 0, 10)
-
-	for _, implication := range implications {
-		if implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name == valueName {
+		if predicate(*implication) {
 			result = append(result, implication)
 		}
 	}

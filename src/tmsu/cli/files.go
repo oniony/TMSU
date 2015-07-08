@@ -134,7 +134,7 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 
 	log.Info(2, "querying database")
 
-	files, err := store.QueryFiles(tx, expression, path, explicitOnly, sort)
+	files, err := store.FilesForQuery(tx, expression, path, explicitOnly, sort)
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
 			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)")

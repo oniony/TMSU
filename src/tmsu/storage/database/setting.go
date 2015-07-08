@@ -22,9 +22,10 @@ import (
 
 // The complete set of settings.
 func Settings(tx *Tx) (entities.Settings, error) {
-	sql := `SELECT name, value
-	        FROM setting
-	        ORDER BY name`
+	sql := `
+SELECT name, value
+FROM setting
+ORDER BY name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -41,9 +42,10 @@ func Settings(tx *Tx) (entities.Settings, error) {
 }
 
 func Setting(tx *Tx, name string) (*entities.Setting, error) {
-	sql := `SELECT name, value
-            FROM setting
-            WHERE name = ?`
+	sql := `
+SELECT name, value
+FROM setting
+WHERE name = ?`
 
 	rows, err := tx.Query(sql, name)
 	if err != nil {
@@ -60,7 +62,9 @@ func Setting(tx *Tx, name string) (*entities.Setting, error) {
 }
 
 func UpdateSetting(tx *Tx, name, value string) (*entities.Setting, error) {
-	sql := `INSERT OR REPLACE INTO setting (name, value) VALUES (?, ?)`
+	sql := `
+INSERT OR REPLACE INTO setting (name, value)
+VALUES (?, ?)`
 
 	result, err := tx.Exec(sql, name, value)
 	if err != nil {

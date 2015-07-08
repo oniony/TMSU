@@ -23,8 +23,9 @@ import (
 
 // Retrieves the count of values.
 func ValueCount(tx *Tx) (uint, error) {
-	sql := `SELECT count(1)
-            FROM value`
+	sql := `
+SELECT count(1)
+FROM value`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -37,9 +38,10 @@ func ValueCount(tx *Tx) (uint, error) {
 
 // Retrieves the complete set of values.
 func Values(tx *Tx) (entities.Values, error) {
-	sql := `SELECT id, name
-            FROM value
-            ORDER BY name`
+	sql := `
+SELECT id, name
+FROM value
+ORDER BY name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -52,9 +54,10 @@ func Values(tx *Tx) (entities.Values, error) {
 
 // Retrieves a specific value.
 func Value(tx *Tx, id entities.ValueId) (*entities.Value, error) {
-	sql := `SELECT id, name
-	        FROM value
-	        WHERE id = ?`
+	sql := `
+SELECT id, name
+FROM value
+WHERE id = ?`
 
 	rows, err := tx.Query(sql, id)
 	if err != nil {
@@ -67,9 +70,10 @@ func Value(tx *Tx, id entities.ValueId) (*entities.Value, error) {
 
 // Retrieves a specific set of values.
 func ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Values, error) {
-	sql := `SELECT id, name
-	        FROM value
-	        WHERE id IN (?`
+	sql := `
+SELECT id, name
+FROM value
+WHERE id IN (?`
 	sql += strings.Repeat(",?", len(ids)-1)
 	sql += ")"
 
@@ -94,10 +98,11 @@ func ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Values, error) {
 
 // Retrieves the set of unused values.
 func UnusedValues(tx *Tx) (entities.Values, error) {
-	sql := `SELECT id, name
-            FROM value
-            WHERE id NOT IN (SELECT distinct(value_id)
-                             FROM file_tag)`
+	sql := `
+SELECT id, name
+FROM value
+WHERE id NOT IN (SELECT distinct(value_id)
+                 FROM file_tag)`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -110,9 +115,10 @@ func UnusedValues(tx *Tx) (entities.Values, error) {
 
 // Retrieves a specific value by name.
 func ValueByName(tx *Tx, name string) (*entities.Value, error) {
-	sql := `SELECT id, name
-	        FROM value
-	        WHERE name = ?`
+	sql := `
+SELECT id, name
+FROM value
+WHERE name = ?`
 
 	rows, err := tx.Query(sql, name)
 	if err != nil {
@@ -129,9 +135,10 @@ func ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
 		return make(entities.Values, 0), nil
 	}
 
-	sql := `SELECT id, name
-            FROM value
-            WHERE name IN (?`
+	sql := `
+SELECT id, name
+FROM value
+WHERE name IN (?`
 	sql += strings.Repeat(",?", len(names)-1)
 	sql += ")"
 
@@ -156,13 +163,13 @@ func ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
 
 // Retrieves the set of values for the specified tag.
 func ValuesByTagId(tx *Tx, tagId entities.TagId) (entities.Values, error) {
-	sql := `SELECT id, name
-            FROM value
-            WHERE id IN (
-                SELECT value_id
-                FROM file_tag
-                WHERE tag_id = ?1)
-            ORDER BY name`
+	sql := `
+SELECT id, name
+FROM value
+WHERE id IN (SELECT value_id
+             FROM file_tag
+             WHERE tag_id = ?1)
+ORDER BY name`
 
 	rows, err := tx.Query(sql, tagId)
 	if err != nil {
@@ -175,8 +182,9 @@ func ValuesByTagId(tx *Tx, tagId entities.TagId) (entities.Values, error) {
 
 // Adds a value.
 func InsertValue(tx *Tx, name string) (*entities.Value, error) {
-	sql := `INSERT INTO value (name)
-	        VALUES (?)`
+	sql := `
+INSERT INTO value (name)
+VALUES (?)`
 
 	result, err := tx.Exec(sql, name)
 	if err != nil {
@@ -201,9 +209,10 @@ func InsertValue(tx *Tx, name string) (*entities.Value, error) {
 
 // Renames a value.
 func RenameValue(tx *Tx, valueId entities.ValueId, newName string) (*entities.Value, error) {
-	sql := `UPDATE value
-            SET name = ?
-            WHERE id = ?`
+	sql := `
+UPDATE value
+SET name = ?
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, newName, valueId)
 	if err != nil {
@@ -226,8 +235,9 @@ func RenameValue(tx *Tx, valueId entities.ValueId, newName string) (*entities.Va
 
 // Deletes a value.
 func DeleteValue(tx *Tx, valueId entities.ValueId) error {
-	sql := `DELETE FROM value
-	        WHERE id = ?`
+	sql := `
+DELETE FROM value
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, valueId)
 	if err != nil {
@@ -251,11 +261,11 @@ func DeleteValue(tx *Tx, valueId entities.ValueId) error {
 // Deletes all unused values.
 func DeleteUnusedValues(tx *Tx, valueIds entities.ValueIds) error {
 	for _, valueId := range valueIds {
-		sql := `DELETE FROM value
-                WHERE id = ?1
-                AND (SELECT count(1)
-                     FROM file_tag
-                     WHERE value_id = ?1) == 0`
+		sql := `
+DELETE FROM value
+WHERE id = ?1 AND (SELECT count(1)
+                   FROM file_tag
+                   WHERE value_id = ?1) == 0`
 
 		_, err := tx.Exec(sql, valueId)
 		if err != nil {

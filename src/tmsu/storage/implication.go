@@ -50,6 +50,31 @@ func (storage *Storage) ImplicationsFor(tx *Tx, tagValuePairs ...entities.TagVal
 	return resultantImplications, nil
 }
 
+// Retrieves the set of implications that imply the specified tag and value pairs.
+func (storage *Storage) ImplicationsImplying(tx *Tx, tagValuePairs ...entities.TagValuePair) (entities.Implications, error) {
+	resultantImplications := make(entities.Implications, 0)
+
+	implyingTagValuePairs := make(entities.TagValuePairs, len(tagValuePairs))
+	copy(implyingTagValuePairs, tagValuePairs)
+
+	for len(implyingTagValuePairs) > 0 {
+		implications, err := database.ImplyingImplications(tx.tx, implyingTagValuePairs)
+		if err != nil {
+			return nil, err
+		}
+
+		implyingTagValuePairs = make(entities.TagValuePairs, 0)
+		for _, implication := range implications {
+			if !containsImplication(resultantImplications, implication) {
+				resultantImplications = append(resultantImplications, implication)
+				implyingTagValuePairs = append(implyingTagValuePairs, entities.TagValuePair{implication.ImplyingTag.Id, implication.ImplyingValue.Id})
+			}
+		}
+	}
+
+	return resultantImplications, nil
+}
+
 // Adds the specified implication.
 func (storage Storage) AddImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
 	return database.AddImplication(tx.tx, tagValuePair, impliedTagValuePair)

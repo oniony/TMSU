@@ -23,8 +23,9 @@ import (
 
 // The number of tags in the database.
 func TagCount(tx *Tx) (uint, error) {
-	sql := `SELECT count(1)
-			FROM tag`
+	sql := `
+SELECT count(1)
+FROM tag`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -37,9 +38,10 @@ func TagCount(tx *Tx) (uint, error) {
 
 // The set of tags.
 func Tags(tx *Tx) (entities.Tags, error) {
-	sql := `SELECT id, name
-            FROM tag
-            ORDER BY name`
+	sql := `
+SELECT id, name
+FROM tag
+ORDER BY name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -52,9 +54,10 @@ func Tags(tx *Tx) (entities.Tags, error) {
 
 // Retrieves a specific tag.
 func Tag(tx *Tx, id entities.TagId) (*entities.Tag, error) {
-	sql := `SELECT id, name
-	        FROM tag
-	        WHERE id = ?`
+	sql := `
+SELECT id, name
+FROM tag
+WHERE id = ?`
 
 	rows, err := tx.Query(sql, id)
 	if err != nil {
@@ -67,9 +70,10 @@ func Tag(tx *Tx, id entities.TagId) (*entities.Tag, error) {
 
 // Retrieves a specific set of tags.
 func TagsByIds(tx *Tx, ids entities.TagIds) (entities.Tags, error) {
-	sql := `SELECT id, name
-	        FROM tag
-	        WHERE id IN (?`
+	sql := `
+SELECT id, name
+FROM tag
+WHERE id IN (?`
 	sql += strings.Repeat(",?", len(ids)-1)
 	sql += ")"
 
@@ -94,9 +98,10 @@ func TagsByIds(tx *Tx, ids entities.TagIds) (entities.Tags, error) {
 
 // Retrieves a specific tag.
 func TagByName(tx *Tx, name string) (*entities.Tag, error) {
-	sql := `SELECT id, name
-	        FROM tag
-	        WHERE name = ?`
+	sql := `
+SELECT id, name
+FROM tag
+WHERE name = ?`
 
 	rows, err := tx.Query(sql, name)
 	if err != nil {
@@ -113,9 +118,10 @@ func TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
 		return make(entities.Tags, 0), nil
 	}
 
-	sql := `SELECT id, name
-            FROM tag
-            WHERE name IN (?`
+	sql := `
+SELECT id, name
+FROM tag
+WHERE name IN (?`
 	sql += strings.Repeat(",?", len(names)-1)
 	sql += ")"
 
@@ -140,8 +146,9 @@ func TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
 
 // Adds a tag.
 func InsertTag(tx *Tx, name string) (*entities.Tag, error) {
-	sql := `INSERT INTO tag (name)
-	        VALUES (?)`
+	sql := `
+INSERT INTO tag (name)
+VALUES (?)`
 
 	result, err := tx.Exec(sql, name)
 	if err != nil {
@@ -166,9 +173,10 @@ func InsertTag(tx *Tx, name string) (*entities.Tag, error) {
 
 // Renames a tag.
 func RenameTag(tx *Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
-	sql := `UPDATE tag
-	        SET name = ?
-	        WHERE id = ?`
+	sql := `
+UPDATE tag
+SET name = ?
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, name, tagId)
 	if err != nil {
@@ -188,8 +196,9 @@ func RenameTag(tx *Tx, tagId entities.TagId, name string) (*entities.Tag, error)
 
 // Deletes a tag.
 func DeleteTag(tx *Tx, tagId entities.TagId) error {
-	sql := `DELETE FROM tag
-	        WHERE id = ?`
+	sql := `
+DELETE FROM tag
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, tagId)
 	if err != nil {
@@ -209,11 +218,12 @@ func DeleteTag(tx *Tx, tagId entities.TagId) error {
 
 // Retrieves the usage of each tag
 func TagUsage(tx *Tx) ([]entities.TagFileCount, error) {
-	sql := `SELECT t.id, t.name, count(file_id)
-            FROM file_tag ft, tag t
-            WHERE ft.tag_id = t.id
-            GROUP BY t.id
-            ORDER BY t.name`
+	sql := `
+SELECT t.id, t.name, count(file_id)
+FROM file_tag ft, tag t
+WHERE ft.tag_id = t.id
+GROUP BY t.id
+ORDER BY t.name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {

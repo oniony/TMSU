@@ -27,8 +27,9 @@ import (
 var latestSchemaVersion = common.Version{0, 6, 0}
 
 func schemaVersion(tx *sql.Tx) common.Version {
-	sql := `SELECT major, minor, patch
-            FROM version`
+	sql := `
+SELECT major, minor, patch
+FROM version`
 
 	var major, minor, patch uint
 
@@ -46,8 +47,9 @@ func schemaVersion(tx *sql.Tx) common.Version {
 }
 
 func insertSchemaVersion(tx *sql.Tx, version common.Version) error {
-	sql := `INSERT INTO version (major, minor, patch)
-            VALUES (?, ?, ?)`
+	sql := `
+INSERT INTO version (major, minor, patch)
+VALUES (?, ?, ?)`
 
 	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
 	if err != nil {
@@ -65,7 +67,8 @@ func insertSchemaVersion(tx *sql.Tx, version common.Version) error {
 }
 
 func updateSchemaVersion(tx *sql.Tx, version common.Version) error {
-	sql := `UPDATE version SET major = ?, minor = ?, patch = ?`
+	sql := `
+UPDATE version SET major = ?, minor = ?, patch = ?`
 
 	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
 	if err != nil {
@@ -123,17 +126,19 @@ func createSchema(tx *sql.Tx) error {
 }
 
 func createTagTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS tag (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS tag (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_tag_name
-           ON tag(name)`
+	sql = `
+CREATE INDEX IF NOT EXISTS idx_tag_name
+ON tag(name)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -143,23 +148,25 @@ func createTagTable(tx *sql.Tx) error {
 }
 
 func createFileTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS file (
-                id INTEGER PRIMARY KEY,
-                directory TEXT NOT NULL,
-                name TEXT NOT NULL,
-                fingerprint TEXT NOT NULL,
-                mod_time DATETIME NOT NULL,
-                size INTEGER NOT NULL,
-                is_dir BOOLEAN NOT NULL,
-                CONSTRAINT con_file_path UNIQUE (directory, name)
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS file (
+    id INTEGER PRIMARY KEY,
+    directory TEXT NOT NULL,
+    name TEXT NOT NULL,
+    fingerprint TEXT NOT NULL,
+    mod_time DATETIME NOT NULL,
+    size INTEGER NOT NULL,
+    is_dir BOOLEAN NOT NULL,
+    CONSTRAINT con_file_path UNIQUE (directory, name)
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_fingerprint
-           ON file(fingerprint)`
+	sql = `
+CREATE INDEX IF NOT EXISTS idx_file_fingerprint
+ON file(fingerprint)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -169,11 +176,12 @@ func createFileTable(tx *sql.Tx) error {
 }
 
 func createValueTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS value (
-                id INTEGER PRIMARY KEY,
-                name TEXT NOT NULL,
-                CONSTRAINT con_value_name UNIQUE (name)
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS value (
+    id INTEGER PRIMARY KEY,
+    name TEXT NOT NULL,
+    CONSTRAINT con_value_name UNIQUE (name)
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -183,36 +191,40 @@ func createValueTable(tx *sql.Tx) error {
 }
 
 func createFileTagTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS file_tag (
-                file_id INTEGER NOT NULL,
-                tag_id INTEGER NOT NULL,
-                value_id INTEGER NOT NULL,
-                PRIMARY KEY (file_id, tag_id, value_id),
-                FOREIGN KEY (file_id) REFERENCES file(id),
-                FOREIGN KEY (tag_id) REFERENCES tag(id)
-                FOREIGN KEY (value_id) REFERENCES value(id)
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS file_tag (
+    file_id INTEGER NOT NULL,
+    tag_id INTEGER NOT NULL,
+    value_id INTEGER NOT NULL,
+    PRIMARY KEY (file_id, tag_id, value_id),
+    FOREIGN KEY (file_id) REFERENCES file(id),
+    FOREIGN KEY (tag_id) REFERENCES tag(id)
+    FOREIGN KEY (value_id) REFERENCES value(id)
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
-           ON file_tag(file_id)`
+	sql = `
+CREATE INDEX IF NOT EXISTS idx_file_tag_file_id
+ON file_tag(file_id)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
-           ON file_tag(tag_id)`
+	sql = `
+CREATE INDEX IF NOT EXISTS idx_file_tag_tag_id
+ON file_tag(tag_id)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
 	}
 
-	sql = `CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
-           ON file_tag(value_id)`
+	sql = `
+CREATE INDEX IF NOT EXISTS idx_file_tag_value_id
+ON file_tag(value_id)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -222,13 +234,14 @@ func createFileTagTable(tx *sql.Tx) error {
 }
 
 func createImplicationTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS implication (
-                tag_id INTEGER NOT NULL,
-                value_id INTEGER NOT NULL,
-                implied_tag_id INTEGER NOT NULL,
-                implied_value_id INTEGER NOT NULL,
-                PRIMARY KEY (tag_id, value_id, implied_tag_id, implied_value_id)
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS implication (
+    tag_id INTEGER NOT NULL,
+    value_id INTEGER NOT NULL,
+    implied_tag_id INTEGER NOT NULL,
+    implied_value_id INTEGER NOT NULL,
+    PRIMARY KEY (tag_id, value_id, implied_tag_id, implied_value_id)
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -238,9 +251,10 @@ func createImplicationTable(tx *sql.Tx) error {
 }
 
 func createQueryTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS query (
-                text TEXT PRIMARY KEY
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS query (
+    text TEXT PRIMARY KEY
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -250,10 +264,11 @@ func createQueryTable(tx *sql.Tx) error {
 }
 
 func createSettingTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS setting (
-                name TEXT PRIMARY KEY,
-                value TEXT NOT NULL
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS setting (
+    name TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err
@@ -263,12 +278,13 @@ func createSettingTable(tx *sql.Tx) error {
 }
 
 func createVersionTable(tx *sql.Tx) error {
-	sql := `CREATE TABLE IF NOT EXISTS version (
-                major NUMBER NOT NULL,
-                minor NUMBER NOT NULL,
-                patch NUMBER NOT NULL,
-                PRIMARY KEY (major, minor, patch)
-            )`
+	sql := `
+CREATE TABLE IF NOT EXISTS version (
+    major NUMBER NOT NULL,
+    minor NUMBER NOT NULL,
+    patch NUMBER NOT NULL,
+    PRIMARY KEY (major, minor, patch)
+)`
 
 	if _, err := tx.Exec(sql); err != nil {
 		return err

@@ -104,31 +104,15 @@ func (store *Storage) UntaggedFiles(tx *Tx) (entities.Files, error) {
 }
 
 // Retrieves the count of files that match the specified query and matching the specified path.
-func (store *Storage) QueryFileCount(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
-	if !explicitOnly {
-		var err error
-		expression, err = addImplications(store, tx, expression)
-		if err != nil {
-			return 0, err
-		}
-	}
-
+func (store *Storage) FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
 	relPath := store.relPath(path)
-	return database.QueryFileCount(tx.tx, expression, relPath)
+	return database.FileCountForQuery(tx.tx, expression, relPath, explicitOnly)
 }
 
 // Retrieves the set of files that match the specified query.
-func (store *Storage) QueryFiles(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
-	if !explicitOnly {
-		var err error
-		expression, err = addImplications(store, tx, expression)
-		if err != nil {
-			return nil, err
-		}
-	}
-
+func (store *Storage) FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
 	relPath := store.relPath(path)
-	files, err := database.QueryFiles(tx.tx, expression, relPath, sort)
+	files, err := database.FilesForQuery(tx.tx, expression, relPath, explicitOnly, sort)
 	store.absPaths(files)
 	return files, err
 }
@@ -209,135 +193,4 @@ func (store *Storage) absPath(file *entities.File) {
 	}
 
 	file.Directory = filepath.Join(store.RootPath, file.Directory)
-}
-
-func addImplications(store *Storage, tx *Tx, expression query.Expression) (query.Expression, error) {
-	//TODO push this down to the database
-	implications, err := store.Implications(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	return addImplicationsRecursive(expression, implications), nil
-}
-
-func addImplicationsRecursive(expression query.Expression, implications entities.Implications) query.Expression {
-	switch typedExpression := expression.(type) {
-	case query.OrExpression:
-		typedExpression.LeftOperand = addImplicationsRecursive(typedExpression.LeftOperand, implications)
-		typedExpression.RightOperand = addImplicationsRecursive(typedExpression.RightOperand, implications)
-		return typedExpression
-	case query.AndExpression:
-		typedExpression.LeftOperand = addImplicationsRecursive(typedExpression.LeftOperand, implications)
-		typedExpression.RightOperand = addImplicationsRecursive(typedExpression.RightOperand, implications)
-		return typedExpression
-	case query.NotExpression:
-		typedExpression.Operand = addImplicationsRecursive(typedExpression.Operand, implications)
-		return typedExpression
-	case query.TagExpression:
-		return applyImplicationsForTag(typedExpression, implications)
-	case query.ComparisonExpression:
-		// left is tag, right is value
-		return applyImplicationsForComparison(typedExpression, implications)
-	case query.EmptyExpression:
-		return expression
-	default:
-		panic(fmt.Sprintf("unsupported expression type '%T'.", typedExpression))
-	}
-}
-
-func applyImplicationsForTag(tagExpression query.TagExpression, implications entities.Implications) query.Expression {
-	tagName := tagExpression.Name
-
-	var expression query.Expression = tagExpression
-
-	predicate := func(implication entities.Implication) bool {
-		return implication.ImpliedTag.Name == tagName
-	}
-	matchingImplications := implications.Where(predicate)
-
-	for _, implication := range matchingImplications {
-		var implicationExpression query.Expression
-
-		if implication.ImplyingValue.Id == 0 {
-			implicationExpression = query.TagExpression{implication.ImplyingTag.Name}
-		} else {
-			implicationExpression = query.ComparisonExpression{query.TagExpression{implication.ImplyingTag.Name}, "=", query.ValueExpression{implication.ImplyingValue.Name}}
-		}
-
-		expression = query.OrExpression{expression, implicationExpression}
-	}
-
-	return expression
-}
-
-func applyImplicationsForComparison(comparisonExpression query.ComparisonExpression, implications entities.Implications) query.Expression {
-	tagName := comparisonExpression.Tag.Name
-	operator := comparisonExpression.Operator
-	valueName := comparisonExpression.Value.Name
-
-	var expression query.Expression = comparisonExpression
-
-	if operator == "!=" {
-		predicate := func(implication entities.Implication) bool {
-			return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name == valueName
-		}
-		matchingImplications := implications.Where(predicate)
-
-		for _, implication := range matchingImplications {
-			var implicationExpression query.Expression
-
-			if implication.ImplyingValue.Id == 0 {
-				implicationExpression = query.TagExpression{implication.ImplyingTag.Name}
-			} else {
-				implicationExpression = query.ComparisonExpression{query.TagExpression{implication.ImplyingTag.Name}, "!=", query.ValueExpression{implication.ImplyingValue.Name}}
-			}
-
-			expression = query.AndExpression{expression, query.NotExpression{implicationExpression}}
-		}
-	} else {
-		var predicate func(entities.Implication) bool
-
-		//TODO need to change this so numeric comparisons are performed on numbers
-		switch operator {
-		case "=", "==":
-			predicate = func(implication entities.Implication) bool {
-				return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name == valueName
-			}
-		case "<":
-			predicate = func(implication entities.Implication) bool {
-				return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name < valueName
-			}
-		case ">":
-			predicate = func(implication entities.Implication) bool {
-				return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name > valueName
-			}
-		case "<=":
-			predicate = func(implication entities.Implication) bool {
-				return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name <= valueName
-			}
-		case ">=":
-			predicate = func(implication entities.Implication) bool {
-				return implication.ImpliedTag.Name == tagName && implication.ImpliedValue.Name >= valueName
-			}
-		default:
-			panic("unsupported operator " + operator)
-		}
-
-		matchingImplications := implications.Where(predicate)
-
-		for _, implication := range matchingImplications {
-			var implicationExpression query.Expression
-
-			if implication.ImplyingValue.Id == 0 {
-				implicationExpression = query.TagExpression{implication.ImplyingTag.Name}
-			} else {
-				implicationExpression = query.ComparisonExpression{query.TagExpression{implication.ImplyingTag.Name}, "=", query.ValueExpression{implication.ImplyingValue.Name}}
-			}
-
-			expression = query.OrExpression{expression, implicationExpression}
-		}
-	}
-
-	return expression
 }

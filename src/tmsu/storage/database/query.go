@@ -22,9 +22,10 @@ import (
 
 // The complete set of queries.
 func Queries(tx *Tx) (entities.Queries, error) {
-	sql := `SELECT text
-	        FROM query
-	        ORDER BY text`
+	sql := `
+SELECT text
+FROM query
+ORDER BY text`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -37,9 +38,10 @@ func Queries(tx *Tx) (entities.Queries, error) {
 
 // Retrieves the specified query.
 func Query(tx *Tx, text string) (*entities.Query, error) {
-	sql := `SELECT 1
-            FROM query
-            WHERE text = ?`
+	sql := `
+SELECT 1
+FROM query
+WHERE text = ?`
 
 	rows, err := tx.Query(sql, text)
 	if err != nil {
@@ -52,8 +54,9 @@ func Query(tx *Tx, text string) (*entities.Query, error) {
 
 // Adds a query to the database.
 func InsertQuery(tx *Tx, text string) (*entities.Query, error) {
-	sql := `INSERT INTO query (text)
-	        VALUES (?)`
+	sql := `
+INSERT INTO query (text)
+VALUES (?)`
 
 	result, err := tx.Exec(sql, text)
 	if err != nil {
@@ -73,8 +76,9 @@ func InsertQuery(tx *Tx, text string) (*entities.Query, error) {
 
 // Removes a query from the database.
 func DeleteQuery(tx *Tx, text string) error {
-	sql := `DELETE FROM query
-	        WHERE text = ?`
+	sql := `
+DELETE FROM query
+WHERE text = ?`
 
 	result, err := tx.Exec(sql, text)
 	if err != nil {

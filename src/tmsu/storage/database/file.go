@@ -42,8 +42,9 @@ func FileCount(tx *Tx) (uint, error) {
 // The complete set of tracked files.
 func Files(tx *Tx, sort string) (entities.Files, error) {
 	builder := NewBuilder()
-	builder.AppendSql(`SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-                       FROM file `)
+	builder.AppendSql(`
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file `)
 
 	buildSort(sort, builder)
 
@@ -58,9 +59,10 @@ func Files(tx *Tx, sort string) (entities.Files, error) {
 
 // Retrieves a specific file.
 func File(tx *Tx, id entities.FileId) (*entities.File, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-	        FROM file
-	        WHERE id = ?`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE id = ?`
 
 	rows, err := tx.Query(sql, id)
 	if err != nil {
@@ -76,9 +78,10 @@ func FileByPath(tx *Tx, path string) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-	        FROM file
-	        WHERE directory = ? AND name = ?`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE directory = ? AND name = ?`
 
 	rows, err := tx.Query(sql, directory, name)
 	if err != nil {
@@ -91,10 +94,11 @@ func FileByPath(tx *Tx, path string) (*entities.File, error) {
 
 // Retrieves all files that are under the specified directory.
 func FilesByDirectory(tx *Tx, path string) (entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-            FROM file
-            WHERE directory = ? OR directory LIKE ?
-            ORDER BY directory || '/' || name`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE directory = ? OR directory LIKE ?
+ORDER BY directory || '/' || name`
 
 	path = filepath.Clean(path)
 
@@ -109,9 +113,10 @@ func FilesByDirectory(tx *Tx, path string) (entities.Files, error) {
 
 // Retrieves the number of files with the specified fingerprint.
 func FileCountByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (uint, error) {
-	sql := `SELECT count(id)
-            FROM file
-            WHERE fingerprint = ?`
+	sql := `
+SELECT count(id)
+FROM file
+WHERE fingerprint = ?`
 
 	rows, err := tx.Query(sql, string(fingerprint))
 	if err != nil {
@@ -124,10 +129,11 @@ func FileCountByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (uint, 
 
 // Retrieves the set of files with the specified fingerprint.
 func FilesByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-	        FROM file
-	        WHERE fingerprint = ?
-	        ORDER BY directory || '/' || name`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE fingerprint = ?
+ORDER BY directory || '/' || name`
 
 	rows, err := tx.Query(sql, string(fingerprint))
 	if err != nil {
@@ -140,10 +146,11 @@ func FilesByFingerprint(tx *Tx, fingerprint fingerprint.Fingerprint) (entities.F
 
 // Retrieves the set of untagged files.
 func UntaggedFiles(tx *Tx) (entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-            FROM file
-            WHERE id NOT IN (SELECT distinct(file_id)
-                             FROM file_tag)`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE id NOT IN (SELECT distinct(file_id)
+                 FROM file_tag)`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -155,8 +162,8 @@ func UntaggedFiles(tx *Tx) (entities.Files, error) {
 }
 
 // Retrieves the count of files matching the specified query and matching the specified path.
-func QueryFileCount(tx *Tx, expression query.Expression, path string) (uint, error) {
-	builder := buildCountQuery(expression, path)
+func FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
+	builder := buildCountQuery(expression, path, explicitOnly)
 
 	rows, err := tx.Query(builder.Sql, builder.Params...)
 	if err != nil {
@@ -168,8 +175,8 @@ func QueryFileCount(tx *Tx, expression query.Expression, path string) (uint, err
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func QueryFiles(tx *Tx, expression query.Expression, path, sort string) (entities.Files, error) {
-	builder := buildQuery(expression, path, sort)
+func FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
+	builder := buildQuery(expression, path, explicitOnly, sort)
 	rows, err := tx.Query(builder.Sql, builder.Params...)
 	if err != nil {
 		return nil, err
@@ -181,16 +188,16 @@ func QueryFiles(tx *Tx, expression query.Expression, path, sort string) (entitie
 
 // Retrieves the sets of duplicate files within the database.
 func DuplicateFiles(tx *Tx) ([]entities.Files, error) {
-	sql := `SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-            FROM file
-            WHERE fingerprint IN (
-                SELECT fingerprint
-                FROM file
-                WHERE fingerprint != ''
-                GROUP BY fingerprint
-                HAVING count(1) > 1
-            )
-            ORDER BY fingerprint, directory || '/' || name`
+	sql := `
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE fingerprint IN (SELECT fingerprint
+                      FROM file
+                      WHERE fingerprint != ''
+                      GROUP BY fingerprint
+                      HAVING count(1) > 1
+)
+ORDER BY fingerprint, directory || '/' || name`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -243,8 +250,9 @@ func InsertFile(tx *Tx, path string, fingerprint fingerprint.Fingerprint, modTim
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
-	        VALUES (?, ?, ?, ?, ?, ?)`
+	sql := `
+INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
+VALUES (?, ?, ?, ?, ?, ?)`
 
 	result, err := tx.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
 	if err != nil {
@@ -272,9 +280,10 @@ func UpdateFile(tx *Tx, fileId entities.FileId, path string, fingerprint fingerp
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
 
-	sql := `UPDATE file
-	        SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?, is_dir = ?
-	        WHERE id = ?`
+	sql := `
+UPDATE file
+SET directory = ?, name = ?, fingerprint = ?, mod_time = ?, size = ?, is_dir = ?
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir, int(fileId))
 	if err != nil {
@@ -294,8 +303,9 @@ func UpdateFile(tx *Tx, fileId entities.FileId, path string, fingerprint fingerp
 
 // Removes a file from the database.
 func DeleteFile(tx *Tx, fileId entities.FileId) error {
-	sql := `DELETE FROM file
-	        WHERE id = ?`
+	sql := `
+DELETE FROM file
+WHERE id = ?`
 
 	result, err := tx.Exec(sql, fileId)
 	if err != nil {
@@ -319,11 +329,12 @@ func DeleteFile(tx *Tx, fileId entities.FileId) error {
 // Deletes the specified files if they are untagged
 func DeleteUntaggedFiles(tx *Tx, fileIds entities.FileIds) error {
 	for _, fileId := range fileIds {
-		sql := `DELETE FROM file
-                WHERE id = ?1
-                AND (SELECT count(1)
-                     FROM file_tag
-                     WHERE file_id = ?1) == 0`
+		sql := `
+DELETE FROM file
+WHERE id = ?1
+AND (SELECT count(1)
+     FROM file_tag
+     WHERE file_id = ?1) == 0`
 
 		_, err := tx.Exec(sql, fileId)
 		if err != nil {
@@ -373,65 +384,158 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
-func buildCountQuery(expression query.Expression, path string) *SqlBuilder {
+func buildCountQuery(expression query.Expression, path string, explicitOnly bool) *SqlBuilder {
 	builder := NewBuilder()
 
-	builder.AppendSql("SELECT count(id) FROM file WHERE 1 == 1 AND\n")
-	buildQueryBranch(expression, builder)
+	builder.AppendSql(`
+SELECT count(id)
+FROM file
+WHERE
+`)
+	buildQueryBranch(expression, builder, explicitOnly)
 	buildPathClause(path, builder)
 
 	return builder
 }
 
-func buildQuery(expression query.Expression, path, sort string) *SqlBuilder {
+func buildQuery(expression query.Expression, path string, explicitOnly bool, sort string) *SqlBuilder {
 	builder := NewBuilder()
 
-	builder.AppendSql("SELECT id, directory, name, fingerprint, mod_time, size, is_dir FROM file WHERE 1==1 AND\n")
-	buildQueryBranch(expression, builder)
+	builder.AppendSql(`
+SELECT id, directory, name, fingerprint, mod_time, size, is_dir
+FROM file
+WHERE
+`)
+	buildQueryBranch(expression, builder, explicitOnly)
 	buildPathClause(path, builder)
 	buildSort(sort, builder)
 
 	return builder
 }
 
-func buildQueryBranch(expression query.Expression, builder *SqlBuilder) {
+func buildQueryBranch(expression query.Expression, builder *SqlBuilder, explicitOnly bool) {
 	switch exp := expression.(type) {
 	case query.TagExpression:
-		builder.AppendSql(`id IN (SELECT file_id FROM file_tag WHERE tag_id = (SELECT id FROM tag WHERE name = `)
-		builder.AppendParam(exp.Name)
-		builder.AppendSql(`))`)
+		buildTagQueryBranch(exp, builder, explicitOnly)
 	case query.ComparisonExpression:
-		var valueExpression string
-		_, err := strconv.ParseFloat(exp.Value.Name, 64)
-		if err == nil {
-			valueExpression = "CAST(name AS float)"
-		} else {
-			valueExpression = "name"
-		}
-
-		builder.AppendSql(`id IN (SELECT file_id FROM file_tag WHERE tag_id = (SELECT id FROM tag WHERE name = `)
-		builder.AppendParam(exp.Tag.Name)
-		builder.AppendSql(`) AND value_id IN (SELECT id FROM value WHERE ` + valueExpression + ` ` + exp.Operator + ` `)
-		builder.AppendParam(exp.Value.Name)
-		builder.AppendSql(`))`)
+		buildComparisonQueryBranch(exp, builder, explicitOnly)
 	case query.NotExpression:
-		builder.AppendSql("\nNOT\n")
-		buildQueryBranch(exp.Operand, builder)
+		buildNotQueryBranch(exp, builder, explicitOnly)
 	case query.AndExpression:
-		buildQueryBranch(exp.LeftOperand, builder)
-		builder.AppendSql("\nAND\n")
-		buildQueryBranch(exp.RightOperand, builder)
+		buildAndQueryBranch(exp, builder, explicitOnly)
 	case query.OrExpression:
-		builder.AppendSql("(\n")
-		buildQueryBranch(exp.LeftOperand, builder)
-		builder.AppendSql("\nOR\n")
-		buildQueryBranch(exp.RightOperand, builder)
-		builder.AppendSql(")\n")
+		buildOrQueryBranch(exp, builder, explicitOnly)
 	case query.EmptyExpression:
 		builder.AppendSql("1 == 1\n")
 	default:
 		panic("Unsupported expression type.")
 	}
+}
+
+func buildTagQueryBranch(expression query.TagExpression, builder *SqlBuilder, explicitOnly bool) {
+	if explicitOnly {
+		builder.AppendSql(`
+id IN (SELECT file_id
+       FROM file_tag
+       WHERE tag_id = (SELECT id
+                       FROM tag
+                       WHERE name = `)
+		builder.AppendParam(expression.Name)
+		builder.AppendSql(`
+                       )
+      )`)
+	} else {
+		builder.AppendSql(`
+id IN (SELECT file_id
+       FROM file_tag
+       WHERE tag_id IN (WITH RECURSIVE working (tag_id, value_id) AS
+                        (
+                            SELECT id, 0
+                            FROM tag
+                            WHERE name = `)
+		builder.AppendParam(expression.Name)
+		builder.AppendSql(`
+                            UNION ALL
+                            SELECT b.tag_id, b.value_id
+                            FROM implication b, working
+                            WHERE b.implied_tag_id = working.tag_id AND
+                                  (working.value_id = 0 OR b.implied_value_id = working.value_id)
+                        )
+                            SELECT tag_id
+                            FROM working
+                       )
+      )`)
+	}
+}
+
+func buildComparisonQueryBranch(expression query.ComparisonExpression, builder *SqlBuilder, explicitOnly bool) {
+	var valueTerm string
+	_, err := strconv.ParseFloat(expression.Value.Name, 64)
+	if err == nil {
+		valueTerm = "CAST(v.name AS float)"
+	} else {
+		valueTerm = "v.name"
+	}
+
+	if explicitOnly {
+		builder.AppendSql(`
+id IN (SELECT file_id
+       FROM file_tag
+       WHERE tag_id = (SELECT id
+                       FROM tag
+                       WHERE name = `)
+		builder.AppendParam(expression.Tag.Name)
+		builder.AppendSql(`) AND
+             value_id = (SELECT id
+                         FROM value
+                         WHERE name = `)
+		builder.AppendParam(expression.Value.Name)
+		builder.AppendSql(`)
+     )`)
+	} else {
+		builder.AppendSql(`
+id IN (WITH RECURSIVE impft (tag_id, value_id) AS
+       (
+           SELECT t.id, v.id
+           FROM tag t, value v
+           WHERE t.name = `)
+		builder.AppendParam(expression.Tag.Name)
+		builder.AppendSql("AND " + valueTerm + " " + expression.Operator)
+		builder.AppendParam(expression.Value.Name)
+		builder.AppendSql(`
+           UNION ALL
+           SELECT b.tag_id, b.value_id
+           FROM implication b, impft
+           WHERE b.implied_tag_id = impft.tag_id AND
+                 (impft.value_id = 0 OR b.implied_value_id = impft.value_id)
+       )
+
+       SELECT file_id
+       FROM file_tag
+       INNER JOIN impft
+       ON file_tag.tag_id = impft.tag_id AND
+          file_tag.value_id = impft.value_id
+      )`)
+	}
+}
+
+func buildNotQueryBranch(expression query.NotExpression, builder *SqlBuilder, explicitOnly bool) {
+	builder.AppendSql("\nNOT\n")
+	buildQueryBranch(expression.Operand, builder, explicitOnly)
+}
+
+func buildAndQueryBranch(expression query.AndExpression, builder *SqlBuilder, explicitOnly bool) {
+	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
+	builder.AppendSql("\nAND\n")
+	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
+}
+
+func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, explicitOnly bool) {
+	builder.AppendSql("(\n")
+	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
+	builder.AppendSql("\nOR\n")
+	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
+	builder.AppendSql(")\n")
 }
 
 func buildPathClause(path string, builder *SqlBuilder) {

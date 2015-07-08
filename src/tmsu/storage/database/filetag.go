@@ -22,9 +22,10 @@ import (
 
 // Determines whether the specified file has the specified tag applied.
 func FileTagExists(tx *Tx, fileId entities.FileId, tagId entities.TagId, value_id entities.ValueId) (bool, error) {
-	sql := `SELECT count(1)
-            FROM file_tag
-            WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
+	sql := `
+SELECT count(1)
+FROM file_tag
+WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
 	rows, err := tx.Query(sql, fileId, tagId, value_id)
 	if err != nil {
@@ -40,8 +41,9 @@ func FileTagExists(tx *Tx, fileId entities.FileId, tagId entities.TagId, value_i
 func FileTagCount(tx *Tx) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1)
-	       FROM file_tag`
+	sql = `
+SELECT count(1)
+FROM file_tag`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -54,8 +56,9 @@ func FileTagCount(tx *Tx) (uint, error) {
 
 // Retrieves the complete set of file tags.
 func FileTags(tx *Tx) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id, value_id
-	        FROM file_tag`
+	sql := `
+SELECT file_id, tag_id, value_id
+FROM file_tag`
 
 	rows, err := tx.Query(sql)
 	if err != nil {
@@ -70,9 +73,10 @@ func FileTags(tx *Tx) (entities.FileTags, error) {
 func FileTagCountByFileId(tx *Tx, fileId entities.FileId) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1)
-	       FROM file_tag
-	       WHERE file_id = ?1`
+	sql = `
+SELECT count(1)
+FROM file_tag
+WHERE file_id = ?1`
 
 	rows, err := tx.Query(sql, fileId)
 	if err != nil {
@@ -87,9 +91,10 @@ func FileTagCountByFileId(tx *Tx, fileId entities.FileId) (uint, error) {
 func FileTagCountByTagId(tx *Tx, tagId entities.TagId) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1)
-	       FROM file_tag
-	       WHERE tag_id = ?1`
+	sql = `
+SELECT count(1)
+FROM file_tag
+WHERE tag_id = ?1`
 
 	rows, err := tx.Query(sql, tagId)
 	if err != nil {
@@ -102,9 +107,10 @@ func FileTagCountByTagId(tx *Tx, tagId entities.TagId) (uint, error) {
 
 // Retrieves the set of file tags with the specified tag ID.
 func FileTagsByTagId(tx *Tx, tagId entities.TagId) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id, value_id
-	        FROM file_tag
-	        WHERE tag_id = ?1`
+	sql := `
+SELECT file_id, tag_id, value_id
+FROM file_tag
+WHERE tag_id = ?1`
 
 	rows, err := tx.Query(sql, tagId)
 	if err != nil {
@@ -119,9 +125,10 @@ func FileTagsByTagId(tx *Tx, tagId entities.TagId) (entities.FileTags, error) {
 func FileTagCountByValueId(tx *Tx, valueId entities.ValueId) (uint, error) {
 	var sql string
 
-	sql = `SELECT count(1)
-	       FROM file_tag
-	       WHERE value_id = ?1`
+	sql = `
+SELECT count(1)
+FROM file_tag
+WHERE value_id = ?1`
 
 	rows, err := tx.Query(sql, valueId)
 	if err != nil {
@@ -134,9 +141,10 @@ func FileTagCountByValueId(tx *Tx, valueId entities.ValueId) (uint, error) {
 
 // Retrieves the set of file tags with the specified value ID.
 func FileTagsByValueId(tx *Tx, valueId entities.ValueId) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id, value_id
-	        FROM file_tag
-	        WHERE value_id = ?1`
+	sql := `
+SELECT file_id, tag_id, value_id
+FROM file_tag
+WHERE value_id = ?1`
 
 	rows, err := tx.Query(sql, valueId)
 	if err != nil {
@@ -149,9 +157,10 @@ func FileTagsByValueId(tx *Tx, valueId entities.ValueId) (entities.FileTags, err
 
 // Retrieves the set of file tags for the specified file.
 func FileTagsByFileId(tx *Tx, fileId entities.FileId) (entities.FileTags, error) {
-	sql := `SELECT file_id, tag_id, value_id
-            FROM file_tag
-            WHERE file_id = ?1`
+	sql := `
+SELECT file_id, tag_id, value_id
+FROM file_tag
+WHERE file_id = ?1`
 
 	rows, err := tx.Query(sql, fileId)
 	if err != nil {
@@ -164,8 +173,9 @@ func FileTagsByFileId(tx *Tx, fileId entities.FileId) (entities.FileTags, error)
 
 // Adds a file tag.
 func AddFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) (*entities.FileTag, error) {
-	sql := `INSERT OR IGNORE INTO file_tag (file_id, tag_id, value_id)
-            VALUES (?1, ?2, ?3)`
+	sql := `
+INSERT OR IGNORE INTO file_tag (file_id, tag_id, value_id)
+VALUES (?1, ?2, ?3)`
 
 	_, err := tx.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
@@ -177,8 +187,9 @@ func AddFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId en
 
 // Removes a file tag.
 func DeleteFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) error {
-	sql := `DELETE FROM file_tag
-	        WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
+	sql := `
+DELETE FROM file_tag
+WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
 	result, err := tx.Exec(sql, fileId, tagId, valueId)
 	if err != nil {
@@ -201,8 +212,9 @@ func DeleteFileTag(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId
 
 // Removes all of the file tags for the specified file.
 func DeleteFileTagsByFileId(tx *Tx, fileId entities.FileId) error {
-	sql := `DELETE FROM file_tag
-	        WHERE file_id = ?`
+	sql := `
+DELETE FROM file_tag
+WHERE file_id = ?`
 
 	_, err := tx.Exec(sql, fileId)
 	if err != nil {
@@ -214,8 +226,9 @@ func DeleteFileTagsByFileId(tx *Tx, fileId entities.FileId) error {
 
 // Removes all of the file tags for the specified tag.
 func DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) error {
-	sql := `DELETE FROM file_tag
-	        WHERE tag_id = ?`
+	sql := `
+DELETE FROM file_tag
+WHERE tag_id = ?`
 
 	_, err := tx.Exec(sql, tagId)
 	if err != nil {
@@ -227,8 +240,9 @@ func DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) error {
 
 // Removes all of the file tags for the specified value.
 func DeleteFileTagsByValueId(tx *Tx, valueId entities.ValueId) error {
-	sql := `DELETE FROM file_tag
-	        WHERE value_id = ?`
+	sql := `
+DELETE FROM file_tag
+WHERE value_id = ?`
 
 	_, err := tx.Exec(sql, valueId)
 	if err != nil {
@@ -240,10 +254,11 @@ func DeleteFileTagsByValueId(tx *Tx, valueId entities.ValueId) error {
 
 // Copies file tags from one tag to another.
 func CopyFileTags(tx *Tx, sourceTagId entities.TagId, destTagId entities.TagId) error {
-	sql := `INSERT INTO file_tag (file_id, tag_id, value_id)
-            SELECT file_id, ?2, value_id
-            FROM file_tag
-            WHERE tag_id = ?1`
+	sql := `
+INSERT INTO file_tag (file_id, tag_id, value_id)
+SELECT file_id, ?2, value_id
+FROM file_tag
+WHERE tag_id = ?1`
 
 	_, err := tx.Exec(sql, sourceTagId, destTagId)
 	if err != nil {

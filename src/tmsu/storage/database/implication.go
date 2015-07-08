@@ -91,6 +91,48 @@ ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 	return implications, nil
 }
 
+func ImplyingImplications(tx *Tx, tagValuePairs entities.TagValuePairs) (entities.Implications, error) {
+	sql := `
+SELECT tag.id, tag.name,
+       value.id, value.name,
+       implying_tag.id, implying_tag.name,
+       implying_value.id, implying_value.name
+FROM implication
+INNER JOIN tag tag ON implication.tag_id = tag.id
+LEFT OUTER JOIN value value ON implication.value_id = value.id
+INNER JOIN tag implying_tag ON implication.implying_tag_id = implying_tag.id
+LEFT OUTER JOIN value implying_value ON implication.implying_value_id = implying_value.id
+WHERE `
+
+	params := make([]interface{}, len(tagValuePairs)*2)
+	for index, tagValuePair := range tagValuePairs {
+		if index > 0 {
+			sql += "   OR "
+		}
+
+		sql += "(implication.implied_tag_id = ? AND implication.implied_value_id = ?)"
+
+		params[index*2] = tagValuePair.TagId
+		params[index*2+1] = tagValuePair.ValueId
+	}
+
+	sql += `
+ORDER BY tag.name, value.name, implying_tag.name, implying_value.name`
+
+	rows, err := tx.Query(sql, params...)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	implications, err := readImplications(rows, make(entities.Implications, 0, 10))
+	if err != nil {
+		return nil, err
+	}
+
+	return implications, nil
+}
+
 // Adds the specified implications
 func AddImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
 	sql := `

@@ -258,24 +258,6 @@ WHERE id = ?`
 	return nil
 }
 
-// Deletes all unused values.
-func DeleteUnusedValues(tx *Tx, valueIds entities.ValueIds) error {
-	for _, valueId := range valueIds {
-		sql := `
-DELETE FROM value
-WHERE id = ?1 AND (SELECT count(1)
-                   FROM file_tag
-                   WHERE value_id = ?1) == 0`
-
-		_, err := tx.Exec(sql, valueId)
-		if err != nil {
-			return nil
-		}
-	}
-
-	return nil
-}
-
 // unexported
 
 func readValue(rows *sql.Rows) (*entities.Value, error) {

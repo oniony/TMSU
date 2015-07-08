@@ -91,33 +91,15 @@ func (storage *Storage) DeleteValue(tx *Tx, valueId entities.ValueId) error {
 		return err
 	}
 
-	// deleting the file-tags automatically deletes the value
-
-	return storage.DeleteImplicationsByValueId(tx, valueId)
-}
-
-// Deletes the value if it is unused.
-func (storage *Storage) DeleteValueIfUnused(tx *Tx, valueId entities.ValueId) error {
-	if valueId == 0 {
-		return nil
-	}
-
-	count, err := storage.FileTagCountByValueId(tx, valueId)
-	if err != nil {
+	if err := storage.DeleteImplicationsByValueId(tx, valueId); err != nil {
 		return err
 	}
-	if count == 0 {
-		if err := database.DeleteValue(tx.tx, valueId); err != nil {
-			return err
-		}
+
+	if err := database.DeleteValue(tx.tx, valueId); err != nil {
+		return err
 	}
 
 	return nil
-}
-
-// Deletes unused values.
-func (storage *Storage) DeleteUnusedValues(tx *Tx, valueIds entities.ValueIds) error {
-	return database.DeleteUnusedValues(tx.tx, valueIds)
 }
 
 // unexported

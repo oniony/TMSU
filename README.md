@@ -120,8 +120,9 @@ v0.6 (in development)
     - tmsu-fs-merge  Merges files (deleting all but the last)
   * Tag values can now be renamed, deleted and merged using the new --value
     option on the corresponding subcommands.
-  * Tag values can now be used in implications. However implied values do
-    not yet work properly in comparisons using the <, <=, > or >= operators.
+  * Tag values can now be used in implications.
+  * Values are no longer automatically deleted when no longer used: it is now
+    up to you to manage them.
   * Added integration tests covering CLI.
 
 v0.5.2

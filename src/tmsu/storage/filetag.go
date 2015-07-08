@@ -141,29 +141,16 @@ func (storage *Storage) DeleteFileTag(tx *Tx, fileId entities.FileId, tagId enti
 		return err
 	}
 
-	if err := storage.DeleteValueIfUnused(tx, valueId); err != nil {
-		return err
-	}
-
 	return nil
 }
 
 // Deletes all of the file tags for the specified file.
 func (storage *Storage) DeleteFileTagsByFileId(tx *Tx, fileId entities.FileId) error {
-	fileTags, err := database.FileTagsByFileId(tx.tx, fileId)
-	if err != nil {
-		return err
-	}
-
 	if err := database.DeleteFileTagsByFileId(tx.tx, fileId); err != nil {
 		return err
 	}
 
 	if err := storage.DeleteFileIfUntagged(tx, fileId); err != nil {
-		return err
-	}
-
-	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
 		return err
 	}
 
@@ -185,10 +172,6 @@ func (storage *Storage) DeleteFileTagsByTagId(tx *Tx, tagId entities.TagId) erro
 		return err
 	}
 
-	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
-		return err
-	}
-
 	return nil
 }
 
@@ -204,10 +187,6 @@ func (storage *Storage) DeleteFileTagsByValueId(tx *Tx, valueId entities.ValueId
 	}
 
 	if err := storage.DeleteUntaggedFiles(tx, fileTags.FileIds()); err != nil {
-		return err
-	}
-
-	if err := storage.DeleteUnusedValues(tx, fileTags.ValueIds()); err != nil {
 		return err
 	}
 

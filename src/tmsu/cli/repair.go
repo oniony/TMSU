@@ -231,10 +231,6 @@ func fullRepair(store *storage.Storage, tx *storage.Tx, searchPaths []string, li
 		return err
 	}
 
-	if err = deleteUnusedValues(store, tx); err != nil {
-		return err
-	}
-
 	if rationalize {
 		if err = rationalizeFileTags(store, tx, dbFiles); err != nil {
 			return err
@@ -253,22 +249,6 @@ func deleteUntaggedFiles(store *storage.Storage, tx *storage.Tx, files entities.
 	}
 
 	return store.DeleteUntaggedFiles(tx, fileIds)
-}
-
-func deleteUnusedValues(store *storage.Storage, tx *storage.Tx) error {
-	log.Infof(2, "purging unused values")
-
-	values, err := store.Values(tx)
-	if err != nil {
-		return fmt.Errorf("could not retrieve set of values")
-	}
-
-	valueIds := make([]entities.ValueId, len(values))
-	for index, value := range values {
-		valueIds[index] = value.Id
-	}
-
-	return store.DeleteUnusedValues(tx, valueIds)
 }
 
 func rationalizeFileTags(store *storage.Storage, tx *storage.Tx, files entities.Files) error {

@@ -123,6 +123,8 @@ v0.6 (in development)
   * Tag values can now be used in implications.
   * Values are no longer automatically deleted when no longer used: it is now
     up to you to manage them.
+  * Tag values can be explicitly created: tmsu tag --create =2015. (It may
+    be necessary to enclose the argument in quotes depending upon your shell.)
   * Added integration tests covering CLI.
 
 v0.5.2

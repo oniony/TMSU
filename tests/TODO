@@ -1,4 +1,0 @@
-tag: ensure tags are applied if there is a 2-step (also 3-step) circluar implication
-    $ tmsu imply a b
-    $ tmsu imply b a
-    $ tmsu tag file a b  # a should be applied, b shouldn't

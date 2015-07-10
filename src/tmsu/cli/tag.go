@@ -36,9 +36,9 @@ var TagCommand = Command{
 	Usages: []string{"tmsu tag [OPTION]... FILE TAG[=VALUE]...",
 		`tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...`,
 		"tmsu tag [OPTION]... --from=SOURCE FILE...",
-		"tmsu tag [OPTION]... --create TAG[=VALUE]...",
+		"tmsu tag [OPTION]... --create {TAG|=VALUE}...",
 		"tmsu tag [OPTION[... -"},
-	Description: `Tags the file FILE with the TAGs specified. If no TAG is specified then all tags are listed.
+	Description: `Tags the file FILE with the TAGs and VALUEs specified.
 
 Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names may not contain whitespace characters, the comparison operator symbols ('=', '<' and '>"), parentheses ('(' and ')'), commas (',') or the slash symbol ('/'). In addition, the tag names '.' and '..' are not valid.
 
@@ -50,7 +50,7 @@ If a single argument of - is passed, TMSU will read lines from standard input in
 	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
-		"$ tmsu tag --create bad rubbish awful"},
+		"$ tmsu tag --create bad rubbish awful =2015"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
@@ -77,7 +77,7 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 			return fmt.Errorf("too few arguments")
 		}
 
-		if err := createTags(store, tx, args); err != nil {
+		if err := createTagsValues(store, tx, args); err != nil {
 			return err
 		}
 	case options.HasOption("--tags"):
@@ -133,24 +133,43 @@ func tagExec(store *storage.Storage, options Options, args []string) error {
 	return nil
 }
 
-func createTags(store *storage.Storage, tx *storage.Tx, tagNames []string) error {
+func createTagsValues(store *storage.Storage, tx *storage.Tx, names []string) error {
 	wereErrors := false
-	for _, tagName := range tagNames {
-		tag, err := store.TagByName(tx, tagName)
-		if err != nil {
-			return fmt.Errorf("could not check if tag '%v' exists: %v", tagName, err)
-		}
+	for _, name := range names {
+		if name[0] == '=' {
+			name = name[1:]
 
-		if tag == nil {
-			log.Infof(2, "adding tag '%v'.", tagName)
-
-			_, err := store.AddTag(tx, tagName)
+			value, err := store.ValueByName(tx, name)
 			if err != nil {
-				return fmt.Errorf("could not create tag '%v': %v", tagName, err)
+				return fmt.Errorf("could not check if value '%v' exists: %v", name, err)
+			}
+
+			if value == nil {
+				log.Infof(2, "adding value '%v'.", name)
+
+				if _, err := store.AddValue(tx, name); err != nil {
+					return fmt.Errorf("could not create value '%v': %v", name, err)
+				}
+			} else {
+				log.Warnf("value '%v' already exists", name)
+				wereErrors = true
 			}
 		} else {
-			log.Warnf("tag '%v' already exists", tagName)
-			wereErrors = true
+			tag, err := store.TagByName(tx, name)
+			if err != nil {
+				return fmt.Errorf("could not check if tag '%v' exists: %v", name, err)
+			}
+
+			if tag == nil {
+				log.Infof(2, "adding tag '%v'.", name)
+
+				if _, err := store.AddTag(tx, name); err != nil {
+					return fmt.Errorf("could not create tag '%v': %v", name, err)
+				}
+			} else {
+				log.Warnf("tag '%v' already exists", name)
+				wereErrors = true
+			}
 		}
 	}
 

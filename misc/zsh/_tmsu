@@ -112,7 +112,20 @@ _tmsu_tags_with_values() {
 }
 
 _tmsu_query() {
-    if [[ $words[$#words-1] =~ '^(=|==|!=|<|>|<=|>=|eq|ne|lt|gt|le|ge)$' ]]
+    if [[ -prefix *= ]]
+    then
+        typeset -a value_list
+        local line
+
+        local tagName=${PREFIX%%=*}
+        _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
+        while read -A line
+        do
+            value_list+=$tagName=$line[1]
+        done
+
+        _describe -t values 'values' value_list
+    elif [[ $words[$#words-1] =~ '^(=|==|!=|<|>|<=|>=|eq|ne|lt|gt|le|ge)$' ]]
     then
         typeset -a value_list
         local line

@@ -45,10 +45,10 @@ func TagNames(expression Expression) []string {
 	return names
 }
 
-// Retrieves the set of value names from an expression
-func ValueNames(expression Expression) []string {
+// Retrieves the set of value names from an expression where the name is matched on exactly
+func ExactValueNames(expression Expression) []string {
 	names := make([]string, 0, 10)
-	names = valueNames(expression, names)
+	names = exactValueNames(expression, names)
 
 	return names
 }
@@ -78,22 +78,29 @@ func tagNames(expression Expression, names []string) []string {
 	return names
 }
 
-func valueNames(expression Expression, names []string) []string {
+func exactValueNames(expression Expression, names []string) []string {
 	switch exp := expression.(type) {
 	case EmptyExpression:
 		// nowt
 	case TagExpression:
 		// nowt
 	case NotExpression:
-		names = valueNames(exp.Operand, names)
+		names = exactValueNames(exp.Operand, names)
 	case AndExpression:
-		names = valueNames(exp.LeftOperand, names)
-		names = valueNames(exp.RightOperand, names)
+		names = exactValueNames(exp.LeftOperand, names)
+		names = exactValueNames(exp.RightOperand, names)
 	case OrExpression:
-		names = valueNames(exp.LeftOperand, names)
-		names = valueNames(exp.RightOperand, names)
+		names = exactValueNames(exp.LeftOperand, names)
+		names = exactValueNames(exp.RightOperand, names)
 	case ComparisonExpression:
-		names = append(names, exp.Value.Name)
+		switch exp.Operator {
+		case "=", "==", "!=":
+			names = append(names, exp.Value.Name)
+		case "<", ">", "<=", ">=":
+			// do nowt
+		default:
+			panic("unsupported operator " + exp.Operator)
+		}
 	default:
 		panic("unsupported token type")
 	}

@@ -36,6 +36,8 @@ If a VALUE is specified then the setting is updated.`,
 	Exec:    configExec,
 }
 
+// unexported
+
 func configExec(store *storage.Storage, options Options, args []string) error {
 	tx, err := store.Begin()
 	if err != nil {
@@ -81,8 +83,6 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 
 	return nil
 }
-
-// unexported
 
 func listAllSettings(store *storage.Storage, tx *storage.Tx, colour bool) error {
 	settings, err := store.Settings(tx)

@@ -36,6 +36,8 @@ var InfoCommand = Command{
 	Aliases: []string{"stats"},
 }
 
+// unexported
+
 func infoExec(store *storage.Storage, options Options, args []string) error {
 	stats := options.HasOption("--stats")
 	usage := options.HasOption("--usage")

@@ -38,6 +38,8 @@ var DupesCommand = Command{
 	Exec:    dupesExec,
 }
 
+// unexported
+
 func dupesExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 

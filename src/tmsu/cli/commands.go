@@ -17,6 +17,8 @@
 
 package cli
 
+// unexported
+
 var commands = []*Command{
 	&ConfigCommand,
 	&CopyCommand,

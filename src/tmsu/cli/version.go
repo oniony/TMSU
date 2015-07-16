@@ -32,6 +32,8 @@ var VersionCommand = Command{
 	Hidden:      true,
 }
 
+// unexported
+
 func versionExec(store *storage.Storage, options Options, args []string) error {
 	fmt.Println("TMSU", version.Version)
 	fmt.Println()

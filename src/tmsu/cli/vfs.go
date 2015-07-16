@@ -36,6 +36,8 @@ It is not normally necessary to issue this subcommand manually unless debugging 
 	Hidden:  true,
 }
 
+// unexported
+
 func vfsExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) == 0 {
 		fmt.Errorf("mountpoint not specified")

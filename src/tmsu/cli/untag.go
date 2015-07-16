@@ -40,6 +40,8 @@ var UntagCommand = Command{
 	Exec: untagExec,
 }
 
+// unexported
+
 func untagExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 1 {
 		return fmt.Errorf("too few arguments")

@@ -35,6 +35,8 @@ Attempting to rename a tag or value with a name that already exists will result 
 	Exec:    renameExec,
 }
 
+// unexported
+
 func renameExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments")

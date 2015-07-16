@@ -37,6 +37,8 @@ Where PATHs are not specified, untagged items under the current working director
 	Exec:    untaggedExec,
 }
 
+// unexported
+
 func untaggedExec(store *storage.Storage, options Options, args []string) error {
 	recursive := !options.HasOption("--directory")
 

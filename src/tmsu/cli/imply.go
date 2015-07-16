@@ -45,6 +45,8 @@ mp3 -> music`,
 	Exec:    implyExec,
 }
 
+// unexported
+
 func implyExec(store *storage.Storage, options Options, args []string) error {
 	tx, err := store.Begin()
 	if err != nil {
@@ -69,8 +71,6 @@ func implyExec(store *storage.Storage, options Options, args []string) error {
 		return addImplications(store, tx, args)
 	}
 }
-
-// unexported
 
 func listImplications(store *storage.Storage, tx *storage.Tx) error {
 	log.Infof(2, "retrieving tag implications.")

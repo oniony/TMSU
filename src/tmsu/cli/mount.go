@@ -50,6 +50,8 @@ To allow other users access to the mounted filesystem, pass the 'allow_other' FU
 	Exec:    mountExec,
 }
 
+// unexported
+
 func mountExec(store *storage.Storage, options Options, args []string) error {
 	var mountOptions string
 	if options.HasOption("--options") {

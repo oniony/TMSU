@@ -60,6 +60,8 @@ If a single argument of - is passed, TMSU will read lines from standard input in
 	Exec: tagExec,
 }
 
+// unexported
+
 func tagExec(store *storage.Storage, options Options, args []string) error {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")

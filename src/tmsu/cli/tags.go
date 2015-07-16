@@ -51,6 +51,8 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Exec: tagsExec,
 }
 
+// unexported
+
 func tagsExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")

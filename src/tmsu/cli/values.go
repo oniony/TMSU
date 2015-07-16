@@ -36,6 +36,8 @@ var ValuesCommand = Command{
 	Exec: valuesExec,
 }
 
+// unexported
+
 func valuesExec(store *storage.Storage, options Options, args []string) error {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")

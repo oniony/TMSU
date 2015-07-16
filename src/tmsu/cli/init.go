@@ -38,6 +38,8 @@ The new database is used automatically whenever TMSU is invoked from a directory
 	Exec:    initExec,
 }
 
+// unexported
+
 func initExec(store *storage.Storage, options Options, args []string) error {
 	paths := args
 
@@ -64,8 +66,6 @@ func initExec(store *storage.Storage, options Options, args []string) error {
 
 	return nil
 }
-
-// unexported
 
 func initializeDatabase(path string) error {
 	tmsuPath := filepath.Join(path, ".tmsu")

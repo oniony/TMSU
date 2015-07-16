@@ -86,6 +86,8 @@ func NewReport() *StatusReport {
 	return &StatusReport{make([]Row, 0, 10)}
 }
 
+// unexported
+
 func statusExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 

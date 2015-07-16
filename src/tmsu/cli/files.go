@@ -57,6 +57,8 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 	Exec: filesExec,
 }
 
+// unexported
+
 func filesExec(store *storage.Storage, options Options, args []string) error {
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")

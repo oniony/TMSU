@@ -33,6 +33,8 @@ var DeleteCommand = Command{
 	Exec:    deleteExec,
 }
 
+// unexported
+
 func deleteExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) == 0 {
 		return fmt.Errorf("too few arguments")

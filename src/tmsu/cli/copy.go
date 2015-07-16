@@ -33,6 +33,8 @@ var CopyCommand = Command{
 	Exec:    copyExec,
 }
 
+// unexported
+
 func copyExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments")

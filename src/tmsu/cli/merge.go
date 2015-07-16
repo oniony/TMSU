@@ -32,6 +32,8 @@ var MergeCommand = Command{
 	Exec:    mergeExec,
 }
 
+// unexported
+
 func mergeExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments")

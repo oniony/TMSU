@@ -37,6 +37,8 @@ var UnmountCommand = Command{
 	Exec:        unmountExec,
 }
 
+// unexported
+
 func unmountExec(store *storage.Storage, options Options, args []string) error {
 	if options.HasOption("--all") {
 		return unmountAll()

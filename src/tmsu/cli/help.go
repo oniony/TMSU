@@ -36,6 +36,8 @@ var HelpCommand = Command{
 	Exec:        helpExec,
 }
 
+// unexported
+
 var helpCommands []*Command
 var colorizeRegexp = regexp.MustCompile(`'\S+'`)
 

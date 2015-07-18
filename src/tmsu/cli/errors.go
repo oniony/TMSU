@@ -13,19 +13,25 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-package entities
+package cli
 
 import (
 	"fmt"
+	_ "github.com/mattn/go-sqlite3"
 )
 
-type TagIdValueIdPair struct {
-	TagId   TagId
-	ValueId ValueId
+type NoSuchTagError struct {
+	Name string
 }
 
-func (pair TagIdValueIdPair) String() string {
-	return fmt.Sprintf("#%v=#%v", pair.TagId, pair.ValueId)
+func (err NoSuchTagError) Error() string {
+	return fmt.Sprintf("no such tag '%v'", err.Name)
 }
 
-type TagIdValueIdPairs []TagIdValueIdPair
+type NoSuchValueError struct {
+	Name string
+}
+
+func (err NoSuchValueError) Error() string {
+	return fmt.Sprintf("no such value '%v'", err.Name)
+}

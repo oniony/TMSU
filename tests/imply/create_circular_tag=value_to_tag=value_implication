@@ -1,0 +1,25 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu imply year=2015 roman=MMXV    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu imply roman=MMXV year=2015    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'year'
+tmsu: new value '2015'
+tmsu: new tag 'roman'
+tmsu: new value 'MMXV'
+tmsu: cannot add implication of 'roman=MMXV' to 'year=2015': implication would create a cycle
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

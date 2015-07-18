@@ -23,20 +23,51 @@ type FileTag struct {
 	Implicit bool
 }
 
-func (fileTag FileTag) TagValuePair() TagValuePair {
-	return TagValuePair{fileTag.TagId, fileTag.ValueId}
+func (fileTag FileTag) ToTagIdValueIdPair() TagIdValueIdPair {
+	return TagIdValueIdPair{fileTag.TagId, fileTag.ValueId}
 }
 
 type FileTags []*FileTag
 
-func (fileTags FileTags) Contains(tagValuePair TagValuePair) bool {
+func (fileTags FileTags) ToTagIdValueIdPairs() TagIdValueIdPairs {
+	pairs := make(TagIdValueIdPairs, len(fileTags))
+
+	for index, fileTag := range fileTags {
+		pairs[index] = fileTag.ToTagIdValueIdPair()
+	}
+
+	return pairs
+}
+
+func (fileTags FileTags) Any(predicate func(fileTag FileTag) bool) bool {
 	for _, fileTag := range fileTags {
-		if fileTag.TagId == tagValuePair.TagId && fileTag.ValueId == tagValuePair.ValueId {
+		if predicate(*fileTag) {
 			return true
 		}
 	}
 
 	return false
+}
+
+func (fileTags FileTags) Where(predicate func(fileTag FileTag) bool) FileTags {
+	matches := make(FileTags, 0, 10)
+
+	for _, fileTag := range fileTags {
+		if predicate(*fileTag) {
+			matches = append(matches, fileTag)
+		}
+	}
+
+	return matches
+}
+
+func (fileTags FileTags) Single() *FileTag {
+	switch len(fileTags) {
+	case 1:
+		return fileTags[0]
+	default:
+		return nil
+	}
 }
 
 func (fileTags FileTags) FileIds() FileIds {
@@ -64,14 +95,4 @@ func (fileTags FileTags) ValueIds() ValueIds {
 	}
 
 	return valueIds.Uniq()
-}
-
-func (fileTags FileTags) Find(fileId FileId, tagId TagId, valueId ValueId) *FileTag {
-	for _, fileTag := range fileTags {
-		if fileTag.FileId == fileId && fileTag.TagId == tagId && fileTag.ValueId == valueId {
-			return fileTag
-		}
-	}
-
-	return nil
 }

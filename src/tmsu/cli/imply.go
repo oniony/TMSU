@@ -119,19 +119,81 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) e
 		return err
 	}
 
-	tagValuePairs, warnings, err := parseTagValuePairs(tagArgs, store, tx, settings)
+	implyingTagArg := tagArgs[0]
+	impliedTagArgs := tagArgs[1:]
+
+	implyingTagName, implyingValueName := parseTagValueName(implyingTagArg)
+
+	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
 		return err
 	}
+	if implyingTag == nil {
+		if settings.AutoCreateTags() {
+			implyingTag, err = createTag(store, tx, implyingTagName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return NoSuchTagError{implyingTagName}
+		}
+	}
 
-	implyingPair := tagValuePairs[0]
-	impliedPairs := tagValuePairs[1:]
+	implyingValue, err := store.ValueByName(tx, implyingValueName)
+	if err != nil {
+		return err
+	}
+	if implyingValue == nil {
+		if settings.AutoCreateValues() {
+			implyingValue, err = createValue(store, tx, implyingValueName)
+			if err != nil {
+				return err
+			}
+		} else {
+			return NoSuchValueError{implyingValueName}
+		}
+	}
 
-	for _, impliedPair := range impliedPairs {
-		log.Infof(2, "adding tag implication of '%v' to '%v'", implyingPair.TagId, impliedPair.TagId)
+	warnings := false
+	for _, impliedTagArg := range impliedTagArgs {
+		impliedTagName, impliedValueName := parseTagValueName(impliedTagArg)
 
-		if err = store.AddImplication(tx, entities.TagValuePair{implyingPair.TagId, implyingPair.ValueId}, entities.TagValuePair{impliedPair.TagId, impliedPair.ValueId}); err != nil {
-			return fmt.Errorf("could not add tag implication of '%v' to '%v': %v", implyingPair, impliedPair, err)
+		impliedTag, err := store.TagByName(tx, impliedTagName)
+		if err != nil {
+			return err
+		}
+		if impliedTag == nil {
+			if settings.AutoCreateTags() {
+				impliedTag, err = createTag(store, tx, impliedTagName)
+				if err != nil {
+					return err
+				}
+			} else {
+				log.Warnf("no such tag '%v'", impliedTagName)
+				warnings = true
+			}
+		}
+
+		impliedValue, err := store.ValueByName(tx, impliedValueName)
+		if err != nil {
+			return err
+		}
+		if impliedValue == nil {
+			if settings.AutoCreateValues() {
+				impliedValue, err = createValue(store, tx, impliedValueName)
+				if err != nil {
+					return err
+				}
+			} else {
+				log.Warnf("no such value '%v'", impliedValueName)
+				warnings = true
+			}
+		}
+
+		log.Infof(2, "adding tag implication of '%v' to '%v'", implyingTagArg, impliedTagArg)
+
+		if err = store.AddImplication(tx, entities.TagIdValueIdPair{implyingTag.Id, implyingValue.Id}, entities.TagIdValueIdPair{impliedTag.Id, impliedValue.Id}); err != nil {
+			return fmt.Errorf("cannot add implication of '%v' to '%v': %v", implyingTagArg, impliedTagArg, err)
 		}
 	}
 
@@ -143,24 +205,55 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) e
 }
 
 func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) error {
-	settings, err := store.Settings(tx)
+	log.Infof(2, "loading settings")
+
+	implyingTagArg := tagArgs[0]
+	impliedTagArgs := tagArgs[1:]
+
+	implyingTagName, implyingValueName := parseTagValueName(implyingTagArg)
+
+	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
 		return err
 	}
+	if implyingTag == nil {
+		return NoSuchTagError{implyingTagName}
+	}
 
-	tagValuePairs, warnings, err := parseTagValuePairs(tagArgs, store, tx, settings)
+	implyingValue, err := store.ValueByName(tx, implyingValueName)
 	if err != nil {
 		return err
 	}
+	if implyingValue == nil {
+		return NoSuchValueError{implyingValueName}
+	}
 
-	implyingPair := tagValuePairs[0]
-	impliedPairs := tagValuePairs[1:]
+	warnings := false
+	for _, impliedTagArg := range impliedTagArgs {
+		log.Infof(2, "removing tag implication %v -> %v.", implyingTagArg, impliedTagArg)
 
-	for _, impliedPair := range impliedPairs {
-		log.Infof(2, "removing tag implication %v -> %v.", implyingPair, impliedPair)
+		impliedTagName, impliedValueName := parseTagValueName(impliedTagArg)
 
-		if err := store.DeleteImplication(tx, implyingPair, impliedPair); err != nil {
-			return fmt.Errorf("could not delete tag implication of %v to %v: %v", implyingPair, impliedPair, err)
+		impliedTag, err := store.TagByName(tx, impliedTagName)
+		if err != nil {
+			return err
+		}
+		if impliedTag == nil {
+			log.Warnf("no such tag '%v'", impliedTagName)
+			warnings = true
+		}
+
+		impliedValue, err := store.ValueByName(tx, impliedValueName)
+		if err != nil {
+			return err
+		}
+		if impliedValue == nil {
+			log.Warnf("no such value '%v'", impliedValueName)
+			warnings = true
+		}
+
+		if err := store.DeleteImplication(tx, entities.TagIdValueIdPair{implyingTag.Id, implyingValue.Id}, entities.TagIdValueIdPair{impliedTag.Id, impliedValue.Id}); err != nil {
+			return fmt.Errorf("could not delete tag implication of %v to %v: %v", implyingTagArg, impliedTagArg, err)
 		}
 	}
 

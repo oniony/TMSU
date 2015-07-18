@@ -16,6 +16,7 @@
 package storage
 
 import (
+	"fmt"
 	"tmsu/entities"
 	"tmsu/storage/database"
 )
@@ -26,23 +27,23 @@ func (storage *Storage) Implications(tx *Tx) (entities.Implications, error) {
 }
 
 // Retrieves the set of implications for the specified tag and value pairs.
-func (storage *Storage) ImplicationsFor(tx *Tx, tagValuePairs ...entities.TagValuePair) (entities.Implications, error) {
+func (storage *Storage) ImplicationsFor(tx *Tx, pairs ...entities.TagIdValueIdPair) (entities.Implications, error) {
 	resultantImplications := make(entities.Implications, 0)
 
-	impliedTagValuePairs := make(entities.TagValuePairs, len(tagValuePairs))
-	copy(impliedTagValuePairs, tagValuePairs)
+	impliedPairs := make(entities.TagIdValueIdPairs, len(pairs))
+	copy(impliedPairs, pairs)
 
-	for len(impliedTagValuePairs) > 0 {
-		implications, err := database.ImplicationsFor(tx.tx, impliedTagValuePairs)
+	for len(impliedPairs) > 0 {
+		implications, err := database.ImplicationsFor(tx.tx, impliedPairs)
 		if err != nil {
 			return nil, err
 		}
 
-		impliedTagValuePairs = make(entities.TagValuePairs, 0)
+		impliedPairs = make(entities.TagIdValueIdPairs, 0)
 		for _, implication := range implications {
-			if !containsImplication(resultantImplications, implication) {
+			if !resultantImplications.Contains(*implication) {
 				resultantImplications = append(resultantImplications, implication)
-				impliedTagValuePairs = append(impliedTagValuePairs, entities.TagValuePair{implication.ImpliedTag.Id, implication.ImpliedValue.Id})
+				impliedPairs = append(impliedPairs, entities.TagIdValueIdPair{implication.ImpliedTag.Id, implication.ImpliedValue.Id})
 			}
 		}
 	}
@@ -51,23 +52,23 @@ func (storage *Storage) ImplicationsFor(tx *Tx, tagValuePairs ...entities.TagVal
 }
 
 // Retrieves the set of implications that imply the specified tag and value pairs.
-func (storage *Storage) ImplicationsImplying(tx *Tx, tagValuePairs ...entities.TagValuePair) (entities.Implications, error) {
+func (storage *Storage) ImplicationsImplying(tx *Tx, pairs ...entities.TagIdValueIdPair) (entities.Implications, error) {
 	resultantImplications := make(entities.Implications, 0)
 
-	implyingTagValuePairs := make(entities.TagValuePairs, len(tagValuePairs))
-	copy(implyingTagValuePairs, tagValuePairs)
+	implyingPairs := make(entities.TagIdValueIdPairs, len(pairs))
+	copy(implyingPairs, pairs)
 
-	for len(implyingTagValuePairs) > 0 {
-		implications, err := database.ImplyingImplications(tx.tx, implyingTagValuePairs)
+	for len(implyingPairs) > 0 {
+		implications, err := database.ImplyingImplications(tx.tx, implyingPairs)
 		if err != nil {
 			return nil, err
 		}
 
-		implyingTagValuePairs = make(entities.TagValuePairs, 0)
+		implyingPairs = make(entities.TagIdValueIdPairs, 0)
 		for _, implication := range implications {
-			if !containsImplication(resultantImplications, implication) {
+			if resultantImplications.Contains(*implication) {
 				resultantImplications = append(resultantImplications, implication)
-				implyingTagValuePairs = append(implyingTagValuePairs, entities.TagValuePair{implication.ImplyingTag.Id, implication.ImplyingValue.Id})
+				implyingPairs = append(implyingPairs, entities.TagIdValueIdPair{implication.ImplyingTag.Id, implication.ImplyingValue.Id})
 			}
 		}
 	}
@@ -76,13 +77,24 @@ func (storage *Storage) ImplicationsImplying(tx *Tx, tagValuePairs ...entities.T
 }
 
 // Adds the specified implication.
-func (storage Storage) AddImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
-	return database.AddImplication(tx.tx, tagValuePair, impliedTagValuePair)
+func (storage Storage) AddImplication(tx *Tx, pair, impliedPair entities.TagIdValueIdPair) error {
+	implications, err := storage.ImplicationsFor(tx, impliedPair, entities.TagIdValueIdPair{impliedPair.TagId, 0})
+	if err != nil {
+		return nil
+	}
+
+	for _, implication := range implications {
+		if implication.ImpliedTag.Id == pair.TagId {
+			return fmt.Errorf("implication would create a cycle")
+		}
+	}
+
+	return database.AddImplication(tx.tx, pair, impliedPair)
 }
 
 // Deletes the specified implication
-func (storage Storage) DeleteImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
-	return database.DeleteImplication(tx.tx, tagValuePair, impliedTagValuePair)
+func (storage Storage) DeleteImplication(tx *Tx, pair, impliedPair entities.TagIdValueIdPair) error {
+	return database.DeleteImplication(tx.tx, pair, impliedPair)
 }
 
 // Deletes implications for the specified tag.
@@ -93,19 +105,4 @@ func (storage Storage) DeleteImplicationsByTagId(tx *Tx, tagId entities.TagId) e
 // Deletes implications for the specified value.
 func (storage Storage) DeleteImplicationsByValueId(tx *Tx, valueId entities.ValueId) error {
 	return database.DeleteImplicationsByValueId(tx.tx, valueId)
-}
-
-// unexported
-
-func containsImplication(implications entities.Implications, check *entities.Implication) bool {
-	for _, implication := range implications {
-		if implication.ImplyingTag.Id == check.ImplyingTag.Id &&
-			implication.ImplyingValue.Id == check.ImplyingValue.Id &&
-			implication.ImpliedTag.Id == check.ImpliedTag.Id &&
-			implication.ImpliedValue.Id == check.ImpliedValue.Id {
-			return true
-		}
-	}
-
-	return false
 }

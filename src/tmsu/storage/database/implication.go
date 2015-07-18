@@ -49,7 +49,7 @@ ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 }
 
 // Retrieves the set of implications by the specified tag and value pairs.
-func ImplicationsFor(tx *Tx, tagValuePairs entities.TagValuePairs) (entities.Implications, error) {
+func ImplicationsFor(tx *Tx, pairs entities.TagIdValueIdPairs) (entities.Implications, error) {
 	sql := `
 SELECT tag.id, tag.name,
        value.id, value.name,
@@ -62,16 +62,16 @@ INNER JOIN tag implied_tag ON implication.implied_tag_id = implied_tag.id
 LEFT OUTER JOIN value implied_value ON implication.implied_value_id = implied_value.id
 WHERE `
 
-	params := make([]interface{}, len(tagValuePairs)*2)
-	for index, tagValuePair := range tagValuePairs {
+	params := make([]interface{}, len(pairs)*2)
+	for index, pair := range pairs {
 		if index > 0 {
 			sql += "   OR "
 		}
 
 		sql += "(implication.tag_id = ? AND implication.value_id = ?)"
 
-		params[index*2] = tagValuePair.TagId
-		params[index*2+1] = tagValuePair.ValueId
+		params[index*2] = pair.TagId
+		params[index*2+1] = pair.ValueId
 	}
 
 	sql += `
@@ -91,7 +91,7 @@ ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 	return implications, nil
 }
 
-func ImplyingImplications(tx *Tx, tagValuePairs entities.TagValuePairs) (entities.Implications, error) {
+func ImplyingImplications(tx *Tx, pairs entities.TagIdValueIdPairs) (entities.Implications, error) {
 	sql := `
 SELECT tag.id, tag.name,
        value.id, value.name,
@@ -104,16 +104,16 @@ INNER JOIN tag implying_tag ON implication.implying_tag_id = implying_tag.id
 LEFT OUTER JOIN value implying_value ON implication.implying_value_id = implying_value.id
 WHERE `
 
-	params := make([]interface{}, len(tagValuePairs)*2)
-	for index, tagValuePair := range tagValuePairs {
+	params := make([]interface{}, len(pairs)*2)
+	for index, pair := range pairs {
 		if index > 0 {
 			sql += "   OR "
 		}
 
 		sql += "(implication.implied_tag_id = ? AND implication.implied_value_id = ?)"
 
-		params[index*2] = tagValuePair.TagId
-		params[index*2+1] = tagValuePair.ValueId
+		params[index*2] = pair.TagId
+		params[index*2+1] = pair.ValueId
 	}
 
 	sql += `
@@ -134,12 +134,12 @@ ORDER BY tag.name, value.name, implying_tag.name, implying_value.name`
 }
 
 // Adds the specified implications
-func AddImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
+func AddImplication(tx *Tx, pair, impliedPair entities.TagIdValueIdPair) error {
 	sql := `
 INSERT OR IGNORE INTO implication (tag_id, value_id, implied_tag_id, implied_value_id)
 VALUES (?1, ?2, ?3, ?4)`
 
-	_, err := tx.Exec(sql, tagValuePair.TagId, tagValuePair.ValueId, impliedTagValuePair.TagId, impliedTagValuePair.ValueId)
+	_, err := tx.Exec(sql, pair.TagId, pair.ValueId, impliedPair.TagId, impliedPair.ValueId)
 	if err != nil {
 		return err
 	}
@@ -148,7 +148,7 @@ VALUES (?1, ?2, ?3, ?4)`
 }
 
 // Deletes the specified implication
-func DeleteImplication(tx *Tx, tagValuePair, impliedTagValuePair entities.TagValuePair) error {
+func DeleteImplication(tx *Tx, pair, impliedPair entities.TagIdValueIdPair) error {
 	sql := `
 DELETE FROM implication
 WHERE tag_id = ?1 AND
@@ -156,7 +156,7 @@ WHERE tag_id = ?1 AND
       implied_tag_id = ?3 AND
       implied_value_id = ?4`
 
-	result, err := tx.Exec(sql, tagValuePair.TagId, tagValuePair.ValueId, impliedTagValuePair.TagId, impliedTagValuePair.ValueId)
+	result, err := tx.Exec(sql, pair.TagId, pair.ValueId, impliedPair.TagId, impliedPair.ValueId)
 	if err != nil {
 		return err
 	}
@@ -166,7 +166,7 @@ WHERE tag_id = ?1 AND
 		return err
 	}
 	if rowsAffected == 0 {
-		return NoSuchImplicationError{tagValuePair, impliedTagValuePair}
+		return NoSuchImplicationError{pair, impliedPair}
 	}
 	if rowsAffected > 1 {
 		panic("expected exactly one row to be affected")

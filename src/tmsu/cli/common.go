@@ -112,58 +112,17 @@ func createValue(store *storage.Storage, tx *storage.Tx, valueName string) (*ent
 	return value, nil
 }
 
-func parseTagValuePairs(tagArgs []string, store *storage.Storage, tx *storage.Tx, settings entities.Settings) (entities.TagValuePairs, bool, error) {
-	tagValuePairs := make([]entities.TagValuePair, 0, 10)
+func parseTagValueName(tagArg string) (tagName, valueName string) {
+	index := strings.Index(tagArg, "=")
 
-	warnings := false
-	for _, tagArg := range tagArgs {
-		var tagName, valueName string
-		index := strings.Index(tagArg, "=")
-
-		switch index {
-		case -1, 0:
-			tagName = tagArg
-		default:
-			tagName = tagArg[0:index]
-			valueName = tagArg[index+1 : len(tagArg)]
-		}
-
-		tag, err := store.TagByName(tx, tagName)
-		if err != nil {
-			return nil, warnings, err
-		}
-		if tag == nil {
-			if settings.AutoCreateTags() {
-				tag, err = createTag(store, tx, tagName)
-				if err != nil {
-					return nil, warnings, err
-				}
-			} else {
-				log.Warnf("no such tag '%v'.", tagName)
-				warnings = true
-				continue
-			}
-		}
-
-		value, err := store.ValueByName(tx, valueName)
-		if err != nil {
-			return nil, warnings, err
-		}
-		if value == nil {
-			if settings.AutoCreateValues() {
-				value, err = createValue(store, tx, valueName)
-				if err != nil {
-					return nil, warnings, err
-				}
-			} else {
-				log.Warnf("no such value '%v'.", valueName)
-				warnings = true
-				continue
-			}
-		}
-
-		tagValuePairs = append(tagValuePairs, entities.TagValuePair{tag.Id, value.Id})
+	switch index {
+	case -1, 0:
+		tagName = tagArg
+		valueName = ""
+	default:
+		tagName = tagArg[0:index]
+		valueName = tagArg[index+1 : len(tagArg)]
 	}
 
-	return tagValuePairs, warnings, nil
+	return
 }

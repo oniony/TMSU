@@ -7,19 +7,16 @@ tmsu imply vegetable aubergine    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
-tmsu imply                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr  
-
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
 tmsu: new tag 'vegetable'
+tmsu: cannot add implication of 'vegetable' to 'aubergine': implication would create a cycle
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-aubergine -> vegetable
-vegetable -> aubergine
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

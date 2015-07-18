@@ -22,15 +22,26 @@ type Implication struct {
 	ImpliedValue  Value
 }
 
-func (implication Implication) ImplyingTagValuePair() TagValuePair {
-	return TagValuePair{implication.ImplyingTag.Id, implication.ImplyingValue.Id}
+func (implication Implication) ImplyingTagValuePair() TagIdValueIdPair {
+	return TagIdValueIdPair{implication.ImplyingTag.Id, implication.ImplyingValue.Id}
 }
 
-func (implication Implication) ImpliedTagValuePair() TagValuePair {
-	return TagValuePair{implication.ImpliedTag.Id, implication.ImpliedValue.Id}
+func (implication Implication) ImpliedTagValuePair() TagIdValueIdPair {
+	return TagIdValueIdPair{implication.ImpliedTag.Id, implication.ImpliedValue.Id}
 }
 
 type Implications []*Implication
+
+func (implications Implications) Contains(implication Implication) bool {
+	for _, i := range implications {
+		if i.ImplyingTag.Id == implication.ImplyingTag.Id && i.ImplyingValue.Id == implication.ImplyingValue.Id &&
+			i.ImpliedTag.Id == implication.ImpliedTag.Id && i.ImpliedValue.Id == implication.ImpliedValue.Id {
+			return true
+		}
+	}
+
+	return false
+}
 
 func (implications Implications) Any(predicate func(Implication) bool) bool {
 	for _, implication := range implications {
@@ -43,18 +54,18 @@ func (implications Implications) Any(predicate func(Implication) bool) bool {
 }
 
 func (implications Implications) Where(predicate func(Implication) bool) Implications {
-	result := make(Implications, 0, 10)
+	matches := make(Implications, 0, 10)
 
 	for _, implication := range implications {
 		if predicate(*implication) {
-			result = append(result, implication)
+			matches = append(matches, implication)
 		}
 	}
 
-	return result
+	return matches
 }
 
-func (implications Implications) Implies(tagValuePair TagValuePair) bool {
+func (implications Implications) Implies(tagValuePair TagIdValueIdPair) bool {
 	for _, implication := range implications {
 		if implication.ImpliedTag.Id == tagValuePair.TagId && implication.ImpliedValue.Id == tagValuePair.ValueId {
 			return true

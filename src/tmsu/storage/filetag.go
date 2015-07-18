@@ -31,7 +31,11 @@ func (storage *Storage) FileTagExists(tx *Tx, fileId entities.FileId, tagId enti
 		return false, err
 	}
 
-	return fileTags.Contains(entities.TagValuePair{tagId, valueId}), nil
+	predicate := func(fileTag entities.FileTag) bool {
+		return fileTag.TagId == tagId && fileTag.ValueId == valueId
+	}
+
+	return fileTags.Any(predicate), nil
 }
 
 // Retrieves the total count of file tags in the database.
@@ -201,22 +205,24 @@ func (storage *Storage) CopyFileTags(tx *Tx, sourceTagId, destTagId entities.Tag
 // unexported
 
 func (storage *Storage) addImpliedFileTags(tx *Tx, fileTags entities.FileTags) (entities.FileTags, error) {
-	tagValuePairs := make(entities.TagValuePairs, 0, len(fileTags))
-	for _, fileTag := range fileTags {
-		tagValuePairs = append(tagValuePairs, entities.TagValuePair{fileTag.TagId, fileTag.ValueId})
-	}
-
 	// WARN: this cannot use 'range' as fileTags is expanded within the loop
 	for index := 0; index < len(fileTags); index++ {
 		fileTag := fileTags[index]
 
-		implications, err := storage.ImplicationsFor(tx, fileTag.TagValuePair())
+		implications, err := storage.ImplicationsFor(tx, fileTag.ToTagIdValueIdPair())
 		if err != nil {
 			return nil, err
 		}
 
 		for _, implication := range implications {
-			impliedFileTag := fileTags.Find(fileTag.FileId, implication.ImpliedTag.Id, implication.ImpliedValue.Id)
+			predicate := func(ft entities.FileTag) bool {
+				return ft.FileId == fileTag.FileId &&
+					ft.TagId == implication.ImpliedTag.Id &&
+					ft.ValueId == implication.ImpliedValue.Id
+			}
+
+			impliedFileTag := fileTags.Where(predicate).Single()
+
 			if impliedFileTag != nil {
 				impliedFileTag.Implicit = true
 			} else {

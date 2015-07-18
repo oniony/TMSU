@@ -17,29 +17,39 @@ export GOPATH:=$(GOPATH):$(PWD)
 all: clean compile dist test
 
 clean:
-	@echo "* Cleaning"
+	@echo
+	@echo "CLEANING"
+	@echo
 	go clean tmsu
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
 
 compile:
-	@echo "* Compiling"
+	@echo
+	@echo "COMPILING"
+	@echo
 	@mkdir -p bin
 	go build -o bin/tmsu tmsu
 
 test: unit-test integration-test
 
 unit-test:
-	@echo "* Running unit tests"
+	@echo
+	@echo "RUNNING UNIT TESTS"
+	@echo
 	go test tmsu/...
 
 integration-test:
-	@echo "* Running integration tests"
+	@echo
+	@echo "RUNNING INTEGRATION TESTS"
+	@echo
 	@cd tests && ./runall
 
 dist: compile
-	@echo "* Packaging distributable"
+	@echo
+	@echo "PACKAGING DISTRIBUTABLE"
+	@echo
 	@mkdir -p $(DIST_DIR)
 	cp -R bin $(DIST_DIR)
 	cp README.md $(DIST_DIR)
@@ -53,25 +63,20 @@ dist: compile
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
 install:
-	@echo "* Installing TMSU"
+	@echo
+	@echo "INSTALLING"
+	@echo
 	cp bin/tmsu $(INSTALL_DIR)
-	@echo "* Installing 'mount' command support"
 	cp misc/bin/mount.tmsu $(MOUNT_INSTALL_DIR)
-	@echo "* Installing scripts"
 	cp misc/bin/tmsu-* $(INSTALL_DIR)
-	@echo "* Installing man page"
 	mkdir -p $(MAN_INSTALL_DIR)
 	gzip -fc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
-	@echo "* Installing Zsh completion"
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
 	cp misc/zsh/_tmsu $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
-	@echo "* Uninstalling TMSU"
+	@echo "UNINSTALLING"
 	rm $(INSTALL_DIR)/tmsu
-	@echo "* Uninstalling mount support"
 	rm $(MOUNT_INSTALL_DIR)/mount.tmsu
-	@echo "* Uninstalling man page"
 	rm $(MAN_INSTALL_DIR)/tmsu.1.gz
-	@echo "* Uninstalling Zsh completion"
 	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu

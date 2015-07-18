@@ -84,8 +84,8 @@ func (err NoSuchFileTagError) Error() string {
 }
 
 type NoSuchImplicationError struct {
-	TagValuePair        entities.TagValuePair
-	ImpliedTagValuePair entities.TagValuePair
+	TagValuePair        entities.TagIdValueIdPair
+	ImpliedTagValuePair entities.TagIdValueIdPair
 }
 
 func (err NoSuchImplicationError) Error() string {

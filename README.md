@@ -125,6 +125,9 @@ v0.6 (in development)
     up to you to manage them.
   * Tag values can be explicitly created: tmsu tag --create =2015. (It may
     be necessary to enclose the argument in quotes depending upon your shell.)
+  * It is no longer possible to add a circular tag implication. (These were
+    not correctly applied anyway. An alias facility will be provided in a later
+    version.)
   * Added integration tests covering CLI.
 
 v0.5.2

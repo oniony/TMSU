@@ -84,26 +84,26 @@ type Tx struct {
 
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
 	log.Infof(3, query)
-	log.Infof(3, "Params: %v", args)
+	log.Infof(3, "params: %v", args)
 
 	return tx.tx.Exec(query, args...)
 }
 
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
 	log.Infof(3, query)
-	log.Infof(3, "Params: %v", args)
+	log.Infof(3, "params: %v", args)
 
 	return tx.tx.Query(query, args...)
 }
 
 func (tx *Tx) Commit() error {
-	log.Infof(2, "Committing transaction")
+	log.Infof(2, "committing transaction")
 
 	return tx.tx.Commit()
 }
 
 func (tx *Tx) Rollback() error {
-	log.Infof(2, "Rolling back transaction")
+	log.Infof(2, "rolling back transaction")
 
 	return tx.tx.Rollback()
 }
@@ -112,7 +112,7 @@ func (tx *Tx) Rollback() error {
 
 func readCount(rows *sql.Rows) (uint, error) {
 	if !rows.Next() {
-		return 0, errors.New("Could not get count.")
+		return 0, errors.New("could not get count")
 	}
 	if rows.Err() != nil {
 		return 0, rows.Err()

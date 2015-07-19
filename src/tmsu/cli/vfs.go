@@ -38,9 +38,9 @@ It is not normally necessary to issue this subcommand manually unless debugging 
 
 // unexported
 
-func vfsExec(store *storage.Storage, options Options, args []string) error {
+func vfsExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) == 0 {
-		fmt.Errorf("mountpoint not specified")
+		return fmt.Errorf("mountpoint not specified"), nil
 	}
 
 	mountOptions := []string{}
@@ -52,11 +52,11 @@ func vfsExec(store *storage.Storage, options Options, args []string) error {
 
 	vfs, err := vfs.MountVfs(store, mountPath, mountOptions)
 	if err != nil {
-		return fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
+		return fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err), nil
 	}
 	defer vfs.Unmount()
 
 	vfs.Serve()
 
-	return nil
+	return nil, nil
 }

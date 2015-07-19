@@ -37,13 +37,13 @@ Attempting to rename a tag or value with a name that already exists will result 
 
 // unexported
 
-func renameExec(store *storage.Storage, options Options, args []string) error {
+func renameExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) < 2 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
 	if len(args) > 2 {
-		return fmt.Errorf("too many arguments")
+		return fmt.Errorf("too many arguments"), nil
 	}
 
 	currentName := args[0]
@@ -51,17 +51,15 @@ func renameExec(store *storage.Storage, options Options, args []string) error {
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if options.HasOption("--value") {
-		err = renameValue(store, tx, currentName, newName)
+		return renameValue(store, tx, currentName, newName), nil
 	} else {
-		err = renameTag(store, tx, currentName, newName)
+		return renameTag(store, tx, currentName, newName), nil
 	}
-
-	return err
 }
 
 func renameTag(store *storage.Storage, tx *storage.Tx, currentName, newName string) error {

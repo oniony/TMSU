@@ -38,18 +38,18 @@ var ValuesCommand = Command{
 
 // unexported
 
-func valuesExec(store *storage.Storage, options Options, args []string) error {
+func valuesExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if len(args) == 0 {
-		return listAllValues(store, tx, showCount, onePerLine)
+		return listAllValues(store, tx, showCount, onePerLine), nil
 	}
 
 	return listValues(store, tx, args, showCount, onePerLine)
@@ -88,17 +88,15 @@ func listAllValues(store *storage.Storage, tx *storage.Tx, showCount, onePerLine
 	return nil
 }
 
-func listValues(store *storage.Storage, tx *storage.Tx, tagNames []string, showCount, onePerLine bool) error {
+func listValues(store *storage.Storage, tx *storage.Tx, tagNames []string, showCount, onePerLine bool) (error, warnings) {
 	switch len(tagNames) {
 	case 0:
-		return fmt.Errorf("at least one tag must be specified")
+		return fmt.Errorf("at least one tag must be specified"), nil
 	case 1:
-		return listValuesForTag(store, tx, tagNames[0], showCount, onePerLine)
+		return listValuesForTag(store, tx, tagNames[0], showCount, onePerLine), nil
 	default:
 		return listValuesForTags(store, tx, tagNames, showCount, onePerLine)
 	}
-
-	return nil
 }
 
 func listValuesForTag(store *storage.Storage, tx *storage.Tx, tagName string, showCount, onePerLine bool) error {
@@ -137,16 +135,16 @@ func listValuesForTag(store *storage.Storage, tx *storage.Tx, tagName string, sh
 	return nil
 }
 
-func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string, showCount, onePerLine bool) error {
-	wereErrors := false
+func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string, showCount, onePerLine bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err), warnings
 		}
 		if tag == nil {
-			log.Warnf("no such tag, '%v'.", tagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such tag, '%v'.", tagName))
 			continue
 		}
 
@@ -154,7 +152,7 @@ func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string
 
 		values, err := store.ValuesByTag(tx, tag.Id)
 		if err != nil {
-			return fmt.Errorf("could not retrieve values for tag '%v': %v", tagName, err)
+			return fmt.Errorf("could not retrieve values for tag '%v': %v", tagName, err), warnings
 		}
 
 		if showCount {
@@ -177,9 +175,5 @@ func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

@@ -38,27 +38,27 @@ If a VALUE is specified then the setting is updated.`,
 
 // unexported
 
-func configExec(store *storage.Storage, options Options, args []string) error {
+func configExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	colour, err := useColour(options)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	if len(args) == 0 {
 		if err := listAllSettings(store, tx, colour); err != nil {
-			return fmt.Errorf("could not list settings")
+			return fmt.Errorf("could not list settings"), nil
 		}
 	}
 
 	if len(args) == 1 && strings.Index(args[0], "=") == -1 {
 		printSettingValue(store, tx, args[0])
-		return nil
+		return nil, nil
 	}
 
 	for _, arg := range args {
@@ -67,21 +67,21 @@ func configExec(store *storage.Storage, options Options, args []string) error {
 		case 1:
 			name := parts[0]
 			if err := printSetting(store, tx, name, colour); err != nil {
-				return fmt.Errorf("could not show value for setting '%v': %v", name, err)
+				return fmt.Errorf("could not show value for setting '%v': %v", name, err), nil
 			}
 		case 2:
 			name := parts[0]
 			value := parts[1]
 
 			if err := amendSetting(store, tx, name, value); err != nil {
-				return fmt.Errorf("could not amend setting '%v' to '%v': %v", name, value, err)
+				return fmt.Errorf("could not amend setting '%v' to '%v': %v", name, value, err), nil
 			}
 		default:
-			return fmt.Errorf("invalid argument, '%v'", arg)
+			return fmt.Errorf("invalid argument, '%v'", arg), nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func listAllSettings(store *storage.Storage, tx *storage.Tx, colour bool) error {

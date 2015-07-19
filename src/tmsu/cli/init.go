@@ -19,7 +19,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"tmsu/common/log"
 	"tmsu/storage"
 )
 
@@ -40,31 +39,26 @@ The new database is used automatically whenever TMSU is invoked from a directory
 
 // unexported
 
-func initExec(store *storage.Storage, options Options, args []string) error {
+func initExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	paths := args
 
 	if len(paths) == 0 {
 		workingDirectory, err := os.Getwd()
 		if err != nil {
-			return fmt.Errorf("could not identify working directory: %v", err)
+			return fmt.Errorf("could not identify working directory: %v", err), nil
 		}
 
 		paths = []string{workingDirectory}
 	}
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
 	for _, path := range paths {
 		if err := initializeDatabase(path); err != nil {
-			log.Warnf("%v: could not initialize database: %v", path, err)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("%v: could not initialize database: %v", path, err))
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
 func initializeDatabase(path string) error {

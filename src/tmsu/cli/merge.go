@@ -34,14 +34,14 @@ var MergeCommand = Command{
 
 // unexported
 
-func mergeExec(store *storage.Storage, options Options, args []string) error {
+func mergeExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) < 2 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
@@ -49,38 +49,34 @@ func mergeExec(store *storage.Storage, options Options, args []string) error {
 	destName := args[len(args)-1]
 
 	if options.HasOption("--value") {
-		err = mergeValues(store, tx, sourceNames, destName)
+		return mergeValues(store, tx, sourceNames, destName)
 	} else {
-		err = mergeTags(store, tx, sourceNames, destName)
+		return mergeTags(store, tx, sourceNames, destName)
 	}
-
-	return err
 }
 
-func mergeTags(store *storage.Storage, tx *storage.Tx, sourceTagNames []string, destTagName string) error {
+func mergeTags(store *storage.Storage, tx *storage.Tx, sourceTagNames []string, destTagName string) (error, warnings) {
 	destTag, err := store.TagByName(tx, destTagName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
+		return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err), nil
 	}
 	if destTag == nil {
-		return fmt.Errorf("no such tag '%v'", destTagName)
+		return fmt.Errorf("no such tag '%v'", destTagName), nil
 	}
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
 	for _, sourceTagName := range sourceTagNames {
 		if sourceTagName == destTagName {
-			log.Warnf("cannot merge tag '%v' into itself", sourceTagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("cannot merge tag '%v' into itself", sourceTagName))
 			continue
 		}
 
 		sourceTag, err := store.TagByName(tx, sourceTagName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
+			return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err), warnings
 		}
 		if sourceTag == nil {
-			log.Warnf("no such tag '%v'", sourceTagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", sourceTagName))
 			continue
 		}
 
@@ -88,57 +84,50 @@ func mergeTags(store *storage.Storage, tx *storage.Tx, sourceTagNames []string, 
 
 		fileTags, err := store.FileTagsByTagId(tx, sourceTag.Id, true)
 		if err != nil {
-			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err)
+			return fmt.Errorf("could not retrieve files for tag '%v': %v", sourceTagName, err), warnings
 		}
 
 		log.Infof(2, "applying tag '%v' to these files.", destTagName)
 
 		for _, fileTag := range fileTags {
-			_, err = store.AddFileTag(tx, fileTag.FileId, destTag.Id, fileTag.ValueId)
-			if err != nil {
-				return fmt.Errorf("could not apply tag '%v' to file #%v: %v", destTagName, fileTag.FileId, err)
+			if _, err = store.AddFileTag(tx, fileTag.FileId, destTag.Id, fileTag.ValueId); err != nil {
+				return fmt.Errorf("could not apply tag '%v' to file #%v: %v", destTagName, fileTag.FileId, err), warnings
 			}
 		}
 
 		log.Infof(2, "deleting tag '%v'.", sourceTagName)
 
-		err = store.DeleteTag(tx, sourceTag.Id)
-		if err != nil {
-			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err)
+		if err = store.DeleteTag(tx, sourceTag.Id); err != nil {
+			return fmt.Errorf("could not delete tag '%v': %v", sourceTagName, err), warnings
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
-func mergeValues(store *storage.Storage, tx *storage.Tx, sourceValueNames []string, destValueName string) error {
+func mergeValues(store *storage.Storage, tx *storage.Tx, sourceValueNames []string, destValueName string) (error, warnings) {
 	destValue, err := store.ValueByName(tx, destValueName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve value '%v': %v", destValueName, err)
+		return fmt.Errorf("could not retrieve value '%v': %v", destValueName, err), nil
 	}
 	if destValue == nil {
-		return fmt.Errorf("no such value '%v'", destValueName)
+		return fmt.Errorf("no such value '%v'", destValueName), nil
 	}
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
+
 	for _, sourceValueName := range sourceValueNames {
 		if sourceValueName == destValueName {
-			log.Warnf("cannot merge value '%v' into itself", sourceValueName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("cannot merge value '%v' into itself", sourceValueName))
 			continue
 		}
 
 		sourceValue, err := store.ValueByName(tx, sourceValueName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve value '%v': %v", sourceValueName, err)
+			return fmt.Errorf("could not retrieve value '%v': %v", sourceValueName, err), warnings
 		}
 		if sourceValue == nil {
-			log.Warnf("no such value '%v'", sourceValueName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", sourceValueName))
 			continue
 		}
 
@@ -146,29 +135,23 @@ func mergeValues(store *storage.Storage, tx *storage.Tx, sourceValueNames []stri
 
 		fileTags, err := store.FileTagsByValueId(tx, sourceValue.Id)
 		if err != nil {
-			return fmt.Errorf("could not retrieve files for value '%v': %v", sourceValueName, err)
+			return fmt.Errorf("could not retrieve files for value '%v': %v", sourceValueName, err), warnings
 		}
 
 		log.Infof(2, "applying value '%v' to these files.", destValueName)
 
 		for _, fileTag := range fileTags {
-			_, err = store.AddFileTag(tx, fileTag.FileId, fileTag.TagId, destValue.Id)
-			if err != nil {
-				return fmt.Errorf("could not apply value '%v' to file #%v: %v", destValueName, fileTag.FileId, err)
+			if _, err = store.AddFileTag(tx, fileTag.FileId, fileTag.TagId, destValue.Id); err != nil {
+				return fmt.Errorf("could not apply value '%v' to file #%v: %v", destValueName, fileTag.FileId, err), warnings
 			}
 		}
 
 		log.Infof(2, "deleting value '%v'.", sourceValueName)
 
-		err = store.DeleteValue(tx, sourceValue.Id)
-		if err != nil {
-			return fmt.Errorf("could not delete value '%v': %v", sourceValueName, err)
+		if err = store.DeleteValue(tx, sourceValue.Id); err != nil {
+			return fmt.Errorf("could not delete value '%v': %v", sourceValueName, err), warnings
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

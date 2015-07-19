@@ -27,6 +27,8 @@ import (
 	"tmsu/storage"
 )
 
+//TODO should return warnings for permission errors
+
 var StatusCommand = Command{
 	Name:     "status",
 	Synopsis: "List the file tagging status",
@@ -88,12 +90,12 @@ func NewReport() *StatusReport {
 
 // unexported
 
-func statusExec(store *storage.Storage, options Options, args []string) error {
+func statusExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
@@ -102,18 +104,18 @@ func statusExec(store *storage.Storage, options Options, args []string) error {
 	if len(args) == 0 {
 		report, err = statusDatabase(store, tx, dirOnly)
 		if err != nil {
-			return err
+			return err, nil
 		}
 	} else {
 		report, err = statusPaths(store, tx, args, dirOnly)
 		if err != nil {
-			return err
+			return err, nil
 		}
 	}
 
 	printReport(report)
 
-	return nil
+	return nil, nil
 }
 
 func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*StatusReport, error) {

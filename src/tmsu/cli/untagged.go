@@ -39,7 +39,7 @@ Where PATHs are not specified, untagged items under the current working director
 
 // unexported
 
-func untaggedExec(store *storage.Storage, options Options, args []string) error {
+func untaggedExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	recursive := !options.HasOption("--directory")
 
 	paths := args
@@ -47,21 +47,21 @@ func untaggedExec(store *storage.Storage, options Options, args []string) error 
 		var err error
 		paths, err = directoryEntries(".")
 		if err != nil {
-			return err
+			return err, nil
 		}
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if err := findUntagged(store, tx, paths, recursive); err != nil {
-		return err
+		return err, nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
@@ -99,9 +99,11 @@ func directoryEntries(path string) ([]string, error) {
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
+			//TODO return as warning
 			log.Warnf("%v: does not exist", path)
 			return []string{}, nil
 		case os.IsPermission(err):
+			//TODO return as warning
 			log.Warnf("%v: permission denied", path)
 			return []string{}, nil
 		default:

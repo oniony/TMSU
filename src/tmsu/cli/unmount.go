@@ -39,16 +39,16 @@ var UnmountCommand = Command{
 
 // unexported
 
-func unmountExec(store *storage.Storage, options Options, args []string) error {
+func unmountExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if options.HasOption("--all") {
-		return unmountAll()
+		return unmountAll(), nil
 	}
 
 	if len(args) < 1 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
-	return unmount(args[0])
+	return unmount(args[0]), nil
 }
 
 func unmount(path string) error {

@@ -61,16 +61,22 @@ func Run() {
 		log.Fatalf("could not open storage: %v", err)
 	}
 
-	if err = processCommand(store, command, options, arguments); err != nil {
-		if err != errBlank {
-			log.Warn(err.Error())
-		}
+	err, warnings := command.Exec(store, options, arguments)
+	store.Close()
 
-		store.Close()
-		os.Exit(1)
+	if warnings != nil {
+		for _, warning := range warnings {
+			log.Warn(warning)
+		}
 	}
 
-	store.Close()
+	if err != nil {
+		log.Warn(err.Error())
+	}
+
+	if err != nil || (warnings != nil && len(warnings) > 0) {
+		os.Exit(1)
+	}
 }
 
 // unexported
@@ -141,14 +147,6 @@ func findCommand(commands []*Command, commandName string) *Command {
 			}
 		}
 
-	}
-
-	return nil
-}
-
-func processCommand(store *storage.Storage, command *Command, options Options, arguments []string) error {
-	if err := command.Exec(store, options, arguments); err != nil {
-		return err
 	}
 
 	return nil

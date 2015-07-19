@@ -34,12 +34,12 @@ var VersionCommand = Command{
 
 // unexported
 
-func versionExec(store *storage.Storage, options Options, args []string) error {
+func versionExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	fmt.Println("TMSU", version.Version)
 	fmt.Println()
 	terminal.PrintWrapped(`Copyright © 2011-2015 Paul Ruane.
 
 This program comes with ABSOLUTELY NO WARRANTY. This is free software, and you are welcome to redistribute it under certain conditions. See the accompanying COPYING file for further details.`)
 
-	return nil
+	return nil, nil
 }

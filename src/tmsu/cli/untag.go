@@ -42,121 +42,108 @@ var UntagCommand = Command{
 
 // unexported
 
-func untagExec(store *storage.Storage, options Options, args []string) error {
+func untagExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) < 1 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
 	recursive := options.HasOption("--recursive")
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if options.HasOption("--all") {
 		if len(args) < 1 {
-			return fmt.Errorf("files to untag must be specified")
+			return fmt.Errorf("files to untag must be specified"), nil
 		}
 
 		paths := args
 
-		if err := untagPathsAll(store, tx, paths, recursive); err != nil {
-			return err
-		}
+		return untagPathsAll(store, tx, paths, recursive)
 	} else if options.HasOption("--tags") {
 		tagArgs := strings.Fields(options.Get("--tags").Argument)
 		if len(tagArgs) == 0 {
-			return fmt.Errorf("set of tags to apply must be specified")
+			return fmt.Errorf("set of tags to apply must be specified"), nil
 		}
 
 		paths := args
 		if len(paths) < 1 {
-			return fmt.Errorf("at least one file to untag must be specified")
+			return fmt.Errorf("at least one file to untag must be specified"), nil
 		}
 
-		if err := untagPaths(store, tx, paths, tagArgs, recursive); err != nil {
-			return err
-		}
+		return untagPaths(store, tx, paths, tagArgs, recursive)
 	} else {
 		if len(args) < 2 {
-			return fmt.Errorf("tags to remove and files to untag must be specified")
+			return fmt.Errorf("tags to remove and files to untag must be specified"), nil
 		}
 
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		if err := untagPaths(store, tx, paths, tagArgs, recursive); err != nil {
-			return err
-		}
+		return untagPaths(store, tx, paths, tagArgs, recursive)
 	}
-
-	return nil
 }
 
-func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
-	wereErrors := false
+func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err), warnings
 		}
 
 		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err), warnings
 		}
 		if file == nil {
-			log.Warnf("%v: file is not tagged.", path)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("%v: file is not tagged.", path))
 			continue
 		}
 
 		log.Infof(2, "%v: removing all tags.", file.Path())
 
 		if err := store.DeleteFileTagsByFileId(tx, file.Id); err != nil {
-			return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err)
+			return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err), warnings
 		}
 
 		if recursive {
 			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
-				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path()), warnings
 			}
 
 			for _, childFile := range childFiles {
 				if err := store.DeleteFileTagsByFileId(tx, childFile.Id); err != nil {
-					return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err)
+					return fmt.Errorf("%v: could not remove file's tags: %v", childFile.Path(), err), warnings
 				}
 			}
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
-func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string, recursive bool) error {
-	wereErrors := false
+func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string, recursive bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
 
 	files := make(entities.Files, 0, len(paths))
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
+			return fmt.Errorf("%v: could not get absolute path: %v", path, err), warnings
 		}
 
 		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+			return fmt.Errorf("%v: could not retrieve file: %v", path, err), warnings
 		}
 		if file == nil {
-			log.Warnf("%v: file is not tagged", path)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("%v: file is not tagged", path))
 			continue
 		}
 
@@ -165,7 +152,7 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 		if recursive {
 			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
-				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path())
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path()), warnings
 			}
 
 			files = append(files, childFiles...)
@@ -186,21 +173,19 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err), warnings
 		}
 		if tag == nil {
-			log.Warnf("no such tag '%v'", tagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
 			continue
 		}
 
 		value, err := store.ValueByName(tx, valueName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
+			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err), warnings
 		}
 		if value == nil {
-			log.Warnf("no such value '%v'", valueName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
 			continue
 		}
 
@@ -210,34 +195,28 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 				case storage.FileTagDoesNotExist:
 					exists, err := store.FileTagExists(tx, file.Id, tag.Id, value.Id, false)
 					if err != nil {
-						return fmt.Errorf("could not check if tag exists: %v", err)
+						return fmt.Errorf("could not check if tag exists: %v", err), warnings
 					}
 
 					if exists {
 						if value.Id != 0 {
-							log.Warnf("%v: cannot remove '%v=%v': delete implication  to remove this tag.", file.Path(), tag.Name, value.Name)
+							warnings = append(warnings, fmt.Sprintf("%v: cannot remove '%v=%v': delete implication  to remove this tag.", file.Path(), tag.Name, value.Name))
 						} else {
-							log.Warnf("%v: cannot remove '%v': delete implication to remove this tag.", file.Path(), tag.Name)
+							warnings = append(warnings, fmt.Sprintf("%v: cannot remove '%v': delete implication to remove this tag.", file.Path(), tag.Name))
 						}
 					} else {
 						if value.Id != 0 {
-							log.Warnf("%v: file is not tagged '%v=%v'.", file.Path(), tag.Name, value.Name)
+							warnings = append(warnings, fmt.Sprintf("%v: file is not tagged '%v=%v'.", file.Path(), tag.Name, value.Name))
 						} else {
-							log.Warnf("%v: file is not tagged '%v'.", file.Path(), tag.Name)
+							warnings = append(warnings, fmt.Sprintf("%v: file is not tagged '%v'.", file.Path(), tag.Name))
 						}
 					}
-
-					wereErrors = true
 				default:
-					return fmt.Errorf("%v: could not remove tag '%v', value '%v': %v", file.Path(), tag.Name, value.Name, err)
+					return fmt.Errorf("%v: could not remove tag '%v', value '%v': %v", file.Path(), tag.Name, value.Name, err), warnings
 				}
 			}
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

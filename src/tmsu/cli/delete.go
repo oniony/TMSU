@@ -17,7 +17,6 @@ package cli
 
 import (
 	"fmt"
-	"tmsu/common/log"
 	"tmsu/storage"
 )
 
@@ -35,74 +34,63 @@ var DeleteCommand = Command{
 
 // unexported
 
-func deleteExec(store *storage.Storage, options Options, args []string) error {
+func deleteExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) == 0 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if options.HasOption("--value") {
-		err = deleteValue(store, tx, args)
+		return deleteValue(store, tx, args)
 	} else {
-		err = deleteTag(store, tx, args)
+		return deleteTag(store, tx, args)
 	}
-
-	return err
 }
 
-func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) error {
-	wereErrors := false
+func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	for _, tagName := range tagNames {
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err)
+			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err), warnings
 		}
 		if tag == nil {
-			log.Warnf("no such tag '%v'", tagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
 			continue
 		}
 
 		err = store.DeleteTag(tx, tag.Id)
 		if err != nil {
-			return fmt.Errorf("could not delete tag '%v': %v", tagName, err)
+			return fmt.Errorf("could not delete tag '%v': %v", tagName, err), warnings
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
-func deleteValue(store *storage.Storage, tx *storage.Tx, valueNames []string) error {
-	wereErrors := false
+func deleteValue(store *storage.Storage, tx *storage.Tx, valueNames []string) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	for _, valueName := range valueNames {
 		value, err := store.ValueByName(tx, valueName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err)
+			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err), warnings
 		}
 		if value == nil {
-			log.Warnf("no such value '%v'", valueName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
 			continue
 		}
 
-		err = store.DeleteValue(tx, value.Id)
-		if err != nil {
-			return fmt.Errorf("could not delete value '%v': %v", valueName, err)
+		if err = store.DeleteValue(tx, value.Id); err != nil {
+			return fmt.Errorf("could not delete value '%v': %v", valueName, err), warnings
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

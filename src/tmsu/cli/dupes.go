@@ -40,23 +40,23 @@ var DupesCommand = Command{
 
 // unexported
 
-func dupesExec(store *storage.Storage, options Options, args []string) error {
+func dupesExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	switch len(args) {
 	case 0:
-		return findDuplicatesInDb(store, tx)
+		return findDuplicatesInDb(store, tx), nil
 	default:
 		return findDuplicatesOf(store, tx, args, recursive)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func findDuplicatesInDb(store *storage.Storage, tx *storage.Tx) error {
@@ -85,39 +85,33 @@ func findDuplicatesInDb(store *storage.Storage, tx *storage.Tx) error {
 	return nil
 }
 
-func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
+func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) (error, warnings) {
 	settings, err := store.Settings(tx)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
 	for _, path := range paths {
 		_, err := os.Stat(path)
 		if err != nil {
 			switch {
 			case os.IsNotExist(err):
-				log.Warnf("%v: no such file", path)
-				wereErrors = true
+				warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
 				continue
 			case os.IsPermission(err):
-				log.Warnf("%v: permission denied", path)
-				wereErrors = true
+				warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
 				continue
 			default:
-				return err
+				return err, warnings
 			}
 		}
-	}
-
-	if wereErrors {
-		return errBlank
 	}
 
 	if recursive {
 		p, err := filesystem.Enumerate(paths...)
 		if err != nil {
-			return fmt.Errorf("could not enumerate paths: %v", err)
+			return fmt.Errorf("could not enumerate paths: %v", err), warnings
 		}
 
 		paths = make([]string, len(p))
@@ -132,7 +126,7 @@ func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, re
 
 		fp, err := fingerprint.Create(path, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
 		if err != nil {
-			return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
+			return fmt.Errorf("%v: could not create fingerprint: %v", path, err), warnings
 		}
 
 		if fp == fingerprint.Fingerprint("") {
@@ -141,12 +135,12 @@ func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, re
 
 		files, err := store.FilesByFingerprint(tx, fp)
 		if err != nil {
-			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fp, err)
+			return fmt.Errorf("%v: could not retrieve files matching fingerprint '%v': %v", path, fp, err), warnings
 		}
 
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return fmt.Errorf("%v: could not determine absolute path: %v", path, err)
+			return fmt.Errorf("%v: could not determine absolute path: %v", path, err), warnings
 		}
 
 		// filter out the file we're searching on
@@ -173,5 +167,5 @@ func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, re
 		}
 	}
 
-	return nil
+	return nil, warnings
 }

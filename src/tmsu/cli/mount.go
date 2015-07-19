@@ -52,7 +52,7 @@ To allow other users access to the mounted filesystem, pass the 'allow_other' FU
 
 // unexported
 
-func mountExec(store *storage.Storage, options Options, args []string) error {
+func mountExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	var mountOptions string
 	if options.HasOption("--options") {
 		mountOptions = options.Get("--options").Argument
@@ -60,36 +60,33 @@ func mountExec(store *storage.Storage, options Options, args []string) error {
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	switch len(args) {
 	case 0:
-		err := listMounts()
-		if err != nil {
-			return err
+		if err := listMounts(); err != nil {
+			return err, nil
 		}
 	case 1:
 		mountPath := args[0]
 
-		err := mountExplicit(store.DbPath, mountPath, mountOptions)
-		if err != nil {
-			return err
+		if err := mountExplicit(store.DbPath, mountPath, mountOptions); err != nil {
+			return err, nil
 		}
 	case 2:
 		databasePath := args[0]
 		mountPath := args[1]
 
-		err := mountExplicit(databasePath, mountPath, mountOptions)
-		if err != nil {
-			return err
+		if err := mountExplicit(databasePath, mountPath, mountOptions); err != nil {
+			return err, nil
 		}
 	default:
-		return fmt.Errorf("too many arguments")
+		return fmt.Errorf("too many arguments"), nil
 	}
 
-	return nil
+	return nil, nil
 }
 
 func listMounts() error {

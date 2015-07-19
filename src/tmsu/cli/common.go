@@ -16,7 +16,6 @@
 package cli
 
 import (
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -28,8 +27,6 @@ import (
 )
 
 // unexported
-
-var errBlank = errors.New("")
 
 func stdoutIsCharDevice() bool {
 	stat, err := os.Stdout.Stat()

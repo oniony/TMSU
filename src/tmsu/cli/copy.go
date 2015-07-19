@@ -35,9 +35,9 @@ var CopyCommand = Command{
 
 // unexported
 
-func copyExec(store *storage.Storage, options Options, args []string) error {
+func copyExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	if len(args) < 2 {
-		return fmt.Errorf("too few arguments")
+		return fmt.Errorf("too few arguments"), nil
 	}
 
 	sourceTagName := args[0]
@@ -45,40 +45,36 @@ func copyExec(store *storage.Storage, options Options, args []string) error {
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	sourceTag, err := store.TagByName(tx, sourceTagName)
 	if err != nil {
-		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err)
+		return fmt.Errorf("could not retrieve tag '%v': %v", sourceTagName, err), nil
 	}
 	if sourceTag == nil {
-		return fmt.Errorf("no such tag '%v'", sourceTagName)
+		return fmt.Errorf("no such tag '%v'", sourceTagName), nil
 	}
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
+
 	for _, destTagName := range destTagNames {
 		destTag, err := store.TagByName(tx, destTagName)
 		if err != nil {
-			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err)
+			return fmt.Errorf("could not retrieve tag '%v': %v", destTagName, err), warnings
 		}
 		if destTag != nil {
-			log.Warnf("a tag with name '%v' already exists", destTagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("a tag with name '%v' already exists", destTagName))
 			continue
 		}
 
 		log.Infof(2, "copying tag '%v' to '%v'.", sourceTagName, destTagName)
 
 		if _, err = store.CopyTag(tx, sourceTag.Id, destTagName); err != nil {
-			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err)
+			return fmt.Errorf("could not copy tag '%v' to '%v': %v", sourceTagName, destTagName, err), warnings
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

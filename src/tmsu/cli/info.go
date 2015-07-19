@@ -38,17 +38,17 @@ var InfoCommand = Command{
 
 // unexported
 
-func infoExec(store *storage.Storage, options Options, args []string) error {
+func infoExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	stats := options.HasOption("--stats")
 	usage := options.HasOption("--usage")
 	colour, err := useColour(options)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
@@ -61,7 +61,7 @@ func infoExec(store *storage.Storage, options Options, args []string) error {
 		showUsage(store, tx, colour)
 	}
 
-	return nil
+	return nil, nil
 }
 
 func showBasic(store *storage.Storage, tx *storage.Tx, colour bool) error {

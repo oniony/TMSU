@@ -47,16 +47,16 @@ mp3 -> music`,
 
 // unexported
 
-func implyExec(store *storage.Storage, options Options, args []string) error {
+func implyExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if options.HasOption("--delete") {
 		if len(args) < 2 {
-			return fmt.Errorf("too few arguments")
+			return fmt.Errorf("too few arguments"), nil
 		}
 
 		return deleteImplications(store, tx, args)
@@ -64,9 +64,9 @@ func implyExec(store *storage.Storage, options Options, args []string) error {
 
 	switch len(args) {
 	case 0:
-		return listImplications(store, tx)
+		return listImplications(store, tx), nil
 	case 1:
-		return fmt.Errorf("tag(s) to be implied must be specified")
+		return fmt.Errorf("tag(s) to be implied must be specified"), nil
 	default:
 		return addImplications(store, tx, args)
 	}
@@ -111,12 +111,12 @@ func listImplications(store *storage.Storage, tx *storage.Tx) error {
 	return nil
 }
 
-func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) error {
+func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	log.Infof(2, "loading settings")
 
 	settings, err := store.Settings(tx)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	implyingTagArg := tagArgs[0]
@@ -126,85 +126,79 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) e
 
 	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	if implyingTag == nil {
 		if settings.AutoCreateTags() {
 			implyingTag, err = createTag(store, tx, implyingTagName)
 			if err != nil {
-				return err
+				return err, nil
 			}
 		} else {
-			return NoSuchTagError{implyingTagName}
+			return NoSuchTagError{implyingTagName}, nil
 		}
 	}
 
 	implyingValue, err := store.ValueByName(tx, implyingValueName)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	if implyingValue == nil {
 		if settings.AutoCreateValues() {
 			implyingValue, err = createValue(store, tx, implyingValueName)
 			if err != nil {
-				return err
+				return err, nil
 			}
 		} else {
-			return NoSuchValueError{implyingValueName}
+			return NoSuchValueError{implyingValueName}, nil
 		}
 	}
 
-	warnings := false
+	warnings := make(warnings, 0, 10)
 	for _, impliedTagArg := range impliedTagArgs {
 		impliedTagName, impliedValueName := parseTagValueName(impliedTagArg)
 
 		impliedTag, err := store.TagByName(tx, impliedTagName)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 		if impliedTag == nil {
 			if settings.AutoCreateTags() {
 				impliedTag, err = createTag(store, tx, impliedTagName)
 				if err != nil {
-					return err
+					return err, warnings
 				}
 			} else {
-				log.Warnf("no such tag '%v'", impliedTagName)
-				warnings = true
+				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", impliedTagName))
 			}
 		}
 
 		impliedValue, err := store.ValueByName(tx, impliedValueName)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 		if impliedValue == nil {
 			if settings.AutoCreateValues() {
 				impliedValue, err = createValue(store, tx, impliedValueName)
 				if err != nil {
-					return err
+					return err, warnings
 				}
 			} else {
-				log.Warnf("no such value '%v'", impliedValueName)
-				warnings = true
+				warnings = append(warnings, fmt.Sprintf("no such value '%v'", impliedValueName))
 			}
 		}
 
 		log.Infof(2, "adding tag implication of '%v' to '%v'", implyingTagArg, impliedTagArg)
 
 		if err = store.AddImplication(tx, entities.TagIdValueIdPair{implyingTag.Id, implyingValue.Id}, entities.TagIdValueIdPair{impliedTag.Id, impliedValue.Id}); err != nil {
-			return fmt.Errorf("cannot add implication of '%v' to '%v': %v", implyingTagArg, impliedTagArg, err)
+			return fmt.Errorf("cannot add implication of '%v' to '%v': %v", implyingTagArg, impliedTagArg, err), warnings
 		}
 	}
 
-	if warnings {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
-func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) error {
+func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	log.Infof(2, "loading settings")
 
 	implyingTagArg := tagArgs[0]
@@ -214,21 +208,21 @@ func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string
 
 	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	if implyingTag == nil {
-		return NoSuchTagError{implyingTagName}
+		return NoSuchTagError{implyingTagName}, nil
 	}
 
 	implyingValue, err := store.ValueByName(tx, implyingValueName)
 	if err != nil {
-		return err
+		return err, nil
 	}
 	if implyingValue == nil {
-		return NoSuchValueError{implyingValueName}
+		return NoSuchValueError{implyingValueName}, nil
 	}
 
-	warnings := false
+	warnings := make(warnings, 0, 10)
 	for _, impliedTagArg := range impliedTagArgs {
 		log.Infof(2, "removing tag implication %v -> %v.", implyingTagArg, impliedTagArg)
 
@@ -236,30 +230,24 @@ func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string
 
 		impliedTag, err := store.TagByName(tx, impliedTagName)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 		if impliedTag == nil {
-			log.Warnf("no such tag '%v'", impliedTagName)
-			warnings = true
+			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", impliedTagName))
 		}
 
 		impliedValue, err := store.ValueByName(tx, impliedValueName)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 		if impliedValue == nil {
-			log.Warnf("no such value '%v'", impliedValueName)
-			warnings = true
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", impliedValueName))
 		}
 
 		if err := store.DeleteImplication(tx, entities.TagIdValueIdPair{implyingTag.Id, implyingValue.Id}, entities.TagIdValueIdPair{impliedTag.Id, impliedValue.Id}); err != nil {
-			return fmt.Errorf("could not delete tag implication of %v to %v: %v", implyingTagArg, impliedTagArg, err)
+			return fmt.Errorf("could not delete tag implication of %v to %v: %v", implyingTagArg, impliedTagArg, err), warnings
 		}
 	}
 
-	if warnings {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }

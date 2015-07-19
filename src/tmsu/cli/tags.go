@@ -53,24 +53,24 @@ See the 'imply' subcommand for more information on implied tags.`,
 
 // unexported
 
-func tagsExec(store *storage.Storage, options Options, args []string) error {
+func tagsExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
 	printPath := options.HasOption("--name")
 	colour, err := useColour(options)
 	if err != nil {
-		return err
+		return err, nil
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
 	if len(args) == 0 {
-		return listAllTags(store, tx, showCount, onePerLine, colour)
+		return listAllTags(store, tx, showCount, onePerLine, colour), nil
 	}
 
 	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour)
@@ -109,21 +109,22 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, 
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour bool) error {
-	wereErrors := false
+func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	printPath = printPath || len(paths) > 1 || !stdoutIsCharDevice()
 
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
-			return err
+			return err, warnings
 		}
 
 		log.Infof(2, "%v: retrieving tags.", path)
 
 		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
-			log.Warn(err.Error())
+			warnings = append(warnings, err.Error())
 			continue
 		}
 
@@ -131,22 +132,20 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 		if file != nil {
 			tagNames, err = tagNamesForFile(store, tx, file.Id, explicitOnly, colour)
 			if err != nil {
-				return err
+				return err, warnings
 			}
 		} else {
 			_, err := os.Stat(absPath)
 			if err != nil {
 				switch {
 				case os.IsPermission(err):
-					log.Warnf("%v: permission denied", path)
-					wereErrors = true
+					warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
 					continue
 				case os.IsNotExist(err):
-					log.Warnf("%v: no such file", path)
-					wereErrors = true
+					warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
 					continue
 				default:
-					return fmt.Errorf("%v: could not stat file: %v", path, err)
+					return fmt.Errorf("%v: could not stat file: %v", path, err), warnings
 				}
 			}
 		}
@@ -185,11 +184,7 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 		}
 	}
 
-	if wereErrors {
-		return errBlank
-	}
-
-	return nil
+	return nil, warnings
 }
 
 func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {

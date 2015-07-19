@@ -28,6 +28,8 @@ import (
 	"tmsu/storage"
 )
 
+//TODO should return warnings for permission errors
+
 var RepairCommand = Command{
 	Name:     "repair",
 	Aliases:  []string{"fix"},
@@ -58,12 +60,12 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 
 // unexported
 
-func repairExec(store *storage.Storage, options Options, args []string) error {
+func repairExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	pretend := options.HasOption("--pretend")
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
@@ -72,7 +74,7 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 		toPath := args[1]
 
 		if err := manualRepair(store, tx, fromPath, toPath, pretend); err != nil {
-			return err
+			return err, nil
 		}
 	} else {
 		searchPaths := args
@@ -86,11 +88,11 @@ func repairExec(store *storage.Storage, options Options, args []string) error {
 		}
 
 		if err := fullRepair(store, tx, searchPaths, limitPath, removeMissing, recalcUnmodified, rationalize, pretend); err != nil {
-			return err
+			return err, nil
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func manualRepair(store *storage.Storage, tx *storage.Tx, fromPath, toPath string, pretend bool) error {

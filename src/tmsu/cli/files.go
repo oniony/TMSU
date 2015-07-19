@@ -59,7 +59,7 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 
 // unexported
 
-func filesExec(store *storage.Storage, options Options, args []string) error {
+func filesExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	print0 := options.HasOption("--print0")
@@ -79,13 +79,13 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 		var err error
 		absPath, err = filepath.Abs(relPath)
 		if err != nil {
-			fmt.Println("could not get absolute path of '%v': %v'", relPath, err)
+			return fmt.Errorf("could not get absolute path of '%v': %v'", relPath, err), nil
 		}
 	}
 
 	tx, err := store.Begin()
 	if err != nil {
-		return err
+		return err, nil
 	}
 	defer tx.Commit()
 
@@ -95,24 +95,23 @@ func filesExec(store *storage.Storage, options Options, args []string) error {
 
 // unexported
 
-func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) error {
+func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) (error, warnings) {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
 	if err != nil {
-		return fmt.Errorf("could not parse query: %v", err)
+		return fmt.Errorf("could not parse query: %v", err), nil
 	}
 
 	log.Info(2, "checking tag names")
 
-	wereErrors := false
+	warnings := make(warnings, 0, 10)
 
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !tags.ContainsName(tagName) {
-			log.Warnf("no such tag '%v'", tagName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
 			continue
 		}
 	}
@@ -121,14 +120,9 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	values, err := store.ValuesByNames(tx, valueNames)
 	for _, valueName := range valueNames {
 		if !values.ContainsName(valueName) {
-			log.Warnf("no such value '%v'", valueName)
-			wereErrors = true
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
 			continue
 		}
-	}
-
-	if wereErrors {
-		return errBlank
 	}
 
 	log.Info(2, "querying database")
@@ -136,17 +130,17 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	files, err := store.FilesForQuery(tx, expression, path, explicitOnly, sort)
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
-			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)")
+			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)"), warnings
 		} else {
-			return fmt.Errorf("could not query files: %v", err)
+			return fmt.Errorf("could not query files: %v", err), warnings
 		}
 	}
 
 	if err = listFiles(tx, files, dirOnly, fileOnly, print0, showCount); err != nil {
-		return err
+		return err, warnings
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func listFiles(tx *storage.Tx, files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {

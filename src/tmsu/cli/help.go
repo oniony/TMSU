@@ -41,7 +41,7 @@ var HelpCommand = Command{
 var helpCommands []*Command
 var colorizeRegexp = regexp.MustCompile(`'\S+'`)
 
-func helpExec(store *storage.Storage, options Options, args []string) error {
+func helpExec(store *storage.Storage, options Options, args []string) (error, warnings) {
 	var colour bool
 	if options.HasOption("--color") {
 		when := options.Get("--color").Argument
@@ -54,7 +54,7 @@ func helpExec(store *storage.Storage, options Options, args []string) error {
 		case "never":
 			colour = false
 		default:
-			return fmt.Errorf("invalid argument '%v' for '--color'", when)
+			return fmt.Errorf("invalid argument '%v' for '--color'", when), nil
 		}
 	} else {
 		colour = terminal.Colour() && terminal.Width() > 0
@@ -72,7 +72,7 @@ func helpExec(store *storage.Storage, options Options, args []string) error {
 		}
 	}
 
-	return nil
+	return nil, nil
 }
 
 func summary(colour bool) {

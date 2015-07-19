@@ -20,6 +20,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type warnings []string
+
 type NoSuchTagError struct {
 	Name string
 }

@@ -27,6 +27,6 @@ type Command struct {
 	Description string
 	Examples    []string
 	Options     Options
-	Exec        func(*storage.Storage, Options, []string) error
+	Exec        func(*storage.Storage, Options, []string) (error, warnings)
 	Hidden      bool
 }

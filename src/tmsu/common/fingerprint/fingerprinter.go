@@ -34,11 +34,7 @@ const sparseFingerprintSize = 512 * 1024
 func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			return Empty, nil
-		}
-
-		return Empty, fmt.Errorf("'%v': could not determine if path is a directory: %v", path, err)
+		return Empty, err
 	}
 
 	if stat.IsDir() {

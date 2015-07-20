@@ -28,8 +28,6 @@ import (
 	"tmsu/storage"
 )
 
-//TODO should return warnings for permission errors
-
 var RepairCommand = Command{
 	Name:     "repair",
 	Aliases:  []string{"fix"},
@@ -288,9 +286,11 @@ func determineStatuses(dbFiles entities.Files) (unmodified, modified, missing en
 		if err != nil {
 			switch {
 			case os.IsPermission(err):
+				//TODO return as warning
 				log.Warnf("%v: permission denied", dbFile.Path())
 				continue
 			case os.IsNotExist(err):
+				//TODO return as warning
 				log.Infof(2, "%v: missing", dbFile.Path())
 				missing = append(missing, dbFile)
 				continue

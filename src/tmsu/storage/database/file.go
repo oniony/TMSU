@@ -461,8 +461,8 @@ id IN (SELECT file_id
                             WHERE b.implied_tag_id = working.tag_id AND
                                   (working.value_id = 0 OR b.implied_value_id = working.value_id)
                         )
-                            SELECT tag_id
-                            FROM working
+                        SELECT tag_id
+                        FROM working
                        )
       )`)
 	}
@@ -539,24 +539,24 @@ func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, expl
 }
 
 func buildPathClause(path string, builder *SqlBuilder) {
+	if path == "" {
+		return
+	}
+
 	path = filepath.Clean(path)
 
 	dir, name := filepath.Split(path)
 	dir = filepath.Clean(dir)
 
-	if path != "" {
-		builder.AppendSql("AND (directory = ")
-		builder.AppendParam(path)
-		builder.AppendSql(" OR directory LIKE ")
-		builder.AppendParam(filepath.Join(path, "%"))
-		builder.AppendSql(" OR (directory = ")
-		builder.AppendParam(dir)
-		builder.AppendSql(" AND name = ")
-		builder.AppendParam(name)
-		builder.AppendSql("))\n")
-
-		//builder.AppendSql("AND (directory = '" + path + "' OR directory LIKE '" + filepath.Join(path, "%") + "'x OR (directory = '" + dir + "' AND name = '" + name + "'))\n")
-	}
+	builder.AppendSql("AND (directory = ")
+	builder.AppendParam(path)
+	builder.AppendSql(" OR directory LIKE ")
+	builder.AppendParam(filepath.Join(path, "%"))
+	builder.AppendSql(" OR (directory = ")
+	builder.AppendParam(dir)
+	builder.AppendSql(" AND name = ")
+	builder.AppendParam(name)
+	builder.AppendSql("))\n")
 }
 
 func buildSort(sort string, builder *SqlBuilder) {

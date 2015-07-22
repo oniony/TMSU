@@ -16,37 +16,56 @@
 package database
 
 import (
+	"bytes"
 	"strconv"
 )
 
 type SqlBuilder struct {
-	Sql    string
-	Params []interface{}
-
-	paramIndex int
-	needsComma bool
+	sql             bytes.Buffer
+	params          []interface{}
+	paramIndex      int
+	needsParamComma bool
 }
 
 func NewBuilder() *SqlBuilder {
-	builder := SqlBuilder{"", make([]interface{}, 0), 1, false}
+	builder := SqlBuilder{bytes.Buffer{}, make([]interface{}, 0), 1, false}
 	return &builder
 }
 
-func (builder *SqlBuilder) AppendSql(sql string) {
-	builder.Sql += " " + sql
+func (builder *SqlBuilder) Sql() string {
+	return builder.sql.String()
+}
 
-	builder.needsComma = false
+func (builder *SqlBuilder) Params() []interface{} {
+	return builder.params
+}
+
+func (builder *SqlBuilder) AppendSql(sql string) {
+	if sql == "" {
+		return
+	}
+
+	switch sql[0] {
+	case ' ', '\n':
+		// do nowt
+	default:
+		builder.sql.WriteRune('\n')
+	}
+
+	builder.sql.WriteString(sql)
+
+	builder.needsParamComma = false
 }
 
 func (builder *SqlBuilder) AppendParam(value interface{}) {
-	if builder.needsComma {
-		builder.Sql += ","
+	if builder.needsParamComma {
+		builder.sql.WriteRune(',')
 	}
 
-	builder.Sql += "?" + strconv.Itoa(builder.paramIndex)
+	builder.sql.WriteRune('?')
+	builder.sql.WriteString(strconv.Itoa(builder.paramIndex))
 	builder.paramIndex++
 
-	builder.Params = append(builder.Params, value)
-
-	builder.needsComma = true
+	builder.params = append(builder.params, value)
+	builder.needsParamComma = true
 }

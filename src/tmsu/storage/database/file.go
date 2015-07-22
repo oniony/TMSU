@@ -48,7 +48,7 @@ FROM file `)
 
 	buildSort(sort, builder)
 
-	rows, err := tx.Query(builder.Sql)
+	rows, err := tx.Query(builder.Sql())
 	if err != nil {
 		return nil, err
 	}
@@ -165,7 +165,7 @@ WHERE id NOT IN (SELECT distinct(file_id)
 func FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
 	builder := buildCountQuery(expression, path, explicitOnly)
 
-	rows, err := tx.Query(builder.Sql, builder.Params...)
+	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
 		return 0, err
 	}
@@ -177,7 +177,7 @@ func FileCountForQuery(tx *Tx, expression query.Expression, path string, explici
 // Retrieves the set of files matching the specified query and matching the specified path.
 func FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
 	builder := buildQuery(expression, path, explicitOnly, sort)
-	rows, err := tx.Query(builder.Sql, builder.Params...)
+	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
 		return nil, err
 	}
@@ -390,8 +390,7 @@ func buildCountQuery(expression query.Expression, path string, explicitOnly bool
 	builder.AppendSql(`
 SELECT count(id)
 FROM file
-WHERE
-`)
+WHERE`)
 	buildQueryBranch(expression, builder, explicitOnly)
 	buildPathClause(path, builder)
 
@@ -404,8 +403,7 @@ func buildQuery(expression query.Expression, path string, explicitOnly bool, sor
 	builder.AppendSql(`
 SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file
-WHERE
-`)
+WHERE`)
 	buildQueryBranch(expression, builder, explicitOnly)
 	buildPathClause(path, builder)
 	buildSort(sort, builder)
@@ -426,7 +424,7 @@ func buildQueryBranch(expression query.Expression, builder *SqlBuilder, explicit
 	case query.OrExpression:
 		buildOrQueryBranch(exp, builder, explicitOnly)
 	case query.EmptyExpression:
-		builder.AppendSql("1 == 1\n")
+		builder.AppendSql("1 == 1")
 	default:
 		panic("Unsupported expression type.")
 	}
@@ -520,22 +518,22 @@ id IN (WITH RECURSIVE impft (tag_id, value_id) AS
 }
 
 func buildNotQueryBranch(expression query.NotExpression, builder *SqlBuilder, explicitOnly bool) {
-	builder.AppendSql("\nNOT\n")
+	builder.AppendSql("NOT")
 	buildQueryBranch(expression.Operand, builder, explicitOnly)
 }
 
 func buildAndQueryBranch(expression query.AndExpression, builder *SqlBuilder, explicitOnly bool) {
 	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
-	builder.AppendSql("\nAND\n")
+	builder.AppendSql("AND")
 	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
 }
 
 func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, explicitOnly bool) {
-	builder.AppendSql("(\n")
+	builder.AppendSql("(")
 	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
-	builder.AppendSql("\nOR\n")
+	builder.AppendSql("OR")
 	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
-	builder.AppendSql(")\n")
+	builder.AppendSql(")")
 }
 
 func buildPathClause(path string, builder *SqlBuilder) {
@@ -556,7 +554,7 @@ func buildPathClause(path string, builder *SqlBuilder) {
 	builder.AppendParam(dir)
 	builder.AppendSql(" AND name = ")
 	builder.AppendParam(name)
-	builder.AppendSql("))\n")
+	builder.AppendSql("))")
 }
 
 func buildSort(sort string, builder *SqlBuilder) {

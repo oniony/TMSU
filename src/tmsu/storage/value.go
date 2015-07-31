@@ -50,21 +50,31 @@ func (storage *Storage) UnusedValues(tx *Tx) (entities.Values, error) {
 
 // Retrieves a specific value by name.
 func (storage *Storage) ValueByName(tx *Tx, name string) (*entities.Value, error) {
+	return storage.ValueByCasedName(tx, name, false)
+}
+
+// Retrieves a specific value by name.
+func (storage *Storage) ValueByCasedName(tx *Tx, name string, ignoreCase bool) (*entities.Value, error) {
 	if name == "" {
 		return &entities.Value{0, ""}, nil
 	}
 
-	return database.ValueByName(tx.tx, name)
+	return database.ValueByName(tx.tx, name, ignoreCase)
+}
+
+// Retrieves the set of values with the specified names.
+func (storage *Storage) ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
+	return storage.ValuesByCasedNames(tx, names, false)
+}
+
+// Retrieves the set of values with the specified names.
+func (storage *Storage) ValuesByCasedNames(tx *Tx, names []string, ignoreCase bool) (entities.Values, error) {
+	return database.ValuesByNames(tx.tx, names, ignoreCase)
 }
 
 // Retrieves the set of values for the specified tag.
 func (storage *Storage) ValuesByTag(tx *Tx, tagId entities.TagId) (entities.Values, error) {
 	return database.ValuesByTagId(tx.tx, tagId)
-}
-
-// Retrieves the set of values with the specified names.
-func (storage *Storage) ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
-	return database.ValuesByNames(tx.tx, names)
 }
 
 // Adds a value.

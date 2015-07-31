@@ -114,11 +114,13 @@ WHERE id NOT IN (SELECT distinct(value_id)
 }
 
 // Retrieves a specific value by name.
-func ValueByName(tx *Tx, name string) (*entities.Value, error) {
+func ValueByName(tx *Tx, name string, ignoreCase bool) (*entities.Value, error) {
+	collation := collationFor(ignoreCase)
+
 	sql := `
 SELECT id, name
 FROM value
-WHERE name = ?`
+WHERE name ` + collation + ` = ?`
 
 	rows, err := tx.Query(sql, name)
 	if err != nil {
@@ -130,17 +132,24 @@ WHERE name = ?`
 }
 
 // Retrieves the set of values with the specified names.
-func ValuesByNames(tx *Tx, names []string) (entities.Values, error) {
+func ValuesByNames(tx *Tx, names []string, ignoreCase bool) (entities.Values, error) {
 	if len(names) == 0 {
 		return make(entities.Values, 0), nil
 	}
 
+	collation := collationFor(ignoreCase)
+
 	sql := `
 SELECT id, name
 FROM value
-WHERE name IN (?`
+WHERE name ` + collation + ` IN (?`
 	sql += strings.Repeat(",?", len(names)-1)
 	sql += ")"
+
+	if ignoreCase {
+		sql += `
+COLLATE NOCASE`
+	}
 
 	params := make([]interface{}, len(names))
 	for index, name := range names {

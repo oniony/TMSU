@@ -103,14 +103,14 @@ v0.6 (in development)
   to the 'implication' table. TMSU will automatically upgrade your database
   upon first use but you may wish to take a backup beforehand.*
 
-  * Added --force option to 'tag' command to allow tagging of missing or
+  * Added --force option to 'tag' subcommand to allow tagging of missing or
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
   * Performance improvements to the virtual filesystem.
   * Fixed 'too many SQL variables' when merging tags applied to lots of files.
   * Added --name option to 'tags' to force printing of name even if there is
     only a single file argument, which is useful when using xargs.
-  * Replaced 'stats' command with 'info' command (with --stats and --usage
+  * Replaced 'stats' subcommand with 'info' subcommand (with --stats and --usage
     options for tag statics and usage counts respectively).
   * Included a set of scripts for performing filesystem operations whilst
     keeping the TMSU database up to date. If you wish to use these scripts
@@ -128,6 +128,8 @@ v0.6 (in development)
   * It is no longer possible to add a circular tag implication. (These were
     not correctly applied anyway. An alias facility will be provided in a later
     version.)
+  * Case insensitive queries can now be performed with the --ignore-case option
+    on the 'files' subcommand.
   * Added integration tests covering CLI.
 
 v0.5.2

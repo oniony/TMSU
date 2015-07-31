@@ -53,7 +53,8 @@ Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. E
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""},
-		{"--sort", "-s", "sort output: id, none, name, size, time", true, ""}},
+		{"--sort", "-s", "sort output: id, none, name, size, time", true, ""},
+		{"--ignore-case", "-i", "ignore the case of tag and value names", false, ""}},
 	Exec: filesExec,
 }
 
@@ -66,6 +67,7 @@ func filesExec(store *storage.Storage, options Options, args []string) (error, w
 	showCount := options.HasOption("--count")
 	hasPath := options.HasOption("--path")
 	explicitOnly := options.HasOption("--explicit")
+	ignoreCase := options.HasOption("--ignore-case")
 
 	sort := "name"
 	if options.HasOption("--sort") {
@@ -90,12 +92,12 @@ func filesExec(store *storage.Storage, options Options, args []string) (error, w
 	defer tx.Commit()
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(store, tx, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, sort)
+	return listFilesForQuery(store, tx, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase, sort)
 }
 
 // unexported
 
-func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly bool, sort string) (error, warnings) {
+func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase bool, sort string) (error, warnings) {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
@@ -108,18 +110,18 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	warnings := make(warnings, 0, 10)
 
 	tagNames := query.TagNames(expression)
-	tags, err := store.TagsByNames(tx, tagNames)
+	tags, err := store.TagsByCasedNames(tx, tagNames, ignoreCase)
 	for _, tagName := range tagNames {
-		if !tags.ContainsName(tagName) {
+		if !tags.ContainsCasedName(tagName, ignoreCase) {
 			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
 			continue
 		}
 	}
 
 	valueNames := query.ExactValueNames(expression)
-	values, err := store.ValuesByNames(tx, valueNames)
+	values, err := store.ValuesByCasedNames(tx, valueNames, ignoreCase)
 	for _, valueName := range valueNames {
-		if !values.ContainsName(valueName) {
+		if !values.ContainsCasedName(valueName, ignoreCase) {
 			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
 			continue
 		}
@@ -127,7 +129,7 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 
 	log.Info(2, "querying database")
 
-	files, err := store.FilesForQuery(tx, expression, path, explicitOnly, sort)
+	files, err := store.FilesForQuery(tx, expression, path, explicitOnly, ignoreCase, sort)
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
 			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)"), warnings

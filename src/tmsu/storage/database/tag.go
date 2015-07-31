@@ -97,11 +97,13 @@ WHERE id IN (?`
 }
 
 // Retrieves a specific tag.
-func TagByName(tx *Tx, name string) (*entities.Tag, error) {
+func TagByName(tx *Tx, name string, ignoreCase bool) (*entities.Tag, error) {
+	collation := collationFor(ignoreCase)
+
 	sql := `
 SELECT id, name
 FROM tag
-WHERE name = ?`
+WHERE name ` + collation + ` = ?`
 
 	rows, err := tx.Query(sql, name)
 	if err != nil {
@@ -113,15 +115,17 @@ WHERE name = ?`
 }
 
 // Retrieves the set of named tags.
-func TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
+func TagsByNames(tx *Tx, names []string, ignoreCase bool) (entities.Tags, error) {
 	if len(names) == 0 {
 		return make(entities.Tags, 0), nil
 	}
 
+	collation := collationFor(ignoreCase)
+
 	sql := `
 SELECT id, name
 FROM tag
-WHERE name IN (?`
+WHERE name ` + collation + ` IN (?`
 	sql += strings.Repeat(",?", len(names)-1)
 	sql += ")"
 

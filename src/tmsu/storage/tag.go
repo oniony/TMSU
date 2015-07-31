@@ -45,12 +45,22 @@ func (storage Storage) TagsByIds(tx *Tx, ids entities.TagIds) (entities.Tags, er
 
 // Retrieves a specific tag.
 func (storage Storage) TagByName(tx *Tx, name string) (*entities.Tag, error) {
-	return database.TagByName(tx.tx, name)
+	return storage.TagByCasedName(tx, name, false)
+}
+
+// Retrieves a specific tag with specified case-sensitivity.
+func (storage Storage) TagByCasedName(tx *Tx, name string, ignoreCase bool) (*entities.Tag, error) {
+	return database.TagByName(tx.tx, name, ignoreCase)
 }
 
 // Retrieves the set of named tags.
 func (storage Storage) TagsByNames(tx *Tx, names []string) (entities.Tags, error) {
-	return database.TagsByNames(tx.tx, names)
+	return storage.TagsByCasedNames(tx, names, false)
+}
+
+// Retrieves the set of named tags.
+func (storage Storage) TagsByCasedNames(tx *Tx, names []string, ignoreCase bool) (entities.Tags, error) {
+	return database.TagsByNames(tx.tx, names, ignoreCase)
 }
 
 // Adds a tag.

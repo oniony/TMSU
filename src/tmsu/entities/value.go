@@ -17,6 +17,7 @@ package entities
 
 import (
 	"sort"
+	"strings"
 )
 
 type ValueId uint
@@ -83,9 +84,18 @@ func (values Values) Contains(searchValue *Value) bool {
 	return false
 }
 
-func (values Values) ContainsName(name string) bool {
+func (values Values) ContainsCasedName(name string, ignoreCase bool) bool {
+	if ignoreCase {
+		name = strings.ToLower(name)
+	}
+
 	for _, value := range values {
-		if value.Name == name {
+		valueName := value.Name
+		if ignoreCase {
+			valueName = strings.ToLower(name)
+		}
+
+		if valueName == name {
 			return true
 		}
 	}

@@ -104,15 +104,15 @@ func (store *Storage) UntaggedFiles(tx *Tx) (entities.Files, error) {
 }
 
 // Retrieves the count of files that match the specified query and matching the specified path.
-func (store *Storage) FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
+func (store *Storage) FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool) (uint, error) {
 	relPath := store.relPath(path)
-	return database.FileCountForQuery(tx.tx, expression, relPath, explicitOnly)
+	return database.FileCountForQuery(tx.tx, expression, relPath, explicitOnly, ignoreCase)
 }
 
 // Retrieves the set of files that match the specified query.
-func (store *Storage) FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
+func (store *Storage) FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) (entities.Files, error) {
 	relPath := store.relPath(path)
-	files, err := database.FilesForQuery(tx.tx, expression, relPath, explicitOnly, sort)
+	files, err := database.FilesForQuery(tx.tx, expression, relPath, explicitOnly, ignoreCase, sort)
 	store.absPaths(files)
 	return files, err
 }

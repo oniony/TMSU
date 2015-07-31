@@ -17,6 +17,7 @@ package entities
 
 import (
 	"sort"
+	"strings"
 )
 
 type TagId uint
@@ -83,9 +84,18 @@ func (tags Tags) Contains(searchTag *Tag) bool {
 	return false
 }
 
-func (tags Tags) ContainsName(name string) bool {
+func (tags Tags) ContainsCasedName(name string, ignoreCase bool) bool {
+	if ignoreCase {
+		name = strings.ToLower(name)
+	}
+
 	for _, tag := range tags {
-		if tag.Name == name {
+		tagName := tag.Name
+		if ignoreCase {
+			tagName = strings.ToLower(tagName)
+		}
+
+		if tagName == name {
 			return true
 		}
 	}

@@ -162,8 +162,8 @@ WHERE id NOT IN (SELECT distinct(file_id)
 }
 
 // Retrieves the count of files matching the specified query and matching the specified path.
-func FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool) (uint, error) {
-	builder := buildCountQuery(expression, path, explicitOnly)
+func FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool) (uint, error) {
+	builder := buildCountQuery(expression, path, explicitOnly, ignoreCase)
 
 	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
@@ -175,8 +175,9 @@ func FileCountForQuery(tx *Tx, expression query.Expression, path string, explici
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly bool, sort string) (entities.Files, error) {
-	builder := buildQuery(expression, path, explicitOnly, sort)
+func FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) (entities.Files, error) {
+	builder := buildQuery(expression, path, explicitOnly, ignoreCase, sort)
+
 	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
 		return nil, err
@@ -384,45 +385,45 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
-func buildCountQuery(expression query.Expression, path string, explicitOnly bool) *SqlBuilder {
+func buildCountQuery(expression query.Expression, path string, explicitOnly, ignoreCase bool) *SqlBuilder {
 	builder := NewBuilder()
 
 	builder.AppendSql(`
 SELECT count(id)
 FROM file
 WHERE`)
-	buildQueryBranch(expression, builder, explicitOnly)
+	buildQueryBranch(expression, builder, explicitOnly, ignoreCase)
 	buildPathClause(path, builder)
 
 	return builder
 }
 
-func buildQuery(expression query.Expression, path string, explicitOnly bool, sort string) *SqlBuilder {
+func buildQuery(expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) *SqlBuilder {
 	builder := NewBuilder()
 
 	builder.AppendSql(`
 SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file
 WHERE`)
-	buildQueryBranch(expression, builder, explicitOnly)
+	buildQueryBranch(expression, builder, explicitOnly, ignoreCase)
 	buildPathClause(path, builder)
 	buildSort(sort, builder)
 
 	return builder
 }
 
-func buildQueryBranch(expression query.Expression, builder *SqlBuilder, explicitOnly bool) {
+func buildQueryBranch(expression query.Expression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
 	switch exp := expression.(type) {
 	case query.TagExpression:
-		buildTagQueryBranch(exp, builder, explicitOnly)
+		buildTagQueryBranch(exp, builder, explicitOnly, ignoreCase)
 	case query.ComparisonExpression:
-		buildComparisonQueryBranch(exp, builder, explicitOnly)
+		buildComparisonQueryBranch(exp, builder, explicitOnly, ignoreCase)
 	case query.NotExpression:
-		buildNotQueryBranch(exp, builder, explicitOnly)
+		buildNotQueryBranch(exp, builder, explicitOnly, ignoreCase)
 	case query.AndExpression:
-		buildAndQueryBranch(exp, builder, explicitOnly)
+		buildAndQueryBranch(exp, builder, explicitOnly, ignoreCase)
 	case query.OrExpression:
-		buildOrQueryBranch(exp, builder, explicitOnly)
+		buildOrQueryBranch(exp, builder, explicitOnly, ignoreCase)
 	case query.EmptyExpression:
 		builder.AppendSql("1 == 1")
 	default:
@@ -430,14 +431,16 @@ func buildQueryBranch(expression query.Expression, builder *SqlBuilder, explicit
 	}
 }
 
-func buildTagQueryBranch(expression query.TagExpression, builder *SqlBuilder, explicitOnly bool) {
+func buildTagQueryBranch(expression query.TagExpression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
+	collation := collationFor(ignoreCase)
+
 	if explicitOnly {
 		builder.AppendSql(`
 id IN (SELECT file_id
        FROM file_tag
        WHERE tag_id = (SELECT id
                        FROM tag
-                       WHERE name = `)
+                       WHERE name ` + collation + ` = `)
 		builder.AppendParam(expression.Name)
 		builder.AppendSql(`
                        )
@@ -450,7 +453,7 @@ id IN (SELECT file_id
                         (
                             SELECT id, 0
                             FROM tag
-                            WHERE name = `)
+                            WHERE name ` + collation + ` = `)
 		builder.AppendParam(expression.Name)
 		builder.AppendSql(`
                             UNION ALL
@@ -466,7 +469,9 @@ id IN (SELECT file_id
 	}
 }
 
-func buildComparisonQueryBranch(expression query.ComparisonExpression, builder *SqlBuilder, explicitOnly bool) {
+func buildComparisonQueryBranch(expression query.ComparisonExpression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
+	collation := collationFor(ignoreCase)
+
 	var valueTerm string
 	_, err := strconv.ParseFloat(expression.Value.Name, 64)
 	if err == nil {
@@ -481,12 +486,12 @@ id IN (SELECT file_id
        FROM file_tag
        WHERE tag_id = (SELECT id
                        FROM tag
-                       WHERE name = `)
+                       WHERE name ` + collation + ` = `)
 		builder.AppendParam(expression.Tag.Name)
 		builder.AppendSql(`) AND
              value_id = (SELECT id
                          FROM value
-                         WHERE name = `)
+                         WHERE name ` + collation + ` = `)
 		builder.AppendParam(expression.Value.Name)
 		builder.AppendSql(`)
      )`)
@@ -496,9 +501,9 @@ id IN (WITH RECURSIVE impft (tag_id, value_id) AS
        (
            SELECT t.id, v.id
            FROM tag t, value v
-           WHERE t.name = `)
+           WHERE t.name ` + collation + ` = `)
 		builder.AppendParam(expression.Tag.Name)
-		builder.AppendSql("AND " + valueTerm + " " + expression.Operator)
+		builder.AppendSql("AND " + valueTerm + " " + collation + " " + expression.Operator)
 		builder.AppendParam(expression.Value.Name)
 		builder.AppendSql(`
            UNION ALL
@@ -517,22 +522,22 @@ id IN (WITH RECURSIVE impft (tag_id, value_id) AS
 	}
 }
 
-func buildNotQueryBranch(expression query.NotExpression, builder *SqlBuilder, explicitOnly bool) {
+func buildNotQueryBranch(expression query.NotExpression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
 	builder.AppendSql("NOT")
-	buildQueryBranch(expression.Operand, builder, explicitOnly)
+	buildQueryBranch(expression.Operand, builder, explicitOnly, ignoreCase)
 }
 
-func buildAndQueryBranch(expression query.AndExpression, builder *SqlBuilder, explicitOnly bool) {
-	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
+func buildAndQueryBranch(expression query.AndExpression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
+	buildQueryBranch(expression.LeftOperand, builder, explicitOnly, ignoreCase)
 	builder.AppendSql("AND")
-	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
+	buildQueryBranch(expression.RightOperand, builder, explicitOnly, ignoreCase)
 }
 
-func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, explicitOnly bool) {
+func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, explicitOnly, ignoreCase bool) {
 	builder.AppendSql("(")
-	buildQueryBranch(expression.LeftOperand, builder, explicitOnly)
+	buildQueryBranch(expression.LeftOperand, builder, explicitOnly, ignoreCase)
 	builder.AppendSql("OR")
-	buildQueryBranch(expression.RightOperand, builder, explicitOnly)
+	buildQueryBranch(expression.RightOperand, builder, explicitOnly, ignoreCase)
 	builder.AppendSql(")")
 }
 

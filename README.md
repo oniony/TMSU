@@ -128,6 +128,7 @@ v0.6 (in development)
   * It is no longer possible to add a circular tag implication. (These were
     not correctly applied anyway. An alias facility will be provided in a later
     version.)
+  * The output of 'files' can now be sorted in various ways using --sort.
   * Case insensitive queries can now be performed with the --ignore-case option
     on the 'files' subcommand.
   * Added integration tests covering CLI.

@@ -130,16 +130,10 @@ func validateValueName(valueName string) error {
 
 	for _, ch := range valueName {
 		switch ch {
-		case '(', ')':
-			return errors.New("tag value cannot contain parentheses: '(' or ')'") // used in query language
-		case ',':
-			return errors.New("tag value cannot contain comma: ','") // reserved for tag delimiter
-		case '=', '!', '<', '>':
-			return errors.New("tag value cannot contain a comparison operator: '=', '!', '<' or '>'") // reserved for tag values
-		case ' ', '\t':
-			return errors.New("tag value cannot contain space or tab") // used as tag delimiter
 		case '/':
 			return errors.New("tag value cannot contain slash: '/'") // cannot be used in the VFS
+		case '\\':
+			return errors.New("tag names cannot contain backslash: '\\'") // cannot be used in the VFS on Windows
 		}
 
 		if !unicode.IsOneOf(validValueChars, ch) {

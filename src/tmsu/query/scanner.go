@@ -136,8 +136,9 @@ func (scanner *Scanner) readToken() (Token, error) {
 		return CloseParenToken{}, nil
 	case r == rune('!'), r == rune('='), r == rune('<'), r == rune('>'):
 		return scanner.readComparisonOperatorToken(r)
-	case unicode.IsOneOf(symbolChars, r):
-		return scanner.readTextToken(r)
+	case unicode.IsOneOf(symbolChars, r), r == rune('\\'):
+		scanner.stream.UnreadRune()
+		return scanner.readTextToken()
 	default:
 		return nil, fmt.Errorf("Unepxected character '%v'.", r)
 	}
@@ -145,8 +146,8 @@ func (scanner *Scanner) readToken() (Token, error) {
 	panic("unreachable")
 }
 
-func (scanner *Scanner) readTextToken(r rune) (Token, error) {
-	text, err := scanner.readString(r)
+func (scanner *Scanner) readTextToken() (Token, error) {
+	text, err := scanner.readString()
 	if err != nil {
 		return nil, err
 	}
@@ -195,18 +196,29 @@ func (scanner *Scanner) readComparisonOperatorToken(r rune) (Token, error) {
 	}
 }
 
-func (scanner *Scanner) readString(initialRune rune) (string, error) {
-	text := string(initialRune)
-
+func (scanner *Scanner) readString() (string, error) {
+	text := ""
+	escaped := false
 	stop := false
+
 	for !stop {
 		r, _, err := scanner.stream.ReadRune()
-
 		if err == io.EOF {
 			return text, nil
 		}
 		if err != nil {
 			return "", err
+		}
+
+		if escaped {
+			text += string(r)
+			escaped = false
+			continue
+		}
+
+		if r == rune('\\') {
+			escaped = true
+			continue
 		}
 
 		switch {

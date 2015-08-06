@@ -12,7 +12,7 @@ tmsu copy aubergine egg/plant         >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
-tmsu: could not copy tag 'aubergine' to 'egg/plant': tag names cannot contain slash: '/'
+tmsu: could not copy tag 'aubergine' to 'egg/plant': tag names cannot contain '/'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

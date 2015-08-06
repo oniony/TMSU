@@ -8,7 +8,7 @@ tmsu tags --explicit            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: could not create tag 'au/bergine': tag names cannot contain slash: '/'
+tmsu: could not create tag 'au/bergine': tag names cannot contain '/'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

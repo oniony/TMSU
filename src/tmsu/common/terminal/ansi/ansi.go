@@ -40,6 +40,10 @@ func Invert(text string) string {
 	return InvertCode + text + ResetCode
 }
 
+func Black(text string) string {
+	return BlackCode + text + ResetCode
+}
+
 func Red(text string) string {
 	return RedCode + text + ResetCode
 }

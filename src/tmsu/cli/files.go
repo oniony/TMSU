@@ -112,6 +112,11 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	tagNames := query.TagNames(expression)
 	tags, err := store.TagsByCasedNames(tx, tagNames, ignoreCase)
 	for _, tagName := range tagNames {
+		if err := entities.ValidateTagName(tagName); err != nil {
+			warnings = append(warnings, err.Error())
+			continue
+		}
+
 		if !tags.ContainsCasedName(tagName, ignoreCase) {
 			warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
 			continue
@@ -121,6 +126,11 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	valueNames := query.ExactValueNames(expression)
 	values, err := store.ValuesByCasedNames(tx, valueNames, ignoreCase)
 	for _, valueName := range valueNames {
+		if err := entities.ValidateValueName(valueName); err != nil {
+			warnings = append(warnings, err.Error())
+			continue
+		}
+
 		if !values.ContainsCasedName(valueName, ignoreCase) {
 			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
 			continue

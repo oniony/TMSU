@@ -16,11 +16,8 @@
 package storage
 
 import (
-	"errors"
-	"fmt"
 	"tmsu/entities"
 	"tmsu/storage/database"
-	"unicode"
 )
 
 // Retrievse the count of values.
@@ -79,7 +76,7 @@ func (storage *Storage) ValuesByTag(tx *Tx, tagId entities.TagId) (entities.Valu
 
 // Adds a value.
 func (storage *Storage) AddValue(tx *Tx, name string) (*entities.Value, error) {
-	if err := validateValueName(name); err != nil {
+	if err := entities.ValidateValueName(name); err != nil {
 		return nil, err
 	}
 
@@ -88,7 +85,7 @@ func (storage *Storage) AddValue(tx *Tx, name string) (*entities.Value, error) {
 
 // Renames a value.
 func (storage *Storage) RenameValue(tx *Tx, valueId entities.ValueId, newName string) (*entities.Value, error) {
-	if err := validateValueName(newName); err != nil {
+	if err := entities.ValidateValueName(newName); err != nil {
 		return nil, err
 	}
 
@@ -107,38 +104,6 @@ func (storage *Storage) DeleteValue(tx *Tx, valueId entities.ValueId) error {
 
 	if err := database.DeleteValue(tx.tx, valueId); err != nil {
 		return err
-	}
-
-	return nil
-}
-
-// unexported
-
-var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
-
-func validateValueName(valueName string) error {
-	switch valueName {
-	case "":
-		return errors.New("tag value cannot be empty")
-	case ".", "..":
-		return errors.New("tag value cannot be '.' or '..'") // cannot be used in the VFS
-	case "and", "AND", "or", "OR", "not", "NOT":
-		return errors.New("tag value cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
-	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
-		return errors.New("tag value cannot be a comparison operator: 'eq', 'ne', 'lt', 'gt', 'le' or 'ge'") // used in query language
-	}
-
-	for _, ch := range valueName {
-		switch ch {
-		case '/':
-			return errors.New("tag value cannot contain slash: '/'") // cannot be used in the VFS
-		case '\\':
-			return errors.New("tag names cannot contain backslash: '\\'") // cannot be used in the VFS on Windows
-		}
-
-		if !unicode.IsOneOf(validValueChars, ch) {
-			return fmt.Errorf("tag value cannot contain '%c'", ch)
-		}
 	}
 
 	return nil

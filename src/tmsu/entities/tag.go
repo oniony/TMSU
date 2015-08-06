@@ -16,8 +16,10 @@
 package entities
 
 import (
+	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 type TagId uint
@@ -118,3 +120,33 @@ type TagFileCount struct {
 	Name      string
 	FileCount uint
 }
+
+func ValidateTagName(tagName string) error {
+	switch tagName {
+	case "":
+		return fmt.Errorf("tag name cannot be empty")
+	case ".", "..":
+		return fmt.Errorf("tag name cannot be '.' or '..'") // cannot be used in the VFS
+	case "and", "AND", "or", "OR", "not", "NOT":
+		return fmt.Errorf("tag name cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
+	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
+		return fmt.Errorf("tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'") // used in query language
+	}
+
+	for _, ch := range tagName {
+		switch ch {
+		case '/', '\\':
+			return fmt.Errorf("tag names cannot contain '%c'", ch) // cannot be used in the VFS on Posix
+		}
+
+		if !unicode.IsOneOf(validTagChars, ch) {
+			return fmt.Errorf("tag names cannot contain '%c'", ch)
+		}
+	}
+
+	return nil
+}
+
+// unexported
+
+var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}

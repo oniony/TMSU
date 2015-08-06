@@ -15,21 +15,22 @@
 
 package ansi
 
-var ResetCode string = "\x1b[0m"
+var ResetCode string = esc + "0m"
 
-var BoldCode string = "\x1b[1m"
-var ItalicCode string = "\x1b[3m"
-var UnderlineCode string = "\x1b[4m"
-var BlinkCode string = "\x1b[5m"
-var InvertCode string = "\x1b[7m"
+var BoldCode string = esc + "1m"
+var ItalicCode string = esc + "3m"
+var UnderlineCode string = esc + "4m"
+var BlinkCode string = esc + "5m"
+var InvertCode string = esc + "7m"
 
-var RedCode string = "\x1b[31m"
-var GreenCode string = "\x1b[32m"
-var YellowCode string = "\x1b[33m"
-var BlueCode string = "\x1b[34m"
-var MagentaCode string = "\x1b[35m"
-var CyanCode string = "\x1b[36m"
-var WhiteCode string = "\x1b[37m"
+var BlackCode string = esc + "30m"
+var RedCode string = esc + "31m"
+var GreenCode string = esc + "32m"
+var YellowCode string = esc + "33m"
+var BlueCode string = esc + "34m"
+var MagentaCode string = esc + "35m"
+var CyanCode string = esc + "36m"
+var WhiteCode string = esc + "37m"
 
 var CodeByName = map[string]string{
 	"reset":   ResetCode,
@@ -37,6 +38,7 @@ var CodeByName = map[string]string{
 	"italic":  ItalicCode,
 	"blink":   BlinkCode,
 	"invert":  InvertCode,
+	"black":   BlackCode,
 	"red":     RedCode,
 	"green":   GreenCode,
 	"yellow":  YellowCode,
@@ -45,3 +47,7 @@ var CodeByName = map[string]string{
 	"cyan":    CyanCode,
 	"white":   WhiteCode,
 }
+
+// unexported
+
+var esc = "\x1b["

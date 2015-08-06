@@ -206,7 +206,7 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 
 		var tagging string
 		if fileTag.ValueId == 0 {
-			tagging = tag.Name
+			tagging = formatTagValueName(tag.Name, "", colour, fileTag.Implicit, fileTag.Explicit)
 		} else {
 			value, err := store.Value(tx, fileTag.ValueId)
 			if err != nil {
@@ -216,17 +216,7 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 				return nil, fmt.Errorf("value '%v' does not exist", fileTag.ValueId)
 			}
 
-			tagging = tag.Name + "=" + value.Name
-		}
-
-		if colour {
-			if fileTag.Implicit {
-				if fileTag.Explicit {
-					tagging = ansi.Yellow(tagging)
-				} else {
-					tagging = ansi.Cyan(tagging)
-				}
-			}
+			tagging = formatTagValueName(tag.Name, value.Name, colour, fileTag.Implicit, fileTag.Explicit)
 		}
 
 		taggings[index] = tagging

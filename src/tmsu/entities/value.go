@@ -16,8 +16,10 @@
 package entities
 
 import (
+	"fmt"
 	"sort"
 	"strings"
+	"unicode"
 )
 
 type ValueId uint
@@ -112,3 +114,33 @@ func (values Values) Any(predicate func(*Value) bool) bool {
 
 	return false
 }
+
+func ValidateValueName(valueName string) error {
+	switch valueName {
+	case "":
+		return fmt.Errorf("tag value cannot be empty")
+	case ".", "..":
+		return fmt.Errorf("tag value cannot be '.' or '..'") // cannot be used in the VFS
+	case "and", "AND", "or", "OR", "not", "NOT":
+		return fmt.Errorf("tag value cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
+	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
+		return fmt.Errorf("tag value cannot be a comparison operator: 'eq', 'ne', 'lt', 'gt', 'le' or 'ge'") // used in query language
+	}
+
+	for _, ch := range valueName {
+		switch ch {
+		case '/', '\\':
+			return fmt.Errorf("tag value cannot contain '%c'", ch) // cannot be used in the VFS
+		}
+
+		if !unicode.IsOneOf(validValueChars, ch) {
+			return fmt.Errorf("tag value cannot contain '%c'", ch)
+		}
+	}
+
+	return nil
+}
+
+// unexported
+
+var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}

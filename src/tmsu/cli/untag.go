@@ -160,16 +160,7 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 	}
 
 	for _, tagArg := range tagArgs {
-		var tagName, valueName string
-		index := strings.Index(tagArg, "=")
-
-		switch index {
-		case -1, 0:
-			tagName = tagArg
-		default:
-			tagName = tagArg[0:index]
-			valueName = tagArg[index+1 : len(tagArg)]
-		}
+		tagName, valueName := parseTagValueName(tagArg)
 
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {

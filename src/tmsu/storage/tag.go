@@ -16,11 +16,8 @@
 package storage
 
 import (
-	"errors"
-	"fmt"
 	"tmsu/entities"
 	"tmsu/storage/database"
-	"unicode"
 )
 
 // The number of tags in the database.
@@ -65,7 +62,7 @@ func (storage Storage) TagsByCasedNames(tx *Tx, names []string, ignoreCase bool)
 
 // Adds a tag.
 func (storage *Storage) AddTag(tx *Tx, name string) (*entities.Tag, error) {
-	if err := validateTagName(name); err != nil {
+	if err := entities.ValidateTagName(name); err != nil {
 		return nil, err
 	}
 
@@ -74,7 +71,7 @@ func (storage *Storage) AddTag(tx *Tx, name string) (*entities.Tag, error) {
 
 // Renames a tag.
 func (storage Storage) RenameTag(tx *Tx, tagId entities.TagId, name string) (*entities.Tag, error) {
-	if err := validateTagName(name); err != nil {
+	if err := entities.ValidateTagName(name); err != nil {
 		return nil, err
 	}
 
@@ -83,7 +80,7 @@ func (storage Storage) RenameTag(tx *Tx, tagId entities.TagId, name string) (*en
 
 // Copies a tag.
 func (storage Storage) CopyTag(tx *Tx, sourceTagId entities.TagId, name string) (*entities.Tag, error) {
-	if err := validateTagName(name); err != nil {
+	if err := entities.ValidateTagName(name); err != nil {
 		return nil, err
 	}
 
@@ -120,34 +117,4 @@ func (storage Storage) DeleteTag(tx *Tx, tagId entities.TagId) error {
 // Retrieves the tag usage.
 func (storage Storage) TagUsage(tx *Tx) ([]entities.TagFileCount, error) {
 	return database.TagUsage(tx.tx)
-}
-
-// unexported
-
-var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
-
-func validateTagName(tagName string) error {
-	switch tagName {
-	case "":
-		return errors.New("tag name cannot be empty")
-	case "and", "AND", "or", "OR", "not", "NOT":
-		return errors.New("tag name cannot be a logical operator: 'and', 'or' or 'not'") // used in query language
-	case "eq", "EQ", "ne", "NE", "lt", "LT", "gt", "GT", "le", "LE", "ge", "GE":
-		return errors.New("tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'") // used in query language
-	}
-
-	for _, ch := range tagName {
-		switch ch {
-		case '/':
-			return errors.New("tag names cannot contain slash: '/'") // cannot be used in the VFS on Posix
-		case '\\':
-			return errors.New("tag names cannot contain backslash: '\\'") // cannot be used in the VFS on Windows
-		}
-
-		if !unicode.IsOneOf(validTagChars, ch) {
-			return fmt.Errorf("tag names cannot contain '%c'", ch)
-		}
-	}
-
-	return nil
 }

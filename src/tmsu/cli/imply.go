@@ -54,6 +54,11 @@ func implyExec(store *storage.Storage, options Options, args []string) (error, w
 	}
 	defer tx.Commit()
 
+	colour, err := useColour(options)
+	if err != nil {
+		return err, nil
+	}
+
 	if options.HasOption("--delete") {
 		if len(args) < 2 {
 			return fmt.Errorf("too few arguments"), nil
@@ -64,7 +69,7 @@ func implyExec(store *storage.Storage, options Options, args []string) (error, w
 
 	switch len(args) {
 	case 0:
-		return listImplications(store, tx), nil
+		return listImplications(store, tx, colour), nil
 	case 1:
 		return fmt.Errorf("tag(s) to be implied must be specified"), nil
 	default:
@@ -72,7 +77,7 @@ func implyExec(store *storage.Storage, options Options, args []string) (error, w
 	}
 }
 
-func listImplications(store *storage.Storage, tx *storage.Tx) error {
+func listImplications(store *storage.Storage, tx *storage.Tx, colour bool) error {
 	log.Infof(2, "retrieving tag implications.")
 
 	implications, err := store.Implications(tx)
@@ -94,15 +99,8 @@ func listImplications(store *storage.Storage, tx *storage.Tx) error {
 
 	if len(implications) > 0 {
 		for _, implication := range implications {
-			implying := implication.ImplyingTag.Name
-			if implication.ImplyingValue.Id != 0 {
-				implying += "=" + implication.ImplyingValue.Name
-			}
-
-			implied := implication.ImpliedTag.Name
-			if implication.ImpliedValue.Id != 0 {
-				implied += "=" + implication.ImpliedValue.Name
-			}
+			implying := formatTagValueName(implication.ImplyingTag.Name, implication.ImplyingValue.Name, colour, false, true)
+			implied := formatTagValueName(implication.ImpliedTag.Name, implication.ImpliedValue.Name, colour, true, false)
 
 			fmt.Printf("%*v -> %v\n", width, implying, implied)
 		}

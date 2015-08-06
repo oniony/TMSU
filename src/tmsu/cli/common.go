@@ -16,12 +16,14 @@
 package cli
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"strings"
 	"time"
 	"tmsu/common/log"
 	"tmsu/common/terminal"
+	"tmsu/common/terminal/ansi"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -109,17 +111,65 @@ func createValue(store *storage.Storage, tx *storage.Tx, valueName string) (*ent
 	return value, nil
 }
 
-func parseTagValueName(tagArg string) (tagName, valueName string) {
-	index := strings.Index(tagArg, "=")
+func parseTagValueName(tagArg string) (string, string) {
+	tagNameBuffer := new(bytes.Buffer)
+	valueNameBuffer := new(bytes.Buffer)
+	var buffer = tagNameBuffer
+	var escaped bool
 
-	switch index {
-	case -1, 0:
-		tagName = tagArg
-		valueName = ""
-	default:
-		tagName = tagArg[0:index]
-		valueName = tagArg[index+1 : len(tagArg)]
+	for _, r := range tagArg {
+		if escaped {
+			buffer.WriteRune(r)
+			continue
+		}
+
+		switch r {
+		case '\\':
+			escaped = true
+		case '=':
+			if buffer == tagNameBuffer {
+				buffer = valueNameBuffer
+			} else {
+				buffer.WriteRune(r)
+			}
+		default:
+			buffer.WriteRune(r)
+		}
 	}
 
-	return
+	return tagNameBuffer.String(), valueNameBuffer.String()
+}
+
+func formatTagValueName(tagName, valueName string, useColour, implicit, explicit bool) string {
+	if useColour {
+		colourCode := colourCodeFor(implicit, explicit)
+
+		if valueName == "" {
+			return colourCode + tagName + ansi.ResetCode
+		} else {
+			return colourCode + tagName + ansi.BoldCode + ansi.BlackCode + "=" + ansi.ResetCode + colourCode + valueName + ansi.ResetCode
+		}
+	}
+
+	if valueName == "" {
+		return escapeEquals(tagName)
+	} else {
+		return escapeEquals(tagName) + "=" + escapeEquals(valueName)
+	}
+}
+
+func colourCodeFor(implicit, explicit bool) string {
+	if implicit && explicit {
+		return ansi.YellowCode
+	}
+
+	if implicit {
+		return ansi.CyanCode
+	}
+
+	return ""
+}
+
+func escapeEquals(text string) string {
+	return strings.Replace(text, "=", "\\=", -1)
 }

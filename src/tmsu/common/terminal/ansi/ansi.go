@@ -72,6 +72,10 @@ func White(text string) string {
 	return WhiteCode + text + ResetCode
 }
 
+func DarkGrey(text string) string {
+	return DarkGreyCode + text + ResetCode
+}
+
 func Strip(text string) string {
 	return formatting.ReplaceAllLiteralString(string(text), "")
 }

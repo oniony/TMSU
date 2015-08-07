@@ -91,12 +91,7 @@ func listAllSettings(store *storage.Storage, tx *storage.Tx, colour bool) error 
 	}
 
 	for _, setting := range settings {
-		value := setting.Value
-		if colour {
-			value = ansi.Green(value)
-		}
-
-		fmt.Printf("%v=%v\n", setting.Name, value)
+		printSettingAndValue(setting.Name, setting.Value, colour)
 	}
 
 	return nil
@@ -115,12 +110,7 @@ func printSetting(store *storage.Storage, tx *storage.Tx, name string, colour bo
 		return fmt.Errorf("no such setting '%v'", name)
 	}
 
-	value := setting.Value
-	if colour {
-		value = ansi.Green(value)
-	}
-
-	fmt.Printf("%v=%v\n", setting.Name, value)
+	printSettingAndValue(setting.Name, setting.Value, colour)
 
 	return nil
 }
@@ -141,6 +131,14 @@ func printSettingValue(store *storage.Storage, tx *storage.Tx, name string) erro
 	fmt.Println(setting.Value)
 
 	return nil
+}
+
+func printSettingAndValue(name, value string, colour bool) {
+	if colour {
+		fmt.Printf("%v"+ansi.DarkGreyCode+"="+ansi.ResetCode+ansi.GreenCode+"%v\n"+ansi.ResetCode, name, value)
+	} else {
+		fmt.Printf("%v=%v\n", name, value)
+	}
 }
 
 func amendSetting(store *storage.Storage, tx *storage.Tx, name, value string) error {

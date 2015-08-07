@@ -32,20 +32,23 @@ var MagentaCode string = esc + "35m"
 var CyanCode string = esc + "36m"
 var WhiteCode string = esc + "37m"
 
+var DarkGreyCode string = BoldCode + BlackCode
+
 var CodeByName = map[string]string{
-	"reset":   ResetCode,
-	"bold":    BoldCode,
-	"italic":  ItalicCode,
-	"blink":   BlinkCode,
-	"invert":  InvertCode,
-	"black":   BlackCode,
-	"red":     RedCode,
-	"green":   GreenCode,
-	"yellow":  YellowCode,
-	"blue":    BlueCode,
-	"magenta": MagentaCode,
-	"cyan":    CyanCode,
-	"white":   WhiteCode,
+	"reset":    ResetCode,
+	"bold":     BoldCode,
+	"italic":   ItalicCode,
+	"blink":    BlinkCode,
+	"invert":   InvertCode,
+	"black":    BlackCode,
+	"red":      RedCode,
+	"green":    GreenCode,
+	"yellow":   YellowCode,
+	"blue":     BlueCode,
+	"magenta":  MagentaCode,
+	"cyan":     CyanCode,
+	"white":    WhiteCode,
+	"darkgrey": DarkGreyCode,
 }
 
 // unexported

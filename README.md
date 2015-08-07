@@ -132,6 +132,8 @@ v0.6 (in development)
   * Case insensitive queries can now be performed with the --ignore-case option
     on the 'files' subcommand.
   * Added integration tests covering CLI.
+  * Relaxed restrictions on tag and value names. Problematic characters can now
+    be escaped with backslash.
 
 v0.5.2
 ------

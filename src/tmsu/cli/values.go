@@ -88,7 +88,12 @@ func listAllValues(store *storage.Storage, tx *storage.Tx, showCount, onePerLine
 	return nil
 }
 
-func listValues(store *storage.Storage, tx *storage.Tx, tagNames []string, showCount, onePerLine bool) (error, warnings) {
+func listValues(store *storage.Storage, tx *storage.Tx, args []string, showCount, onePerLine bool) (error, warnings) {
+	tagNames := make([]string, len(args))
+	for index, arg := range args {
+		tagNames[index] = parseTagOrValueName(arg)
+	}
+
 	switch len(tagNames) {
 	case 0:
 		return fmt.Errorf("at least one tag must be specified"), nil

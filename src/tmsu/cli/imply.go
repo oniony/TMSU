@@ -120,7 +120,7 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (
 	implyingTagArg := tagArgs[0]
 	impliedTagArgs := tagArgs[1:]
 
-	implyingTagName, implyingValueName := parseTagValueName(implyingTagArg)
+	implyingTagName, implyingValueName := parseTagEqValueName(implyingTagArg)
 
 	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
@@ -154,7 +154,7 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (
 
 	warnings := make(warnings, 0, 10)
 	for _, impliedTagArg := range impliedTagArgs {
-		impliedTagName, impliedValueName := parseTagValueName(impliedTagArg)
+		impliedTagName, impliedValueName := parseTagEqValueName(impliedTagArg)
 
 		impliedTag, err := store.TagByName(tx, impliedTagName)
 		if err != nil {
@@ -202,7 +202,7 @@ func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string
 	implyingTagArg := tagArgs[0]
 	impliedTagArgs := tagArgs[1:]
 
-	implyingTagName, implyingValueName := parseTagValueName(implyingTagArg)
+	implyingTagName, implyingValueName := parseTagEqValueName(implyingTagArg)
 
 	implyingTag, err := store.TagByName(tx, implyingTagName)
 	if err != nil {
@@ -224,7 +224,7 @@ func deleteImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string
 	for _, impliedTagArg := range impliedTagArgs {
 		log.Infof(2, "removing tag implication %v -> %v.", implyingTagArg, impliedTagArg)
 
-		impliedTagName, impliedValueName := parseTagValueName(impliedTagArg)
+		impliedTagName, impliedValueName := parseTagEqValueName(impliedTagArg)
 
 		impliedTag, err := store.TagByName(tx, impliedTagName)
 		if err != nil {

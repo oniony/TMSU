@@ -46,8 +46,8 @@ func renameExec(store *storage.Storage, options Options, args []string) (error, 
 		return fmt.Errorf("too many arguments"), nil
 	}
 
-	currentName := args[0]
-	newName := args[1]
+	currentName := parseTagOrValueName(args[0])
+	newName := parseTagOrValueName(args[1])
 
 	tx, err := store.Begin()
 	if err != nil {

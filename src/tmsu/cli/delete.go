@@ -52,10 +52,12 @@ func deleteExec(store *storage.Storage, options Options, args []string) (error, 
 	}
 }
 
-func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) (error, warnings) {
+func deleteTag(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	for _, tagName := range tagNames {
+	for _, tagArg := range tagArgs {
+		tagName := parseTagOrValueName(tagArg)
+
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve tag '%v': %v", tagName, err), warnings
@@ -74,10 +76,12 @@ func deleteTag(store *storage.Storage, tx *storage.Tx, tagNames []string) (error
 	return nil, warnings
 }
 
-func deleteValue(store *storage.Storage, tx *storage.Tx, valueNames []string) (error, warnings) {
+func deleteValue(store *storage.Storage, tx *storage.Tx, valueArgs []string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	for _, valueName := range valueNames {
+	for _, valueArg := range valueArgs {
+		valueName := parseTagOrValueName(valueArg)
+
 		value, err := store.ValueByName(tx, valueName)
 		if err != nil {
 			return fmt.Errorf("could not retrieve value '%v': %v", valueName, err), warnings

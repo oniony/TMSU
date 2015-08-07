@@ -111,7 +111,29 @@ func createValue(store *storage.Storage, tx *storage.Tx, valueName string) (*ent
 	return value, nil
 }
 
-func parseTagValueName(tagArg string) (string, string) {
+func parseTagOrValueName(name string) string {
+	buffer := new(bytes.Buffer)
+	var escaped bool
+
+	for _, r := range name {
+		if escaped {
+			buffer.WriteRune(r)
+			escaped = false
+			continue
+		}
+
+		switch r {
+		case '\\':
+			escaped = true
+		default:
+			buffer.WriteRune(r)
+		}
+	}
+
+	return buffer.String()
+}
+
+func parseTagEqValueName(tagArg string) (string, string) {
 	tagNameBuffer := new(bytes.Buffer)
 	valueNameBuffer := new(bytes.Buffer)
 	var buffer = tagNameBuffer
@@ -120,6 +142,7 @@ func parseTagValueName(tagArg string) (string, string) {
 	for _, r := range tagArg {
 		if escaped {
 			buffer.WriteRune(r)
+			escaped = false
 			continue
 		}
 

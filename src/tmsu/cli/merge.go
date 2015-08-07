@@ -45,8 +45,12 @@ func mergeExec(store *storage.Storage, options Options, args []string) (error, w
 	}
 	defer tx.Commit()
 
-	sourceNames := args[0 : len(args)-1]
-	destName := args[len(args)-1]
+	sourceNames := make([]string, len(args)-1)
+	for index, name := range args[:len(args)-1] {
+		sourceNames[index] = parseTagOrValueName(name)
+	}
+
+	destName := parseTagOrValueName(args[len(args)-1])
 
 	if options.HasOption("--value") {
 		return mergeValues(store, tx, sourceNames, destName)

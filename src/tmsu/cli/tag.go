@@ -122,10 +122,12 @@ func tagExec(store *storage.Storage, options Options, args []string) (error, war
 	}
 }
 
-func createTagsValues(store *storage.Storage, tx *storage.Tx, names []string) (error, warnings) {
+func createTagsValues(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	for _, name := range names {
+	for _, tagArg := range tagArgs {
+		name := parseTagOrValueName(tagArg)
+
 		if name[0] == '=' {
 			name = name[1:]
 
@@ -172,7 +174,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 	warnings := make(warnings, 0, 10)
 
 	for _, tagArg := range tagArgs {
-		tagName, valueName := parseTagValueName(tagArg)
+		tagName, valueName := parseTagEqValueName(tagArg)
 
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {

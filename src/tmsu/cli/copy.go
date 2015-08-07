@@ -40,8 +40,12 @@ func copyExec(store *storage.Storage, options Options, args []string) (error, wa
 		return fmt.Errorf("too few arguments"), nil
 	}
 
-	sourceTagName := args[0]
-	destTagNames := args[1:]
+	sourceTagName := parseTagOrValueName(args[0])
+
+	destTagNames := make([]string, len(args)-1)
+	for index, arg := range args[1:] {
+		destTagNames[index] = parseTagOrValueName(arg)
+	}
 
 	tx, err := store.Begin()
 	if err != nil {

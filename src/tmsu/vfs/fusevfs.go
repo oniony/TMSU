@@ -941,7 +941,11 @@ func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files e
 		return []string{}, nil
 	}
 
-	valueNames := make([]string, 0, 10)
+	valueIds := make(entities.ValueIds, 0, 10)
+
+	predicate := func(fileTag entities.FileTag) bool {
+		return fileTag.TagId == tag.Id
+	}
 
 	for _, file := range files {
 		fileTags, err := vfs.store.FileTagsByFileId(tx, file.Id, false)
@@ -949,21 +953,19 @@ func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files e
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
 
-		valueIds := make(entities.ValueIds, len(fileTags))
-		for index, fileTag := range fileTags {
-			if fileTag.TagId == tag.Id {
-				valueIds[index] = fileTag.ValueId
-			}
+		for _, valueId := range fileTags.Where(predicate).ValueIds() {
+			valueIds = append(valueIds, valueId)
 		}
+	}
 
-		values, err := vfs.store.ValuesByIds(tx, valueIds)
-		if err != nil {
-			return nil, fmt.Errorf("could not retrieve values: %v", err)
-		}
+	values, err := vfs.store.ValuesByIds(tx, valueIds.Uniq())
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve values: %v", err)
+	}
 
-		for _, value := range values {
-			valueNames = append(valueNames, value.Name)
-		}
+	valueNames := make([]string, len(values))
+	for index, value := range values {
+		valueNames[index] = value.Name
 	}
 
 	return valueNames, nil

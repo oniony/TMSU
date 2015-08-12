@@ -19,7 +19,7 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"strings"
+	"regexp"
 	"time"
 	"tmsu/common/log"
 	"tmsu/common/terminal"
@@ -164,20 +164,23 @@ func parseTagEqValueName(tagArg string) (string, string) {
 }
 
 func formatTagValueName(tagName, valueName string, useColour, implicit, explicit bool) string {
+	tagName = escape(tagName)
+	valueName = escape(valueName)
+
 	if useColour {
 		colourCode := colourCodeFor(implicit, explicit)
 
 		if valueName == "" {
 			return colourCode + tagName + ansi.ResetCode
 		} else {
-			return colourCode + tagName + ansi.DarkGreyCode + "=" + ansi.ResetCode + colourCode + valueName + ansi.ResetCode
+			return colourCode + tagName + ansi.ResetCode + "=" + colourCode + valueName + ansi.ResetCode
 		}
 	}
 
 	if valueName == "" {
-		return escapeEquals(tagName)
+		return tagName
 	} else {
-		return escapeEquals(tagName) + "=" + escapeEquals(valueName)
+		return tagName + "=" + valueName
 	}
 }
 
@@ -193,6 +196,8 @@ func colourCodeFor(implicit, explicit bool) string {
 	return ""
 }
 
-func escapeEquals(text string) string {
-	return strings.Replace(text, "=", "\\=", -1)
+var escapePattern = regexp.MustCompile("(=|<|>|!)")
+
+func escape(text string) string {
+	return escapePattern.ReplaceAllString(text, "\\$1")
 }

@@ -52,7 +52,7 @@ Note: The equals character '=' must be escaped with a backslash '\' when used wi
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
 		"$ tmsu tag --create bad rubbish awful =2015",
-		`$ tmsu tag sheep.jpg 'contains\=equals`,
+		`$ tmsu tag sheep.jpg 'contains\=equals'`,
 		"$ tmsu tag sheep.jpg '<tag>'"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},

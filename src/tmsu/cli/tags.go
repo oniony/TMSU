@@ -70,13 +70,13 @@ func tagsExec(store *storage.Storage, options Options, args []string) (error, wa
 	defer tx.Commit()
 
 	if len(args) == 0 {
-		return listAllTags(store, tx, showCount, onePerLine, colour), nil
+		return listAllTags(store, tx, showCount, onePerLine), nil
 	}
 
 	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour)
 }
 
-func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, colour bool) error {
+func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine bool) error {
 	log.Info(2, "retrieving all tags.")
 
 	if showCount {
@@ -94,7 +94,7 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine, 
 
 		tagNames := make([]string, len(tags))
 		for index, tag := range tags {
-			tagNames[index] = tag.Name
+			tagNames[index] = escape(tag.Name)
 		}
 
 		if onePerLine {

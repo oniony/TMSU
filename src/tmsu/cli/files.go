@@ -33,20 +33,22 @@ var FilesCommand = Command{
 	Usages:   []string{"tmsu files [OPTION]... [QUERY]"},
 	Description: `Lists the files in the database that match the QUERY specified. If no query is specified, all files in the database are listed.
 
-QUERY may contain tag names to match, operators and parentheses. Operators are: and or not == != < > <= >=.
+QUERY may contain tag names to match, operators and parentheses. Operators are: and or not == != < > <= >= eq ne lt gt le ge.
 
 Queries are run against the database so the results may not reflect the current state of the filesystem. Only tagged files are matched: to identify untagged files use the 'untagged' subcommand.
 
-Note: Your shell may use some punctuation (e.g. < and >) for its own purposes. Either enclose the query in quotation marks, escape the problematic characters or use the equivalent text operators: == eq, != ne, < lt, > gt, <= le, >= ge.`,
+Note: If your tag or value name contains operator punctuation (e.g. '<') or parentheses ('(' or ')'), these must be escaped with a backslash '\', e.g. '\<tag\>' matches the tag name '<tag>'. Your shell, however, may use some punctuation for its own purposes: this can normally be avoided by enclosing the query in single quotation marks or by escaping the problem characters with a backslash.`,
 	Examples: []string{"$ tmsu files music mp3  # files with both 'music' and 'mp3'",
 		"$ tmsu files music and mp3  # same query but with explicit 'and'",
 		"$ tmsu files music and not mp3",
-		`$ tmsu files \"music and (mp3 or flac)"}`,
-		`$ tmsu files "year == 2015"  # tagged 'year' with a value '2015'`,
-		`$ tmsu files "year < 2015" # tagged 'year' with values under '2015'`,
-		`$ tmsu files year lt 2015  # same query but using textual operator`,
-		`$ tmsu files year  # tagged 'year' (any or no value)`,
-		`$ tmsu files --path=/home/bob music  # tagged 'music' under /home/bob`},
+		`$ tmsu files "music and (mp3 or flac)"`,
+		`$ tmsu files "year == 2015"`,
+		`$ tmsu files "year < 2015"`,
+		`$ tmsu files year lt 2015`,
+		`$ tmsu files year`,
+		`$ tmsu files --path=/home/bob music`,
+		`$ tmsu files 'contains\=equals'`,
+		`$ tmsu files '\<tag\>'`},
 	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
 		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},

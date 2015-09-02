@@ -15,6 +15,10 @@
 
 package query
 
+import (
+	"fmt"
+)
+
 func Parse(query string) (Expression, error) {
 	scanner := NewScanner(query)
 	parser := NewParser(scanner)
@@ -38,60 +42,95 @@ func HasAll(tagNames []string) Expression {
 }
 
 // Retrieves the set of tag names from an expression
-func TagNames(expression Expression) []string {
+func TagNames(expression Expression) ([]string, error) {
 	names := make([]string, 0, 10)
-	names = tagNames(expression, names)
-
-	return names
+	return tagNames(expression, names)
 }
 
 // Retrieves the set of value names from an expression where the name is matched on exactly
-func ExactValueNames(expression Expression) []string {
+func ExactValueNames(expression Expression) ([]string, error) {
 	names := make([]string, 0, 10)
-	names = exactValueNames(expression, names)
 
-	return names
+	return exactValueNames(expression, names)
 }
 
 // unexported
 
-func tagNames(expression Expression, names []string) []string {
+func tagNames(expression Expression, names []string) ([]string, error) {
+	var err error
+
 	switch exp := expression.(type) {
 	case EmptyExpression:
 		// nowt
 	case TagExpression:
 		names = append(names, exp.Name)
 	case NotExpression:
-		names = tagNames(exp.Operand, names)
+		names, err = tagNames(exp.Operand, names)
+		if err != nil {
+			return nil, err
+		}
 	case AndExpression:
-		names = tagNames(exp.LeftOperand, names)
-		names = tagNames(exp.RightOperand, names)
+		names, err = tagNames(exp.LeftOperand, names)
+		if err != nil {
+			return nil, err
+		}
+
+		names, err = tagNames(exp.RightOperand, names)
+		if err != nil {
+			return nil, err
+		}
 	case OrExpression:
-		names = tagNames(exp.LeftOperand, names)
-		names = tagNames(exp.RightOperand, names)
+		names, err = tagNames(exp.LeftOperand, names)
+		if err != nil {
+			return nil, err
+		}
+
+		names, err = tagNames(exp.RightOperand, names)
+		if err != nil {
+			return nil, err
+		}
 	case ComparisonExpression:
 		names = append(names, exp.Tag.Name)
 	default:
-		panic("unsupported token type")
+		return nil, fmt.Errorf("unsupported token type '%t'", exp)
 	}
 
-	return names
+	return names, nil
 }
 
-func exactValueNames(expression Expression, names []string) []string {
+func exactValueNames(expression Expression, names []string) ([]string, error) {
+	var err error
+
 	switch exp := expression.(type) {
 	case EmptyExpression:
 		// nowt
 	case TagExpression:
 		// nowt
 	case NotExpression:
-		names = exactValueNames(exp.Operand, names)
+		names, err = exactValueNames(exp.Operand, names)
+		if err != nil {
+			return nil, err
+		}
 	case AndExpression:
-		names = exactValueNames(exp.LeftOperand, names)
-		names = exactValueNames(exp.RightOperand, names)
+		names, err = exactValueNames(exp.LeftOperand, names)
+		if err != nil {
+			return nil, err
+		}
+
+		names, err = exactValueNames(exp.RightOperand, names)
+		if err != nil {
+			return nil, err
+		}
 	case OrExpression:
-		names = exactValueNames(exp.LeftOperand, names)
-		names = exactValueNames(exp.RightOperand, names)
+		names, err = exactValueNames(exp.LeftOperand, names)
+		if err != nil {
+			return nil, err
+		}
+
+		names, err = exactValueNames(exp.RightOperand, names)
+		if err != nil {
+			return nil, err
+		}
 	case ComparisonExpression:
 		switch exp.Operator {
 		case "=", "==", "!=":
@@ -99,11 +138,11 @@ func exactValueNames(expression Expression, names []string) []string {
 		case "<", ">", "<=", ">=":
 			// do nowt
 		default:
-			panic("unsupported operator " + exp.Operator)
+			return nil, fmt.Errorf("unsupported operator '%v'", exp.Operator)
 		}
 	default:
-		panic("unsupported token type")
+		return nil, fmt.Errorf("unsupported token type '%t'", exp)
 	}
 
-	return names
+	return names, nil
 }

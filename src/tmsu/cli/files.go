@@ -37,7 +37,7 @@ QUERY may contain tag names to match, operators and parentheses. Operators are: 
 
 Queries are run against the database so the results may not reflect the current state of the filesystem. Only tagged files are matched: to identify untagged files use the 'untagged' subcommand.
 
-Note: If your tag or value name contains operator punctuation (e.g. '<') or parentheses ('(' or ')'), these must be escaped with a backslash '\', e.g. '\<tag\>' matches the tag name '<tag>'. Your shell, however, may use some punctuation for its own purposes: this can normally be avoided by enclosing the query in single quotation marks or by escaping the problem characters with a backslash.`,
+Note: If your tag or value name contains whitespace, operators (e.g. '<') or parentheses ('(' or ')'), these must be escaped with a backslash '\', e.g. '\<tag\>' matches the tag name '<tag>'. Your shell, however, may use some punctuation for its own purposes: this can normally be avoided by enclosing the query in single quotation marks or by escaping the problem characters with a backslash.`,
 	Examples: []string{"$ tmsu files music mp3  # files with both 'music' and 'mp3'",
 		"$ tmsu files music and mp3  # same query but with explicit 'and'",
 		"$ tmsu files music and not mp3",
@@ -111,7 +111,11 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 
 	warnings := make(warnings, 0, 10)
 
-	tagNames := query.TagNames(expression)
+	tagNames, err := query.TagNames(expression)
+	if err != nil {
+		return fmt.Errorf("could not identify tag names: %v", err), nil
+	}
+
 	tags, err := store.TagsByCasedNames(tx, tagNames, ignoreCase)
 	for _, tagName := range tagNames {
 		if err := entities.ValidateTagName(tagName); err != nil {
@@ -125,7 +129,11 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 		}
 	}
 
-	valueNames := query.ExactValueNames(expression)
+	valueNames, err := query.ExactValueNames(expression)
+	if err != nil {
+		return fmt.Errorf("could not identify value names: %v", err), nil
+	}
+
 	values, err := store.ValuesByCasedNames(tx, valueNames, ignoreCase)
 	for _, valueName := range valueNames {
 		if err := entities.ValidateValueName(valueName); err != nil {

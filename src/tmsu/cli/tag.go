@@ -41,13 +41,13 @@ var TagCommand = Command{
 
 Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
 
-Tag names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names cannot contain whitespace, slash '/' or backslash '\' characters.
+Tag and value names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names cannot contain the slash '/' or backslash '\' characters.
 
 Tags will not be applied if they are already implied by tag implications. This behaviour can be overriden with the --explicit option. See the 'imply' subcommand for more information.
 
 If a single argument of - is passed, TMSU will read lines from standard input in the format 'FILE TAG[=VALUE]...'.
 
-Note: The equals character '=' must be escaped with a backslash '\' when used within a tag name. However, your shell may use the backslash for its own purposes: this can normally be avoided by enclosing the argument in single quotation marks or by escaping the backslash with an additional backslash '\\'.`,
+Note: The equals '=' and whitespace characters must be escaped with a backslash '\' when used within a tag or value name. However, your shell may use the backslash for its own purposes: this can normally be avoided by enclosing the argument in single quotation marks or by escaping the backslash with an additional backslash '\\'.`,
 	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,

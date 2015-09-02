@@ -143,4 +143,4 @@ func ValidateValueName(valueName string) error {
 
 // unexported
 
-var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
+var validValueChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol, unicode.Space}

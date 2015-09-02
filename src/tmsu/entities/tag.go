@@ -149,4 +149,4 @@ func ValidateTagName(tagName string) error {
 
 // unexported
 
-var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol}
+var validTagChars = []*unicode.RangeTable{unicode.Letter, unicode.Number, unicode.Punct, unicode.Symbol, unicode.Space}

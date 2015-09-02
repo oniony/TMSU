@@ -729,7 +729,11 @@ func (vfs FuseVfs) getQueryEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	}
 	defer tx.Commit()
 
-	tagNames := query.TagNames(expression)
+	tagNames, err := query.TagNames(expression)
+	if err != nil {
+		log.Fatalf("could not identify tag names: %v", err)
+	}
+
 	tags, err := vfs.store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !containsTag(tags, tagName) {
@@ -850,10 +854,14 @@ func (vfs FuseVfs) openQueryEntryDir(tx *storage.Tx, path []string) ([]fuse.DirE
 
 	expression, err := query.Parse(queryText)
 	if err != nil {
-		return nil, fuse.ENOENT
+		log.Fatalf("could not parse query: %v", err)
 	}
 
-	tagNames := query.TagNames(expression)
+	tagNames, err := query.TagNames(expression)
+	if err != nil {
+		log.Fatalf("could not identify tag names: %v", err)
+	}
+
 	tags, err := vfs.store.TagsByNames(tx, tagNames)
 	for _, tagName := range tagNames {
 		if !containsTag(tags, tagName) {

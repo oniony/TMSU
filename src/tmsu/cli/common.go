@@ -196,7 +196,7 @@ func colourCodeFor(implicit, explicit bool) string {
 	return ""
 }
 
-var escapePattern = regexp.MustCompile(`(=|<|>|!|\(|\))`)
+var escapePattern = regexp.MustCompile(`(=|<|>|!|\(|\)| )`)
 
 func escape(text string) string {
 	return escapePattern.ReplaceAllString(text, `\$1`)

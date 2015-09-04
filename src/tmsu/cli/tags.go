@@ -92,16 +92,16 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 			return fmt.Errorf("could not retrieve tags: %v", err)
 		}
 
-		tagNames := make([]string, len(tags))
-		for index, tag := range tags {
-			tagNames[index] = escape(tag.Name)
-		}
-
 		if onePerLine {
-			for _, tagName := range tagNames {
+			for _, tagName := range tags {
 				fmt.Println(tagName)
 			}
 		} else {
+			tagNames := make([]string, len(tags))
+			for index, tag := range tags {
+				tagNames[index] = tag.Name
+			}
+
 			terminal.PrintColumns(tagNames)
 		}
 	}

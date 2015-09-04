@@ -192,6 +192,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
+				continue
 			}
 		}
 
@@ -207,6 +208,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
+				continue
 			}
 		}
 

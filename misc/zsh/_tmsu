@@ -62,20 +62,8 @@ _tmsu_commands() {
 	_describe -t commands 'command' command_list "$@"
 }
 
-_tmsu_tag_values() {
-    typeset -a value_list
-    local line
-
-    local tagName=${PREFIX%%=*}
-    _call_program tmsu tmsu $db values 2>/dev/null | \
-    while read -A line
-    do
-        value_list+=$tagName=$line[1]
-    done
-
-    _describe -t values 'values' value_list
-}
-
+# the set of tag names
+# escaping: completion, =
 _tmsu_tags() {
     typeset -a tag_list
     local tag
@@ -83,12 +71,14 @@ _tmsu_tags() {
     _call_program tmsu tmsu $db tags | \
     while read -A tag
     do
-        tag_list+=$tag[1]:gs/:/\\:/
+        tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/
     done
 
     _describe -t tags 'tags' tag_list
 }
 
+# the set of values
+# escaping: completion
 _tmsu_values() {
     typeset -a value_list
     local value
@@ -102,6 +92,24 @@ _tmsu_values() {
     _describe -t values 'values' value_list
 }
 
+# the set of values for a tag
+# escaping: completion
+_tmsu_tag_values() {
+    typeset -a value_list
+    local line
+
+    local tagName=${PREFIX%%=*}
+    _call_program tmsu tmsu $db values 2>/dev/null | \
+    while read -A value
+    do
+        value_list+=$tagName=$value:gs/:/\\:/
+    done
+
+    _describe -t values 'values' value_list
+}
+
+# the set of tags, or values for that tag if ending =
+# escaping: completion, =
 _tmsu_tags_with_values() {
     if [[ -prefix *= ]] 
     then
@@ -111,6 +119,8 @@ _tmsu_tags_with_values() {
     fi
 }
 
+# file query words: tags, values, operators
+# escaping: completion, =, <, >
 _tmsu_query() {
     if [[ -prefix *= ]]
     then
@@ -119,9 +129,9 @@ _tmsu_query() {
 
         local tagName=${PREFIX%%=*}
         _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
-        while read -A line
+        while read -A value
         do
-            value_list+=$tagName=$line[1]
+            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
         done
 
         _describe -t values 'values' value_list
@@ -133,14 +143,23 @@ _tmsu_query() {
         local tagName=$words[$#words-2]
 
         _call_program tmsu tmsu $db values $tagName | \
-        while read -A line
+        while read -A value
         do
-            value_list+=$line[1]
+            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
         done
 
         _describe -t values 'values' value_list
     else
-        _tmsu_tags
+        typeset -a tag_list
+        local tag
+
+        _call_program tmsu tmsu $db tags | \
+        while read -A tag
+        do
+            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
+        done
+
+        _describe -t tags 'tags' tag_list
 
         typeset -a operator_list
 
@@ -164,35 +183,18 @@ _tmsu_query() {
     fi
 }
 
+# set of files
 _tmsu_files() {
     typeset -a file_list
     local file
 
-    _call_program tmsu tmsu $db files | while read -A file
+    _call_program tmsu tmsu $db files | \
+    while read -A file
     do
-        file_list+=$file
+        file_list+=$file:s#./##
     done
 
     _describe -t files 'files' file_list
-}
-
-_tmsu_file_tags() {
-    file=$words[1]
-
-    if [[ $file = "" ]]
-    then
-        _tmsu_tags_with_values
-    else
-        typeset -a tag_list
-        local tag
-
-        _call_program tmsu tmsu $db tags -1 $file | tail -n +2 | while read -A tag
-        do
-            tag_list+=$tag[1]:gs/:/\\:/
-        done
-
-        _describe -t tags 'tags' tag_list
-    fi
 }
 
 _tmsu_setting_names() {
@@ -388,7 +390,7 @@ _tmsu_cmd_untag() {
 				then
 					_wanted files expl 'files' _tmsu_files
 				else
-					_wanted tags expl 'tags' _tmsu_file_tags
+					_wanted tags expl 'tags' _tmsu_tags_with_values
 				fi
 			fi
 	esac

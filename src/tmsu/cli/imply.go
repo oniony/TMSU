@@ -168,6 +168,7 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", impliedTagName))
+				continue
 			}
 		}
 
@@ -183,6 +184,7 @@ func addImplications(store *storage.Storage, tx *storage.Tx, tagArgs []string) (
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such value '%v'", impliedValueName))
+				continue
 			}
 		}
 

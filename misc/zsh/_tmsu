@@ -131,7 +131,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
         while read -A value
         do
-            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
+            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
         done
 
         _describe -t values 'values' value_list
@@ -145,7 +145,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db values $tagName | \
         while read -A value
         do
-            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
+            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
         done
 
         _describe -t values 'values' value_list
@@ -156,7 +156,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db tags | \
         while read -A tag
         do
-            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/
+            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
         done
 
         _describe -t tags 'tags' tag_list

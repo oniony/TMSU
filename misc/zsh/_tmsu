@@ -54,7 +54,7 @@ _tmsu_commands() {
 	local line
 
 	_call_program tmsu tmsu help --list | \
-	while read -A line
+	while read line
 	do
 		command_list+=($line[1])
 	done
@@ -69,7 +69,7 @@ _tmsu_tags() {
     local tag
 
     _call_program tmsu tmsu $db tags | \
-    while read -A tag
+    while read tag
     do
         tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/
     done
@@ -84,7 +84,7 @@ _tmsu_values() {
     local value
 
     _call_program tmsu tmsu $db values | \
-    while read -A value
+    while read value
     do
         value_list+=$value[1]:gs/:/\\:/
     done
@@ -100,7 +100,7 @@ _tmsu_tag_values() {
 
     local tagName=${PREFIX%%=*}
     _call_program tmsu tmsu $db values 2>/dev/null | \
-    while read -A value
+    while read value
     do
         value_list+=$tagName=$value:gs/:/\\:/
     done
@@ -120,7 +120,7 @@ _tmsu_tags_with_values() {
 }
 
 # file query words: tags, values, operators
-# escaping: completion, =, <, >
+# escaping: completion, !, =, <, >, (, ), whitespace
 _tmsu_query() {
     if [[ -prefix *= ]]
     then
@@ -129,9 +129,9 @@ _tmsu_query() {
 
         local tagName=${PREFIX%%=*}
         _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
-        while read -A value
+        while read value
         do
-            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
+            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
         done
 
         _describe -t values 'values' value_list
@@ -143,9 +143,9 @@ _tmsu_query() {
         local tagName=$words[$#words-2]
 
         _call_program tmsu tmsu $db values $tagName | \
-        while read -A value
+        while read value
         do
-            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
+            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
         done
 
         _describe -t values 'values' value_list
@@ -154,9 +154,9 @@ _tmsu_query() {
         local tag
 
         _call_program tmsu tmsu $db tags | \
-        while read -A tag
+        while read tag
         do
-            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/
+            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
         done
 
         _describe -t tags 'tags' tag_list
@@ -189,7 +189,7 @@ _tmsu_files() {
     local file
 
     _call_program tmsu tmsu $db files | \
-    while read -A file
+    while read file
     do
         file_list+=$file:s#./##
     done
@@ -203,7 +203,7 @@ _tmsu_setting_names() {
         typeset -a setting_names
         local name
 
-        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read -A name
+        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read name
         do
             setting_names+=$name
         done

@@ -92,7 +92,7 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
   * Wiki: <https://github.com/oniony/TMSU/wiki>
   * Issue tracker: <https://github.com/oniony/TMSU/issues>
   * Mailing list: <http://groups.google.com/group/tmsu>
-  * Feedback: <https://www.surveymonkey.com/r/NQ7M9KT>
+  * Feedback: <https://docs.google.com/forms/d/1cd-SwD7OcHaAkv7X9OBf4kPlAyEKghSz8SQ9tSqHjo8/>
 
 Release Notes
 =============

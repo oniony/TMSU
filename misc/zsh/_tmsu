@@ -49,12 +49,21 @@ _tmsu() {
 	esac
 }
 
+# colons must be escaped as they have special meaning to Zsh completion
+_escape_colon() {
+    echo "$1" | sed 's/:/\\:/g'
+}
+
+_escape_equals() {
+    _escape_colon "$1" | sed 's/=/\\\\=/g'
+}
+
 _tmsu_commands() {
 	typeset -a command_list
 	local line
 
 	_call_program tmsu tmsu help --list | \
-	while read line
+	while read -A line
 	do
 		command_list+=($line[1])
 	done
@@ -63,53 +72,49 @@ _tmsu_commands() {
 }
 
 # the set of tag names
-# escaping: completion, =
 _tmsu_tags() {
     typeset -a tag_list
     local tag
 
     _call_program tmsu tmsu $db tags | \
-    while read tag
+    while read -A tag
     do
-        tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/
+        tag_list+=("$( _escape_equals "$tag" )")
     done
 
     _describe -t tags 'tags' tag_list
 }
 
 # the set of values
-# escaping: completion
 _tmsu_values() {
     typeset -a value_list
     local value
 
     _call_program tmsu tmsu $db values | \
-    while read value
+    while read -A value
     do
-        value_list+=$value[1]:gs/:/\\:/
+        value_list+=("$( _escape_equals "$value[1]" )")
     done
 
     _describe -t values 'values' value_list
 }
 
 # the set of values for a tag
-# escaping: completion
 _tmsu_tag_values() {
     typeset -a value_list
     local line
 
     local tagName=${PREFIX%%=*}
     _call_program tmsu tmsu $db values 2>/dev/null | \
-    while read value
+    while read -A value
     do
-        value_list+=$tagName=$value:gs/:/\\:/
+        value_list+=("$( _escape_equals "$tagName" )=$( _escape_colon "$value" )")
     done
 
     _describe -t values 'values' value_list
 }
 
 # the set of tags, or values for that tag if ending =
-# escaping: completion, =
 _tmsu_tags_with_values() {
     if [[ -prefix *= ]] 
     then
@@ -129,9 +134,9 @@ _tmsu_query() {
 
         local tagName=${PREFIX%%=*}
         _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
-        while read value
+        while read -A value
         do
-            value_list+=$tagName=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
+            value_list+=("$( _escape_query "$tagName" )=$( _escape_query "$value" )")
         done
 
         _describe -t values 'values' value_list
@@ -142,10 +147,10 @@ _tmsu_query() {
 
         local tagName=$words[$#words-2]
 
-        _call_program tmsu tmsu $db values $tagName | \
-        while read value
+        _call_program tmsu tmsu $db values "$tagName" | \
+        while read -A value
         do
-            value_list+=$value:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
+            value_list+=("$( _escape_query "$value" )")
         done
 
         _describe -t values 'values' value_list
@@ -154,9 +159,9 @@ _tmsu_query() {
         local tag
 
         _call_program tmsu tmsu $db tags | \
-        while read tag
+        while read -A tag
         do
-            tag_list+=$tag:gs/:/\\:/:gs/=/\\\\=/:gs/!/\\\\!/:gs/\</\\\\\</:gs/\>/\\\\\>/:gs/\(/\\\\\(/:gs/\)/\\\\\)/:gs/\ /\\\\\ /
+            tag_list+=("$( _escape_query "$tag" )")
         done
 
         _describe -t tags 'tags' tag_list
@@ -189,7 +194,7 @@ _tmsu_files() {
     local file
 
     _call_program tmsu tmsu $db files | \
-    while read file
+    while read -A file
     do
         file_list+=$file:s#./##
     done
@@ -203,7 +208,7 @@ _tmsu_setting_names() {
         typeset -a setting_names
         local name
 
-        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read name
+        _call_program tmsu tmsu $db config | cut -d = -f 1 | while read -A name
         do
             setting_names+=$name
         done

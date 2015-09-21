@@ -50,7 +50,9 @@ ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
 
 // Retrieves the set of implications by the specified tag and value pairs.
 func ImplicationsFor(tx *Tx, pairs entities.TagIdValueIdPairs) (entities.Implications, error) {
-	sql := `
+	builder := NewBuilder()
+
+	builder.AppendSql(`
 SELECT tag.id, tag.name,
        value.id, value.name,
        implied_tag.id, implied_tag.name,
@@ -60,24 +62,29 @@ INNER JOIN tag tag ON implication.tag_id = tag.id
 LEFT OUTER JOIN value value ON implication.value_id = value.id
 INNER JOIN tag implied_tag ON implication.implied_tag_id = implied_tag.id
 LEFT OUTER JOIN value implied_value ON implication.implied_value_id = implied_value.id
-WHERE `
+WHERE `)
 
-	params := make([]interface{}, len(pairs)*2)
 	for index, pair := range pairs {
 		if index > 0 {
-			sql += "   OR "
+			builder.AppendSql("   OR ")
 		}
 
-		sql += "(implication.tag_id = ? AND implication.value_id = ?)"
-
-		params[index*2] = pair.TagId
-		params[index*2+1] = pair.ValueId
+		if pair.ValueId == 0 {
+			builder.AppendSql("(implication.tag_id = ")
+			builder.AppendParam(pair.TagId)
+			builder.AppendSql(")")
+		} else {
+			builder.AppendSql("(implication.tag_id = ")
+			builder.AppendParam(pair.TagId)
+			builder.AppendSql(" AND implication.value_id IN (0, ")
+			builder.AppendParam(pair.ValueId)
+			builder.AppendSql("))")
+		}
 	}
 
-	sql += `
-ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`
+	builder.AppendSql(`ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`)
 
-	rows, err := tx.Query(sql, params...)
+	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
 		return nil, err
 	}

@@ -15,10 +15,6 @@
 
 package cli
 
-import (
-	"tmsu/storage"
-)
-
 type Command struct {
 	Name        string
 	Aliases     []string
@@ -27,6 +23,6 @@ type Command struct {
 	Description string
 	Examples    []string
 	Options     Options
-	Exec        func(*storage.Storage, Options, []string) (error, warnings)
+	Exec        func(options Options, arguments []string, databasePath string) (error, warnings)
 	Hidden      bool
 }

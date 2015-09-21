@@ -62,7 +62,7 @@ Note: If your tag or value name contains whitespace, operators (e.g. '<') or par
 
 // unexported
 
-func filesExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func filesExec(options Options, args []string, databasePath string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
 	fileOnly := options.HasOption("--file")
 	print0 := options.HasOption("--print0")
@@ -86,6 +86,12 @@ func filesExec(store *storage.Storage, options Options, args []string) (error, w
 			return fmt.Errorf("could not get absolute path of '%v': %v'", relPath, err), nil
 		}
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

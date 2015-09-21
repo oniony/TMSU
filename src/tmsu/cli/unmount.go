@@ -22,7 +22,6 @@ import (
 	"os"
 	"os/exec"
 	"tmsu/common/log"
-	"tmsu/storage"
 	"tmsu/vfs"
 )
 
@@ -39,7 +38,7 @@ var UnmountCommand = Command{
 
 // unexported
 
-func unmountExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func unmountExec(options Options, args []string, databasePath string) (error, warnings) {
 	if options.HasOption("--all") {
 		return unmountAll(), nil
 	}

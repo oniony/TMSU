@@ -53,7 +53,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 
 // unexported
 
-func tagsExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func tagsExec(options Options, args []string, databasePath string) (error, warnings) {
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
@@ -62,6 +62,12 @@ func tagsExec(store *storage.Storage, options Options, args []string) (error, wa
 	if err != nil {
 		return err, nil
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

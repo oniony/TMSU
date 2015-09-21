@@ -18,7 +18,6 @@ package cli
 import (
 	"fmt"
 	"tmsu/common/terminal"
-	"tmsu/storage"
 	"tmsu/version"
 )
 
@@ -34,7 +33,7 @@ var VersionCommand = Command{
 
 // unexported
 
-func versionExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func versionExec(options Options, args []string, databasePath string) (error, warnings) {
 	fmt.Println("TMSU", version.Version)
 	fmt.Println()
 	terminal.PrintWrapped(`Copyright © 2011-2015 Paul Ruane.

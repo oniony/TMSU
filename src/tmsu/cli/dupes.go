@@ -40,8 +40,14 @@ var DupesCommand = Command{
 
 // unexported
 
-func dupesExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func dupesExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

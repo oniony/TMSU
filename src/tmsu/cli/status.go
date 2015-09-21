@@ -90,8 +90,14 @@ func NewReport() *StatusReport {
 
 // unexported
 
-func statusExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func statusExec(options Options, args []string, databasePath string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

@@ -58,8 +58,14 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 
 // unexported
 
-func repairExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func repairExec(options Options, args []string, databasePath string) (error, warnings) {
 	pretend := options.HasOption("--pretend")
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

@@ -35,7 +35,7 @@ var CopyCommand = Command{
 
 // unexported
 
-func copyExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func copyExec(options Options, args []string, databasePath string) (error, warnings) {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments"), nil
 	}
@@ -46,6 +46,12 @@ func copyExec(store *storage.Storage, options Options, args []string) (error, wa
 	for index, arg := range args[1:] {
 		destTagNames[index] = parseTagOrValueName(arg)
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

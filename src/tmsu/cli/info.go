@@ -38,13 +38,19 @@ var InfoCommand = Command{
 
 // unexported
 
-func infoExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func infoExec(options Options, args []string, databasePath string) (error, warnings) {
 	stats := options.HasOption("--stats")
 	usage := options.HasOption("--usage")
 	colour, err := useColour(options)
 	if err != nil {
 		return err, nil
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

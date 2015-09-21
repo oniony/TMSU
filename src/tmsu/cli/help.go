@@ -24,7 +24,6 @@ import (
 	"tmsu/common/log"
 	"tmsu/common/terminal"
 	"tmsu/common/terminal/ansi"
-	"tmsu/storage"
 )
 
 var HelpCommand = Command{
@@ -41,7 +40,7 @@ var HelpCommand = Command{
 var helpCommands []*Command
 var colorizeRegexp = regexp.MustCompile(`'\S+'`)
 
-func helpExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func helpExec(options Options, args []string, databasePath string) (error, warnings) {
 	var colour bool
 	if options.HasOption("--color") {
 		when := options.Get("--color").Argument

@@ -42,12 +42,18 @@ var UntagCommand = Command{
 
 // unexported
 
-func untagExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func untagExec(options Options, args []string, databasePath string) (error, warnings) {
 	if len(args) < 1 {
 		return fmt.Errorf("too few arguments"), nil
 	}
 
 	recursive := options.HasOption("--recursive")
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

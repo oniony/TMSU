@@ -65,10 +65,16 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 
 // unexported
 
-func tagExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func tagExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
 	force := options.HasOption("--force")
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

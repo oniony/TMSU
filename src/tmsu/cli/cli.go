@@ -22,7 +22,6 @@ import (
 	"path/filepath"
 	"tmsu/common/log"
 	_path "tmsu/common/path"
-	"tmsu/storage"
 )
 
 func Run() {
@@ -56,13 +55,7 @@ func Run() {
 		}
 	}
 
-	store, err := storage.OpenAt(databasePath)
-	if err != nil {
-		log.Fatalf("could not open storage: %v", err)
-	}
-
-	err, warnings := command.Exec(store, options, arguments)
-	store.Close()
+	err, warnings := command.Exec(options, arguments, databasePath)
 
 	if warnings != nil {
 		for _, warning := range warnings {

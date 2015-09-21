@@ -39,7 +39,7 @@ The new database is used automatically whenever TMSU is invoked from a directory
 
 // unexported
 
-func initExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func initExec(options Options, args []string, databasePath string) (error, warnings) {
 	paths := args
 
 	if len(paths) == 0 {

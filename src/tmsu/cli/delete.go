@@ -34,10 +34,16 @@ var DeleteCommand = Command{
 
 // unexported
 
-func deleteExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func deleteExec(options Options, args []string, databasePath string) (error, warnings) {
 	if len(args) == 0 {
 		return fmt.Errorf("too few arguments"), nil
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

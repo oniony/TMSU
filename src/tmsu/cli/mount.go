@@ -52,11 +52,17 @@ To allow other users access to the mounted filesystem, pass the 'allow_other' FU
 
 // unexported
 
-func mountExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func mountExec(options Options, args []string, databasePath string) (error, warnings) {
 	var mountOptions string
 	if options.HasOption("--options") {
 		mountOptions = options.Get("--options").Argument
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

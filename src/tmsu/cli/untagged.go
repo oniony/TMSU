@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -39,7 +39,7 @@ Where PATHs are not specified, untagged items under the current working director
 
 // unexported
 
-func untaggedExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func untaggedExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := !options.HasOption("--directory")
 
 	paths := args
@@ -50,6 +50,12 @@ func untaggedExec(store *storage.Storage, options Options, args []string) (error
 			return err, nil
 		}
 	}
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

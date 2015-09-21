@@ -37,7 +37,7 @@ Attempting to rename a tag or value with a name that already exists will result 
 
 // unexported
 
-func renameExec(store *storage.Storage, options Options, args []string) (error, warnings) {
+func renameExec(options Options, args []string, databasePath string) (error, warnings) {
 	if len(args) < 2 {
 		return fmt.Errorf("too few arguments"), nil
 	}
@@ -48,6 +48,12 @@ func renameExec(store *storage.Storage, options Options, args []string) (error, 
 
 	currentName := parseTagOrValueName(args[0])
 	newName := parseTagOrValueName(args[1])
+
+	store, err := storage.OpenAt(databasePath)
+	if err != nil {
+		return err, nil
+	}
+	defer store.Close()
 
 	tx, err := store.Begin()
 	if err != nil {

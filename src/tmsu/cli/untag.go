@@ -18,8 +18,8 @@ package cli
 import (
 	"fmt"
 	"path/filepath"
-	"strings"
 	"tmsu/common/log"
+	"tmsu/common/text"
 	"tmsu/entities"
 	"tmsu/storage"
 )
@@ -70,7 +70,7 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 
 		return untagPathsAll(store, tx, paths, recursive)
 	} else if options.HasOption("--tags") {
-		tagArgs := strings.Fields(options.Get("--tags").Argument)
+		tagArgs := text.Tokenize(options.Get("--tags").Argument)
 		if len(tagArgs) == 0 {
 			return fmt.Errorf("set of tags to apply must be specified"), nil
 		}

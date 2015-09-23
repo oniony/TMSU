@@ -21,7 +21,6 @@ import (
 	"io"
 	"os"
 	"path/filepath"
-	"strings"
 	"tmsu/common/fingerprint"
 	"tmsu/common/log"
 	"tmsu/common/text"
@@ -94,7 +93,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 			return fmt.Errorf("too few arguments"), nil
 		}
 
-		tagArgs := strings.Fields(options.Get("--tags").Argument)
+		tagArgs := text.Tokenize(options.Get("--tags").Argument)
 		if len(tagArgs) == 0 {
 			return fmt.Errorf("too few arguments"), nil
 		}

@@ -55,7 +55,11 @@ _escape_colon() {
 }
 
 _escape_equals() {
-    _escape_colon "$1" | sed 's/=/\\\\=/g'
+    _escape_colon "$1" | sed 's/=/\\\\=/g' | sed "s/'/\\'/g"
+}
+
+_escape_query() {
+    _escape_equals "$1"
 }
 
 _tmsu_commands() {
@@ -156,12 +160,12 @@ _tmsu_query() {
         _describe -t values 'values' value_list
     else
         typeset -a tag_list
-        local tag
+        local tagName
 
         _call_program tmsu tmsu $db tags | \
-        while read -A tag
+        while read -A tagName
         do
-            tag_list+=("$( _escape_query "$tag" )")
+            tag_list+=("$( _escape_query "$tagName" )")
         done
 
         _describe -t tags 'tags' tag_list

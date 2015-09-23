@@ -24,10 +24,15 @@ func Tokenize(text string) []string {
 	for _, char := range text {
 		switch {
 		case escape:
-			token = append(token, char)
+			switch char {
+			case '"', '\'', '\\', ' ', '\t':
+				token = append(token, char)
+			default:
+				token = append(token, '\\')
+				token = append(token, char)
+			}
+
 			escape = false
-		case char == '\\':
-			escape = true
 		case quote != 0:
 			if char == quote {
 				tokens = append(tokens, string(token))
@@ -36,6 +41,8 @@ func Tokenize(text string) []string {
 			} else {
 				token = append(token, char)
 			}
+		case char == '\\':
+			escape = true
 		case char == '"', char == '\'':
 			quote = char
 		case char == ' ', char == '\t':

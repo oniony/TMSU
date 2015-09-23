@@ -24,15 +24,28 @@ func Tokenize(text string) []string {
 	for _, char := range text {
 		switch {
 		case escape:
-			switch char {
-			case '"', '\'', '\\', ' ', '\t':
-				token = append(token, char)
-			default:
-				token = append(token, '\\')
-				token = append(token, char)
+			if quote != 0 {
+				// only the current quote character and backslash can be escaped inside a quote
+				if char == quote || char == '\\' {
+					token = append(token, char)
+				} else {
+					token = append(token, '\\')
+					token = append(token, char)
+				}
+			} else {
+				// only ", ', \, space and tab can be escaped
+				switch char {
+				case '"', '\'', '\\', ' ', '\t':
+					token = append(token, char)
+				default:
+					token = append(token, '\\')
+					token = append(token, char)
+				}
 			}
 
 			escape = false
+		case char == '\\':
+			escape = true
 		case quote != 0:
 			if char == quote {
 				tokens = append(tokens, string(token))

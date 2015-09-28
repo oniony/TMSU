@@ -8,6 +8,8 @@ typeset -A opt_args
 
 local db
 
+autoload -U regexp-replace
+
 _tmsu() {
 	local cmd db ret=1
 	integer i=2
@@ -49,19 +51,6 @@ _tmsu() {
 	esac
 }
 
-# colons must be escaped as they have special meaning to Zsh completion
-_escape_colon() {
-    echo "$1" | sed 's/:/\\:/g'
-}
-
-_escape_equals() {
-    _escape_colon "$1" | sed 's/=/\\\\=/g' | sed "s/'/\\'/g"
-}
-
-_escape_query() {
-    _escape_equals "$1"
-}
-
 _tmsu_commands() {
 	typeset -a command_list
 	local line
@@ -81,9 +70,10 @@ _tmsu_tags() {
     local tag
 
     _call_program tmsu tmsu $db tags | \
-    while read -A tag
+    while read tag
     do
-        tag_list+=("$( _escape_equals "$tag" )")
+        local escapedTag=$tag:gs/:/\:/:gs/=/\\\\=/
+        tag_list+=("$escapedTag")
     done
 
     _describe -t tags 'tags' tag_list
@@ -95,9 +85,12 @@ _tmsu_values() {
     local value
 
     _call_program tmsu tmsu $db values | \
-    while read -A value
+    while read value
     do
-        value_list+=("$( _escape_equals "$value[1]" )")
+        local escapedValue=$value:gs/:/\:/
+        escapedValue=$escapedValue:gs/=/\\=/
+
+        value_list+=("$escapedValue")
     done
 
     _describe -t values 'values' value_list
@@ -108,11 +101,16 @@ _tmsu_tag_values() {
     typeset -a value_list
     local line
 
-    local tagName=${PREFIX%%=*}
+    local tag=${PREFIX%=*}
+    local escapedTag=$tag:gs/:/\:/:gs/=/\\\\=/
+
     _call_program tmsu tmsu $db values 2>/dev/null | \
-    while read -A value
+    while read value
     do
-        value_list+=("$( _escape_equals "$tagName" )=$( _escape_colon "$value" )")
+        local escapedValue=$value:gs/:/\\:/
+        escapedValue=$escapedValue:gs/=/\\=/
+
+        value_list+=("$escapedTag=$escapedValue")
     done
 
     _describe -t values 'values' value_list
@@ -136,11 +134,29 @@ _tmsu_query() {
         typeset -a value_list
         local line
 
-        local tagName=${PREFIX%%=*}
-        _call_program tmsu tmsu $db values $tagName 2>/dev/null | \
-        while read -A value
+        local tag=${PREFIX%=*}
+        local escapedTag=$tag:gs/:/\:/
+        escapedTag=${escapedTag:gs/=/\\\\&}
+        escapedTag=${escapedTag:gs/!/\\\\&}
+        escapedTag=${escapedTag:gs/</\\\\&}
+        escapedTag=${escapedTag:gs/>/\\\\&}
+        escapedTag=${escapedTag:gs/(/\\\\&}
+        escapedTag=${escapedTag:gs/)/\\\\&}
+        escapedTag=${escapedTag:gs/ /\\\\&}
+
+        _call_program tmsu tmsu $db values $tag2>/dev/null | \
+        while read value
         do
-            value_list+=("$( _escape_query "$tagName" )=$( _escape_query "$value" )")
+            local escapedValue=$value:gs/:/\:/
+            escapedValue=${escapedValue:gs/=/\\\\&}
+            escapedValue=${escapedValue:gs/!/\\\\&}
+            escapedValue=${escapedValue:gs/</\\\\&}
+            escapedValue=${escapedValue:gs/>/\\\\&}
+            escapedValue=${escapedValue:gs/(/\\\\&}
+            escapedValue=${escapedValue:gs/)/\\\\&}
+            escapedValue=${escapedValue:gs/ /\\\\&}
+
+            value_list+=("$escapedTag=$escapedValue")
         done
 
         _describe -t values 'values' value_list
@@ -149,23 +165,49 @@ _tmsu_query() {
         typeset -a value_list
         local line
 
-        local tagName=$words[$#words-2]
+        local tag=$words[$#words-2]
+        local escapedTag=$tag:gs/:/\:/
+        escapedTag=${escapedTag:gs/=/\\\\&}
+        escapedTag=${escapedTag:gs/!/\\\\&}
+        escapedTag=${escapedTag:gs/</\\\\&}
+        escapedTag=${escapedTag:gs/>/\\\\&}
+        escapedTag=${escapedTag:gs/(/\\\\&}
+        escapedTag=${escapedTag:gs/)/\\\\&}
+        escapedTag=${escapedTag:gs/ /\\\\&}
 
-        _call_program tmsu tmsu $db values "$tagName" | \
-        while read -A value
+        _call_program tmsu tmsu $db values "$tag" | \
+        while read value
         do
-            value_list+=("$( _escape_query "$value" )")
+            local escapedValue=$value:gs/:/\:/
+            escapedValue=${escapedValue:gs/=/\\\\&}
+            escapedValue=${escapedValue:gs/!/\\\\&}
+            escapedValue=${escapedValue:gs/</\\\\&}
+            escapedValue=${escapedValue:gs/>/\\\\&}
+            escapedValue=${escapedValue:gs/(/\\\\&}
+            escapedValue=${escapedValue:gs/)/\\\\&}
+            escapedValue=${escapedValue:gs/ /\\\\&}
+
+            value_list+=("$escapedValue")
         done
 
         _describe -t values 'values' value_list
     else
         typeset -a tag_list
-        local tagName
+        local tag
 
         _call_program tmsu tmsu $db tags | \
-        while read -A tagName
+        while read tag
         do
-            tag_list+=("$( _escape_query "$tagName" )")
+            local escapedTag=$tag:gs/:/\:/
+            escapedTag=${escapedTag:gs/=/\\\\&}
+            escapedTag=${escapedTag:gs/!/\\\\&}
+            escapedTag=${escapedTag:gs/</\\\\&}
+            escapedTag=${escapedTag:gs/>/\\\\&}
+            escapedTag=${escapedTag:gs/(/\\\\&}
+            escapedTag=${escapedTag:gs/)/\\\\&}
+            escapedTag=${escapedTag:gs/ /\\\\&}
+
+            tag_list+=("$escapedTag")
         done
 
         _describe -t tags 'tags' tag_list

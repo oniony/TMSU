@@ -13,6 +13,7 @@ DIST_DIR=$(DIST_NAME)
 DIST_FILE=$(DIST_NAME).tgz
 
 export GOPATH:=$(GOPATH):$(PWD)
+echo "Gopath is $(GOPATH)"
 
 all: clean compile dist test
 

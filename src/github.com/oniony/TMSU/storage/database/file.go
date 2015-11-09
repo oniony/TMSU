@@ -480,6 +480,12 @@ func buildComparisonQueryBranch(expression query.ComparisonExpression, builder *
 		valueTerm = "v.name"
 	}
 
+	if expression.Operator == "!=" {
+		// reinterprent as otherwise it won't work for multiple values of same tag
+		expression.Operator = "=="
+		builder.AppendSql(" not ")
+	}
+
 	if explicitOnly {
 		builder.AppendSql(`
 id IN (SELECT file_id

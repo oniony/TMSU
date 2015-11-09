@@ -31,7 +31,7 @@ compile:
 	@echo
 	@mkdir -p bin
 	@echo "Gopath is $(GOPATH)"
-	ls $(GOPATH)
+	ls
 	go build -o bin/tmsu github.com/oniony/TMSU
 
 test: unit-test integration-test

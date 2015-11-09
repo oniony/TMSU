@@ -13,7 +13,6 @@ DIST_DIR=$(DIST_NAME)
 DIST_FILE=$(DIST_NAME).tgz
 
 export GOPATH:=$(GOPATH):$(PWD)
-echo "Gopath is $(GOPATH)"
 
 all: clean compile dist test
 
@@ -31,6 +30,7 @@ compile:
 	@echo "COMPILING"
 	@echo
 	@mkdir -p bin
+	@echo "Gopath is $(GOPATH)"
 	go build -o bin/tmsu github.com/oniony/TMSU
 
 test: unit-test integration-test

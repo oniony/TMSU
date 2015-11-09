@@ -12,7 +12,7 @@ DIST_NAME=tmsu-$(ARCH)-$(VER)
 DIST_DIR=$(DIST_NAME)
 DIST_FILE=$(DIST_NAME).tgz
 
-export GOPATH:=$(GOPATH):$(PWD)
+export GOPATH:=$(PWD):$(GOPATH)
 
 all: clean compile dist test
 

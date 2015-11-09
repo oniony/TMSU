@@ -135,6 +135,7 @@ v0.6 (in development)
   * Added integration tests covering CLI.
   * Relaxed restrictions on tag and value names, allowing punctuation and
     whitespace characters. Problematic characters can be escaped with backslash.
+  * Bug fixes.
 
 v0.5.2
 ------

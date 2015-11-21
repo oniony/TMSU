@@ -39,7 +39,7 @@ func deleteExec(options Options, args []string, databasePath string) (error, war
 		return fmt.Errorf("too few arguments"), nil
 	}
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

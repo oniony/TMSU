@@ -27,9 +27,9 @@ fi
 
 diff /tmp/tmsu/stdout - <<EOF
 brocolli
-/tmp/tmsu/dir1/file1
 /tmp/tmsu/file1
 /tmp/tmsu/file2
+/tmp/tmsu/dir1/file1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

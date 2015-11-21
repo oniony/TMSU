@@ -19,8 +19,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff -I "^Size" /tmp/tmsu/stdout - <<EOF
-Database: /tmp/tmsu/db
-Root path: /
+Database: /tmp/tmsu/.tmsu/db
+Root path: /tmp/tmsu
 
 Tags: 1
 Values: 1

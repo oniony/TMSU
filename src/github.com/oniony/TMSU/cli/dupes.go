@@ -43,7 +43,7 @@ var DupesCommand = Command{
 func dupesExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

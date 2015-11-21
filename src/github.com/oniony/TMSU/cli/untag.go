@@ -49,7 +49,7 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 
 	recursive := options.HasOption("--recursive")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

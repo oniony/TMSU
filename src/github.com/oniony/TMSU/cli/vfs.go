@@ -19,7 +19,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/oniony/TMSU/storage"
 	"github.com/oniony/TMSU/vfs"
 	"strings"
 )
@@ -50,7 +49,7 @@ func vfsExec(options Options, args []string, databasePath string) (error, warnin
 
 	mountPath := args[0]
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

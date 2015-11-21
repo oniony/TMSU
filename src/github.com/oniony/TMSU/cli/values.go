@@ -42,7 +42,7 @@ func valuesExec(options Options, args []string, databasePath string) (error, war
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

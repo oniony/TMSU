@@ -13,8 +13,8 @@ for testcase in $*; do
     mkdir -p /tmp/tmsu
 
     # (re)create the database
-    export TMSU_DB=/tmp/tmsu/db
-    tmsu info >/dev/null 2>/dev/null
+    tmsu init /tmp/tmsu >/dev/null 2>/dev/null
+    export TMSU_DB=/tmp/tmsu/.tmsu/db
 
     # run set-up
     ./setup

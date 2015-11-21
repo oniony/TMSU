@@ -17,6 +17,7 @@ package cli
 
 import (
 	"fmt"
+	"github.com/oniony/TMSU/common/log"
 	"github.com/oniony/TMSU/storage"
 	"os"
 	"path/filepath"
@@ -30,7 +31,7 @@ var InitCommand = Command{
 
 Creates a .tmsu directory under PATH and initialises a new empty database within it.
 
-If PATH is omitted then the current working directory is assumed.
+If no PATH is specified then the current working directory is assumed.
 
 The new database is used automatically whenever TMSU is invoked from a directory under PATH (unless overriden by the global --database option or the TMSU_DB environment variable.`,
 	Options: Options{},
@@ -62,15 +63,12 @@ func initExec(options Options, args []string, databasePath string) (error, warni
 }
 
 func initializeDatabase(path string) error {
+	log.Warnf("%v: creating database", path)
+
 	tmsuPath := filepath.Join(path, ".tmsu")
+	os.Mkdir(tmsuPath, 0755)
 
 	dbPath := filepath.Join(tmsuPath, "db")
 
-	store, err := storage.OpenAt(dbPath)
-	if err != nil {
-		return fmt.Errorf("%v: could not open database", dbPath, err)
-	}
-	store.Close()
-
-	return nil
+	return storage.CreateAt(dbPath)
 }

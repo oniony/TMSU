@@ -21,27 +21,43 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/oniony/TMSU/common/log"
 	"os"
-	"path/filepath"
 )
 
 type Database struct {
 	db *sql.DB
 }
 
-// Opens the database at the specified path
+func CreateAt(path string) error {
+	log.Infof(2, "creating database at '%v'.", path)
+
+	db, err := sql.Open("sqlite3", path)
+	if err != nil {
+		return DatabaseAccessError{path, err}
+	}
+	defer db.Close()
+
+	tx, err := db.Begin()
+	if err != nil {
+		return DatabaseTransactionError{path, err}
+	}
+
+	if err := upgrade(tx); err != nil {
+		return err
+	}
+
+	if err := tx.Commit(); err != nil {
+		return DatabaseTransactionError{path, err}
+	}
+
+	return nil
+}
+
 func OpenAt(path string) (*Database, error) {
 	log.Infof(2, "opening database at '%v'.", path)
 
 	_, err := os.Stat(path)
 	if err != nil {
-		if os.IsNotExist(err) {
-			log.Warnf("creating database at '%v'.", path)
-
-			dir := filepath.Dir(path)
-			os.Mkdir(dir, 0755)
-		} else {
-			log.Warnf("could not stat database: %v", err)
-		}
+		return nil, DatabaseAccessError{path, err}
 	}
 
 	db, err := sql.Open("sqlite3", path)

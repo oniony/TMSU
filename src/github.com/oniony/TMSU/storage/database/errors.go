@@ -21,6 +21,14 @@ import (
 	"github.com/oniony/TMSU/entities"
 )
 
+type DatabaseNotFoundError struct {
+	Path string
+}
+
+func (err DatabaseNotFoundError) Error() string {
+	return fmt.Sprintf("no database at '%v'", err.Path)
+}
+
 type DatabaseAccessError struct {
 	DatabasePath string
 	Reason       error

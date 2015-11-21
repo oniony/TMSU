@@ -39,7 +39,7 @@ If a VALUE is specified then the setting is updated.`,
 // unexported
 
 func configExec(options Options, args []string, databasePath string) (error, warnings) {
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

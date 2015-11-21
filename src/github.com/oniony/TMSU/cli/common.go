@@ -23,11 +23,27 @@ import (
 	"github.com/oniony/TMSU/common/terminal/ansi"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
+	"github.com/oniony/TMSU/storage/database"
 	"os"
 	"time"
 )
 
 // unexported
+
+func openDatabase(path string) (*storage.Storage, error) {
+	storage, err := storage.OpenAt(path)
+	if err != nil {
+		switch err.(type) {
+		case database.DatabaseAccessError:
+			log.Warnf("use 'tmsu init' to create a new TMSU database in the working directory")
+			return nil, fmt.Errorf("no database found")
+		default:
+			return nil, err
+		}
+	}
+
+	return storage, nil
+}
 
 func stdoutIsCharDevice() bool {
 	stat, err := os.Stdout.Stat()

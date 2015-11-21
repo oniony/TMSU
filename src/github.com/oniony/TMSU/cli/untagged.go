@@ -51,7 +51,7 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 		}
 	}
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

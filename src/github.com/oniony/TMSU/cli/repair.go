@@ -61,7 +61,7 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 func repairExec(options Options, args []string, databasePath string) (error, warnings) {
 	pretend := options.HasOption("--pretend")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

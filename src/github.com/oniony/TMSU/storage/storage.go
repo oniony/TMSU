@@ -28,10 +28,14 @@ type Storage struct {
 	RootPath string
 }
 
+func CreateAt(path string) error {
+	return database.CreateAt(path)
+}
+
 func OpenAt(path string) (*Storage, error) {
 	db, err := database.OpenAt(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not open database at '%v': %v", path, err)
+		return nil, err
 	}
 
 	rootPath, err := determineRootPath(path)

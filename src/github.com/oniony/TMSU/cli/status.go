@@ -93,7 +93,7 @@ func NewReport() *StatusReport {
 func statusExec(options Options, args []string, databasePath string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

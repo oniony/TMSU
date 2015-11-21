@@ -2,9 +2,9 @@
 
 # test
 
-tmsu tag /tmp/tmsu/file1 one\\=two      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file1 'two\=three'    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags /tmp/tmsu/file1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 one\\=two     >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 'two\=three'  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file1              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

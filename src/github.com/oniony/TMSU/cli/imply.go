@@ -48,7 +48,7 @@ mp3 -> music`,
 // unexported
 
 func implyExec(options Options, args []string, databasePath string) (error, warnings) {
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

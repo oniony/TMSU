@@ -69,7 +69,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 	explicit := options.HasOption("--explicit")
 	force := options.HasOption("--force")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

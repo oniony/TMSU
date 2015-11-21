@@ -49,7 +49,7 @@ func renameExec(options Options, args []string, databasePath string) (error, war
 	currentName := parseTagOrValueName(args[0])
 	newName := parseTagOrValueName(args[1])
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}

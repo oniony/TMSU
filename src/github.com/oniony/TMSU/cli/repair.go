@@ -16,6 +16,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/common/log"
@@ -74,6 +75,10 @@ func repairExec(options Options, args []string, databasePath string) (error, war
 	defer tx.Commit()
 
 	if options.HasOption("--manual") {
+		if len(args) < 2 {
+			return errors.New("too few arguments"), nil
+		}
+
 		fromPath := args[0]
 		toPath := args[1]
 

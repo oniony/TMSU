@@ -34,9 +34,10 @@ func openDatabase(path string) (*storage.Storage, error) {
 	storage, err := storage.OpenAt(path)
 	if err != nil {
 		switch err.(type) {
+		case database.DatabaseNotFoundError:
+			return nil, fmt.Errorf("no database found: use 'tmsu init' to create one")
 		case database.DatabaseAccessError:
-			log.Warnf("use 'tmsu init' to create a new TMSU database in the working directory")
-			return nil, fmt.Errorf("no database found")
+			return nil, fmt.Errorf("cannot access database: %v", err)
 		default:
 			return nil, err
 		}

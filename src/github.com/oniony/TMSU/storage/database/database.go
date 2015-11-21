@@ -57,7 +57,12 @@ func OpenAt(path string) (*Database, error) {
 
 	_, err := os.Stat(path)
 	if err != nil {
-		return nil, DatabaseAccessError{path, err}
+		switch {
+		case os.IsNotExist(err):
+			return nil, DatabaseNotFoundError{path}
+		default:
+			return nil, DatabaseAccessError{path, err}
+		}
 	}
 
 	db, err := sql.Open("sqlite3", path)

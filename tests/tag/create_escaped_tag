@@ -15,8 +15,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-one=two
-two=three
+one\=two
+two\=three
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

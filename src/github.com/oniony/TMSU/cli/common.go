@@ -25,6 +25,7 @@ import (
 	"github.com/oniony/TMSU/storage"
 	"github.com/oniony/TMSU/storage/database"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -180,6 +181,8 @@ func parseTagEqValueName(tagArg string) (string, string) {
 }
 
 func formatTagValueName(tagName, valueName string, useColour, implicit, explicit bool) string {
+	tagName = escape(tagName, '=', ' ')
+
 	if useColour {
 		colourCode := colourCodeFor(implicit, explicit)
 
@@ -207,4 +210,12 @@ func colourCodeFor(implicit, explicit bool) string {
 	}
 
 	return ""
+}
+
+func escape(text string, chars ...rune) string {
+	for _, char := range chars {
+		text = strings.Replace(text, string(char), `\`+string(char), -1)
+	}
+
+	return text
 }

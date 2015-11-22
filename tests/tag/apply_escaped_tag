@@ -17,7 +17,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/file1: one=two two=three
+/tmp/tmsu/file1: one\=two two\=three
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

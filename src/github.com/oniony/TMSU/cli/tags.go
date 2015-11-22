@@ -99,13 +99,13 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 		}
 
 		if onePerLine {
-			for _, tagName := range tags {
-				fmt.Println(tagName)
+			for _, tag := range tags {
+				fmt.Println(escape(tag.Name, '=', ' '))
 			}
 		} else {
 			tagNames := make([]string, len(tags))
 			for index, tag := range tags {
-				tagNames[index] = tag.Name
+				tagNames[index] = escape(tag.Name, '=', ' ')
 			}
 
 			terminal.PrintColumns(tagNames)

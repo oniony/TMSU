@@ -17,7 +17,6 @@ package cli
 
 import (
 	"fmt"
-	"github.com/oniony/TMSU/common/terminal/ansi"
 	"github.com/oniony/TMSU/storage"
 	"strings"
 )
@@ -51,13 +50,8 @@ func configExec(options Options, args []string, databasePath string) (error, war
 	}
 	defer tx.Commit()
 
-	colour, err := useColour(options)
-	if err != nil {
-		return err, nil
-	}
-
 	if len(args) == 0 {
-		if err := listAllSettings(store, tx, colour); err != nil {
+		if err := listAllSettings(store, tx); err != nil {
 			return fmt.Errorf("could not list settings"), nil
 		}
 	}
@@ -72,7 +66,7 @@ func configExec(options Options, args []string, databasePath string) (error, war
 		switch len(parts) {
 		case 1:
 			name := parts[0]
-			if err := printSetting(store, tx, name, colour); err != nil {
+			if err := printSetting(store, tx, name); err != nil {
 				return fmt.Errorf("could not show value for setting '%v': %v", name, err), nil
 			}
 		case 2:
@@ -90,20 +84,20 @@ func configExec(options Options, args []string, databasePath string) (error, war
 	return nil, nil
 }
 
-func listAllSettings(store *storage.Storage, tx *storage.Tx, colour bool) error {
+func listAllSettings(store *storage.Storage, tx *storage.Tx) error {
 	settings, err := store.Settings(tx)
 	if err != nil {
 		return fmt.Errorf("could not retrieve settings: %v", err)
 	}
 
 	for _, setting := range settings {
-		printSettingAndValue(setting.Name, setting.Value, colour)
+		printSettingAndValue(setting.Name, setting.Value)
 	}
 
 	return nil
 }
 
-func printSetting(store *storage.Storage, tx *storage.Tx, name string, colour bool) error {
+func printSetting(store *storage.Storage, tx *storage.Tx, name string) error {
 	if name == "" {
 		return fmt.Errorf("setting name must be specified")
 	}
@@ -116,7 +110,7 @@ func printSetting(store *storage.Storage, tx *storage.Tx, name string, colour bo
 		return fmt.Errorf("no such setting '%v'", name)
 	}
 
-	printSettingAndValue(setting.Name, setting.Value, colour)
+	printSettingAndValue(setting.Name, setting.Value)
 
 	return nil
 }
@@ -139,12 +133,8 @@ func printSettingValue(store *storage.Storage, tx *storage.Tx, name string) erro
 	return nil
 }
 
-func printSettingAndValue(name, value string, colour bool) {
-	if colour {
-		fmt.Printf("%v"+ansi.DarkGreyCode+"="+ansi.ResetCode+ansi.GreenCode+"%v\n"+ansi.ResetCode, name, value)
-	} else {
-		fmt.Printf("%v=%v\n", name, value)
-	}
+func printSettingAndValue(name, value string) {
+	fmt.Printf("%v=%v\n", name, value)
 }
 
 func amendSetting(store *storage.Storage, tx *storage.Tx, name, value string) error {

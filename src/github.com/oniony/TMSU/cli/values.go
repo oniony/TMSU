@@ -79,12 +79,12 @@ func listAllValues(store *storage.Storage, tx *storage.Tx, showCount, onePerLine
 
 		if onePerLine {
 			for _, value := range values {
-				fmt.Println(value.Name)
+				fmt.Println(escape(value.Name))
 			}
 		} else {
 			valueNames := make([]string, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = escape(value.Name)
 			}
 
 			terminal.PrintColumns(valueNames)
@@ -131,12 +131,12 @@ func listValuesForTag(store *storage.Storage, tx *storage.Tx, tagName string, sh
 	} else {
 		if onePerLine {
 			for _, value := range values {
-				fmt.Println(value.Name)
+				fmt.Println(escape(value.Name, '=', ' '))
 			}
 		} else {
 			valueNames := make([]string, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = escape(value.Name, '=', ' ')
 			}
 
 			terminal.PrintColumns(valueNames)
@@ -172,13 +172,13 @@ func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string
 			if onePerLine {
 				fmt.Println(tagName)
 				for _, value := range values {
-					fmt.Println(value.Name)
+					fmt.Println(escape(value.Name, '=', ' '))
 				}
 				fmt.Println()
 			} else {
 				valueNames := make([]string, len(values))
 				for index, value := range values {
-					valueNames[index] = value.Name
+					valueNames[index] = escape(value.Name, '=', ' ')
 				}
 
 				fmt.Printf("%v: %v\n", tagName, strings.Join(valueNames, " "))

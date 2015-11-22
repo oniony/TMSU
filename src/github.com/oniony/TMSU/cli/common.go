@@ -182,6 +182,7 @@ func parseTagEqValueName(tagArg string) (string, string) {
 
 func formatTagValueName(tagName, valueName string, useColour, implicit, explicit bool) string {
 	tagName = escape(tagName, '=', ' ')
+	valueName = escape(valueName, '=', ' ')
 
 	if useColour {
 		colourCode := colourCodeFor(implicit, explicit)

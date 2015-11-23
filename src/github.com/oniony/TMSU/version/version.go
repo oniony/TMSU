@@ -19,4 +19,4 @@ import (
 	"github.com/oniony/TMSU/common"
 )
 
-var Version = common.ParseVersion("0.6.0")
+var Version = common.ParseVersion("0.7.0")

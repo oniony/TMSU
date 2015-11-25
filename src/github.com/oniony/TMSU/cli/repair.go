@@ -329,7 +329,7 @@ func repairUnmodified(store *storage.Storage, tx *storage.Tx, unmodified entitie
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -357,7 +357,7 @@ func repairModified(store *storage.Storage, tx *storage.Tx, modified entities.Fi
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -410,7 +410,7 @@ func repairMoved(store *storage.Storage, tx *storage.Tx, missing entities.Files,
 				return fmt.Errorf("%v: could not stat file: %v", candidatePath, err)
 			}
 
-			fingerprint, err := fingerprint.Create(candidatePath, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+			fingerprint, err := fingerprint.Create(candidatePath, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 			if err != nil {
 				return fmt.Errorf("%v: could not create fingerprint: %v", candidatePath, err)
 			}

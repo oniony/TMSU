@@ -35,7 +35,11 @@ func (settings Settings) FileFingerprintAlgorithm() string {
 }
 
 func (settings Settings) DirectoryFingerprintAlgorithm() string {
-	return settings.Value("directoyFingerprintAlgorithm")
+	return settings.Value("directoryFingerprintAlgorithm")
+}
+
+func (settings Settings) SymlinkFingerprintAlgorithm() string {
+	return settings.Value("symlinkFingerprintAlgorithm")
 }
 
 func (settings Settings) ContainsName(name string) bool {

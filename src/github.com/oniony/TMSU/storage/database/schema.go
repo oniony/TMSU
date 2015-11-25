@@ -24,7 +24,7 @@ import (
 
 // unexported
 
-var latestSchemaVersion = common.Version{0, 6, 0}
+var latestSchemaVersion = common.Version{0, 7, 0}
 
 func schemaVersion(tx *sql.Tx) common.Version {
 	sql := `

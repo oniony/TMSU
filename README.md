@@ -100,6 +100,10 @@ Release Notes
 v0.7.0 (in development)
 ------
 
+  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint algorithm
+    for symbolic links to be configured separately to that used for regular files. (TMSU
+    will automatically set this if you are using `symlinkTargetName[NoExt]`.)
+
 v0.6.0
 ------
 

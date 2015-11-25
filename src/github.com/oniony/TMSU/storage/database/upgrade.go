@@ -56,6 +56,11 @@ func upgrade(tx *sql.Tx) error {
 			return err
 		}
 	}
+	if version.LessThan(common.Version{0, 7, 0}) {
+		if err := updateFingerprintAlgorithms(tx); err != nil {
+			return err
+		}
+	}
 
 	if err := updateSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
@@ -96,6 +101,47 @@ FROM implication_old`); err != nil {
 	if _, err := tx.Exec(`
 DROP TABLE implication_old`); err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func updateFingerprintAlgorithms(tx *sql.Tx) error {
+	rows, err := tx.Query(`
+SELECT value
+FROM setting
+WHERE name = 'fileFingerprintAlgorithm'`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var fileFingerprintAlg string
+	if rows.Next() && rows.Err() == nil {
+		rows.Scan(&fileFingerprintAlg) // ignore errors
+	}
+
+	switch fileFingerprintAlg {
+	case "symlinkTargetName":
+		if _, err := tx.Exec(`
+INSERT INTO setting (name, value)
+VALUES ("symlinkFingerprintAlgorithm", "targetName")`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`
+DELETE FROM setting WHERE name = 'fileFingerprintAlgorithm';`); err != nil {
+			return err
+		}
+	case "symlinkTargetNameNoExt":
+		if _, err := tx.Exec(`
+INSERT INTO setting (name, value)
+VALUES ("symlinkFingerprintAlgorithm", "targetNameNoExt")`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`
+DELETE FROM setting WHERE name = 'fileFingerprintAlgorithm';`); err != nil {
+			return err
+		}
 	}
 
 	return nil

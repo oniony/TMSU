@@ -84,7 +84,7 @@ func testCreateForFile(test *testing.T, algorithm string, size uint, expectedFin
 		test.Fatal(err.Error())
 	}
 
-	fingerprint, err := Create(tempFilePath, algorithm, "none")
+	fingerprint, err := Create(tempFilePath, algorithm, "none", "none")
 	if err != nil {
 		test.Fatal(err.Error())
 	}

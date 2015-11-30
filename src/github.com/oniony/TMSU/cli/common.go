@@ -109,7 +109,7 @@ func (emptyStat) Sys() interface{} {
 func createTag(store *storage.Storage, tx *storage.Tx, tagName string) (*entities.Tag, error) {
 	tag, err := store.AddTag(tx, tagName)
 	if err != nil {
-		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+		return nil, err
 	}
 
 	log.Warnf("new tag '%v'", tagName)

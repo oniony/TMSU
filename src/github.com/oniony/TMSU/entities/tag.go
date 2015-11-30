@@ -134,13 +134,12 @@ func ValidateTagName(tagName string) error {
 	}
 
 	for _, ch := range tagName {
-		switch ch {
-		case '/', '\\':
-			return fmt.Errorf("tag names cannot contain '%c'", ch) // cannot be used in the VFS on Posix
-		}
-
 		if !unicode.IsOneOf(validTagChars, ch) {
-			return fmt.Errorf("tag names cannot contain '%c'", ch)
+			if unicode.IsPrint(ch) {
+				return fmt.Errorf("tag names cannot contain '%c'", ch)
+			} else {
+				return fmt.Errorf("tag names cannot contain %U", ch)
+			}
 		}
 	}
 

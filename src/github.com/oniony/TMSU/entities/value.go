@@ -128,13 +128,12 @@ func ValidateValueName(valueName string) error {
 	}
 
 	for _, ch := range valueName {
-		switch ch {
-		case '/', '\\':
-			return fmt.Errorf("tag value cannot contain '%c'", ch) // cannot be used in the VFS
-		}
-
 		if !unicode.IsOneOf(validValueChars, ch) {
-			return fmt.Errorf("tag value cannot contain '%c'", ch)
+			if unicode.IsPrint(ch) {
+				return fmt.Errorf("tag value cannot contain '%c'", ch)
+			} else {
+				return fmt.Errorf("tag value cannot contain %U", ch)
+			}
 		}
 	}
 

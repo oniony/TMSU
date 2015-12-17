@@ -16,6 +16,7 @@ autoCreateTags=yes
 autoCreateValues=yes
 directoryFingerprintAlgorithm=none
 fileFingerprintAlgorithm=dynamic:SHA256
+reportDuplicates=yes
 symlinkFingerprintAlgorithm=follow
 EOF
 if [[ $? -ne 0 ]]; then

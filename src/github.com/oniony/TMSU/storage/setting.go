@@ -18,6 +18,7 @@ package storage
 import (
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage/database"
+	"sort"
 )
 
 var defaultSettings = entities.Settings{
@@ -25,6 +26,7 @@ var defaultSettings = entities.Settings{
 	&entities.Setting{"autoCreateValues", "yes"},
 	&entities.Setting{"directoryFingerprintAlgorithm", "none"},
 	&entities.Setting{"fileFingerprintAlgorithm", "dynamic:SHA256"},
+	&entities.Setting{"reportDuplicates", "yes"},
 	&entities.Setting{"symlinkFingerprintAlgorithm", "follow"}}
 
 // The complete set of settings.
@@ -40,6 +42,8 @@ func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
 			settings = append(settings, defaultSetting)
 		}
 	}
+
+	sort.Sort(settings)
 
 	return settings, nil
 }

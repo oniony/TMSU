@@ -20,6 +20,7 @@ tmsu: new tag 'vegetable'
 tmsu: new value 'aubergine'
 tmsu: new value 'potato'
 tmsu: new value 'brocolli'
+tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -12,6 +12,7 @@ tmsu files --path="/tmp/tmsu/dir1" aubergine                        >>/tmp/tmsu/
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
+tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

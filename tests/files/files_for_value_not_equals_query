@@ -18,6 +18,7 @@ tmsu: new tag 'month'
 tmsu: new value 'June'
 tmsu: new value 'July'
 tmsu: new tag 'blah'
+tmsu: '/tmp/tmsu/file3dupe1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

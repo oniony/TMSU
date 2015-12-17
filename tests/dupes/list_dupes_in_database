@@ -13,6 +13,8 @@ tmsu dupes                                                          >>/tmp/tmsu/
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
+tmsu: '/tmp/tmsu/file3dupe1' is a duplicate
+tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -22,6 +22,18 @@ type Setting struct {
 
 type Settings []*Setting
 
+func (settings Settings) Len() int {
+	return len(settings)
+}
+
+func (settings Settings) Less(i, j int) bool {
+	return settings[i].Name < settings[j].Name
+}
+
+func (settings Settings) Swap(i, j int) {
+	settings[i], settings[j] = settings[j], settings[i]
+}
+
 func (settings Settings) AutoCreateTags() bool {
 	return settings.BoolValue("autoCreateTags")
 }
@@ -40,6 +52,10 @@ func (settings Settings) DirectoryFingerprintAlgorithm() string {
 
 func (settings Settings) SymlinkFingerprintAlgorithm() string {
 	return settings.Value("symlinkFingerprintAlgorithm")
+}
+
+func (settings Settings) ReportDuplicates() bool {
+	return settings.BoolValue("reportDuplicates")
 }
 
 func (settings Settings) ContainsName(name string) bool {

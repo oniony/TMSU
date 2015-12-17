@@ -24,8 +24,7 @@ import (
 func Settings(tx *Tx) (entities.Settings, error) {
 	sql := `
 SELECT name, value
-FROM setting
-ORDER BY name`
+FROM setting`
 
 	rows, err := tx.Query(sql)
 	if err != nil {

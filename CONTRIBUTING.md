@@ -1,4 +1,4 @@
-First of all, thank you for considering to contribute to this project! Please get in [contact](mailto:paul.ruane@oniony.com) to chat about what you would like to work on, though the [TODO list](https://github.com/oniony/TMSU/wiki/TODO) and [issue
+First of all, thank you for considering to contribute to this project! Please get in [contact](mailto:paul.ruane@oniony.com?subject=Contributing+to+TMSU) to chat about what you would like to work on, though the [TODO list](https://github.com/oniony/TMSU/wiki/TODO) and [issue
 tracker](https://github.com/oniony/TMSU/issues) are good places to start.
 
 I built this project for several reasons:

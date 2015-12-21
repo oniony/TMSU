@@ -4,6 +4,7 @@ tracker](https://github.com/oniony/TMSU/issues) are good places to start.
 I built this project for several reasons:
 
   * I disliked the opaque, proprietary solutions available for tagging files
+  * I thought the idea of presenting tagged files as a virtual filesystem was unique (it transpires it wasn't)
   * I wanted to learn a new programming language
   * I wanted to have a pet project to work upon outside of work
 

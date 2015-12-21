@@ -11,4 +11,5 @@ I built this project for several reasons:
 Once you have found something you would like to work on, please do not go off and squirrel away at a giagantic pull-request. It would be far better if we could communicate often and keep the pull requests small and tightly scoped so that they're easier to understand and so that it's not disheartening if it stuff to be changed.
 
 Thanks again, I look forward to collaborating with you.
+
 Paul

@@ -7,6 +7,7 @@ I built this project for several reasons:
   * I wanted to learn a new programming language
   * I wanted to have a pet project to work upon outside of work
 
-Once you have found something you would like to work on, please do not go off and squirrel away at a massive pull-request that
-I will inevitably not want to accept. It is far better if you communicate often and keep the pull requests small: baby steps.
-That way we can make any corrections to approach before too much time has been invested.
+Once you have found something you would like to work on, please do not go off and squirrel away at a giagantic pull-request. It would be far better if we could communicate often and keep the pull requests small and tightly scoped so that they're easier to understand and so that it's not disheartening if it stuff to be changed.
+
+Thanks again, I look forward to collaborating with you.
+Paul

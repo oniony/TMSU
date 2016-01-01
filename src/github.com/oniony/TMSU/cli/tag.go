@@ -309,17 +309,17 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 	if file == nil {
 		log.Infof(2, "%v: creating fingerprint", path)
 
-		fingerprint, err := fingerprint.Create(path, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg)
+		fp, err := fingerprint.Create(path, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg)
 		if err != nil {
 			if !force || !(os.IsNotExist(err) || os.IsPermission(err)) {
 				return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 			}
 		}
 
-		if reportDuplicates {
+		if fp != fingerprint.Empty && reportDuplicates {
 			log.Infof(2, "%v: checking for duplicates", path)
 
-			count, err := store.FileCountByFingerprint(tx, fingerprint)
+			count, err := store.FileCountByFingerprint(tx, fp)
 			if err != nil {
 				return fmt.Errorf("%v: could not identify duplicates: %v", path, err)
 			}
@@ -330,7 +330,7 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 
 		log.Infof(2, "%v: adding file", path)
 
-		file, err = store.AddFile(tx, path, fingerprint, stat.ModTime(), int64(stat.Size()), stat.IsDir())
+		file, err = store.AddFile(tx, path, fp, stat.ModTime(), int64(stat.Size()), stat.IsDir())
 		if err != nil {
 			return fmt.Errorf("%v: could not add file to database: %v", path, err)
 		}

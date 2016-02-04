@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ var ValuesCommand = Command{
 	Synopsis:    "List values",
 	Usages:      []string{"tmsu values [OPTION]... [TAG]..."},
 	Description: "Lists the values for TAGs. If no TAG is specified then all tags are listed.",
-	Examples: []string{"$ tmsu values year\n2000\n2001\n2015",
-		"$ tmsu values\n2000\n2001\n2015\ncheese\nopera",
+	Examples: []string{"$ tmsu values year\n2000\n2001\n2016",
+		"$ tmsu values\n2000\n2001\n2016\ncheese\nopera",
 		"$ tmsu values --count year\n3"},
 	Options: Options{{"--count", "-c", "lists the number of values rather than their names", false, ""},
 		{"", "-1", "list one value per line", false, ""}},

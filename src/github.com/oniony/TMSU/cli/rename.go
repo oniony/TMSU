@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -30,7 +30,7 @@ var RenameCommand = Command{
 
 Attempting to rename a tag or value with a name that already exists will result in an error. To merge tags or values use the 'merge' subcommand instead.`,
 	Examples: []string{"$ tmsu rename montain mountain",
-		"$ tmsu rename --value MMXV 2015"},
+		"$ tmsu rename --value MMXV 2016"},
 	Options: Options{{"--value", "", "rename a value", false, ""}},
 	Exec:    renameExec,
 }

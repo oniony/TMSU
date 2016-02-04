@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -42,9 +42,9 @@ Note: If your tag or value name contains whitespace, operators (e.g. '<') or par
 		"$ tmsu files music and mp3  # same query but with explicit 'and'",
 		"$ tmsu files music and not mp3",
 		`$ tmsu files "music and (mp3 or flac)"`,
-		`$ tmsu files "year == 2015"`,
-		`$ tmsu files "year < 2015"`,
-		`$ tmsu files year lt 2015`,
+		`$ tmsu files "year == 2016"`,
+		`$ tmsu files "year < 2016"`,
+		`$ tmsu files year lt 2016`,
 		`$ tmsu files year`,
 		`$ tmsu files --path=/home/bob music`,
 		`$ tmsu files 'contains\=equals'`,

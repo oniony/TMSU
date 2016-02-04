@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -33,7 +33,7 @@ var UntagCommand = Command{
 	Description: "Disassociates FILE with the TAGs specified.",
 	Examples: []string{"$ tmsu untag mountain.jpg hill county=germany",
 		"$ tmsu untag --all mountain-copy.jpg",
-		`$ tmsu untag --tags="river underwater year=2015" forest.jpg desert.jpg`},
+		`$ tmsu untag --tags="river underwater year=2016" forest.jpg desert.jpg`},
 	Options: Options{{"--all", "-a", "strip each file of all tags", false, ""},
 		{"--tags", "-t", "the set of tags to remove", true, ""},
 		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""}},

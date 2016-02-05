@@ -78,8 +78,10 @@ About
 TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul@tmsu.org>).
 
 The creation of TMSU is motivation in itself, but if you should feel inclinded
-to make a small gift via Bitcoin then it shall be gratefully received:
+to make a small gift via Pledgie or Bitcoin then it shall be gratefully received:
 
+  * <https://pledgie.com/campaigns/28849> (€)
+  * <https://pledgie.com/campaigns/31085> ($US)
   * `1TMSU5TL3Yj6AGP7Wq6uahTfkTSX2nWvM`
 
 TMSU is written in Go: <http://www.golang.org/>

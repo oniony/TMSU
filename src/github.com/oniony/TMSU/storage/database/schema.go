@@ -24,18 +24,18 @@ import (
 
 // unexported
 
-var latestSchemaVersion = common.Version{0, 7, 0}
+var latestSchemaVersion = schemaVersion{common.Version{0, 7, 0}, 1}
 
-func schemaVersion(tx *sql.Tx) common.Version {
+func currentSchemaVersion(tx *sql.Tx) schemaVersion {
 	sql := `
 SELECT major, minor, patch
 FROM version`
 
-	var major, minor, patch uint
+	var major, minor, patch, revision uint
 
 	rows, err := tx.Query(sql)
 	if err != nil {
-		return common.Version{}
+		return schemaVersion{}
 	}
 	defer rows.Close()
 
@@ -43,15 +43,15 @@ FROM version`
 		rows.Scan(&major, &minor, &patch) // ignore errors
 	}
 
-	return common.Version{major, minor, patch}
+	return schemaVersion{common.Version{major, minor, patch}, revision}
 }
 
-func insertSchemaVersion(tx *sql.Tx, version common.Version) error {
+func insertSchemaVersion(tx *sql.Tx, version schemaVersion) error {
 	sql := `
-INSERT INTO version (major, minor, patch)
-VALUES (?, ?, ?)`
+INSERT INTO version (major, minor, patch, revision)
+VALUES (?, ?, ?, ?)`
 
-	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
+	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch, version.Revision)
 	if err != nil {
 		return fmt.Errorf("could not update schema version: %v", err)
 	}
@@ -66,11 +66,11 @@ VALUES (?, ?, ?)`
 	return nil
 }
 
-func updateSchemaVersion(tx *sql.Tx, version common.Version) error {
+func updateSchemaVersion(tx *sql.Tx, version schemaVersion) error {
 	sql := `
-UPDATE version SET major = ?, minor = ?, patch = ?`
+UPDATE version SET major = ?, minor = ?, patch = ?, revision = ?`
 
-	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch)
+	result, err := tx.Exec(sql, version.Major, version.Minor, version.Patch, version.Revision)
 	if err != nil {
 		return fmt.Errorf("could not update schema version: %v", err)
 	}
@@ -283,7 +283,8 @@ CREATE TABLE IF NOT EXISTS version (
     major NUMBER NOT NULL,
     minor NUMBER NOT NULL,
     patch NUMBER NOT NULL,
-    PRIMARY KEY (major, minor, patch)
+    revision NUMBER NOT NULL,
+    PRIMARY KEY (major, minor, patch, revision)
 )`
 
 	if _, err := tx.Exec(sql); err != nil {

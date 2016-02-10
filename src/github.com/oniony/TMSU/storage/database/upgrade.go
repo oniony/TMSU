@@ -25,7 +25,7 @@ import (
 // unexported
 
 func upgrade(tx *sql.Tx) error {
-	version := schemaVersion(tx)
+	version := currentSchemaVersion(tx)
 
 	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
 
@@ -33,7 +33,7 @@ func upgrade(tx *sql.Tx) error {
 		return nil
 	}
 
-	noVersion := common.Version{}
+	noVersion := schemaVersion{}
 	if version == noVersion {
 		log.Infof(2, "creating schema")
 
@@ -46,18 +46,23 @@ func upgrade(tx *sql.Tx) error {
 
 	log.Infof(2, "upgrading database")
 
-	if version.LessThan(common.Version{0, 5, 0}) {
+	if version.LessThan(schemaVersion{common.Version{0, 5, 0}, 0}) {
 		if err := renameFingerprintAlgorithmSetting(tx); err != nil {
 			return err
 		}
 	}
-	if version.LessThan(common.Version{0, 6, 0}) {
+	if version.LessThan(schemaVersion{common.Version{0, 6, 0}, 0}) {
 		if err := recreateImplicationTable(tx); err != nil {
 			return err
 		}
 	}
-	if version.LessThan(common.Version{0, 7, 0}) {
+	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 0}) {
 		if err := updateFingerprintAlgorithms(tx); err != nil {
+			return err
+		}
+	}
+	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 1}) {
+		if err := recreateVersionTable(tx); err != nil {
 			return err
 		}
 	}
@@ -142,6 +147,22 @@ VALUES ("symlinkFingerprintAlgorithm", "targetNameNoExt")`); err != nil {
 DELETE FROM setting WHERE name = 'fileFingerprintAlgorithm';`); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func recreateVersionTable(tx *sql.Tx) error {
+	if _, err := tx.Exec("DROP TABLE version;"); err != nil {
+		return err
+	}
+
+	if err := createVersionTable(tx); err != nil {
+		return err
+	}
+
+	if err := insertSchemaVersion(tx, latestSchemaVersion); err != nil {
+		return err
 	}
 
 	return nil

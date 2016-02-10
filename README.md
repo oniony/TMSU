@@ -105,6 +105,7 @@ v0.7.0 (in development)
     will automatically set this if you are using `symlinkTargetName[NoExt]`.)
   * By default duplicate files will now be reported when tagging.
   * A new setting `reportDuplicates` can be used to turn of duplicate reporting during tagging.
+  * Made it possible to upgrade the database schema between releases.
 
 v0.6.0
 ------

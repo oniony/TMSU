@@ -20,6 +20,7 @@ import (
 	"github.com/oniony/TMSU/common/log"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
+	"strings"
 )
 
 var ImplyCommand = Command{
@@ -105,10 +106,16 @@ func listImplications(store *storage.Storage, tx *storage.Tx, colour bool) error
 
 	if len(implications) > 0 {
 		for _, implication := range implications {
+			paddingWidth := width - len(implication.ImplyingTag.Name)
+			if implication.ImplyingValue.Id != 0 {
+				paddingWidth -= 1 + len(implication.ImplyingValue.Name)
+			}
+			padding := strings.Repeat(" ", paddingWidth)
+
 			implying := formatTagValueName(implication.ImplyingTag.Name, implication.ImplyingValue.Name, colour, false, true)
 			implied := formatTagValueName(implication.ImpliedTag.Name, implication.ImpliedValue.Name, colour, true, false)
 
-			fmt.Printf("%*v -> %v\n", width, implying, implied)
+			fmt.Printf("%s%s -> %s\n", padding, implying, implied)
 		}
 	}
 

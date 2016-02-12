@@ -73,7 +73,7 @@ match the query. (It is not necessary to create the directory first.)
     README.md
     $ ls "cheese and wine"
     pinot_cheddar.12  edam_blanc.14
-    $ ls "cheese and (tomato or mushroom)
+    $ ls "cheese and (tomato or mushroom)"
     margherita.7  funghi.11
     $ ls
     cheese and (tomato or mushroom)  cheese and wine 

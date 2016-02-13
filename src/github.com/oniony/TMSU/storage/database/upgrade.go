@@ -30,6 +30,7 @@ func upgrade(tx *sql.Tx) error {
 	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
 
 	if version == latestSchemaVersion {
+		log.Infof(2, "schema is up to date")
 		return nil
 	}
 
@@ -47,26 +48,35 @@ func upgrade(tx *sql.Tx) error {
 	log.Infof(2, "upgrading database")
 
 	if version.LessThan(schemaVersion{common.Version{0, 5, 0}, 0}) {
+		log.Infof(2, "renaming fingerprint algorithm setting")
+
 		if err := renameFingerprintAlgorithmSetting(tx); err != nil {
 			return err
 		}
 	}
 	if version.LessThan(schemaVersion{common.Version{0, 6, 0}, 0}) {
+		log.Infof(2, "recreating implication table")
+
 		if err := recreateImplicationTable(tx); err != nil {
 			return err
 		}
 	}
 	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 0}) {
+		log.Infof(2, "updating fingerprint algorithms")
+
 		if err := updateFingerprintAlgorithms(tx); err != nil {
 			return err
 		}
 	}
 	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 1}) {
+		log.Infof(2, "recreating version table")
+
 		if err := recreateVersionTable(tx); err != nil {
 			return err
 		}
 	}
 
+	log.Infof(2, "updating schema version")
 	if err := updateSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
 	}

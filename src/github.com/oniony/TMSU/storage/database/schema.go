@@ -28,7 +28,7 @@ var latestSchemaVersion = schemaVersion{common.Version{0, 7, 0}, 1}
 
 func currentSchemaVersion(tx *sql.Tx) schemaVersion {
 	sql := `
-SELECT major, minor, patch, revision
+SELECT *
 FROM version`
 
 	var major, minor, patch, revision uint
@@ -40,7 +40,11 @@ FROM version`
 	defer rows.Close()
 
 	if rows.Next() && rows.Err() == nil {
-		rows.Scan(&major, &minor, &patch, &revision) // ignore errors
+		err := rows.Scan(&major, &minor, &patch, &revision)
+		if err != nil {
+			// might be prior to schema 0.7.0-1 where there was no revision column
+			rows.Scan(&major, &minor, &patch) // ignore errors
+		}
 	}
 
 	return schemaVersion{common.Version{major, minor, patch}, revision}

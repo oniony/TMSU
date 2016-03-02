@@ -19,7 +19,7 @@ package cli
 
 // unexported
 
-var commands = *Command{
+var commands = []*Command{
 	&ConfigCommand,
 	&CopyCommand,
 	&DeleteCommand,

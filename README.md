@@ -97,6 +97,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.6.1
+------
+
+  * Fixed crash when opening an empty tag directory in the VFS.
+
 v0.6.0
 ------
 

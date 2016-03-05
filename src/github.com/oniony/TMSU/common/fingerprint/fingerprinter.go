@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -31,30 +31,37 @@ import (
 const sparseFingerprintThreshold = 5 * 1024 * 1024
 const sparseFingerprintSize = 512 * 1024
 
-func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error) {
-	stat, err := os.Stat(path)
+func Create(path, fileAlgorithm, directoryAlgorithm, symlinkAlgorithm string) (Fingerprint, error) {
+	stat, err := os.Lstat(path)
 	if err != nil {
 		return Empty, err
 	}
 
-	if stat.IsDir() {
-		switch directoryAlgorithm {
-		case "sumSizes":
-			return sumSizesFingerprint(path, 0)
-		case "dynamic:sumSizes", "":
-			return sumSizesFingerprint(path, 500)
-		case "none":
-			return Empty, nil
-		default:
-			return "", fmt.Errorf("unsupported directory fingerprint algorithm '%v'.", directoryAlgorithm)
+	if stat.Mode()&os.ModeSymlink != 0 {
+		if symlinkAlgorithm == "follow" {
+			stat, err = os.Stat(path)
+			if err != nil {
+				return Empty, err
+			}
+		} else {
+			return createSymlinkFingerprint(path, symlinkAlgorithm)
 		}
 	}
 
-	switch fileAlgorithm {
-	case "symlinkTargetName":
-		return symlinkTargetNameFingerprint(path, true)
-	case "symlinkTargetNameNoExt":
-		return symlinkTargetNameFingerprint(path, false)
+	switch {
+	case stat.Mode().IsDir():
+		return createDirectoryFingerprint(path, directoryAlgorithm)
+	case stat.Mode().IsRegular():
+		return createFileFingerprint(path, fileAlgorithm, stat)
+	default:
+		return Empty, fmt.Errorf("unsupported file mode", stat.Mode())
+	}
+}
+
+// unexported
+
+func createFileFingerprint(path, algorithm string, stat os.FileInfo) (Fingerprint, error) {
+	switch algorithm {
 	case "dynamic:SHA256", "":
 		return dynamicFingerprint(path, sha256.New(), stat.Size())
 	case "dynamic:SHA1":
@@ -70,11 +77,35 @@ func Create(path, fileAlgorithm, directoryAlgorithm string) (Fingerprint, error)
 	case "none":
 		return Empty, nil
 	default:
-		return "", fmt.Errorf("unsupported file fingerprint algorithm '%v'.", fileAlgorithm)
+		return "", fmt.Errorf("unsupported file fingerprint algorithm '%v'", algorithm)
 	}
 }
 
-// unexported
+func createDirectoryFingerprint(path, algorithm string) (Fingerprint, error) {
+	switch algorithm {
+	case "sumSizes":
+		return sumSizesFingerprint(path, 0)
+	case "dynamic:sumSizes", "":
+		return sumSizesFingerprint(path, 500)
+	case "none":
+		return Empty, nil
+	default:
+		return "", fmt.Errorf("unsupported directory fingerprint algorithm '%v'", algorithm)
+	}
+}
+
+func createSymlinkFingerprint(path, algorithm string) (Fingerprint, error) {
+	switch algorithm {
+	case "targetName":
+		return symlinkTargetNameFingerprint(path, true)
+	case "targetNameNoExt":
+		return symlinkTargetNameFingerprint(path, false)
+	case "none":
+		return Empty, nil
+	default:
+		return Empty, fmt.Errorf("unsupported symbolic link fingerprint algorithm '%v'", algorithm)
+	}
+}
 
 func regularFingerprint(path string, h hash.Hash) (Fingerprint, error) {
 	return calculateRegularFingerprint(path, h)
@@ -90,23 +121,13 @@ func dynamicFingerprint(path string, h hash.Hash, fileSize int64) (Fingerprint, 
 
 // Uses the symoblic target's filename as the fingerprint
 func symlinkTargetNameFingerprint(path string, includeExtension bool) (Fingerprint, error) {
-	stat, err := os.Lstat(path)
+	target, err := os.Readlink(path)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return Empty, nil
 		}
 
-		return Empty, fmt.Errorf("'%v': could not determine if path is symbolic link: %v", path, err)
-	}
-
-	if stat.Mode()&os.ModeSymlink != os.ModeSymlink {
-		// for other files, use the base name
-		return Fingerprint(stat.Name()), nil
-	}
-
-	target, err := os.Readlink(path)
-	if err != nil {
-		return "", fmt.Errorf("'%v': could not determine targe of symbolic link: %v", path, err)
+		return Empty, fmt.Errorf("'%v': could not determine target of symbolic link: %v", path, err)
 	}
 
 	fingerprint := filepath.Base(target)

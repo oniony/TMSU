@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,14 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	"github.com/oniony/TMSU/entities"
 )
+
+type DatabaseNotFoundError struct {
+	Path string
+}
+
+func (err DatabaseNotFoundError) Error() string {
+	return fmt.Sprintf("no database at '%v'", err.Path)
+}
 
 type DatabaseAccessError struct {
 	DatabasePath string

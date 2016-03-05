@@ -78,8 +78,9 @@ About
 TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul@tmsu.org>).
 
 The creation of TMSU is motivation in itself, but if you should feel inclinded
-to make a small gift via Bitcoin then it shall be gratefully received:
+to make a small gift via Pledgie or Bitcoin then it shall be gratefully received:
 
+  * <https://pledgie.com/campaigns/31085>
   * `1TMSU5TL3Yj6AGP7Wq6uahTfkTSX2nWvM`
 
 TMSU is written in Go: <http://www.golang.org/>
@@ -92,18 +93,31 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
   * Wiki: <https://github.com/oniony/TMSU/wiki>
   * Issue tracker: <https://github.com/oniony/TMSU/issues>
   * Mailing list: <http://groups.google.com/group/tmsu>
-  * Feedback: <https://docs.google.com/forms/d/1cd-SwD7OcHaAkv7X9OBf4kPlAyEKghSz8SQ9tSqHjo8/>
 
 Release Notes
 =============
 
-v0.6 (in development)
-----
+v0.7.0 (in development)
+------
+
+  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint algorithm
+    for symbolic links to be configured separately to that used for regular files. (TMSU
+    will automatically set this if you are using `symlinkTargetName[NoExt]`.)
+  * By default duplicate files will now be reported when tagging.
+  * A new setting `reportDuplicates` can be used to turn of duplicate reporting during tagging.
+  * Made it possible to upgrade the database schema between releases.
+
+v0.6.0
+------
 
   *Note: this release changes the database schema by adding additional columns
   to the 'implication' table. TMSU will automatically upgrade your database
   upon first use but you may wish to take a backup beforehand.*
 
+  * Relaxed restrictions on tag and value names, allowing punctuation and
+    whitespace characters. Problematic characters can be escaped with backslash.
+  * Values are no longer automatically deleted when no longer used: it is now
+    up to you to manage them.
   * Added --force option to 'tag' subcommand to allow tagging of missing or
     permission denied paths and broken symlinks.
   * 'imply' now creates tags if necessary (and 'autoCreateTags' is set).
@@ -116,14 +130,12 @@ v0.6 (in development)
   * Included a set of scripts for performing filesystem operations whilst
     keeping the TMSU database up to date. If you wish to use these scripts
     I recommend you alias them to simpler names, e.g. 'trm'.
-    - tmsu-fs-rm     Removes files from the filesystem and TMSU
-    - tmsu-fs-mv     Moves a file in the filesystem and updates TMSU
-    - tmsu-fs-merge  Merges files (deleting all but the last)
+    - `tmsu-fs-rm`     Removes files from the filesystem and TMSU
+    - `tmsu-fs-mv`     Moves a file in the filesystem and updates TMSU
+    - `tmsu-fs-merge`  Merges files (deleting all but the last)
   * Tag values can now be renamed, deleted and merged using the new --value
     option on the corresponding subcommands.
   * Tag values can now be used in implications.
-  * Values are no longer automatically deleted when no longer used: it is now
-    up to you to manage them.
   * Tag values can be explicitly created: tmsu tag --create =2015. (It may
     be necessary to enclose the argument in quotes depending upon your shell.)
   * It is no longer possible to add a circular tag implication. (These were
@@ -133,8 +145,7 @@ v0.6 (in development)
   * Case insensitive queries can now be performed with the --ignore-case option
     on the 'files' subcommand.
   * Added integration tests covering CLI.
-  * Relaxed restrictions on tag and value names, allowing punctuation and
-    whitespace characters. Problematic characters can be escaped with backslash.
+  * Bug fixes.
 
 v0.5.2
 ------
@@ -275,37 +286,9 @@ v0.3.0
     system 'mount' command or on startup via the fstab.
   * Bug fixes.
 
-v0.2.2
-------
-
-  * Fixed virtual filesystem.
-
-v0.2.1
-------
-
-  * Fixed bug where excluding multiple tags would return incorrect results.
-  * Fixed Go 1.1 compilation problems. 
-
-v0.2.0
-------
-
-  * Added support for tag implications, e.g. tag 'a' implies 'b'. New 'imply'
-    subcommand for managing these.
-  * Added --force option to 'repair' subcommand to remove missing files (and
-    associated taggings) from the database.
-  * Added --from option to 'tag' subcommand to allow tags to copied from one
-    file to another. e.g. 'tmsu tag -f a b' will apply file b's tags to file a.
-    ('tag -r -f a a' will recursively retag a directory's contents.)
-  * Added --directory option to 'status' subcommand to stop it recursively
-    processing directory contents.
-  * Added --print0 option to 'files' subcommand to allow use with xargs.
-  * Added --count option to 'tags' and 'files' subcommand to list tag/file count
-    rather than names.
-  * Bug fixes and unit-test improvements.
-
 - - -
 
-Copyright 2011-2015 Paul Ruane
+Copyright 2011-2016 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,10 +28,14 @@ type Storage struct {
 	RootPath string
 }
 
+func CreateAt(path string) error {
+	return database.CreateAt(path)
+}
+
 func OpenAt(path string) (*Storage, error) {
 	db, err := database.OpenAt(path)
 	if err != nil {
-		return nil, fmt.Errorf("could not open database at '%v': %v", path, err)
+		return nil, err
 	}
 
 	rootPath, err := determineRootPath(path)

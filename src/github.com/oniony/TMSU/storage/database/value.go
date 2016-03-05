@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -70,6 +70,10 @@ WHERE id = ?`
 
 // Retrieves a specific set of values.
 func ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Values, error) {
+	if len(ids) == 0 {
+		return make(entities.Values, 0), nil
+	}
+
 	sql := `
 SELECT id, name
 FROM value

@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -25,15 +25,16 @@ import (
 // unexported
 
 func upgrade(tx *sql.Tx) error {
-	version := schemaVersion(tx)
+	version := currentSchemaVersion(tx)
 
 	log.Infof(2, "database schema has version %v, latest schema version is %v", version, latestSchemaVersion)
 
 	if version == latestSchemaVersion {
+		log.Infof(2, "schema is up to date")
 		return nil
 	}
 
-	noVersion := common.Version{}
+	noVersion := schemaVersion{}
 	if version == noVersion {
 		log.Infof(2, "creating schema")
 
@@ -46,17 +47,36 @@ func upgrade(tx *sql.Tx) error {
 
 	log.Infof(2, "upgrading database")
 
-	if version.LessThan(common.Version{0, 5, 0}) {
+	if version.LessThan(schemaVersion{common.Version{0, 5, 0}, 0}) {
+		log.Infof(2, "renaming fingerprint algorithm setting")
+
 		if err := renameFingerprintAlgorithmSetting(tx); err != nil {
 			return err
 		}
 	}
-	if version.LessThan(common.Version{0, 6, 0}) {
+	if version.LessThan(schemaVersion{common.Version{0, 6, 0}, 0}) {
+		log.Infof(2, "recreating implication table")
+
 		if err := recreateImplicationTable(tx); err != nil {
 			return err
 		}
 	}
+	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 0}) {
+		log.Infof(2, "updating fingerprint algorithms")
 
+		if err := updateFingerprintAlgorithms(tx); err != nil {
+			return err
+		}
+	}
+	if version.LessThan(schemaVersion{common.Version{0, 7, 0}, 1}) {
+		log.Infof(2, "recreating version table")
+
+		if err := recreateVersionTable(tx); err != nil {
+			return err
+		}
+	}
+
+	log.Infof(2, "updating schema version")
 	if err := updateSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
 	}
@@ -95,6 +115,63 @@ FROM implication_old`); err != nil {
 
 	if _, err := tx.Exec(`
 DROP TABLE implication_old`); err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func updateFingerprintAlgorithms(tx *sql.Tx) error {
+	rows, err := tx.Query(`
+SELECT value
+FROM setting
+WHERE name = 'fileFingerprintAlgorithm'`)
+	if err != nil {
+		return err
+	}
+	defer rows.Close()
+
+	var fileFingerprintAlg string
+	if rows.Next() && rows.Err() == nil {
+		rows.Scan(&fileFingerprintAlg) // ignore errors
+	}
+
+	switch fileFingerprintAlg {
+	case "symlinkTargetName":
+		if _, err := tx.Exec(`
+INSERT INTO setting (name, value)
+VALUES ("symlinkFingerprintAlgorithm", "targetName")`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`
+DELETE FROM setting WHERE name = 'fileFingerprintAlgorithm';`); err != nil {
+			return err
+		}
+	case "symlinkTargetNameNoExt":
+		if _, err := tx.Exec(`
+INSERT INTO setting (name, value)
+VALUES ("symlinkFingerprintAlgorithm", "targetNameNoExt")`); err != nil {
+			return err
+		}
+		if _, err := tx.Exec(`
+DELETE FROM setting WHERE name = 'fileFingerprintAlgorithm';`); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func recreateVersionTable(tx *sql.Tx) error {
+	if _, err := tx.Exec("DROP TABLE version;"); err != nil {
+		return err
+	}
+
+	if err := createVersionTable(tx); err != nil {
+		return err
+	}
+
+	if err := insertSchemaVersion(tx, latestSchemaVersion); err != nil {
 		return err
 	}
 

@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -18,13 +18,16 @@ package storage
 import (
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage/database"
+	"sort"
 )
 
 var defaultSettings = entities.Settings{
 	&entities.Setting{"autoCreateTags", "yes"},
 	&entities.Setting{"autoCreateValues", "yes"},
 	&entities.Setting{"directoryFingerprintAlgorithm", "none"},
-	&entities.Setting{"fileFingerprintAlgorithm", "dynamic:SHA256"}}
+	&entities.Setting{"fileFingerprintAlgorithm", "dynamic:SHA256"},
+	&entities.Setting{"reportDuplicates", "yes"},
+	&entities.Setting{"symlinkFingerprintAlgorithm", "follow"}}
 
 // The complete set of settings.
 func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
@@ -39,6 +42,8 @@ func (storage *Storage) Settings(tx *Tx) (entities.Settings, error) {
 			settings = append(settings, defaultSetting)
 		}
 	}
+
+	sort.Sort(settings)
 
 	return settings, nil
 }

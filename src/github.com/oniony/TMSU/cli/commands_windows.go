@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -19,7 +19,7 @@ package cli
 
 // unexported
 
-var commands = *Command{
+var commands = []*Command{
 	&ConfigCommand,
 	&CopyCommand,
 	&DeleteCommand,

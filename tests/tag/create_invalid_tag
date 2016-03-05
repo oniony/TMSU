@@ -2,8 +2,6 @@
 
 # test
 
-tmsu tag --create auber/gine     >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag --create 'broc\\coli'   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag --create .              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag --create ..             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag --create and            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
@@ -29,8 +27,6 @@ tmsu tags --explicit             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: could not create tag 'auber/gine': tag names cannot contain '/'
-tmsu: could not create tag 'broc\\coli': tag names cannot contain '\'
 tmsu: could not create tag '.': tag name cannot be '.' or '..'
 tmsu: could not create tag '..': tag name cannot be '.' or '..'
 tmsu: could not create tag 'and': tag name cannot be a logical operator: 'and', 'or' or 'not'

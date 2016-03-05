@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -28,8 +28,8 @@ var ValuesCommand = Command{
 	Synopsis:    "List values",
 	Usages:      []string{"tmsu values [OPTION]... [TAG]..."},
 	Description: "Lists the values for TAGs. If no TAG is specified then all tags are listed.",
-	Examples: []string{"$ tmsu values year\n2000\n2001\n2015",
-		"$ tmsu values\n2000\n2001\n2015\ncheese\nopera",
+	Examples: []string{"$ tmsu values year\n2000\n2001\n2016",
+		"$ tmsu values\n2000\n2001\n2016\ncheese\nopera",
 		"$ tmsu values --count year\n3"},
 	Options: Options{{"--count", "-c", "lists the number of values rather than their names", false, ""},
 		{"", "-1", "list one value per line", false, ""}},
@@ -42,7 +42,7 @@ func valuesExec(options Options, args []string, databasePath string) (error, war
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}
@@ -79,12 +79,12 @@ func listAllValues(store *storage.Storage, tx *storage.Tx, showCount, onePerLine
 
 		if onePerLine {
 			for _, value := range values {
-				fmt.Println(value.Name)
+				fmt.Println(escape(value.Name))
 			}
 		} else {
 			valueNames := make([]string, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = escape(value.Name)
 			}
 
 			terminal.PrintColumns(valueNames)
@@ -131,12 +131,12 @@ func listValuesForTag(store *storage.Storage, tx *storage.Tx, tagName string, sh
 	} else {
 		if onePerLine {
 			for _, value := range values {
-				fmt.Println(value.Name)
+				fmt.Println(escape(value.Name, '=', ' '))
 			}
 		} else {
 			valueNames := make([]string, len(values))
 			for index, value := range values {
-				valueNames[index] = value.Name
+				valueNames[index] = escape(value.Name, '=', ' ')
 			}
 
 			terminal.PrintColumns(valueNames)
@@ -172,13 +172,13 @@ func listValuesForTags(store *storage.Storage, tx *storage.Tx, tagNames []string
 			if onePerLine {
 				fmt.Println(tagName)
 				for _, value := range values {
-					fmt.Println(value.Name)
+					fmt.Println(escape(value.Name, '=', ' '))
 				}
 				fmt.Println()
 			} else {
 				valueNames := make([]string, len(values))
 				for index, value := range values {
-					valueNames[index] = value.Name
+					valueNames[index] = escape(value.Name, '=', ' ')
 				}
 
 				fmt.Printf("%v: %v\n", tagName, strings.Join(valueNames, " "))

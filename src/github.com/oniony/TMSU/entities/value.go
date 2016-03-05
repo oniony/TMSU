@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -128,13 +128,12 @@ func ValidateValueName(valueName string) error {
 	}
 
 	for _, ch := range valueName {
-		switch ch {
-		case '/', '\\':
-			return fmt.Errorf("tag value cannot contain '%c'", ch) // cannot be used in the VFS
-		}
-
 		if !unicode.IsOneOf(validValueChars, ch) {
-			return fmt.Errorf("tag value cannot contain '%c'", ch)
+			if unicode.IsPrint(ch) {
+				return fmt.Errorf("tag value cannot contain '%c'", ch)
+			} else {
+				return fmt.Errorf("tag value cannot contain %U", ch)
+			}
 		}
 	}
 

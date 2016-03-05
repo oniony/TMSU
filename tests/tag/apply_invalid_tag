@@ -2,8 +2,6 @@
 
 # test
 
-tmsu tag /tmp/tmsu/file1 auber/gine      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file1 'broc\\coli'    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag /tmp/tmsu/file1 .               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag /tmp/tmsu/file1 ..              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tag /tmp/tmsu/file1 and             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
@@ -29,28 +27,26 @@ tmsu tags --explicit /tmp/tmsu/file1     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: could not create tag 'auber/gine': tag names cannot contain '/'
-tmsu: could not create tag 'broc\\coli': tag names cannot contain '\'
-tmsu: could not create tag '.': tag name cannot be '.' or '..'
-tmsu: could not create tag '..': tag name cannot be '.' or '..'
-tmsu: could not create tag 'and': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'or': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'not': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'eq': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'ne': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'lt': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'gt': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'le': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'ge': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'AND': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'OR': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'NOT': tag name cannot be a logical operator: 'and', 'or' or 'not'
-tmsu: could not create tag 'EQ': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'NE': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'LT': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'GT': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'LE': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
-tmsu: could not create tag 'GE': tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be '.' or '..'
+tmsu: tag name cannot be '.' or '..'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a logical operator: 'and', 'or' or 'not'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
+tmsu: tag name cannot be a comparison operator: 'eq', 'ne', 'gt', 'lt', 'ge' or 'le'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

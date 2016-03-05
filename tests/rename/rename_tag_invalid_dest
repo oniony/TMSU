@@ -6,13 +6,13 @@ tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu rename aubergine egg/plant       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu rename aubergine eggplant       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
-tmsu: could not rename tag 'aubergine' to 'egg/plant': tag names cannot contain '/'
+tmsu: could not rename tag 'aubergine' to 'eggplant': tag names cannot contain U+0002
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

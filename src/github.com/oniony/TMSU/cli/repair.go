@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -16,6 +16,7 @@
 package cli
 
 import (
+	"errors"
 	"fmt"
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/common/log"
@@ -61,7 +62,7 @@ When run with the --manual option, any paths that begin with OLD are updated to 
 func repairExec(options Options, args []string, databasePath string) (error, warnings) {
 	pretend := options.HasOption("--pretend")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}
@@ -74,6 +75,10 @@ func repairExec(options Options, args []string, databasePath string) (error, war
 	defer tx.Commit()
 
 	if options.HasOption("--manual") {
+		if len(args) < 2 {
+			return errors.New("too few arguments"), nil
+		}
+
 		fromPath := args[0]
 		toPath := args[1]
 
@@ -324,7 +329,7 @@ func repairUnmodified(store *storage.Storage, tx *storage.Tx, unmodified entitie
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -352,7 +357,7 @@ func repairModified(store *storage.Storage, tx *storage.Tx, modified entities.Fi
 			return err
 		}
 
-		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+		fingerprint, err := fingerprint.Create(dbFile.Path(), settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 		if err != nil {
 			log.Warnf("%v: could not create fingerprint: %v", dbFile.Path(), err)
 			continue
@@ -405,7 +410,7 @@ func repairMoved(store *storage.Storage, tx *storage.Tx, missing entities.Files,
 				return fmt.Errorf("%v: could not stat file: %v", candidatePath, err)
 			}
 
-			fingerprint, err := fingerprint.Create(candidatePath, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+			fingerprint, err := fingerprint.Create(candidatePath, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 			if err != nil {
 				return fmt.Errorf("%v: could not create fingerprint: %v", candidatePath, err)
 			}

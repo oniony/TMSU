@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -23,11 +23,29 @@ import (
 	"github.com/oniony/TMSU/common/terminal/ansi"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
+	"github.com/oniony/TMSU/storage/database"
 	"os"
+	"strings"
 	"time"
 )
 
 // unexported
+
+func openDatabase(path string) (*storage.Storage, error) {
+	storage, err := storage.OpenAt(path)
+	if err != nil {
+		switch err.(type) {
+		case database.DatabaseNotFoundError:
+			return nil, fmt.Errorf("no database found: use 'tmsu init' to create one")
+		case database.DatabaseAccessError:
+			return nil, fmt.Errorf("cannot access database: %v", err)
+		default:
+			return nil, err
+		}
+	}
+
+	return storage, nil
+}
 
 func stdoutIsCharDevice() bool {
 	stat, err := os.Stdout.Stat()
@@ -91,7 +109,7 @@ func (emptyStat) Sys() interface{} {
 func createTag(store *storage.Storage, tx *storage.Tx, tagName string) (*entities.Tag, error) {
 	tag, err := store.AddTag(tx, tagName)
 	if err != nil {
-		return nil, fmt.Errorf("could not create tag '%v': %v", tagName, err)
+		return nil, err
 	}
 
 	log.Warnf("new tag '%v'", tagName)
@@ -163,6 +181,9 @@ func parseTagEqValueName(tagArg string) (string, string) {
 }
 
 func formatTagValueName(tagName, valueName string, useColour, implicit, explicit bool) string {
+	tagName = escape(tagName, '=', ' ')
+	valueName = escape(valueName, '=', ' ')
+
 	if useColour {
 		colourCode := colourCodeFor(implicit, explicit)
 
@@ -190,4 +211,12 @@ func colourCodeFor(implicit, explicit bool) string {
 	}
 
 	return ""
+}
+
+func escape(text string, chars ...rune) string {
+	for _, char := range chars {
+		text = strings.Replace(text, string(char), `\`+string(char), -1)
+	}
+
+	return text
 }

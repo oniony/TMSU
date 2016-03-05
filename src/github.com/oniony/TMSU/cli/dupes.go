@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -43,7 +43,7 @@ var DupesCommand = Command{
 func dupesExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}
@@ -130,7 +130,7 @@ func findDuplicatesOf(store *storage.Storage, tx *storage.Tx, paths []string, re
 	for _, path := range paths {
 		log.Infof(2, "%v: identifying duplicate files.", path)
 
-		fp, err := fingerprint.Create(path, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm())
+		fp, err := fingerprint.Create(path, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
 		if err != nil {
 			return fmt.Errorf("%v: could not create fingerprint: %v", path, err), warnings
 		}

@@ -13,31 +13,28 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build !windows
-
-package terminal
+package database
 
 import (
-	"os"
-	"syscall"
-	"unsafe"
+	"fmt"
+	"github.com/oniony/TMSU/common"
 )
 
-func Colour() bool {
-	return true
+// unexported
+
+type schemaVersion struct {
+	common.Version
+	Revision uint
 }
 
-func Width() int {
-	var s winsize
-
-	_, _, _ = syscall.Syscall(syscall.SYS_IOCTL, os.Stdout.Fd(), uintptr(syscall.TIOCGWINSZ), uintptr(unsafe.Pointer(&s)))
-
-	return int(s.cols)
+func (version schemaVersion) String() string {
+	return fmt.Sprintf("%v.%v.%v-%v", version.Major, version.Minor, version.Patch, version.Revision)
 }
 
-type winsize struct {
-	rows     uint16
-	cols     uint16
-	pxWidth  uint16
-	pxHeight uint16
+func (this schemaVersion) LessThan(that schemaVersion) bool {
+	return this.Major < that.Major || this.Minor < that.Minor || this.Patch < that.Patch || this.Revision < that.Revision
+}
+
+func (this schemaVersion) GreaterThan(that schemaVersion) bool {
+	return this.Major > that.Major || this.Minor > that.Minor || this.Patch > that.Patch || this.Revision > that.Revision
 }

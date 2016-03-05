@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -73,7 +73,7 @@ match the query. (It is not necessary to create the directory first.)
     README.md
     $ ls "cheese and wine"
     pinot_cheddar.12  edam_blanc.14
-    $ ls "cheese and (tomato or mushroom)
+    $ ls "cheese and (tomato or mushroom)"
     margherita.7  funghi.11
     $ ls
     cheese and (tomato or mushroom)  cheese and wine 
@@ -590,11 +590,17 @@ func (vfs FuseVfs) tagDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status)
 		log.Fatalf("Could not retrieve tags: %v", err)
 	}
 
-	entries := make([]fuse.DirEntry, len(tags))
-	for index, tag := range tags {
-		entries[index] = fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR}
+	entries := make([]fuse.DirEntry, 0, len(tags))
+	for _, tag := range tags {
+		if strings.ContainsAny(tag.Name, "/\\") {
+			log.Infof(2, "Tag '%v' contains slashes so is omitted from the VFS")
+			continue
+		}
+
+		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR})
 	}
 
+	// show help file until there are three tags
 	if len(tags) < 3 {
 		entries = append(entries, fuse.DirEntry{Name: helpFilename, Mode: fuse.S_IFREG})
 	}
@@ -971,9 +977,14 @@ func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files e
 		return nil, fmt.Errorf("could not retrieve values: %v", err)
 	}
 
-	valueNames := make([]string, len(values))
-	for index, value := range values {
-		valueNames[index] = value.Name
+	valueNames := make([]string, 0, len(values))
+	for _, value := range values {
+		if strings.ContainsAny(value.Name, "/\\") {
+			log.Infof(2, "value '%v' omitted as it contains slashes")
+			continue
+		}
+
+		valueNames = append(valueNames, value.Name)
 	}
 
 	return valueNames, nil
@@ -999,6 +1010,11 @@ func (vfs FuseVfs) tagNamesForFiles(tx *storage.Tx, files entities.Files) ([]str
 		}
 
 		for _, tag := range tags {
+			if strings.ContainsAny(tag.Name, "/\\") {
+				log.Infof(2, "tag '%v' omitted as it contains slashes")
+				continue
+			}
+
 			if !containsString(tagNames, tag.Name) {
 				tagNames = append(tagNames, tag.Name)
 			}

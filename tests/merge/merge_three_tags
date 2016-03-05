@@ -19,6 +19,7 @@ diff /tmp/tmsu/stderr - <<EOF
 tmsu: new tag 'aubergine'
 tmsu: new tag 'potato'
 tmsu: new tag 'brocolli'
+tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -26,9 +27,9 @@ fi
 
 diff /tmp/tmsu/stdout - <<EOF
 brocolli
-/tmp/tmsu/dir1/file1
 /tmp/tmsu/file1
 /tmp/tmsu/file2
+/tmp/tmsu/dir1/file1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

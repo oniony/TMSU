@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -63,7 +63,7 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 		return err, nil
 	}
 
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}
@@ -99,13 +99,13 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 		}
 
 		if onePerLine {
-			for _, tagName := range tags {
-				fmt.Println(tagName)
+			for _, tag := range tags {
+				fmt.Println(escape(tag.Name, '=', ' '))
 			}
 		} else {
 			tagNames := make([]string, len(tags))
 			for index, tag := range tags {
-				tagNames[index] = tag.Name
+				tagNames[index] = escape(tag.Name, '=', ' ')
 			}
 
 			terminal.PrintColumns(tagNames)

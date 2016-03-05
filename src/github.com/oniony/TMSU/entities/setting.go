@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -22,6 +22,18 @@ type Setting struct {
 
 type Settings []*Setting
 
+func (settings Settings) Len() int {
+	return len(settings)
+}
+
+func (settings Settings) Less(i, j int) bool {
+	return settings[i].Name < settings[j].Name
+}
+
+func (settings Settings) Swap(i, j int) {
+	settings[i], settings[j] = settings[j], settings[i]
+}
+
 func (settings Settings) AutoCreateTags() bool {
 	return settings.BoolValue("autoCreateTags")
 }
@@ -35,7 +47,15 @@ func (settings Settings) FileFingerprintAlgorithm() string {
 }
 
 func (settings Settings) DirectoryFingerprintAlgorithm() string {
-	return settings.Value("directoyFingerprintAlgorithm")
+	return settings.Value("directoryFingerprintAlgorithm")
+}
+
+func (settings Settings) SymlinkFingerprintAlgorithm() string {
+	return settings.Value("symlinkFingerprintAlgorithm")
+}
+
+func (settings Settings) ReportDuplicates() bool {
+	return settings.BoolValue("reportDuplicates")
 }
 
 func (settings Settings) ContainsName(name string) bool {

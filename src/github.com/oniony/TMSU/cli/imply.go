@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -20,6 +20,7 @@ import (
 	"github.com/oniony/TMSU/common/log"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
+	"strings"
 )
 
 var ImplyCommand = Command{
@@ -48,7 +49,7 @@ mp3 -> music`,
 // unexported
 
 func implyExec(options Options, args []string, databasePath string) (error, warnings) {
-	store, err := storage.OpenAt(databasePath)
+	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
 	}
@@ -105,10 +106,16 @@ func listImplications(store *storage.Storage, tx *storage.Tx, colour bool) error
 
 	if len(implications) > 0 {
 		for _, implication := range implications {
+			paddingWidth := width - len(implication.ImplyingTag.Name)
+			if implication.ImplyingValue.Id != 0 {
+				paddingWidth -= 1 + len(implication.ImplyingValue.Name)
+			}
+			padding := strings.Repeat(" ", paddingWidth)
+
 			implying := formatTagValueName(implication.ImplyingTag.Name, implication.ImplyingValue.Name, colour, false, true)
 			implied := formatTagValueName(implication.ImpliedTag.Name, implication.ImpliedValue.Name, colour, true, false)
 
-			fmt.Printf("%*v -> %v\n", width, implying, implied)
+			fmt.Printf("%s%s -> %s\n", padding, implying, implied)
 		}
 	}
 

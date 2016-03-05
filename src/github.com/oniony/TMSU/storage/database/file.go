@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -478,6 +478,12 @@ func buildComparisonQueryBranch(expression query.ComparisonExpression, builder *
 		valueTerm = "CAST(v.name AS float)"
 	} else {
 		valueTerm = "v.name"
+	}
+
+	if expression.Operator == "!=" {
+		// reinterprent as otherwise it won't work for multiple values of same tag
+		expression.Operator = "=="
+		builder.AppendSql(" not ")
 	}
 
 	if explicitOnly {

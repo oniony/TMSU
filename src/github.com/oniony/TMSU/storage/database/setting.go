@@ -1,4 +1,4 @@
-// Copyright 2011-2015 Paul Ruane.
+// Copyright 2011-2016 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -24,8 +24,7 @@ import (
 func Settings(tx *Tx) (entities.Settings, error) {
 	sql := `
 SELECT name, value
-FROM setting
-ORDER BY name`
+FROM setting`
 
 	rows, err := tx.Query(sql)
 	if err != nil {

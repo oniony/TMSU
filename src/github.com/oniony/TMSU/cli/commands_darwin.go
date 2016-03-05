@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build !windows,!darwin
+// +build darwin
 
 package cli
 
@@ -30,15 +30,12 @@ var commands = []*Command{
 	&InfoCommand,
 	&InitCommand,
 	&MergeCommand,
-	&MountCommand,
 	&RenameCommand,
 	&RepairCommand,
 	&StatusCommand,
 	&TagCommand,
 	&TagsCommand,
-	&UnmountCommand,
 	&UntagCommand,
 	&UntaggedCommand,
 	&ValuesCommand,
-	&VersionCommand,
-	&VfsCommand}
+	&VersionCommand}

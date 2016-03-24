@@ -217,10 +217,10 @@ func (vfs FuseVfs) Mkdir(name string, mode uint32, context *fuse.Context) fuse.S
 
 	switch path[0] {
 	case tagsDir:
-		name := path[1]
+		tagName := unescape(path[1])
 
-		if _, err := vfs.store.AddTag(tx, name); err != nil {
-			log.Fatalf("could not create tag '%v': %v", name, err)
+		if _, err := vfs.store.AddTag(tx, tagName); err != nil {
+			log.Fatalf("could not create tag '%v': %v", tagName, err)
 		}
 
 		if err := tx.Commit(); err != nil {
@@ -306,7 +306,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	}
 	defer tx.Commit()
 
-	if name == ".database" {
+	if name == databaseFilename {
 		return vfs.readDatabaseFileLink()
 	}
 
@@ -347,8 +347,8 @@ func (vfs FuseVfs) Rename(oldName string, newName string, context *fuse.Context)
 		return fuse.EPERM
 	}
 
-	oldTagName := oldPath[1]
-	newTagName := newPath[1]
+	oldTagName := unescape(oldPath[1])
+	newTagName := unescape(newPath[1])
 
 	tag, err := vfs.store.TagByName(tx, oldTagName)
 	if err != nil {
@@ -388,7 +388,7 @@ func (vfs FuseVfs) Rmdir(name string, context *fuse.Context) fuse.Status {
 			return fuse.EPERM
 		}
 
-		tagName := path[1]
+		tagName := unescape(path[1])
 		tag, err := vfs.store.TagByName(tx, tagName)
 		if err != nil {
 			log.Fatalf("could not retrieve tag '%v': %v", tagName, err)
@@ -500,10 +500,10 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 		var tagName, valueName string
 		if dirName[0] == '=' {
-			tagName = path[len(path)-3]
-			valueName = dirName[1:len(dirName)]
+			tagName = unescape(path[len(path)-3])
+			valueName = unescape(dirName[1:len(dirName)])
 		} else {
-			tagName = dirName
+			tagName = unescape(dirName)
 			valueName = ""
 		}
 
@@ -592,12 +592,9 @@ func (vfs FuseVfs) tagDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status)
 
 	entries := make([]fuse.DirEntry, 0, len(tags))
 	for _, tag := range tags {
-		if strings.ContainsAny(tag.Name, "/\\") {
-			log.Infof(2, "Tag '%v' contains slashes so is omitted from the VFS")
-			continue
-		}
+		tagName := escape(tag.Name)
 
-		entries = append(entries, fuse.DirEntry{Name: tag.Name, Mode: fuse.S_IFDIR})
+		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR})
 	}
 
 	// show help file until there are three tags
@@ -675,7 +672,9 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	tagNames := make([]string, 0, len(path))
 	for _, pathElement := range path {
 		if pathElement[0] != '=' {
-			tagNames = append(tagNames, pathElement)
+			tagName := unescape(pathElement)
+
+			tagNames = append(tagNames, tagName)
 		}
 	}
 
@@ -818,7 +817,7 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 
 	var valueNames []string
 	if lastPathElement[0] != '=' {
-		tagName := lastPathElement
+		tagName := unescape(lastPathElement)
 
 		valueNames, err = vfs.tagValueNamesForFiles(tx, tagName, files)
 		if err != nil {
@@ -841,6 +840,7 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	}
 
 	for _, valueName := range valueNames {
+		valueName = escape(valueName)
 		entries = append(entries, fuse.DirEntry{Name: "=" + valueName, Mode: fuse.S_IFDIR | 0755})
 	}
 
@@ -1031,12 +1031,12 @@ func pathToExpression(path []string) query.Expression {
 		var elementExpression query.Expression
 
 		if element[0] == '=' {
-			tagName := path[index-1]
-			valueName := element[1:len(element)]
+			tagName := unescape(path[index-1])
+			valueName := unescape(element[1:len(element)])
 
 			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {
-			tagName := element
+			tagName := unescape(element)
 			elementExpression = query.TagExpression{tagName}
 		}
 
@@ -1073,4 +1073,16 @@ func containsString(values []string, value string) bool {
 	}
 
 	return false
+}
+
+func escape(name string) string {
+	name = strings.Replace(name, `/`, "\u200B\u2215", -1)
+	name = strings.Replace(name, `\`, "\u200B\u2216", -1)
+	return name
+}
+
+func unescape(name string) string {
+	name = strings.Replace(name, "\u200B\u2215", `/`, -1)
+	name = strings.Replace(name, "\u200B\u2216", `\`, -1)
+	return name
 }

@@ -673,7 +673,6 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	for _, pathElement := range path {
 		if pathElement[0] != '=' {
 			tagName := unescape(pathElement)
-
 			tagNames = append(tagNames, tagName)
 		}
 	}
@@ -834,6 +833,7 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagNames))
 	for _, tagName := range furtherTagNames {
+		tagName = escape(tagName)
 		if !containsString(path, tagName) {
 			entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
 		}
@@ -979,11 +979,6 @@ func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files e
 
 	valueNames := make([]string, 0, len(values))
 	for _, value := range values {
-		if strings.ContainsAny(value.Name, "/\\") {
-			log.Infof(2, "value '%v' omitted as it contains slashes")
-			continue
-		}
-
 		valueNames = append(valueNames, value.Name)
 	}
 
@@ -1010,11 +1005,6 @@ func (vfs FuseVfs) tagNamesForFiles(tx *storage.Tx, files entities.Files) ([]str
 		}
 
 		for _, tag := range tags {
-			if strings.ContainsAny(tag.Name, "/\\") {
-				log.Infof(2, "tag '%v' omitted as it contains slashes")
-				continue
-			}
-
 			if !containsString(tagNames, tag.Name) {
 				tagNames = append(tagNames, tag.Name)
 			}

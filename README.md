@@ -100,11 +100,13 @@ Release Notes
 v0.7.0 (in development)
 ------
 
-  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint algorithm
-    for symbolic links to be configured separately to that used for regular files. (TMSU
-    will automatically set this if you are using `symlinkTargetName[NoExt]`.)
+  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint
+    algorithm for symbolic links to be configured separately to regular files.
   * By default duplicate files will now be reported when tagging.
-  * A new setting `reportDuplicates` can be used to turn of duplicate reporting during tagging.
+  * A new setting `reportDuplicates` can be used to turn off duplicate reporting
+    during tagging.
+  * Slashes are now permitted within tags and values, useful for recording URLs.
+    In the virtual filesystem, similar looking characters are substituted.
   * Made it possible to upgrade the database schema between releases.
 
 v0.6.0

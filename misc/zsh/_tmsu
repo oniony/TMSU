@@ -147,7 +147,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db values $tag2>/dev/null | \
         while read value
         do
-            local escapedValue=$value:gs/:/\:/
+            local escapedValue=$value:gs/:/\\\:/
             escapedValue=${escapedValue:gs/=/\\\\&}
             escapedValue=${escapedValue:gs/!/\\\\&}
             escapedValue=${escapedValue:gs/</\\\\&}

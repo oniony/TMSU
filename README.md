@@ -118,6 +118,11 @@ v0.7.0 (in development)
   * Made it possible to upgrade the database schema between releases.
   * Bug fixes.
 
+v0.6.1
+------
+
+  * Fixed crash when opening an empty tag directory in the VFS.
+
 v0.6.0
 ------
 

@@ -17,6 +17,14 @@ the tags you set up.
 Usage
 =====
 
+Before you can get tagging, you'll need to initialise a TMSU database:
+
+    $ cd ~
+    $ tmsu init
+
+This database will be used automatically whenever you are under that
+directory. In this case we created one under the home directory.
+
 You can tag a file by specifying the file and the list of tags to apply:
 
     $ tmsu tag banana.jpg fruit art year=2015

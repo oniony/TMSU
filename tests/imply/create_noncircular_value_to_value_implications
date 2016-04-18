@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# test
+
+tmsu imply name=courgette name=zucchini    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu imply name=courgette name=marrow      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+tmsu imply                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr  
+
+diff /tmp/tmsu/stderr - <<EOF
+tmsu: new tag 'name'
+tmsu: new value 'courgette'
+tmsu: new value 'zucchini'
+tmsu: new value 'marrow'
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff /tmp/tmsu/stdout - <<EOF
+name=courgette -> name=marrow
+name=courgette -> name=zucchini
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

@@ -84,7 +84,7 @@ func (storage Storage) AddImplication(tx *Tx, pair, impliedPair entities.TagIdVa
 	}
 
 	for _, implication := range implications {
-		if implication.ImpliedTag.Id == pair.TagId {
+        if implication.ImpliedTag.Id == pair.TagId && (pair.ValueId == 0 || implication.ImpliedValue.Id == pair.ValueId) {
 			return fmt.Errorf("implication would create a cycle")
 		}
 	}

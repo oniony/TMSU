@@ -78,9 +78,9 @@ func (storage *Storage) ImplicationsImplying(tx *Tx, pairs ...entities.TagIdValu
 
 // Adds the specified implication.
 func (storage Storage) AddImplication(tx *Tx, pair, impliedPair entities.TagIdValueIdPair) error {
-	implications, err := storage.ImplicationsFor(tx, impliedPair, entities.TagIdValueIdPair{impliedPair.TagId, 0})
+	implications, err := storage.ImplicationsFor(tx, impliedPair)
 	if err != nil {
-		return nil
+		return err
 	}
 
 	for _, implication := range implications {

@@ -116,6 +116,7 @@ v0.7.0 (in development)
   * Slashes are now permitted within tags and values, useful for recording URLs.
     In the virtual filesystem, similar looking characters are substituted.
   * Made it possible to upgrade the database schema between releases.
+  * Added --count option to 'untagged'.
   * Bug fixes.
 
 v0.6.1

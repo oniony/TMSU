@@ -33,7 +33,8 @@ var UntaggedCommand = Command{
 Where PATHs are not specified, untagged items under the current working directory are shown.`,
 	Examples: []string{"$ tmsu untagged",
 		"$ tmsu untagged /home/fred/drawings"},
-	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
+	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
+	                 Option{"--count", "-c", "list the number of files rather than their names", false, ""}},
 	Exec:    untaggedExec,
 }
 
@@ -41,6 +42,7 @@ Where PATHs are not specified, untagged items under the current working director
 
 func untaggedExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := !options.HasOption("--directory")
+	count := options.HasOption("--count")
 
 	paths := args
 	if len(paths) == 0 {
@@ -63,14 +65,44 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	}
 	defer tx.Commit()
 
-	if err := findUntagged(store, tx, paths, recursive); err != nil {
-		return err, nil
-	}
+    if count {
+        count, err := findUntaggedCount(store, tx, paths, recursive)
+        if err != nil {
+            return err, nil
+        }
+
+        fmt.Println(count)
+    } else {
+        if err := findUntagged(store, tx, paths, recursive); err != nil {
+            return err, nil
+        }
+    }
 
 	return nil, nil
 }
 
 func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
+    var action = func(absPath string) {
+        relPath := _path.Rel(absPath)
+        fmt.Println(relPath)
+    }
+
+    return findUntaggedFunc(store, tx, paths, recursive, action)
+}
+
+func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) (uint, error) {
+    var count uint = 0
+
+    var action = func(absPath string) {
+        count++
+    }
+
+    err := findUntaggedFunc(store, tx, paths, recursive, action)
+
+    return count, err
+}
+
+func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool, action func(absPath string)) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
@@ -83,8 +115,7 @@ func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recurs
 			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 		}
 		if file == nil {
-			relPath := _path.Rel(absPath)
-			fmt.Println(relPath)
+			action(absPath)
 		}
 
 		if recursive {

@@ -449,6 +449,7 @@ _tmsu_cmd_untag() {
 
 _tmsu_cmd_untagged() {
     _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
+                     ''{--count,-c}'[lists the number of files rather than their names]' \
                      '*:file:_files' \
     && ret=0
 }

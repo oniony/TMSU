@@ -24,20 +24,7 @@ a downloaded binary then they can be safely ignored.
 
     * <http://golang.org/cmd/go/#hdr-GOPATH_environment_variable>
 
-3. Install the dependent packages.
-
-    These will be installed to your GOPATH directory (see previous step).
-
-    Unix like operating systems:
-
-        go get -u github.com/mattn/go-sqlite3
-        go get -u github.com/hanwen/go-fuse/fuse
-
-    Microsoft Windows:
-
-        go get -u github.com/mattn/go-sqlite3
-
-4. Clone the TMSU respository:
+3. Clone the TMSU respository:
 
     To clone the current stable release branch:
 
@@ -49,9 +36,19 @@ a downloaded binary then they can be safely ignored.
 
         git clone https://github.com/oniony/TMSU.git
 
-5. Build and install
+Now follow the next steps according to your operating system.
 
-    Unix like operating systems:
+Linux
+-----
+
+4. Install the dependent packages
+
+    These will be installed to your GOPATH directory (see previous step).
+
+        go get -u github.com/mattn/go-sqlite3
+        go get -u github.com/hanwen/go-fuse/fuse
+
+5. Build and install
 
         make
         sudo make install
@@ -60,9 +57,52 @@ a downloaded binary then they can be safely ignored.
     Zsh completion, a `mount` wrapper and the manual page. To adjust the paths
     please edit the `Makefile`.
 
-    Microsoft Windows:
+Windows
+-------
 
-        go build tmsu
+4. Set up MinGW
+
+    To compile the dependent package, go-sqlite3, it is necessary to set up a MinGW
+    environment.
+
+    There are various options available, which you can peruse these at the download
+    page, but I found Msys2 pretty painless to install:
+
+    * <http://mingw-w64.org/>
+
+5. Install GCC
+
+    TMSU uses the go-sqlite3 library, which in turn requires Sqlite3 to be compiled.
+    To do this you need to install GCC from within the MinGW environment. If you
+    installed Msys2, above, then this can be accomplised using the following pacman
+    command from an Msys2 terminal:
+
+        pacman -S mingw64/mingw-w64-x86_64-gcc
+
+    If you used another option, you will need to install this package either through
+    the graphical installer or package manager provided, if it is not installed by
+    default.
+
+6. Install the dependent package
+
+    This will be installed to your GOPATH directory (see step 2). The following
+    command has to be run from the MinGW terminal (e.g. Msys2) otherwise it will fail
+    to compile Sqlite3:
+
+        go get -u github.com/mattn/go-sqlite3
+
+7. Set the path
+
+    Within the MinGW terminal, and from the directory where you cloned TMSU, configure
+    the GOPATH environment variable:
+
+        export GOPATH=$PWD:$GOPATH
+    
+8. Build and install
+
+    Now run the following command:
+
+        go build -o tmsu.exe github.com/oniony/TMSU
 
     This will build `tmsu.exe` to the working directory.
 

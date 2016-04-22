@@ -17,6 +17,14 @@ the tags you set up.
 Usage
 =====
 
+Before you can get tagging, you'll need to initialise a TMSU database:
+
+    $ cd ~
+    $ tmsu init
+
+This database will be used automatically whenever you are under that
+directory. In this case we created one under the home directory.
+
 You can tag a file by specifying the file and the list of tags to apply:
 
     $ tmsu tag banana.jpg fruit art year=2015
@@ -100,12 +108,21 @@ Release Notes
 v0.7.0 (in development)
 ------
 
-  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint algorithm
-    for symbolic links to be configured separately to that used for regular files. (TMSU
-    will automatically set this if you are using `symlinkTargetName[NoExt]`.)
+  * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint
+    algorithm for symbolic links to be configured separately to regular files.
   * By default duplicate files will now be reported when tagging.
-  * A new setting `reportDuplicates` can be used to turn of duplicate reporting during tagging.
+  * A new setting `reportDuplicates` can be used to turn off duplicate reporting
+    during tagging.
+  * Slashes are now permitted within tags and values, useful for recording URLs.
+    In the virtual filesystem, similar looking characters are substituted.
   * Made it possible to upgrade the database schema between releases.
+  * Added --count option to 'untagged'.
+  * Bug fixes.
+
+v0.6.1
+------
+
+  * Fixed crash when opening an empty tag directory in the VFS.
 
 v0.6.0
 ------

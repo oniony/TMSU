@@ -69,17 +69,11 @@ WHERE `)
 			builder.AppendSql("   OR ")
 		}
 
-		if pair.ValueId == 0 {
-			builder.AppendSql("(implication.tag_id = ")
-			builder.AppendParam(pair.TagId)
-			builder.AppendSql(")")
-		} else {
-			builder.AppendSql("(implication.tag_id = ")
-			builder.AppendParam(pair.TagId)
-			builder.AppendSql(" AND implication.value_id IN (0, ")
-			builder.AppendParam(pair.ValueId)
-			builder.AppendSql("))")
-		}
+        builder.AppendSql("(implication.tag_id = ")
+        builder.AppendParam(pair.TagId)
+        builder.AppendSql(" AND implication.value_id IN (0, ")
+        builder.AppendParam(pair.ValueId)
+        builder.AppendSql("))")
 	}
 
 	builder.AppendSql(`ORDER BY tag.name, value.name, implied_tag.name, implied_value.name`)

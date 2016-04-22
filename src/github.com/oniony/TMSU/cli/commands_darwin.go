@@ -1,4 +1,4 @@
-// Copyright 2011-2016 Paul Ruane.
+// Copyright 2011-2015 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build !windows,!darwin
+// +build darwin
 
 package cli
 
@@ -30,15 +30,12 @@ var commands = []*Command{
 	&InfoCommand,
 	&InitCommand,
 	&MergeCommand,
-	&MountCommand,
 	&RenameCommand,
 	&RepairCommand,
 	&StatusCommand,
 	&TagCommand,
 	&TagsCommand,
-	&UnmountCommand,
 	&UntagCommand,
 	&UntaggedCommand,
 	&ValuesCommand,
-	&VersionCommand,
-	&VfsCommand}
+	&VersionCommand}

@@ -45,8 +45,10 @@ func Run() {
 	var databasePath string
 	switch {
 	case options.HasOption("--database"):
+		log.Infof(2, "using database from command-line option")
 		databasePath = options.Get("--database").Argument
 	case os.Getenv("TMSU_DB") != "":
+		log.Infof(2, "using database from environment variable")
 		databasePath = os.Getenv("TMSU_DB")
 	default:
 		databasePath, err = findDatabase()
@@ -107,6 +109,9 @@ func findDatabaseInPath() (string, error) {
 	// look for .tmsu/db in current directory and ancestors
 	for {
 		dbPath := filepath.Join(path, ".tmsu", "db")
+
+		log.Infof(2, "looking for database at '%s'", dbPath)
+
 		_, err := os.Stat(dbPath)
 		if err == nil {
 			return dbPath, nil

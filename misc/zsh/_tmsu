@@ -87,7 +87,7 @@ _tmsu_values() {
     _call_program tmsu tmsu $db values | \
     while read value
     do
-        local escapedValue=$value:gs/:/\:/
+        local escapedValue=$value:gs/:/\\\:/
         escapedValue=$escapedValue:gs/=/\\=/
 
         value_list+=("$escapedValue")
@@ -102,12 +102,12 @@ _tmsu_tag_values() {
     local line
 
     local tag=${PREFIX%=*}
-    local escapedTag=$tag:gs/:/\:/:gs/=/\\\\=/
+    local escapedTag=$tag:gs/:/\\\:/:gs/=/\\\\=/
 
     _call_program tmsu tmsu $db values 2>/dev/null | \
     while read value
     do
-        local escapedValue=$value:gs/:/\\:/
+        local escapedValue=$value:gs/:/\\\:/
         escapedValue=$escapedValue:gs/=/\\=/
 
         value_list+=("$escapedTag=$escapedValue")
@@ -135,7 +135,7 @@ _tmsu_query() {
         local line
 
         local tag=${PREFIX%=*}
-        local escapedTag=$tag:gs/:/\:/
+        local escapedTag=$tag:gs/:/\\\:/
         escapedTag=${escapedTag:gs/=/\\\\&}
         escapedTag=${escapedTag:gs/!/\\\\&}
         escapedTag=${escapedTag:gs/</\\\\&}
@@ -147,7 +147,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db values $tag2>/dev/null | \
         while read value
         do
-            local escapedValue=$value:gs/:/\:/
+            local escapedValue=$value:gs/:/\\\:/
             escapedValue=${escapedValue:gs/=/\\\\&}
             escapedValue=${escapedValue:gs/!/\\\\&}
             escapedValue=${escapedValue:gs/</\\\\&}
@@ -449,6 +449,7 @@ _tmsu_cmd_untag() {
 
 _tmsu_cmd_untagged() {
     _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
+                     ''{--count,-c}'[lists the number of files rather than their names]' \
                      '*:file:_files' \
     && ret=0
 }

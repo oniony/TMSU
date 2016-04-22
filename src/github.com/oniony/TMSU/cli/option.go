@@ -84,11 +84,11 @@ func (parser *OptionParser) Parse(args ...string) (command *Command, options Opt
 	for index := 0; index < len(args); index++ {
 		arg := args[index]
 
-		switch arg {
-		case "":
+		switch {
+		case arg == "":
 			err = fmt.Errorf("invalid empty argument")
 			return
-		case "--":
+		case arg == "--" && parseOptions:
 			parseOptions = false
 		default:
 			if parseOptions && len(arg) > 1 && arg[0] == '-' {

@@ -70,6 +70,10 @@ WHERE id = ?`
 
 // Retrieves a specific set of values.
 func ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Values, error) {
+	if len(ids) == 0 {
+		return make(entities.Values, 0), nil
+	}
+
 	sql := `
 SELECT id, name
 FROM value

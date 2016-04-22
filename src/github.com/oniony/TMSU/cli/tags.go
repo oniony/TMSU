@@ -121,12 +121,13 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 	printPath = printPath || len(paths) > 1 || !stdoutIsCharDevice()
 
 	for index, path := range paths {
+		escapedPath := escape(path, '\\', ':')
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return err, warnings
 		}
 
-		log.Infof(2, "%v: retrieving tags.", path)
+		log.Infof(2, "%v: retrieving tags.", escapedPath)
 
 		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
@@ -145,13 +146,13 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 			if err != nil {
 				switch {
 				case os.IsPermission(err):
-					warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
+					warnings = append(warnings, fmt.Sprintf("%v: permission denied", escapedPath))
 					continue
 				case os.IsNotExist(err):
-					warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
+					warnings = append(warnings, fmt.Sprintf("%v: no such file", escapedPath))
 					continue
 				default:
-					return fmt.Errorf("%v: could not stat file: %v", path, err), warnings
+					return fmt.Errorf("%v: could not stat file: %v", escapedPath, err), warnings
 				}
 			}
 		}
@@ -159,7 +160,7 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 		switch {
 		case showCount:
 			if printPath {
-				fmt.Print(path + ": ")
+				fmt.Print(escapedPath + ": ")
 			}
 
 			fmt.Println(strconv.Itoa(len(tagNames)))
@@ -169,7 +170,7 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 			}
 
 			if printPath {
-				fmt.Println(path + ":")
+				fmt.Println(escapedPath + ":")
 			}
 
 			for _, tagName := range tagNames {
@@ -177,7 +178,7 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 			}
 		default:
 			if printPath {
-				fmt.Print(path + ":")
+				fmt.Print(escapedPath + ":")
 
 				for _, tagName := range tagNames {
 					fmt.Print(" " + tagName)

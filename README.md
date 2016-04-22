@@ -108,13 +108,18 @@ Release Notes
 v0.7.0 (in development)
 ------
 
+  *Note: this release changes how symbolic links are handled.*
+
+  * Using 'tag' or 'untag' on a symbolic link now tags/untags the target file
+    by default, rather than the link. A new option --no-dereference restores
+    previous behaviour of acting upon the link's path.
   * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint
     algorithm for symbolic links to be configured separately to regular files.
-  * By default duplicate files will now be reported when tagging.
-  * A new setting `reportDuplicates` can be used to turn off duplicate reporting
-    during tagging.
+  * By default duplicate files will now be reported when tagging. A new setting
+    `reportDuplicates` can be used to turn this off.
   * Slashes are now permitted within tags and values, useful for recording URLs.
-    In the virtual filesystem, similar looking characters are substituted.
+    In the virtual filesystem, similar looking Unicode characters are used in
+    their place.
   * Made it possible to upgrade the database schema between releases.
   * Added --count option to 'untagged'.
   * Bug fixes.

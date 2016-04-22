@@ -88,6 +88,23 @@ func UnescapeOctal(path string) string {
 	return octalEscapePattern.ReplaceAllStringFunc(path, decodeChar)
 }
 
+func Dereference(path string) (string, error) {
+    stat, err := os.Lstat(path)
+    if err != nil {
+        return "", err
+    }
+    if stat.Mode()&os.ModeSymlink != 0 {
+        path, err := os.Readlink(path) 
+        if err != nil {
+            return "", err
+        }
+
+        return Dereference(path)
+    }
+
+    return path, nil
+}
+
 // unexported
 
 var octalEscapePattern = regexp.MustCompile(`\\[0-7]{3}`)

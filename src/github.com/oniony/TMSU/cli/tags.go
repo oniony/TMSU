@@ -18,6 +18,7 @@ package cli
 import (
 	"fmt"
 	"github.com/oniony/TMSU/common/log"
+	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/common/terminal"
 	"github.com/oniony/TMSU/common/terminal/ansi"
 	"github.com/oniony/TMSU/entities"
@@ -47,7 +48,8 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
-		{"--name", "-n", "always print the file name", false, ""}},
+		{"--name", "-n", "always print the file name", false, ""},
+		{"--no-dereference", "-P", "never follow symlinks (show tags for symlink itself)", false, ""}},
 	Exec: tagsExec,
 }
 
@@ -58,6 +60,7 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
 	printPath := options.HasOption("--name")
+    followSymlinks := !options.HasOption("--no-dereference")
 	colour, err := useColour(options)
 	if err != nil {
 		return err, nil
@@ -79,7 +82,7 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 		return listAllTags(store, tx, showCount, onePerLine), nil
 	}
 
-	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour)
+	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour, followSymlinks)
 }
 
 func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine bool) error {
@@ -115,19 +118,33 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour bool) (error, warnings) {
+func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour, followSymlinks bool) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
 	printPath = printPath || len(paths) > 1 || !stdoutIsCharDevice()
 
 	for index, path := range paths {
-		escapedPath := escape(path, '\\', ':')
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return err, warnings
 		}
 
-		log.Infof(2, "%v: retrieving tags.", escapedPath)
+		log.Infof(2, "%v: resolving path", absPath)
+
+		stat, err := os.Lstat(absPath)
+		if err != nil {
+			warnings = append(warnings, err.Error())
+			continue
+        }
+        if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+            absPath, err = _path.Dereference(absPath)
+            if err != nil {
+                warnings = append(warnings, err.Error())
+                continue
+            }
+        }
+
+		log.Infof(2, "%v: retrieving tags", absPath)
 
 		file, err := store.FileByPath(tx, absPath)
 		if err != nil {
@@ -146,17 +163,18 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 			if err != nil {
 				switch {
 				case os.IsPermission(err):
-					warnings = append(warnings, fmt.Sprintf("%v: permission denied", escapedPath))
+					warnings = append(warnings, fmt.Sprintf("%v: permission denied", absPath))
 					continue
 				case os.IsNotExist(err):
-					warnings = append(warnings, fmt.Sprintf("%v: no such file", escapedPath))
+					warnings = append(warnings, fmt.Sprintf("%v: no such file", absPath))
 					continue
 				default:
-					return fmt.Errorf("%v: could not stat file: %v", escapedPath, err), warnings
+					return fmt.Errorf("%v: could not stat file: %v", absPath, err), warnings
 				}
 			}
 		}
 
+		escapedPath := escape(path, '\\', ':')
 		switch {
 		case showCount:
 			if printPath {

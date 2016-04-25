@@ -20,8 +20,8 @@ import (
 	"fmt"
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/common/log"
-	"github.com/oniony/TMSU/common/text"
 	_path "github.com/oniony/TMSU/common/path"
+	"github.com/oniony/TMSU/common/text"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
 	"io"
@@ -70,7 +70,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 	recursive := options.HasOption("--recursive")
 	explicit := options.HasOption("--explicit")
 	force := options.HasOption("--force")
-    followSymlinks := !options.HasOption("--no-dereference")
+	followSymlinks := !options.HasOption("--no-dereference")
 
 	store, err := openDatabase(databasePath)
 	if err != nil {
@@ -247,16 +247,16 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 		return fmt.Errorf("could not retrieve settings: %v", err), nil
 	}
 
-    stat, err := os.Lstat(fromPath)
-    if err != nil {
-        return err, nil
-    }
-    if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-        fromPath, err = _path.Dereference(fromPath)
-        if err != nil {
-            return err, nil
-        }
-    }
+	stat, err := os.Lstat(fromPath)
+	if err != nil {
+		return err, nil
+	}
+	if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+		fromPath, err = _path.Dereference(fromPath)
+		if err != nil {
+			return err, nil
+		}
+	}
 
 	file, err := store.FileByPath(tx, fromPath)
 	if err != nil {
@@ -300,39 +300,30 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
-    stat, err := os.Lstat(absPath)
-    if err != nil {
+	stat, err := os.Lstat(absPath)
+	if err != nil {
 		switch {
-        case os.IsNotExist(err), os.IsPermission(err):
-			if !force {
-				return err
-			} else {
+		case os.IsNotExist(err), os.IsPermission(err):
+			if force {
+				// force tag even though can't access file
 				stat = emptyStat{}
+			} else {
+				return err
 			}
 		default:
 			return err
 		}
-    }
-    if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-        absPath, err = _path.Dereference(absPath)
-        if err != nil {
-            // can't honour 'force' as we don't know the target path
-            return err
-        }
+	} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+		absPath, err = _path.Dereference(absPath)
+		if err != nil {
+			// can't honour 'force' as we don't know the target path
+			return err
+		}
 
-        stat, err = os.Lstat(absPath)
-        if err != nil {
-            switch {
-            case os.IsNotExist(err), os.IsPermission(err):
-                if !force {
-                    return err
-                } else {
-                    stat = emptyStat{}
-                }
-            default:
-                return err
-            }
-        }
+		stat, err = os.Lstat(absPath)
+		if err != nil {
+			return err
+		}
 	}
 
 	log.Infof(2, "%v: checking if file exists in database", absPath)

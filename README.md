@@ -108,7 +108,7 @@ Release Notes
 v0.7.0 (in development)
 ------
 
-  *Note: this release changes how symbolic links are handled.*
+  *Note: this release changes how symbolic links are handled. See below.*
 
   * Using 'tag' or 'untag' on a symbolic link now tags/untags the target file
     by default, rather than the link. A new option --no-dereference restores

@@ -34,8 +34,8 @@ Where PATHs are not specified, untagged items under the current working director
 	Examples: []string{"$ tmsu untagged",
 		"$ tmsu untagged /home/fred/drawings"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
-	                 Option{"--count", "-c", "list the number of files rather than their names", false, ""}},
-	Exec:    untaggedExec,
+		Option{"--count", "-c", "list the number of files rather than their names", false, ""}},
+	Exec: untaggedExec,
 }
 
 // unexported
@@ -65,41 +65,41 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	}
 	defer tx.Commit()
 
-    if count {
-        count, err := findUntaggedCount(store, tx, paths, recursive)
-        if err != nil {
-            return err, nil
-        }
+	if count {
+		count, err := findUntaggedCount(store, tx, paths, recursive)
+		if err != nil {
+			return err, nil
+		}
 
-        fmt.Println(count)
-    } else {
-        if err := findUntagged(store, tx, paths, recursive); err != nil {
-            return err, nil
-        }
-    }
+		fmt.Println(count)
+	} else {
+		if err := findUntagged(store, tx, paths, recursive); err != nil {
+			return err, nil
+		}
+	}
 
 	return nil, nil
 }
 
 func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) error {
-    var action = func(absPath string) {
-        relPath := _path.Rel(absPath)
-        fmt.Println(relPath)
-    }
+	var action = func(absPath string) {
+		relPath := _path.Rel(absPath)
+		fmt.Println(relPath)
+	}
 
-    return findUntaggedFunc(store, tx, paths, recursive, action)
+	return findUntaggedFunc(store, tx, paths, recursive, action)
 }
 
 func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) (uint, error) {
-    var count uint = 0
+	var count uint = 0
 
-    var action = func(absPath string) {
-        count++
-    }
+	var action = func(absPath string) {
+		count++
+	}
 
-    err := findUntaggedFunc(store, tx, paths, recursive, action)
+	err := findUntaggedFunc(store, tx, paths, recursive, action)
 
-    return count, err
+	return count, err
 }
 
 func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool, action func(absPath string)) error {

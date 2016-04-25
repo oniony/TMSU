@@ -60,7 +60,7 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
 	printPath := options.HasOption("--name")
-    followSymlinks := !options.HasOption("--no-dereference")
+	followSymlinks := !options.HasOption("--no-dereference")
 	colour, err := useColour(options)
 	if err != nil {
 		return err, nil
@@ -133,16 +133,20 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 
 		stat, err := os.Lstat(absPath)
 		if err != nil {
-			warnings = append(warnings, err.Error())
-			continue
-        }
-        if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-            absPath, err = _path.Dereference(absPath)
-            if err != nil {
-                warnings = append(warnings, err.Error())
-                continue
-            }
-        }
+			switch {
+			case os.IsNotExist(err), os.IsPermission(err):
+				stat = emptyStat{}
+			default:
+				warnings = append(warnings, err.Error())
+				continue
+			}
+		} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+			absPath, err = _path.Dereference(absPath)
+			if err != nil {
+				warnings = append(warnings, err.Error())
+				continue
+			}
+		}
 
 		log.Infof(2, "%v: retrieving tags", absPath)
 

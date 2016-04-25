@@ -18,9 +18,11 @@ package cli
 import (
 	"fmt"
 	"github.com/oniony/TMSU/common/log"
+	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/common/text"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
+	"os"
 	"path/filepath"
 )
 
@@ -36,7 +38,8 @@ var UntagCommand = Command{
 		`$ tmsu untag --tags="river underwater year=2016" forest.jpg desert.jpg`},
 	Options: Options{{"--all", "-a", "strip each file of all tags", false, ""},
 		{"--tags", "-t", "the set of tags to remove", true, ""},
-		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""}},
+		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""},
+		{"--no-dereference", "-P", "never follow symbolic links (untag the link itself)", false, ""}},
 	Exec: untagExec,
 }
 
@@ -48,6 +51,7 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 	}
 
 	recursive := options.HasOption("--recursive")
+	followSymlinks := !options.HasOption("--no-dereference")
 
 	store, err := openDatabase(databasePath)
 	if err != nil {
@@ -68,7 +72,7 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 
 		paths := args
 
-		return untagPathsAll(store, tx, paths, recursive)
+		return untagPathsAll(store, tx, paths, recursive, followSymlinks)
 	} else if options.HasOption("--tags") {
 		tagArgs := text.Tokenize(options.Get("--tags").Argument)
 		if len(tagArgs) == 0 {
@@ -80,7 +84,7 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 			return fmt.Errorf("at least one file to untag must be specified"), nil
 		}
 
-		return untagPaths(store, tx, paths, tagArgs, recursive)
+		return untagPaths(store, tx, paths, tagArgs, recursive, followSymlinks)
 	} else {
 		if len(args) < 2 {
 			return fmt.Errorf("tags to remove and files to untag must be specified"), nil
@@ -89,17 +93,34 @@ func untagExec(options Options, args []string, databasePath string) (error, warn
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		return untagPaths(store, tx, paths, tagArgs, recursive)
+		return untagPaths(store, tx, paths, tagArgs, recursive, followSymlinks)
 	}
 }
 
-func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recursive bool) (error, warnings) {
+func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks bool) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err), warnings
+		}
+
+		log.Infof(2, "%v: resolving path", path)
+
+		stat, err := os.Lstat(absPath)
+		if err != nil {
+			switch {
+			case os.IsNotExist(err), os.IsPermission(err):
+				// ignore
+			default:
+				return err, nil
+			}
+		} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+			absPath, err = _path.Dereference(absPath)
+			if err != nil {
+				return err, nil
+			}
 		}
 
 		file, err := store.FileByPath(tx, absPath)
@@ -111,16 +132,16 @@ func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recur
 			continue
 		}
 
-		log.Infof(2, "%v: removing all tags.", file.Path())
+		log.Infof(2, "%v: removing all tags.", path)
 
 		if err := store.DeleteFileTagsByFileId(tx, file.Id); err != nil {
-			return fmt.Errorf("%v: could not remove file's tags: %v", file.Path(), err), warnings
+			return fmt.Errorf("%v: could not remove file's tags: %v", path, err), warnings
 		}
 
 		if recursive {
 			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
-				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path()), warnings
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", path, err), warnings
 			}
 
 			for _, childFile := range childFiles {
@@ -134,7 +155,7 @@ func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recur
 	return nil, warnings
 }
 
-func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string, recursive bool) (error, warnings) {
+func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string, recursive, followSymlinks bool) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
 	files := make(entities.Files, 0, len(paths))
@@ -142,6 +163,23 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err), warnings
+		}
+
+		log.Infof(2, "%v: resolving path", path)
+
+		stat, err := os.Lstat(absPath)
+		if err != nil {
+			switch {
+			case os.IsNotExist(err), os.IsPermission(err):
+				// ignore
+			default:
+				return err, nil
+			}
+		} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
+			absPath, err = _path.Dereference(absPath)
+			if err != nil {
+				return err, nil
+			}
 		}
 
 		file, err := store.FileByPath(tx, absPath)

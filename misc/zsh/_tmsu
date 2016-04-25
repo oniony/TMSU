@@ -235,19 +235,6 @@ _tmsu_query() {
 }
 
 # set of files
-_tmsu_files() {
-    typeset -a file_list
-    local file
-
-    _call_program tmsu tmsu $db files | \
-    while read -A file
-    do
-        file_list+=$file:s#./##
-    done
-
-    _describe -t files 'files' file_list
-}
-
 _tmsu_setting_names() {
     if [[ -prefix *^= ]] 
     then
@@ -391,6 +378,7 @@ _tmsu_cmd_tag() {
 	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
 	                 ''{--create+,-c}'[create a tag without tagging any files]:source:_files' \
 	                 ''{--force,-F}'[apply tags to non-existant or non-permissioned paths]' \
+                     ''{--no-dereference,-P}'[never follow symlinks (tag link itself)]' \
 	                 '*:: :->items' \
 	&& ret=0
 
@@ -414,6 +402,7 @@ _tmsu_cmd_tags() {
 	_arguments -s -w ''{--count,-c}'[lists the number of tags rather than their names]' \
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
+                     ''{--no-dereference,-P}'[never follow symlinks (show tags for link itself)]' \
 	                 '*:file:_files' \
 	&& ret=0
 }
@@ -428,6 +417,7 @@ _tmsu_cmd_untag() {
 	_arguments -s -w ''{--all,-a}'[remove all tags]' \
 	                 ''{--tags=,-t}'[remove set of tags from multiple files]:tags:_tmsu_tags_with_values' \
 	                 ''{--recursive,-r}'[remove tags recursively from contents of directories]' \
+                     ''{--no-dereference,-P}'[never follow symlinks (untag link itself)]' \
 	                 '*:: :->items' \
 	&& ret=0
 
@@ -435,11 +425,11 @@ _tmsu_cmd_untag() {
 		(items)
 			if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--all]} || ${+opt_args[-a]} ))
 			then
-                _wanted files expl 'files' _tmsu_files
+                _wanted files expl 'files' _files
 			else
 				if (( CURRENT == 1 ))
 				then
-					_wanted files expl 'files' _tmsu_files
+					_wanted files expl 'files' _files
 				else
 					_wanted tags expl 'tags' _tmsu_tags_with_values
 				fi
@@ -450,6 +440,7 @@ _tmsu_cmd_untag() {
 _tmsu_cmd_untagged() {
     _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
                      ''{--count,-c}'[lists the number of files rather than their names]' \
+                     ''{--no-dereference,-P}'[never follow symlinks (list untagged links)]' \
                      '*:file:_files' \
     && ret=0
 }

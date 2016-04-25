@@ -300,6 +300,8 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 	}
 
+	log.Infof(2, "%v: resolving path", path)
+
 	stat, err := os.Lstat(absPath)
 	if err != nil {
 		switch {
@@ -326,54 +328,54 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 		}
 	}
 
-	log.Infof(2, "%v: checking if file exists in database", absPath)
+	log.Infof(2, "%v: checking if file exists in database", path)
 
 	file, err := store.FileByPath(tx, absPath)
 	if err != nil {
-		return fmt.Errorf("%v: could not retrieve file: %v", absPath, err)
+		return fmt.Errorf("%v: could not retrieve file: %v", path, err)
 	}
 	if file == nil {
-		log.Infof(2, "%v: creating fingerprint", absPath)
+		log.Infof(2, "%v: creating fingerprint", path)
 
 		fp, err := fingerprint.Create(absPath, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg)
 		if err != nil {
 			if !force || !(os.IsNotExist(err) || os.IsPermission(err)) {
-				return fmt.Errorf("%v: could not create fingerprint: %v", absPath, err)
+				return fmt.Errorf("%v: could not create fingerprint: %v", path, err)
 			}
 		}
 
 		if fp != fingerprint.Empty && reportDuplicates {
-			log.Infof(2, "%v: checking for duplicates", absPath)
+			log.Infof(2, "%v: checking for duplicates", path)
 
 			count, err := store.FileCountByFingerprint(tx, fp)
 			if err != nil {
-				return fmt.Errorf("%v: could not identify duplicates: %v", absPath, err)
+				return fmt.Errorf("%v: could not identify duplicates: %v", path, err)
 			}
 			if count != 0 {
-				log.Warnf("'%v' is a duplicate", absPath)
+				log.Warnf("'%v' is a duplicate", path)
 			}
 		}
 
-		log.Infof(2, "%v: adding file", absPath)
+		log.Infof(2, "%v: adding file", path)
 
 		file, err = store.AddFile(tx, absPath, fp, stat.ModTime(), int64(stat.Size()), stat.IsDir())
 		if err != nil {
-			return fmt.Errorf("%v: could not add file to database: %v", absPath, err)
+			return fmt.Errorf("%v: could not add file to database: %v", path, err)
 		}
 	}
 
 	if !explicit {
 		pairs, err = removeAlreadyAppliedTagValuePairs(store, tx, pairs, file)
 		if err != nil {
-			return fmt.Errorf("%v: could not remove applied tags: %v", absPath, err)
+			return fmt.Errorf("%v: could not remove applied tags: %v", path, err)
 		}
 	}
 
-	log.Infof(2, "%v: applying tags.", absPath)
+	log.Infof(2, "%v: applying tags.", path)
 
 	for _, pair := range pairs {
 		if _, err = store.AddFileTag(tx, file.Id, pair.TagId, pair.ValueId); err != nil {
-			return fmt.Errorf("%v: could not apply tags: %v", file.Path(), err)
+			return fmt.Errorf("%v: could not apply tags: %v", path, err)
 		}
 	}
 

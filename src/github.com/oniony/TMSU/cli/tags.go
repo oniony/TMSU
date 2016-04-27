@@ -49,7 +49,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
 		{"--name", "-n", "always print the file name", false, ""},
-		{"--no-dereference", "-P", "never follow symlinks (show tags for symlink itself)", false, ""}},
+		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""}},
 	Exec: tagsExec,
 }
 

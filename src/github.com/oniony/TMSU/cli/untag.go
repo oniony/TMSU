@@ -39,7 +39,7 @@ var UntagCommand = Command{
 	Options: Options{{"--all", "-a", "strip each file of all tags", false, ""},
 		{"--tags", "-t", "the set of tags to remove", true, ""},
 		{"--recursive", "-r", "recursively remove tags from directory contents", false, ""},
-		{"--no-dereference", "-P", "never follow symbolic links (untag the link itself)", false, ""}},
+		{"--no-dereference", "-P", "do not follow symbolic links (untag the link itself)", false, ""}},
 	Exec: untagExec,
 }
 

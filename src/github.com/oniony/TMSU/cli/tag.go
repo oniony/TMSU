@@ -60,7 +60,7 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 		{"--create", "-c", "create tags or values without tagging any files", false, ""},
 		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""},
 		{"--force", "-F", "apply tags to non-existant or non-permissioned paths", false, ""},
-		{"--no-dereference", "-P", "never follow symbolic links (tag the link itself)", false, ""}},
+		{"--no-dereference", "-P", "do not follow symbolic links (tag the link itself)", false, ""}},
 	Exec: tagExec,
 }
 

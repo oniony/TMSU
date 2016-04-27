@@ -35,7 +35,7 @@ Where PATHs are not specified, untagged items under the current working director
 		"$ tmsu untagged /home/fred/drawings"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
 		Option{"--count", "-c", "list the number of files rather than their names", false, ""},
-		Option{"--no-dereference", "-P", "never dereference symbolic links", false, ""}},
+		Option{"--no-dereference", "-P", "do not dereference symbolic links", false, ""}},
 	Exec: untaggedExec,
 }
 

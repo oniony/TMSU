@@ -110,9 +110,10 @@ v0.7.0 (in development)
 
   *Note: this release changes how symbolic links are handled. See below.*
 
-  * Using 'tag' or 'untag' on a symbolic link now tags/untags the target file
-    by default, rather than the link. A new option --no-dereference restores
-    previous behaviour of acting upon the link's path.
+  * Symbolic links are now followed by default. This means that if you tag a
+    symbolic link, the target file is tagged instead. To instruct TMSU to not
+    follow symbolic links (previous behaviour) use the new --no-dereference
+    option on the relevant subcommands.
   * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint
     algorithm for symbolic links to be configured separately to regular files.
   * By default duplicate files will now be reported when tagging. A new setting

@@ -8,7 +8,9 @@ I built this project for several reasons:
   * I wanted to learn a new programming language
   * I wanted to have a pet project to work upon outside of work
 
-Once you have found something you would like to work on, please do not go off and squirrel away at a giagantic pull-request. It would be far better if we could communicate often and keep the pull requests small and tightly scoped so that they're easier to understand and so that it's not disheartening if it stuff to be changed.
+When you have found something you'd like to work on, please get in touch to discuss approach. Please also try to
+break it down into small pieces so that each pull request can be small. It's much easier to digest a small PR than
+a huge one, it's less disappointing if changes have to be made and it's much easier to steer the project that way.
 
 Thanks again, I look forward to collaborating with you.
 

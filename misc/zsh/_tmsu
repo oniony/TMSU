@@ -367,6 +367,7 @@ _tmsu_cmd_repair() {
 
 _tmsu_cmd_status() {
     _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
+                     ''{--no-dereference,-P}'[never follow symbolic links]' \
 	                 '*:file:_files' \
 	&& ret=0
 }

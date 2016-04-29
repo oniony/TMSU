@@ -18,7 +18,7 @@ package cli
 import (
 	"fmt"
 	"github.com/oniony/TMSU/common/log"
-	"github.com/oniony/TMSU/common/path"
+	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
 	"os"
@@ -48,7 +48,8 @@ Note: The 'repair' subcommand can be used to fix problems caused by files that h
 	Examples: []string{"$ tmsu status",
 		"$ tmsu status .",
 		"$ tmsu status --directory *"},
-	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""}},
+	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
+	                Option{"--no-dereference", "-P", "do not follow symbolic links", false, ""}},
 	Exec:    statusExec,
 }
 
@@ -92,6 +93,7 @@ func NewReport() *StatusReport {
 
 func statusExec(options Options, args []string, databasePath string) (error, warnings) {
 	dirOnly := options.HasOption("--directory")
+	followSymlinks := !options.HasOption("--no-dereference")
 
 	store, err := openDatabase(databasePath)
 	if err != nil {
@@ -108,12 +110,12 @@ func statusExec(options Options, args []string, databasePath string) (error, war
 	var report *StatusReport
 
 	if len(args) == 0 {
-		report, err = statusDatabase(store, tx, dirOnly)
+		report, err = statusDatabase(store, tx, dirOnly, followSymlinks)
 		if err != nil {
 			return err, nil
 		}
 	} else {
-		report, err = statusPaths(store, tx, args, dirOnly)
+		report, err = statusPaths(store, tx, args, dirOnly, followSymlinks)
 		if err != nil {
 			return err, nil
 		}
@@ -124,7 +126,7 @@ func statusExec(options Options, args []string, databasePath string) (error, war
 	return nil, nil
 }
 
-func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*StatusReport, error) {
+func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly, followSymlinks bool) (*StatusReport, error) {
 	report := NewReport()
 
 	log.Info(2, "retrieving all files from database.")
@@ -139,7 +141,7 @@ func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*Stat
 		return nil, err
 	}
 
-	tree := path.NewTree()
+	tree := _path.NewTree()
 	for _, file := range files {
 		tree.Add(file.Path(), file.IsDir)
 	}
@@ -150,7 +152,7 @@ func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*Stat
 	}
 
 	for _, path := range topLevelPaths {
-		if err = findNewFiles(path, report, dirOnly); err != nil {
+		if err = findNewFiles(path, report, dirOnly, followSymlinks); err != nil {
 			return nil, err
 		}
 	}
@@ -158,7 +160,7 @@ func statusDatabase(store *storage.Storage, tx *storage.Tx, dirOnly bool) (*Stat
 	return report, nil
 }
 
-func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly bool) (*StatusReport, error) {
+func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly, followSymlinks bool) (*StatusReport, error) {
 	report := NewReport()
 
 	for _, path := range paths {
@@ -167,21 +169,42 @@ func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly
 			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-		file, err := store.FileByPath(tx, absPath)
-		if err != nil {
-			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
-		}
-		if file != nil {
-			err = statusCheckFile(file, report)
-			if err != nil {
-				return nil, err
-			}
-		}
+        log.Infof(2, "%v: resolving file", path)
 
-		if !dirOnly {
+        resolvedPath := absPath
+
+        stat, err := os.Lstat(absPath)
+        if err != nil {
+            switch {
+            case os.IsNotExist(err), os.IsPermission(err):
+                stat = emptyStat{}
+            default:
+                return nil, fmt.Errorf("%v: could not stat path: %v", path, err)
+            }
+        } else if stat.Mode()&os.ModeSymlink != 0 {
+            resolvedPath, err = _path.Dereference(absPath)
+            if err != nil {
+                return nil, fmt.Errorf("%v: could not dereference symbolic link: %v", path, err)
+            }
+        }
+
+        log.Infof(2, "%v: checking file in database", path)
+
+        file, err := store.FileByPath(tx, resolvedPath)
+        if err != nil {
+            return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
+        }
+        if file != nil {
+            err = statusCheckFile(absPath, file, report)
+            if err != nil {
+                return nil, err
+            }
+        }
+
+        if !dirOnly && (stat.Mode()&os.ModeSymlink == 0 || followSymlinks) {
 			log.Infof(2, "%v: retrieving files from database.", path)
 
-			files, err := store.FilesByDirectory(tx, absPath)
+			files, err := store.FilesByDirectory(tx, resolvedPath)
 			if err != nil {
 				return nil, fmt.Errorf("%v: could not retrieve files for directory: %v", path, err)
 			}
@@ -192,7 +215,7 @@ func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly
 			}
 		}
 
-		err = findNewFiles(absPath, report, dirOnly)
+		err = findNewFiles(absPath, report, dirOnly, followSymlinks)
 		if err != nil {
 			return nil, err
 		}
@@ -203,8 +226,7 @@ func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly
 
 func statusCheckFiles(files entities.Files, report *StatusReport) error {
 	for _, file := range files {
-		err := statusCheckFile(file, report)
-		if err != nil {
+		if err := statusCheckFile(file.Path(), file, report); err != nil {
 			return err
 		}
 	}
@@ -212,54 +234,50 @@ func statusCheckFiles(files entities.Files, report *StatusReport) error {
 	return nil
 }
 
-func statusCheckFile(file *entities.File, report *StatusReport) error {
-	relPath := path.Rel(file.Path())
-
-	log.Infof(2, "%v: checking file status.", file.Path())
+func statusCheckFile(absPath string, file *entities.File, report *StatusReport) error {
+	log.Infof(2, "%v: checking file status.", absPath)
 
 	stat, err := os.Stat(file.Path())
 	if err != nil {
 		switch {
 		case os.IsNotExist(err):
-			log.Infof(2, "%v: file is missing.", file.Path())
+			log.Infof(2, "%v: file is missing.", absPath)
 
-			report.AddRow(Row{relPath, MISSING})
+			report.AddRow(Row{absPath, MISSING})
 			return nil
 		case os.IsPermission(err):
-			log.Warnf("%v: permission denied.", file.Path())
-		case strings.Contains(err.Error(), "not a directory"):
-			report.AddRow(Row{relPath, MISSING})
+			log.Warnf("%v: permission denied.", absPath)
+		case strings.Contains(err.Error(), "not a directory"): //TODO improve
+			report.AddRow(Row{file.Path(), MISSING})
 			return nil
 		default:
 			return fmt.Errorf("%v: could not stat: %v", file.Path(), err)
 		}
 	} else {
 		if stat.Size() != file.Size || !stat.ModTime().UTC().Equal(file.ModTime) {
-			log.Infof(2, "%v: file is modified.", file.Path())
+			log.Infof(2, "%v: file is modified.", absPath)
 
-			report.AddRow(Row{relPath, MODIFIED})
+			report.AddRow(Row{absPath, MODIFIED})
 		} else {
-			log.Infof(2, "%v: file is unchanged.", file.Path())
+			log.Infof(2, "%v: file is unchanged.", absPath)
 
-			report.AddRow(Row{relPath, TAGGED})
+			report.AddRow(Row{absPath, TAGGED})
 		}
 	}
 
 	return nil
 }
 
-func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
+func findNewFiles(searchPath string, report *StatusReport, dirOnly, followSymlinks bool) error {
 	log.Infof(2, "%v: finding new files.", searchPath)
-
-	relPath := path.Rel(searchPath)
-
-	if !report.ContainsRow(relPath) {
-		report.AddRow(Row{relPath, UNTAGGED})
-	}
 
 	absPath, err := filepath.Abs(searchPath)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", searchPath, err)
+	}
+
+	if !report.ContainsRow(absPath) {
+		report.AddRow(Row{absPath, UNTAGGED})
 	}
 
 	stat, err := os.Stat(absPath)
@@ -289,8 +307,8 @@ func findNewFiles(searchPath string, report *StatusReport, dirOnly bool) error {
 		sort.Strings(dirNames)
 
 		for _, dirName := range dirNames {
-			dirPath := filepath.Join(searchPath, dirName)
-			err = findNewFiles(dirPath, report, dirOnly)
+			dirPath := filepath.Join(absPath, dirName)
+			err = findNewFiles(dirPath, report, dirOnly, followSymlinks)
 			if err != nil {
 				return err
 			}
@@ -316,5 +334,6 @@ func printRows(rows []Row, status Status) {
 }
 
 func printRow(row Row) {
-	fmt.Printf("%v %v\n", string(row.Status), row.Path)
+    relPath := _path.Rel(row.Path)
+	fmt.Printf("%v %v\n", string(row.Status), relPath)
 }

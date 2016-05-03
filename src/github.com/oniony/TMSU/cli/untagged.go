@@ -44,7 +44,7 @@ Where PATHs are not specified, untagged items under the current working director
 func untaggedExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := !options.HasOption("--directory")
 	count := options.HasOption("--count")
-    followSymlinks := !options.HasOption("--no-dereference")
+	followSymlinks := !options.HasOption("--no-dereference")
 
 	paths := args
 	if len(paths) == 0 {
@@ -111,14 +111,14 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-        if followSymlinks {
-            log.Infof(2, "%v: resolving path", path)
+		if followSymlinks {
+			log.Infof(2, "%v: resolving path", path)
 
-            absPath, err = _path.Dereference(absPath)
-            if err != nil {
-                return fmt.Errorf("%v: could not dereference path: %v", path, err)
-            }
-        }
+			absPath, err = _path.Dereference(absPath)
+			if err != nil {
+				return fmt.Errorf("%v: could not dereference path: %v", path, err)
+			}
+		}
 
 		//TODO PERF no need to retrieve file: we merely need to know it exists
 		file, err := store.FileByPath(tx, absPath)
@@ -135,7 +135,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 				return err
 			}
 
-			findUntagged(store, tx, entries, true, followSymlinks)
+			findUntaggedFunc(store, tx, entries, true, followSymlinks, action)
 		}
 	}
 

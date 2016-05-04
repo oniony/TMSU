@@ -2,17 +2,18 @@
 
 # setup
 
-tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+mkdir /tmp/tmsu/dir1
+touch /tmp/tmsu/{file1,dir1/file1}
+
+tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1/file1    >/dev/null 2>&1
 
 # test
 
-tmsu files --path="/tmp/tmsu/dir1" aubergine                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files --path="/tmp/tmsu/dir1" aubergine                        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
-tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

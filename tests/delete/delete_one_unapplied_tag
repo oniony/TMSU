@@ -2,11 +2,11 @@
 
 # setup
 
-tmsu tag --create aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --create aubergine    >/dev/null 2>&1
 
 # test
 
-tmsu delete aubergine          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete aubergine          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 

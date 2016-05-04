@@ -2,8 +2,10 @@
 
 # setup
 
-tmsu tag --tags="aubergine" /tmp/tmsu/file4 /tmp/tmsu/dir1/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-rm /tmp/tmsu/file4 /tmp/tmsu/dir1/file1                             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+mkdir /tmp/tmsu/dir1
+touch /tmp/tmsu/{dir1/file1,file4}
+tmsu tag --tags="aubergine" /tmp/tmsu/file4 /tmp/tmsu/dir1/file1    >/dev/null 2>&1
+rm /tmp/tmsu/file4 /tmp/tmsu/dir1/file1                             >/dev/null 2>&1
 
 # test
 
@@ -14,7 +16,6 @@ tmsu repair --path=/tmp/tmsu/dir1                                   >>/tmp/tmsu/
 tmsu tags /tmp/tmsu/file4 /tmp/tmsu/dir1/file1                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

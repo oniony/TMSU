@@ -2,12 +2,13 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 vegetable=aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file2 vegetable=potato       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+touch /tmp/tmsu/{file1,file2}
+tmsu tag /tmp/tmsu/file1 vegetable=aubergine    >/dev/null 2>&1
+tmsu tag /tmp/tmsu/file2 vegetable=potato       >/dev/null 2>&1
 
 # test
 
-tmsu merge --value aubergine potato             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu merge --value aubergine potato             >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
@@ -15,9 +16,6 @@ tmsu values                                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/
 tmsu files vegetable=potato                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'vegetable'
-tmsu: new value 'aubergine'
-tmsu: new value 'potato'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

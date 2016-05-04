@@ -2,18 +2,18 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+tmsu tag /tmp/tmsu/file1 aubergine    >/dev/null 2>&1
 
 # test
 
-tmsu delete aubergine                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete aubergine                 >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 tmsu files aubergine                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
 tmsu: no such tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then

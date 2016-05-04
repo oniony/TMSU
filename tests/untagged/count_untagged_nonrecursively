@@ -3,12 +3,12 @@
 # setup
 
 mkdir /tmp/tmsu/dir
-touch /tmp/tmsu/{file1,file2,file3}
+touch /tmp/tmsu/dir/{file1,file2,file3}
 tmsu tag --tags=aubergine /tmp/tmsu/dir/{file1,file2}    >/dev/null 2>&1
 
 # test
 
-tmsu untagged --directory /tmp/tmsu/dir                  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu untagged --count --directory /tmp/tmsu/dir     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -19,7 +19,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-/tmp/tmsu/dir
+1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

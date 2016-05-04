@@ -2,19 +2,19 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 aubergine potato   >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+
+tmsu tag /tmp/tmsu/file1 aubergine potato   >/dev/null 2>&1
 
 # test
 
-tmsu merge aubergine brocolli potato        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu merge aubergine brocolli potato        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 tmsu tags                                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
-tmsu: new tag 'potato'
 tmsu: no such tag 'brocolli'
 EOF
 if [[ $? -ne 0 ]]; then

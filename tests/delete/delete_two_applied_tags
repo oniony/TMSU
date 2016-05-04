@@ -2,11 +2,12 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+tmsu tag /tmp/tmsu/file1 aubergine eggplant    >/dev/null 2>&1
 
 # test
 
-tmsu delete aubergine eggplant                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete aubergine eggplant                 >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
@@ -14,8 +15,6 @@ tmsu files aubergine                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/s
 tmsu files eggplant                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
-tmsu: new tag 'eggplant'
 tmsu: no such tag 'aubergine'
 tmsu: no such tag 'eggplant'
 EOF

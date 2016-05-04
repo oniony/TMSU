@@ -2,13 +2,16 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 vegetable=aubergine        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file2 vegetable=potato           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/dir1/file1 vegetable=brocolli    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+mkdir /tmp/tmsu/dir1
+touch /tmp/tmsu/{file1,file2,dir1/file1}
+
+tmsu tag /tmp/tmsu/file1 vegetable=aubergine        >/dev/null 2>&1
+tmsu tag /tmp/tmsu/file2 vegetable=potato           >/dev/null 2>&1
+tmsu tag /tmp/tmsu/dir1/file1 vegetable=brocolli    >/dev/null 2>&1
 
 # test
 
-tmsu merge --value aubergine potato brocolli        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu merge --value aubergine potato brocolli        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
@@ -16,11 +19,6 @@ tmsu values                                         >>/tmp/tmsu/stdout 2>>/tmp/t
 tmsu files vegetable=brocolli                       >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'vegetable'
-tmsu: new value 'aubergine'
-tmsu: new value 'potato'
-tmsu: new value 'brocolli'
-tmsu: '/tmp/tmsu/dir1/file1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

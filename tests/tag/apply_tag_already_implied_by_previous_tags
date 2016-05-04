@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
 
+# setup
+
+touch /tmp/tmsu/file1
+
 # test
 
 tmsu imply aubergine vegetable          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr

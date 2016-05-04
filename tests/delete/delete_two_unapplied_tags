@@ -2,7 +2,7 @@
 
 # setup
 
-tmsu tag --create aubergine eggplant    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag --create aubergine eggplant    >/dev/null 2>&1
 
 # test
 

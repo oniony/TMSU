@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 
+echo 1 >/tmp/tmsu/file1
+echo 2 >/tmp/tmsu/file2
+
 # test
 
 tmsu tag /tmp/tmsu/file1 aubergine potato          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr

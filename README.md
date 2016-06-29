@@ -110,6 +110,7 @@ v0.7.0 (in development)
 
   *Note: this release changes how symbolic links are handled. See below.*
 
+  * TMSU now compiles for Mac O/S. (Thanks to https://github.com/pguth.)
   * Symbolic links are now followed by default. This means that if you tag a
     symbolic link, the target file is tagged instead. To instruct TMSU to not
     follow symbolic links (previous behaviour) use the new --no-dereference

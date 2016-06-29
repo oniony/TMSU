@@ -13,7 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-// +build !windows,!darwin
+// +build !windows
 
 package vfs
 
@@ -52,14 +52,14 @@ Descend the tag directories to hone in on the files you want:
     edam_blanc.14  funghi.11  margherita.7  mushroom  pino_cheddar.12  tomato  wine
     $ ls cheese/tomato
     margherita.7
-    
+
 The tags directory also allows some operations to be performed:
 
   * Create a tag by creating a new directory
   * Rename a tag by renaming the tag directory
   * Untag a file by deleting the file symlink from the tag directory
   * Delete an unused tag by deleting the directory
-  
+
 (This file will hide once you have created a few tags.)`
 
 const queriesDir = "queries"
@@ -76,12 +76,12 @@ match the query. (It is not necessary to create the directory first.)
     $ ls "cheese and (tomato or mushroom)"
     margherita.7  funghi.11
     $ ls
-    cheese and (tomato or mushroom)  cheese and wine 
+    cheese and (tomato or mushroom)  cheese and wine
 
 You can even create new queries by typing the query into the file chooser of a
 graphical program.
 
-Use ` + "`rmdir`" + ` to remove any query directory you no longer need. Do not use ` + "`rm -r`" + ` 
+Use ` + "`rmdir`" + ` to remove any query directory you no longer need. Do not use ` + "`rm -r`" + `
 as this will untag the contained files.
 
 (This file will hide once you have created a query.)`

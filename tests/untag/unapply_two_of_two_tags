@@ -2,6 +2,7 @@
 
 # test
 
+touch /tmp/tmsu/file1
 tmsu tag /tmp/tmsu/file1 aubergine potato      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file1           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu untag /tmp/tmsu/file1 aubergine potato    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr

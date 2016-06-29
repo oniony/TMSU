@@ -4,6 +4,7 @@
 
 # setup
 
+touch /tmp/tmsu/file1
 tmsu tag /tmp/tmsu/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test

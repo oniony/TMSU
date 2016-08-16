@@ -17,6 +17,7 @@ package database
 
 import (
 	"database/sql"
+	"math/rand"
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/query"
@@ -250,12 +251,13 @@ ORDER BY fingerprint, directory || '/' || name`
 func InsertFile(tx *Tx, path string, fingerprint fingerprint.Fingerprint, modTime time.Time, size int64, isDir bool) (*entities.File, error) {
 	directory := filepath.Dir(path)
 	name := filepath.Base(path)
+	uuid := rand.Int()
 
 	sql := `
-INSERT INTO file (directory, name, fingerprint, mod_time, size, is_dir)
-VALUES (?, ?, ?, ?, ?, ?)`
+INSERT INTO file (id, directory, name, fingerprint, mod_time, size, is_dir)
+VALUES (?, ?, ?, ?, ?, ?, ?)`
 
-	result, err := tx.Exec(sql, directory, name, string(fingerprint), modTime, size, isDir)
+	result, err := tx.Exec(sql, uuid, directory, name, string(fingerprint), modTime, size, isDir)
 	if err != nil {
 		return nil, err
 	}

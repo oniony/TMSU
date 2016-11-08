@@ -1,8 +1,8 @@
 # installation paths
-INSTALL_DIR=/usr/bin
-MOUNT_INSTALL_DIR=/usr/sbin
-MAN_INSTALL_DIR=/usr/share/man/man1
-ZSH_COMP_INSTALL_DIR=/usr/share/zsh/site-functions
+INSTALL_DIR=$(DESTDIR)/usr/bin
+MOUNT_INSTALL_DIR=$(DESTDIR)/usr/sbin
+MAN_INSTALL_DIR=$(DESTDIR)/usr/share/man/man1
+ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/share/zsh/site-functions
 
 # other vars
 VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" src/github.com/oniony/TMSU/version/version.go)

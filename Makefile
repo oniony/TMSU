@@ -12,7 +12,8 @@ DIST_NAME=tmsu-$(ARCH)-$(VER)
 DIST_DIR=$(DIST_NAME)
 DIST_FILE=$(DIST_NAME).tgz
 
-export GOPATH:=$(PWD):$(GOPATH)
+export GOPATH ?= /usr/lib/go:/usr/share/gocode
+export GOPATH := $(CURDIR):$(GOPATH)
 
 all: clean compile dist test
 

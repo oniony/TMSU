@@ -53,9 +53,13 @@ func (version Version) String() string {
 }
 
 func (this Version) LessThan(that Version) bool {
-	return this.Major < that.Major || this.Minor < that.Minor || this.Patch < that.Patch
+	return this.Major < that.Major ||
+		(this.Major == that.Major && this.Minor < that.Minor) ||
+		(this.Major == that.Major && this.Minor == that.Minor && this.Patch < that.Patch)
 }
 
 func (this Version) GreaterThan(that Version) bool {
-	return this.Major > that.Major || this.Minor > that.Minor || this.Patch > that.Patch
+	return this.Major > that.Major ||
+		(this.Major == that.Major && this.Minor > that.Minor) ||
+		(this.Major == that.Major && this.Minor == that.Minor && this.Patch > that.Patch)
 }

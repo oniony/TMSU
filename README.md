@@ -80,6 +80,17 @@ operating system's package management system.
 
         $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
 
+Ubuntu
+------
+
+    sudo add-apt-repository ppa:tmsu
+    sudo apt update
+    sudo apt install tmsu
+
+**For the daily build:** Use `ppa:tmsu/daily` instead.  
+**For Ubuntu ≤ 16.04:** Either follow the normal install instructions, or install v0.6.1 from a `.deb` file: [amd64](https://code.launchpad.net/~tmsu/+archive/ubuntu/ppa/+build/11193268/+files/tmsu_0.6.1-0~934~ubuntu16.04.1_amd64.deb) · [i386](https://code.launchpad.net/~tmsu/+archive/ubuntu/ppa/+build/11193269/+files/tmsu_0.6.1-0~934~ubuntu16.04.1_i386.deb)
+
+
 About
 =====
 

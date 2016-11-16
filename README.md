@@ -55,17 +55,32 @@ Documentation is maintained online on the wiki:
 Installing
 ==========
 
+Packages
+--------
+
+Thanks to the efforts of contributors using these platforms, packages are available
+for the following GNU/Linux distributions:
+
+  * Ubuntu
+    - Stable <https://launchpad.net/~tmsu/+archive/ubuntu/ppa>
+    - Daily <https://launchpad.net/~tmsu/+archive/ubuntu/daily>
+  * Arch
+    - Stable <https://aur.archlinux.org/packages/tmsu/>
+
+These packgase are not maintained by me and I cannot guarantee their content.
+
+Binary
+------
+
 Binary builds for a limited number of architectures and operating system
 combinations are available:
 
   * <https://github.com/oniony/TMSU/releases>
 
-(If you would rather build from the source code then please see `COMPILING.md`
-in the root of the repository.)
-
 You will need to ensure that both FUSE and Sqlite3 are installed for the
 program to function. These packages are typically available with your
-operating system's package management system.
+operating system's package management system. (If you install TMSU using one
+of the above packages, these should be installed automatically.)
 
 1. Install the binary
 
@@ -79,6 +94,12 @@ operating system's package management system.
     Copy the Zsh completion file to the Zsh site-functions directory:
 
         $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
+
+From Source
+-----------
+
+If you would rather build from the source code then please see `COMPILING.md`
+in the root of the repository.
 
 About
 =====

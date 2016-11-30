@@ -171,10 +171,6 @@ func (vfs FuseVfs) GetAttr(name string, context *fuse.Context) (*fuse.Attr, fuse
 
 	switch path[0] {
 	case tagsDir:
-		if path[len(path)-1] == filesDir {
-			return vfs.getFilesAttr(path)
-		}
-
 		return vfs.getTaggedEntryAttr(path[1:])
 	case queriesDir:
 		return vfs.getQueryEntryAttr(path[1:])
@@ -600,6 +596,10 @@ func (vfs FuseVfs) tagDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status)
 	for _, tag := range tags {
 		tagName := escape(tag.Name)
 
+		if tagName == filesDir {
+			continue
+		}
+
 		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR})
 	}
 
@@ -677,6 +677,10 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	}
 
 	name := path[len(path)-1]
+
+	if name == filesDir {
+		return vfs.getFilesAttr(path)
+	}
 
 	fileId := vfs.parseFileId(name)
 	if fileId != 0 {
@@ -820,7 +824,9 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
-	if path[len(path)-1] == filesDir {
+	lastPathElement := path[len(path)-1]
+
+	if lastPathElement == filesDir {
 		return vfs.openTaggedEntryFilesDir(tx, path[:len(path)-1])
 	}
 
@@ -829,8 +835,6 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
-
-	lastPathElement := path[len(path)-1]
 
 	var valueNames []string
 	if lastPathElement[0] != '=' {
@@ -852,9 +856,15 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagNames))
 	for _, tagName := range furtherTagNames {
 		tagName = escape(tagName)
-		if !containsString(path, tagName) {
-			entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
+
+		if tagName == filesDir {
+			continue
 		}
+		if containsString(path, tagName) {
+			continue
+		}
+
+		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
 	}
 
 	for _, valueName := range valueNames {
@@ -863,11 +873,6 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	}
 
 	entries = append(entries, fuse.DirEntry{Name: filesDir, Mode: fuse.S_IFDIR | 0755})
-
-	//	for _, file := range files {
-	//		linkName := vfs.getLinkName(file)
-	//		entries = append(entries, fuse.DirEntry{Name: linkName, Mode: fuse.S_IFLNK})
-	//	}
 
 	return entries, fuse.OK
 }

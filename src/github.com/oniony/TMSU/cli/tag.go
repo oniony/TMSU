@@ -23,6 +23,7 @@ import (
 	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/common/text"
 	"github.com/oniony/TMSU/entities"
+	"github.com/oniony/TMSU/query"
 	"github.com/oniony/TMSU/storage"
 	"io"
 	"os"
@@ -35,6 +36,7 @@ var TagCommand = Command{
 	Usages: []string{"tmsu tag [OPTION]... FILE TAG[=VALUE]...",
 		`tmsu tag [OPTION]... --tags="TAG[=VALUE]..." FILE...`,
 		"tmsu tag [OPTION]... --from=SOURCE FILE...",
+		"tmsu tag [OPTION]... --where=QUERY TAG[=VALUE]...",
 		"tmsu tag [OPTION]... --create {TAG|=VALUE}...",
 		"tmsu tag [OPTION[... -"},
 	Description: `Tags the file FILE with the TAGs and VALUEs specified.
@@ -52,11 +54,12 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
 		"$ tmsu tag --create bad rubbish awful =2016",
-		`$ tmsu tag sheep.jpg 'contains\=equals'`,
+		`$ tmsu tag --where="bad and good" confused`,
 		"$ tmsu tag sheep.jpg '<tag>'"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
 		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
+		{"--where", "-w", "tags files matching QUERY", true, ""},
 		{"--create", "-c", "create tags or values without tagging any files", false, ""},
 		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""},
 		{"--force", "-F", "apply tags to non-existant or non-permissioned paths", false, ""},
@@ -120,6 +123,15 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 		paths := args
 
 		return tagFrom(store, tx, fromPath, paths, explicit, recursive, force, followSymlinks)
+	case options.HasOption("--where"):
+		if len(args) < 1 {
+			return fmt.Errorf("too few arguments"), nil
+		}
+
+		query := options.Get("--where").Argument
+		tagArgs := args
+
+		return tagWhere(store, tx, query, explicit, tagArgs)
 	case len(args) == 1 && args[0] == "-":
 		return readStandardInput(store, tx, recursive, explicit, force, followSymlinks)
 	default:
@@ -175,52 +187,18 @@ func createTagsValues(store *storage.Storage, tx *storage.Tx, tagArgs []string) 
 }
 
 func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, explicit, recursive, force, followSymlinks bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
 	log.Infof(2, "loading settings")
 
 	settings, err := store.Settings(tx)
 	if err != nil {
-		return err, nil
+		return err, warnings
 	}
 
-	pairs := make(entities.TagIdValueIdPairs, 0, len(tagArgs))
-	warnings := make(warnings, 0, 10)
-
-	for _, tagArg := range tagArgs {
-		tagName, valueName := parseTagEqValueName(tagArg)
-
-		tag, err := store.TagByName(tx, tagName)
-		if err != nil {
-			return err, warnings
-		}
-		if tag == nil {
-			if settings.AutoCreateTags() {
-				tag, err = createTag(store, tx, tagName)
-				if err != nil {
-					return err, warnings
-				}
-			} else {
-				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
-				continue
-			}
-		}
-
-		value, err := store.ValueByName(tx, valueName)
-		if err != nil {
-			return err, warnings
-		}
-		if value == nil {
-			if settings.AutoCreateValues() {
-				value, err = createValue(store, tx, valueName)
-				if err != nil {
-					return err, warnings
-				}
-			} else {
-				warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
-				continue
-			}
-		}
-
-		pairs = append(pairs, entities.TagIdValueIdPair{tag.Id, value.Id})
+	pairs, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
+	if err != nil {
+		return err, warnings
 	}
 
 	for _, path := range paths {
@@ -287,6 +265,48 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 				warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
 			default:
 				return fmt.Errorf("%v: could not stat file: %v", path, err), warnings
+			}
+		}
+	}
+
+	return nil, warnings
+}
+
+func tagWhere(store *storage.Storage, tx *storage.Tx, queryText string, explicit bool, tagArgs []string) (error, warnings) {
+	warnings := make(warnings, 0, 10)
+
+	log.Infof(2, "loading settings")
+
+	settings, err := store.Settings(tx)
+	if err != nil {
+		return err, warnings
+	}
+
+	log.Info(2, "parsing query")
+
+	expression, err := query.Parse(queryText)
+	if err != nil {
+		return fmt.Errorf("could not parse query: %v", err), warnings
+	}
+
+	log.Info(2, "querying files")
+
+	files, err := store.FilesForQuery(tx, expression, "", explicit, false, "none")
+	if err != nil {
+		return err, warnings
+	}
+
+	pairs, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
+	if err != nil {
+		return err, warnings
+	}
+
+	log.Infof(2, "applying tags to %v files", len(files))
+
+	for _, file := range files {
+		for _, pair := range pairs {
+			if _, err = store.AddFileTag(tx, file.Id, pair.TagId, pair.ValueId); err != nil {
+				return fmt.Errorf("could not apply tags: %v", err), warnings
 			}
 		}
 	}
@@ -386,6 +406,52 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 	}
 
 	return nil
+}
+
+func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entities.Settings, tagArgs []string, warnings warnings) (entities.TagIdValueIdPairs, error) {
+	log.Info(2, "parsing tag/value pairs")
+
+	pairs := make(entities.TagIdValueIdPairs, 0, len(tagArgs))
+
+	for _, tagArg := range tagArgs {
+		tagName, valueName := parseTagEqValueName(tagArg)
+
+		tag, err := store.TagByName(tx, tagName)
+		if err != nil {
+			return nil, err
+		}
+		if tag == nil {
+			if settings.AutoCreateTags() {
+				tag, err = createTag(store, tx, tagName)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
+				continue
+			}
+		}
+
+		value, err := store.ValueByName(tx, valueName)
+		if err != nil {
+			return nil, err
+		}
+		if value == nil {
+			if settings.AutoCreateValues() {
+				value, err = createValue(store, tx, valueName)
+				if err != nil {
+					return nil, err
+				}
+			} else {
+				warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
+				continue
+			}
+		}
+
+		pairs = append(pairs, entities.TagIdValueIdPair{tag.Id, value.Id})
+	}
+
+	return pairs, nil
 }
 
 func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explicit, force, followSymlinks bool) (error, warnings) {

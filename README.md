@@ -143,6 +143,8 @@ v0.7.0 (in development)
   * Slashes are now permitted within tags and values, useful for recording URLs.
     In the virtual filesystem, similar looking Unicode characters are used in
     their place.
+  * Added --where option to `tag` subcommand to allow tags to be applied to
+    the set of files matching a query.
   * Made it possible to upgrade the database schema between releases.
   * Added --count option to 'untagged'.
   * Bug fixes.

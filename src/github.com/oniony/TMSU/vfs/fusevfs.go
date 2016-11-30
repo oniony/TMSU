@@ -36,6 +36,7 @@ import (
 
 const helpFilename = "README.md"
 const databaseFilename = ".database"
+const filesDir = "files"
 
 const tagsDir = "tags"
 const tagsDirHelp = `Tags Directories
@@ -286,6 +287,7 @@ func (vfs FuseVfs) OpenDir(name string, context *fuse.Context) ([]fuse.DirEntry,
 	}
 
 	path := vfs.splitPath(name)
+
 	switch path[0] {
 	case tagsDir:
 		return vfs.openTaggedEntryDir(tx, path[1:])
@@ -594,6 +596,10 @@ func (vfs FuseVfs) tagDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Status)
 	for _, tag := range tags {
 		tagName := escape(tag.Name)
 
+		if tagName == filesDir {
+			continue
+		}
+
 		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR})
 	}
 
@@ -624,6 +630,14 @@ func (vfs FuseVfs) queriesDirectories(tx *storage.Tx) ([]fuse.DirEntry, fuse.Sta
 	}
 
 	return entries, fuse.OK
+}
+
+func (vfs FuseVfs) getFilesAttr(path []string) (*fuse.Attr, fuse.Status) {
+	log.Infof(2, "BEGIN getFilesAttr")
+	defer log.Infof(2, "END getFilesAttr")
+
+	now := time.Now()
+	return &fuse.Attr{Mode: fuse.S_IFDIR | 0755, Nlink: 2, Size: 0, Mtime: uint64(now.Unix()), Mtimensec: uint32(now.Nanosecond())}, fuse.OK
 }
 
 func (vfs FuseVfs) getTagsAttr() (*fuse.Attr, fuse.Status) {
@@ -663,6 +677,10 @@ func (vfs FuseVfs) getTaggedEntryAttr(path []string) (*fuse.Attr, fuse.Status) {
 	}
 
 	name := path[len(path)-1]
+
+	if name == filesDir {
+		return vfs.getFilesAttr(path)
+	}
 
 	fileId := vfs.parseFileId(name)
 	if fileId != 0 {
@@ -806,13 +824,17 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	log.Infof(2, "BEGIN openTaggedEntryDir(%v)", path)
 	defer log.Infof(2, "END openTaggedEntryDir(%v)", path)
 
+	lastPathElement := path[len(path)-1]
+
+	if lastPathElement == filesDir {
+		return vfs.openTaggedEntryFilesDir(tx, path[:len(path)-1])
+	}
+
 	expression := pathToExpression(path)
 	files, err := vfs.store.FilesForQuery(tx, expression, "", false, false, "name")
 	if err != nil {
 		log.Fatalf("could not query files: %v", err)
 	}
-
-	lastPathElement := path[len(path)-1]
 
 	var valueNames []string
 	if lastPathElement[0] != '=' {
@@ -834,15 +856,38 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 	entries := make([]fuse.DirEntry, 0, len(files)+len(furtherTagNames))
 	for _, tagName := range furtherTagNames {
 		tagName = escape(tagName)
-		if !containsString(path, tagName) {
-			entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
+
+		if tagName == filesDir {
+			continue
 		}
+		if containsString(path, tagName) {
+			continue
+		}
+
+		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
 	}
 
 	for _, valueName := range valueNames {
 		valueName = escape(valueName)
 		entries = append(entries, fuse.DirEntry{Name: "=" + valueName, Mode: fuse.S_IFDIR | 0755})
 	}
+
+	entries = append(entries, fuse.DirEntry{Name: filesDir, Mode: fuse.S_IFDIR | 0755})
+
+	return entries, fuse.OK
+}
+
+func (vfs FuseVfs) openTaggedEntryFilesDir(tx *storage.Tx, path []string) ([]fuse.DirEntry, fuse.Status) {
+	log.Infof(2, "BEGIN openTaggedEntryFilesDir(%v)", path)
+	defer log.Infof(2, "END openTaggedEntryFilesDir(%v)", path)
+
+	expression := pathToExpression(path)
+	files, err := vfs.store.FilesForQuery(tx, expression, "", false, false, "name")
+	if err != nil {
+		log.Fatalf("could not query files: %v", err)
+	}
+
+	entries := make([]fuse.DirEntry, 0, len(files))
 
 	for _, file := range files {
 		linkName := vfs.getLinkName(file)

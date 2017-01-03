@@ -81,5 +81,6 @@ uninstall:
 	@echo "UNINSTALLING"
 	rm $(INSTALL_DIR)/tmsu
 	rm $(MOUNT_INSTALL_DIR)/mount.tmsu
+	rm $(INSTALL_DIR)/tmsu-*
 	rm $(MAN_INSTALL_DIR)/tmsu.1.gz
 	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu

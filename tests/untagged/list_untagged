@@ -10,7 +10,7 @@ tmsu tag /tmp/tmsu/dir/file1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu untagged /tmp/tmsu/dir               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu untagged /tmp/tmsu/dir | sort        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -23,8 +23,8 @@ fi
 
 diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/dir
-/tmp/tmsu/dir/file3
 /tmp/tmsu/dir/file2
+/tmp/tmsu/dir/file3
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

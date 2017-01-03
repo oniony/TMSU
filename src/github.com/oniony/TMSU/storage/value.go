@@ -40,7 +40,7 @@ func (storage Storage) ValuesByIds(tx *Tx, ids entities.ValueIds) (entities.Valu
 	return database.ValuesByIds(tx.tx, ids)
 }
 
-// Retrievse the set of unused values.
+// Retrieves the set of unused values.
 func (storage *Storage) UnusedValues(tx *Tx) (entities.Values, error) {
 	return database.UnusedValues(tx.tx)
 }

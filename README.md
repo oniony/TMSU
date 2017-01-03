@@ -135,8 +135,6 @@ v0.7.0 (in development)
   * The VFS no longer lists files alongside the tag directories under `tags`.
     Instead there are `files` directories at each level, within which you can
     find the file set.
-  * The VFS will now list tags that are already on the path. This allows a tag
-    to be repeated with different values, e.g. tags/color/=red/color/=blue.
   * Symbolic links are now followed by default. This means that if you tag a
     symbolic link, the target file is tagged instead. To instruct TMSU to not
     follow symbolic links (previous behaviour) use the new --no-dereference
@@ -150,6 +148,8 @@ v0.7.0 (in development)
     their place.
   * Added --where option to `tag` subcommand to allow tags to be applied to
     the set of files matching a query.
+  * The VFS tags directory will now relist tags that have values so that
+    multiple values can be specified, e.g. tags/color/=red/color/=blue.
   * Made it possible to upgrade the database schema between releases.
   * Added --count option to 'untagged'.
   * Bug fixes.

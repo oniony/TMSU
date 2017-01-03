@@ -198,7 +198,7 @@ _tmsu_query() {
         _call_program tmsu tmsu $db tags | \
         while read tag
         do
-            local escapedTag=$tag:gs/:/\:/
+            local escapedTag=$tag:gs/:/\\\:/
             escapedTag=${escapedTag:gs/=/\\\\&}
             escapedTag=${escapedTag:gs/!/\\\\&}
             escapedTag=${escapedTag:gs/</\\\\&}

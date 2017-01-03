@@ -860,9 +860,6 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 		if tagName == filesDir {
 			continue
 		}
-		if containsString(path, tagName) {
-			continue
-		}
 
 		entries = append(entries, fuse.DirEntry{Name: tagName, Mode: fuse.S_IFDIR | 0755})
 	}

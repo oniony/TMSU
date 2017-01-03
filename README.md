@@ -135,6 +135,8 @@ v0.7.0 (in development)
   * The VFS no longer lists files alongside the tag directories under `tags`.
     Instead there are `files` directories at each level, within which you can
     find the file set.
+  * The VFS will now list tags that are already on the path. This allows a tag
+    to be repeated with different values, e.g. tags/color/=red/color/=blue.
   * Symbolic links are now followed by default. This means that if you tag a
     symbolic link, the target file is tagged instead. To instruct TMSU to not
     follow symbolic links (previous behaviour) use the new --no-dereference

@@ -860,7 +860,13 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 		if tagName == filesDir {
 			continue
 		}
-		if containsString(path, tagName) {
+
+		hasValues, err := vfs.tagHasValues(tx, tagName)
+		if err != nil {
+			log.Fatalf("could not determine whether tag has values: %v", err)
+		}
+
+		if !hasValues && containsString(path, tagName) {
 			continue
 		}
 
@@ -1057,6 +1063,20 @@ func (vfs FuseVfs) tagNamesForFiles(tx *storage.Tx, files entities.Files) ([]str
 	}
 
 	return tagNames, nil
+}
+
+func (vfs FuseVfs) tagHasValues(tx *storage.Tx, tagName string) (bool, error) {
+	tag, err := vfs.store.TagByName(tx, tagName)
+	if err != nil {
+		return false, err
+	}
+
+	values, err := vfs.store.ValuesByTag(tx, tag.Id)
+	if err != nil {
+		return false, err
+	}
+
+	return len(values) > 0, nil
 }
 
 func pathToExpression(path []string) query.Expression {

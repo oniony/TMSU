@@ -148,6 +148,8 @@ v0.7.0 (in development)
     their place.
   * Added --where option to `tag` subcommand to allow tags to be applied to
     the set of files matching a query.
+  * The VFS tags directory will now relist tags that have values so that
+    multiple values can be specified, e.g. tags/color/=red/color/=blue.
   * Made it possible to upgrade the database schema between releases.
   * Added --count option to 'untagged'.
   * Bug fixes.

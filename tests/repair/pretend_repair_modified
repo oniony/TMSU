@@ -2,19 +2,19 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 aubergine     >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+tmsu tag /tmp/tmsu/file1 aubergine     >/dev/null 2>&1
 echo horseradish >>/tmp/tmsu/file1
 
 # test
 
-tmsu repair --pretend /tmp/tmsu        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu repair --pretend /tmp/tmsu        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 tmsu status /tmp/tmsu/file1            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

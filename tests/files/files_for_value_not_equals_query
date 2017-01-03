@@ -2,23 +2,19 @@
 
 # setup
 
-tmsu tag --tags="month=June" /tmp/tmsu/file1             >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu tag --tags="month=July" /tmp/tmsu/file2             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tag --tags="blah" /tmp/tmsu/file3dupe1              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tag --tags="month=June month=July" /tmp/tmsu/file4  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr    
+touch /tmp/tmsu/{file1,file2,file3,file4}
+tmsu tag --tags="month=June" /tmp/tmsu/file1               >/dev/null 2>&1
+tmsu tag --tags="month=July" /tmp/tmsu/file2               >/dev/null 2>&1
+tmsu tag --tags="blah" /tmp/tmsu/file3                     >/dev/null 2>&1
+tmsu tag --tags="month=June month=July" /tmp/tmsu/file4    >/dev/null 2>&1
 
 # test
 
-tmsu files "month != June"                                     >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files "month != June"                                 >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'month'
-tmsu: new value 'June'
-tmsu: new value 'July'
-tmsu: new tag 'blah'
-tmsu: '/tmp/tmsu/file3dupe1' is a duplicate
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -26,7 +22,7 @@ fi
 
 diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/file2
-/tmp/tmsu/file3dupe1
+/tmp/tmsu/file3
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

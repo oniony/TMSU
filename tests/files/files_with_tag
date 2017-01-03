@@ -2,16 +2,17 @@
 
 # setup
 
-tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+mkdir /tmp/tmsu/dir1
+tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1    >/dev/null 2>&1
 
 # test
 
-tmsu files --file aubergine                                   >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files --file aubergine                                   >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -2,6 +2,8 @@
 
 # setup
 
+echo 1 >/tmp/tmsu/file1
+echo 2 >/tmp/tmsu/file2
 tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/file2    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test

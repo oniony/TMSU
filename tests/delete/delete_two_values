@@ -2,21 +2,18 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 year=2015 country=Iceland    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+tmsu tag /tmp/tmsu/file1 year=2015 country=Iceland    >/dev/null 2>&1
 
 # test
 
-tmsu delete --value 2015 Iceland                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu delete --value 2015 Iceland                      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 tmsu values                                           >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'year'
-tmsu: new value '2015'
-tmsu: new tag 'country'
-tmsu: new value 'Iceland'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -2,6 +2,7 @@
 
 # test
 
+touch /tmp/tmsu/file1
 tmsu copy aubergine eggplant    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

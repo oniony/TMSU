@@ -377,6 +377,7 @@ _tmsu_cmd_tag() {
 	                 ''{--recursive,-r}'[apply tags recursively to contents of directories]' \
 	                 ''{--explicit,-e}'[explicitly apply tags even if they are already implied]' \
 	                 ''{--from=,-f}'[copy tags from the specified file]:source:_files' \
+	                 ''{--where=,-w}'[apply tags to files meeting the query]:query:_tmsu_query' \
 	                 ''{--create+,-c}'[create a tag without tagging any files]:source:_files' \
 	                 ''{--force,-F}'[apply tags to non-existant or non-permissioned paths]' \
                      ''{--no-dereference,-P}'[never follow symlinks (tag link itself)]' \
@@ -388,6 +389,9 @@ _tmsu_cmd_tag() {
             if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--from]} || ${+opt_args[-f]} ))
             then
                 _wanted files expl 'files' _files
+            elif (( ${+opt_args[--where]} || ${+opt_args[-w]} ))
+            then
+                _wanted tags expl 'tags' _tmsu_tags_with_values
             else
                 if (( CURRENT == 1 ))
                 then

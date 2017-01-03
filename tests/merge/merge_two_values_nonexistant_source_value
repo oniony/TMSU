@@ -2,17 +2,16 @@
 
 # setup
 
-tmsu tag /tmp/tmsu/file1 vegetable=aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/file1
+tmsu tag /tmp/tmsu/file1 vegetable=aubergine    >/dev/null 2>&1
 
 # test
 
-tmsu merge --value potato aubergine             >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu merge --value potato aubergine             >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'vegetable'
-tmsu: new value 'aubergine'
 tmsu: no such value 'potato'
 EOF
 if [[ $? -ne 0 ]]; then

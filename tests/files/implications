@@ -2,20 +2,22 @@
 
 # setup
 
-tmsu imply a b                          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
-tmsu imply b c                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu imply j=1 k                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu imply k l                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu imply x y=2                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu imply y z                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+touch /tmp/tmsu/{file1,file2,file3}
 
-tmsu tag /tmp/tmsu/file1 a              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file2 j=1            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tag /tmp/tmsu/file4 x              >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu imply a b                          >/dev/null 2>&1
+tmsu imply b c                          >/dev/null 2>&1
+tmsu imply j=1 k                        >/dev/null 2>&1
+tmsu imply k l                          >/dev/null 2>&1
+tmsu imply x y=2                        >/dev/null 2>&1
+tmsu imply y z                          >/dev/null 2>&1
+
+tmsu tag /tmp/tmsu/file1 a              >/dev/null 2>&1
+tmsu tag /tmp/tmsu/file2 j=1            >/dev/null 2>&1
+tmsu tag /tmp/tmsu/file3 x              >/dev/null 2>&1
 
 # test
 
-tmsu files a                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files a                            >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu files b                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files c                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files a b c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
@@ -34,23 +36,12 @@ tmsu tags /tmp/tmsu/file1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file1    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags /tmp/tmsu/file2               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file2    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags /tmp/tmsu/file4               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-tmsu tags --explicit /tmp/tmsu/file4    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file3               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags --explicit /tmp/tmsu/file3    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'a'
-tmsu: new tag 'b'
-tmsu: new tag 'c'
-tmsu: new tag 'j'
-tmsu: new value '1'
-tmsu: new tag 'k'
-tmsu: new tag 'l'
-tmsu: new tag 'x'
-tmsu: new tag 'y'
-tmsu: new value '2'
-tmsu: new tag 'z'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -65,16 +56,16 @@ diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/file2
 /tmp/tmsu/file2
 /tmp/tmsu/file2
-/tmp/tmsu/file4
-/tmp/tmsu/file4
-/tmp/tmsu/file4
-/tmp/tmsu/file4
+/tmp/tmsu/file3
+/tmp/tmsu/file3
+/tmp/tmsu/file3
+/tmp/tmsu/file3
 /tmp/tmsu/file1: a b c
 /tmp/tmsu/file1: a
 /tmp/tmsu/file2: j=1 k l
 /tmp/tmsu/file2: j=1
-/tmp/tmsu/file4: x y=2 z
-/tmp/tmsu/file4: x
+/tmp/tmsu/file3: x y=2 z
+/tmp/tmsu/file3: x
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 
+# setup
+
+mkdir /tmp/tmsu/dir1
+touch /tmp/tmsu/dir1/file1
+
 # test
 
 tmsu tag --recursive /tmp/tmsu/dir1 aubergine    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr

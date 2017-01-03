@@ -2,17 +2,17 @@
 
 # setup
 
-tmsu tag --tags="aubergine" /tmp/tmsu/file2 /tmp/tmsu/file1    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+touch /tmp/tmsu/{file1,file2}
+tmsu tag --tags="aubergine" /tmp/tmsu/file2 /tmp/tmsu/file1    >/dev/null 2>&1
 
 # test
 
-tmsu files --sort=name aubergine                               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files --sort=name aubergine                               >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu files --sort=id aubergine                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
 diff /tmp/tmsu/stderr - <<EOF
-tmsu: new tag 'aubergine'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -67,7 +67,7 @@ for the following GNU/Linux distributions:
   * Arch
     - Stable <https://aur.archlinux.org/packages/tmsu/>
 
-These packgase are not maintained by me and I cannot guarantee their content.
+These packages are not maintained by me and I cannot guarantee their content.
 
 Binary
 ------

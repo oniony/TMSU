@@ -1,4 +1,4 @@
-// Copyright 2011-2016 Paul Ruane.
+// Copyright 2011-2017 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -104,7 +104,7 @@ func TestSingleTagWithValue(test *testing.T) {
 }
 
 func TestComplexQuery(test *testing.T) {
-	scanner := NewScanner("not cheese and (peas or sweetcorn) and not beans and bestbefore=2016")
+	scanner := NewScanner("not cheese and (peas or sweetcorn) and not beans and bestbefore=2017")
 
 	token, err := scanner.Next()
 	if err != nil {
@@ -194,7 +194,7 @@ func TestComplexQuery(test *testing.T) {
 	if err != nil {
 		test.Fatal(err)
 	}
-	validateSymbolToken(token, "2016", test)
+	validateSymbolToken(token, "2017", test)
 	token, err = scanner.Next()
 	if err != nil {
 		test.Fatal(err)

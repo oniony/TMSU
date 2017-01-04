@@ -108,7 +108,7 @@ Windows
 
 - - -
 
-Copyright 2011-2016 Paul Ruane
+Copyright 2011-2017 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

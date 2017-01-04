@@ -1,4 +1,4 @@
-// Copyright 2011-2016 Paul Ruane.
+// Copyright 2011-2017 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by
@@ -53,7 +53,7 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 	Examples: []string{"$ tmsu tag mountain1.jpg photo landscape holiday good country=france",
 		"$ tmsu tag --from=mountain1.jpg mountain2.jpg",
 		`$ tmsu tag --tags="landscape" field1.jpg field2.jpg`,
-		"$ tmsu tag --create bad rubbish awful =2016",
+		"$ tmsu tag --create bad rubbish awful =2017",
 		`$ tmsu tag --where="bad and good" confused`,
 		"$ tmsu tag sheep.jpg '<tag>'"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},

@@ -196,7 +196,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 		return err, warnings
 	}
 
-	pairs, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
+	pairs, warnings, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
 	if err != nil {
 		return err, warnings
 	}
@@ -296,7 +296,7 @@ func tagWhere(store *storage.Storage, tx *storage.Tx, queryText string, explicit
 		return err, warnings
 	}
 
-	pairs, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
+	pairs, warnings, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
 	if err != nil {
 		return err, warnings
 	}
@@ -408,7 +408,7 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 	return nil
 }
 
-func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entities.Settings, tagArgs []string, warnings warnings) (entities.TagIdValueIdPairs, error) {
+func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entities.Settings, tagArgs []string, warnings warnings) (entities.TagIdValueIdPairs, warnings, error) {
 	log.Info(2, "parsing tag/value pairs")
 
 	pairs := make(entities.TagIdValueIdPairs, 0, len(tagArgs))
@@ -418,13 +418,13 @@ func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entitie
 
 		tag, err := store.TagByName(tx, tagName)
 		if err != nil {
-			return nil, err
+			return nil, warnings, err
 		}
 		if tag == nil {
 			if settings.AutoCreateTags() {
 				tag, err = createTag(store, tx, tagName)
 				if err != nil {
-					return nil, err
+					return nil, warnings, err
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such tag '%v'", tagName))
@@ -434,13 +434,13 @@ func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entitie
 
 		value, err := store.ValueByName(tx, valueName)
 		if err != nil {
-			return nil, err
+			return nil, warnings, err
 		}
 		if value == nil {
 			if settings.AutoCreateValues() {
 				value, err = createValue(store, tx, valueName)
 				if err != nil {
-					return nil, err
+					return nil, warnings, err
 				}
 			} else {
 				warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
@@ -451,7 +451,7 @@ func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entitie
 		pairs = append(pairs, entities.TagIdValueIdPair{tag.Id, value.Id})
 	}
 
-	return pairs, nil
+	return pairs, warnings, nil
 }
 
 func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explicit, force, followSymlinks bool) (error, warnings) {

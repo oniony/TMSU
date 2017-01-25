@@ -49,7 +49,8 @@ See the 'imply' subcommand for more information on implied tags.`,
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
 		{"--name", "-n", "always print the file name", false, ""},
-		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""}},
+		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""},
+		{"--value", "-v", "show tags for which utilise value", true, ""}},
 	Exec: tagsExec,
 }
 
@@ -77,6 +78,11 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 		return err, nil
 	}
 	defer tx.Commit()
+
+	if options.HasOption("--value") {
+		valueName := options.Get("--value").Argument
+		return listTagsForValue(store, tx, valueName, showCount, onePerLine), nil
+	}
 
 	if len(args) == 0 {
 		return listAllTags(store, tx, showCount, onePerLine), nil
@@ -216,6 +222,31 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 	return nil, warnings
 }
 
+func listTagsForValue(store *storage.Storage, tx *storage.Tx, valueName string, showCount, onePerLine bool) error {
+	value, err := store.ValueByName(tx, valueName)
+	if err != nil {
+		return err
+	}
+	if value == nil {
+		return fmt.Errorf("no such value '%v'", valueName)
+	}
+
+	tagNames, err := tagNamesForValue(store, tx, value.Id)
+
+	switch {
+	case showCount:
+		fmt.Println(strconv.Itoa(len(tagNames)))
+	case onePerLine:
+		for _, tagName := range tagNames {
+			fmt.Println(tagName)
+		}
+	default:
+		terminal.PrintColumns(tagNames)
+	}
+
+	return nil
+}
+
 func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {
 	fileTags, err := store.FileTagsByFileId(tx, fileId, explicitOnly)
 	if err != nil {
@@ -254,4 +285,29 @@ func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.Fil
 	ansi.Sort(taggings)
 
 	return taggings, nil
+}
+
+func tagNamesForValue(store *storage.Storage, tx *storage.Tx, valueId entities.ValueId) ([]string, error) {
+	fileTags, err := store.FileTagsByValueId(tx, valueId)
+	if err != nil {
+		return nil, fmt.Errorf("could not retrieve file-tags for value '%v': %v", valueId, err)
+	}
+
+	tagNames := make([]string, len(fileTags))
+
+	for index, fileTag := range fileTags {
+		tag, err := store.Tag(tx, fileTag.TagId)
+		if err != nil {
+			return nil, fmt.Errorf("could not lookup tag: %v", err)
+		}
+		if tag == nil {
+			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
+		}
+
+		tagNames[index] = tag.Name
+	}
+
+	ansi.Sort(tagNames)
+
+	return tagNames, nil
 }

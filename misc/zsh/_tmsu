@@ -11,8 +11,8 @@ local db
 autoload -U regexp-replace
 
 _tmsu() {
-	local cmd db ret=1
-	integer i=2
+    local cmd db ret=1
+    integer i=2
 
     # store which database to use
     while (( i < $#words ))
@@ -30,38 +30,38 @@ _tmsu() {
         (( i++ ))
     done
 
-	_arguments -C \
-	    {--verbose,-v}'[show verbose messages]' \
-	    {--version,-V}'[show version information and exit]' \
-	    {--database=,-D}'[use the specified database]:file:_files' \
+    _arguments -C \
+        {--verbose,-v}'[show verbose messages]' \
+        {--version,-V}'[show version information and exit]' \
+        {--database=,-D}'[use the specified database]:file:_files' \
         --color='[colorize the output]:when:((auto always never))' \
-	    {--help,-h}'[show help and exit]' \
-		': :_tmsu_commands' \
-		'*::arg:->args' \
-		&& ret=0
+        {--help,-h}'[show help and exit]' \
+        ': :_tmsu_commands' \
+        '*::arg:->args' \
+        && ret=0
 
-	case $state in
-		(args)
-			cmd="$words[1]"
-			if (( $+functions[_tmsu_cmd_${cmd}] ))
-			then
-				_tmsu_cmd_$cmd
-			fi
-		;;
-	esac
+    case $state in
+        (args)
+            cmd="$words[1]"
+            if (( $+functions[_tmsu_cmd_${cmd}] ))
+            then
+                _tmsu_cmd_$cmd
+            fi
+        ;;
+    esac
 }
 
 _tmsu_commands() {
-	typeset -a command_list
-	local line
+    typeset -a command_list
+    local line
 
-	_call_program tmsu tmsu help --list | \
-	while read -A line
-	do
-		command_list+=($line[1])
-	done
+    _call_program tmsu tmsu help --list | \
+    while read -A line
+    do
+        command_list+=($line[1])
+    done
 
-	_describe -t commands 'command' command_list "$@"
+    _describe -t commands 'command' command_list "$@"
 }
 
 # the set of tag names
@@ -261,11 +261,11 @@ _tmsu_cmd_copy() {
 }
 
 _tmsu_cmd_delete() {
-	_arguments -s -w ''--value'[delete a value]' \
+    _arguments -s -w ''--value'[delete a value]' \
                      '*:: :-> items'\
     && ret=0
 
-	case $state in
+    case $state in
         (items)
             if (( ${+opt_args[--value]} ))
             then
@@ -277,26 +277,26 @@ _tmsu_cmd_delete() {
 }
 
 _tmsu_cmd_dupes() {
-	_arguments -s -w ''{--recursive,-r}'[recursively check directory contents]' \
-	                 '*:file:_files' \
-	&& ret=0
+    _arguments -s -w ''{--recursive,-r}'[recursively check directory contents]' \
+                     '*:file:_files' \
+    && ret=0
 }
 
 _tmsu_cmd_files() {
-	_arguments -s -w ''{--directory,-d}'[list only items that are directories]' \
+    _arguments -s -w ''{--directory,-d}'[list only items that are directories]' \
                      ''{--file,-f}'[list only items that are files]' \
                      ''{--count,-c}'[lists the number of files rather than their names]' \
                      ''{--path=,-p}'[list only items under PATH]':path:_files \
                      ''{--sort=,-s}'[sort items]:sort:(id name none size time)' \
                      ''{--explicit,-e}'[list only explicitly tagged files]' \
-	                 '*:tag:_tmsu_query' \
-	&& ret=0
+                     '*:tag:_tmsu_query' \
+    && ret=0
 }
 
 _tmsu_cmd_help() {
-	_arguments -s -w ''{--list,-l}'[list commands]' \
-	                 '1:command:_tmsu_commands' \
-	&& ret=0
+    _arguments -s -w ''{--list,-l}'[list commands]' \
+                     '1:command:_tmsu_commands' \
+    && ret=0
 }
 
 _tmsu_cmd_imply() {
@@ -316,11 +316,11 @@ _tmsu_cmd_init() {
 }
 
 _tmsu_cmd_merge() {
-	_arguments -s -w ''--value'[merge values]' \
+    _arguments -s -w ''--value'[merge values]' \
                      '*:: :-> items' \
-	&& ret=0
+    && ret=0
 
-	case $state in
+    case $state in
         (items)
             if (( ${+opt_args[--value]} ))
             then
@@ -334,16 +334,16 @@ _tmsu_cmd_merge() {
 _tmsu_cmd_mount() {
     _arguments -s -w ''{--options=,-o}'[mount options (passed to fusermount)]' \
                      ':file:_files' \
-	                 ':mountpoint:_dirs' \
-	&& ret=0
+                     ':mountpoint:_dirs' \
+    && ret=0
 }
 
 _tmsu_cmd_rename() {
-	_arguments -s -w ''--value'[rename a value]' \
+    _arguments -s -w ''--value'[rename a value]' \
                      '1:: :-> items' \
     && ret=0
 
-	case $state in
+    case $state in
         (items)
             if (( ${+opt_args[--value]} ))
             then
@@ -355,13 +355,13 @@ _tmsu_cmd_rename() {
 }
 
 _tmsu_cmd_repair() {
-	_arguments -s -w ''{--path=,-p}'[limit repair to files under a path]':path:_files \
+    _arguments -s -w ''{--path=,-p}'[limit repair to files under a path]':path:_files \
                      ''{--remove,-R}'[remove missing files from the database]' \
-	                 ''{--unmodified,-u}'[recalculate fingerprints for unmodified files]' \
-	                 ''{--pretend,-P}'[do not make any changes]' \
-	                 ''{--manual,-m}'[manually relocate files]' \
-	                 ''--rationalize'[remove explicit taggings where an implicit tagging exists]' \
-	                 '*:file:_files' \
+                     ''{--unmodified,-u}'[recalculate fingerprints for unmodified files]' \
+                     ''{--pretend,-P}'[do not make any changes]' \
+                     ''{--manual,-m}'[manually relocate files]' \
+                     ''--rationalize'[remove explicit taggings where an implicit tagging exists]' \
+                     '*:file:_files' \
     && ret=0
 }
 
@@ -384,7 +384,7 @@ _tmsu_cmd_tag() {
 	                 '*:: :->items' \
 	&& ret=0
 
-	case $state in
+    case $state in
         (items)
             if (( ${+opt_args[--tags]} || ${+opt_args[-t]} || ${+opt_args[--from]} || ${+opt_args[-f]} ))
             then
@@ -408,14 +408,15 @@ _tmsu_cmd_tags() {
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
                      ''{--no-dereference,-P}'[never follow symlinks (show tags for link itself)]' \
+                     ''{--value=,-v}'[show tags utilising value]:value:_tmsu_values' \
 	                 '*:file:_files' \
 	&& ret=0
 }
 
 _tmsu_cmd_unmount() {
-	_arguments -s -w ''{--all,-a}'[unmount all]' \
-	                 ':mountpoint:_files' \
-	&& ret=0
+    _arguments -s -w ''{--all,-a}'[unmount all]' \
+                     ':mountpoint:_files' \
+    && ret=0
 }
 
 _tmsu_cmd_untag() {
@@ -451,21 +452,21 @@ _tmsu_cmd_untagged() {
 }
 
 _tmsu_cmd_values() {
-	_arguments -s -w ''{--count,-c}'[lists the number of values rather than their names]' \
-	                 '-1[lists on value per line]' \
-	                 '*:tag:_tmsu_tags' \
-	&& ret=0
+    _arguments -s -w ''{--count,-c}'[lists the number of values rather than their names]' \
+                     '-1[lists on value per line]' \
+                     '*:tag:_tmsu_tags' \
+    && ret=0
 }
 
 _tmsu_cmd_version() {
-	# no arguments
+    # no arguments
 }
 
 _tmsu_cmd_vfs() {
     _arguments -s -w ''{--options,-o}'[mount options (passed to fusermount)]' \
                      '1:file:_files' \
-	                 '2:mountpoint:_dirs' \
-	&& ret=0
+                     '2:mountpoint:_dirs' \
+    && ret=0
 }
 
 _tmsu "$@"

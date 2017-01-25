@@ -137,7 +137,7 @@ v0.7.0 (in development)
     find the file set.
   * Symbolic links are now followed by default. This means that if you tag a
     symbolic link, the target file is tagged instead. To instruct TMSU to not
-    follow symbolic links (previous behaviour) use the new --no-dereference
+    follow symbolic links (previous behaviour) use the new `--no-dereference`
     option on the relevant subcommands.
   * Added new setting `symlinkFingerprintAlgorithm` to allow the fingerprint
     algorithm for symbolic links to be configured separately to regular files.
@@ -146,12 +146,14 @@ v0.7.0 (in development)
   * Slashes are now permitted within tags and values, useful for recording URLs.
     In the virtual filesystem, similar looking Unicode characters are used in
     their place.
-  * Added --where option to `tag` subcommand to allow tags to be applied to
+  * Added `--where` option to `tag` subcommand to allow tags to be applied to
     the set of files matching a query.
   * The VFS tags directory will now relist tags that have values so that
     multiple values can be specified, e.g. tags/color/=red/color/=blue.
+  * It is now possible to list tags that use a particular value with the new
+    `--value` option on the 'tags' subcommand.
   * Made it possible to upgrade the database schema between releases.
-  * Added --count option to 'untagged'.
+  * Added `--count` option to `untagged`.
   * Bug fixes.
 
 v0.6.1

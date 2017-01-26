@@ -293,9 +293,9 @@ func tagNamesForValue(store *storage.Storage, tx *storage.Tx, valueId entities.V
 		return nil, fmt.Errorf("could not retrieve file-tags for value '%v': %v", valueId, err)
 	}
 
-	tagNames := make([]string, len(fileTags))
+	tagNames := make([]string, 0, 10)
 
-	for index, fileTag := range fileTags {
+	for _, fileTag := range fileTags {
 		tag, err := store.Tag(tx, fileTag.TagId)
 		if err != nil {
 			return nil, fmt.Errorf("could not lookup tag: %v", err)
@@ -304,10 +304,22 @@ func tagNamesForValue(store *storage.Storage, tx *storage.Tx, valueId entities.V
 			return nil, fmt.Errorf("tag '%v' does not exist", fileTag.TagId)
 		}
 
-		tagNames[index] = tag.Name
+		if !containsTagName(tagNames, tag.Name) {
+			tagNames = append(tagNames, tag.Name)
+		}
 	}
 
 	ansi.Sort(tagNames)
 
 	return tagNames, nil
+}
+
+func containsTagName(tagNames []string, search string) bool {
+	for _, tagName := range tagNames {
+		if tagName == search {
+			return true
+		}
+	}
+
+	return false
 }

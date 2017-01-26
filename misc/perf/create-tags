@@ -1,5 +1,0 @@
-#! /usr/bin/env bash
-
-for (( i = 0; i < 1000; i++ )) do
-    tmsu tag --create tag-$i
-done

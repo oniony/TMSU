@@ -408,7 +408,7 @@ _tmsu_cmd_tags() {
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
                      ''{--no-dereference,-P}'[never follow symlinks (show tags for link itself)]' \
-                     ''{--value,-v}'[show tags utilising value]' \
+                     ''{--value,-u}'[show tags utilising value]' \
 	                 '*:: :->items' \
 	&& ret=0
 

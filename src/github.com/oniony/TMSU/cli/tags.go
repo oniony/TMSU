@@ -51,7 +51,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 		{"--explicit", "-e", "do not show implied tags", false, ""},
 		{"--name", "-n", "always print the file/value name", false, ""},
 		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""},
-		{"--value", "-v", "show tags which utilise values", false, ""}},
+		{"--value", "-u", "show tags which utilise values", false, ""}},
 	Exec: tagsExec,
 }
 

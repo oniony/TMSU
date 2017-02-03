@@ -408,9 +408,19 @@ _tmsu_cmd_tags() {
 	                 '-1[list one tag per line]' \
 	                 ''{--explicit,-e}'[do not show implied tags]' \
                      ''{--no-dereference,-P}'[never follow symlinks (show tags for link itself)]' \
-                     ''{--value=,-v}'[show tags utilising value]:value:_tmsu_values' \
-	                 '*:file:_files' \
+                     ''{--value,-v}'[show tags utilising value]' \
+	                 '*:: :->items' \
 	&& ret=0
+
+	case $state in
+        (items)
+            if (( ${+opt_args[--value]} ))
+            then
+                _wanted values expl 'values' _tmsu_values
+            else 
+                _wanted files expl 'files' _files
+            fi
+    esac
 }
 
 _tmsu_cmd_unmount() {

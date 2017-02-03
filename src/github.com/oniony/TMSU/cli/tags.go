@@ -44,13 +44,14 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Examples: []string{"$ tmsu tags\nmp3  music  opera",
 		"$ tmsu tags tralala.mp3\nmp3  music  opera",
 		"$ tmsu tags tralala.mp3 boom.mp3\n./tralala.mp3: mp3 music opera\n./boom.mp3: mp3 music drum-n-bass",
-		"$ tmsu tags --count tralala.mp3"},
+		"$ tmsu tags --count tralala.mp3",
+		"$ tmsu tags --value 2009 red"},
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
-		{"--name", "-n", "always print the file name", false, ""},
+		{"--name", "-n", "always print the file/value name", false, ""},
 		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""},
-		{"--value", "-v", "show tags for which utilise value", true, ""}},
+		{"--value", "-v", "show tags which utilise values", false, ""}},
 	Exec: tagsExec,
 }
 
@@ -60,7 +61,7 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
-	printPath := options.HasOption("--name")
+	printName := options.HasOption("--name")
 	followSymlinks := !options.HasOption("--no-dereference")
 	colour, err := useColour(options)
 	if err != nil {
@@ -80,15 +81,14 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	defer tx.Commit()
 
 	if options.HasOption("--value") {
-		valueName := options.Get("--value").Argument
-		return listTagsForValue(store, tx, valueName, showCount, onePerLine), nil
+		return listTagsForValues(store, tx, args, showCount, onePerLine, printName, colour)
 	}
 
 	if len(args) == 0 {
 		return listAllTags(store, tx, showCount, onePerLine), nil
 	}
 
-	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printPath, colour, followSymlinks)
+	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printName, colour, followSymlinks)
 }
 
 func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine bool) error {
@@ -222,29 +222,71 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 	return nil, warnings
 }
 
-func listTagsForValue(store *storage.Storage, tx *storage.Tx, valueName string, showCount, onePerLine bool) error {
-	value, err := store.ValueByName(tx, valueName)
-	if err != nil {
-		return err
-	}
-	if value == nil {
-		return fmt.Errorf("no such value '%v'", valueName)
-	}
+func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []string, showCount, onePerLine, printTagName, colour bool) (error, warnings) {
+	warnings := make(warnings, 0, 10)
 
-	tagNames, err := tagNamesForValue(store, tx, value.Id)
+	printTagName = printTagName || len(valueNames) > 1 || !stdoutIsCharDevice()
 
-	switch {
-	case showCount:
-		fmt.Println(strconv.Itoa(len(tagNames)))
-	case onePerLine:
-		for _, tagName := range tagNames {
-			fmt.Println(tagName)
+	for index, valueName := range valueNames {
+		log.Infof(2, "%v: looking up value", valueName)
+
+		value, err := store.ValueByName(tx, valueName)
+		if err != nil {
+			return err, warnings
 		}
-	default:
-		terminal.PrintColumns(tagNames)
+		if value == nil {
+			warnings = append(warnings, fmt.Sprintf("no such value '%v'", valueName))
+			continue
+		}
+
+		log.Infof(2, "%v: retrieving tags", valueName)
+
+		var tagNames []string
+		if value != nil {
+			tagNames, err = tagNamesForValue(store, tx, value.Id)
+			if err != nil {
+				return err, warnings
+			}
+		} else {
+			warnings = append(warnings, fmt.Sprintf("value '%v' does not exist", valueName))
+			continue
+		}
+
+		switch {
+		case showCount:
+			if printTagName {
+				fmt.Println(valueName + ":")
+			}
+
+			fmt.Println(strconv.Itoa(len(tagNames)))
+		case onePerLine:
+			if index > 0 {
+				fmt.Println()
+			}
+
+			if printTagName {
+				fmt.Println(valueName + ":")
+			}
+
+			for _, tagName := range tagNames {
+				fmt.Println(tagName)
+			}
+		default:
+			if printTagName {
+				fmt.Print(valueName + ":")
+
+				for _, tagName := range tagNames {
+					fmt.Print(" " + tagName)
+				}
+
+				fmt.Println()
+			} else {
+				terminal.PrintColumns(tagNames)
+			}
+		}
 	}
 
-	return nil
+	return nil, warnings
 }
 
 func tagNamesForFile(store *storage.Storage, tx *storage.Tx, fileId entities.FileId, explicitOnly, colour bool) ([]string, error) {

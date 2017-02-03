@@ -133,8 +133,8 @@ v0.7.0 (in development)
 
   * TMSU now compiles for Mac O/S. (Thanks to https://github.com/pguth.)
   * The VFS no longer lists files alongside the tag directories under `tags`.
-    Instead there are `files` directories at each level, within which you can
-    find the file set.
+    Instead there are `results` directories at each level, within which you can
+    find the set of symbolic links to the tagged files.
   * Symbolic links are now followed by default. This means that if you tag a
     symbolic link, the target file is tagged instead. To instruct TMSU to not
     follow symbolic links (previous behaviour) use the new `--no-dereference`

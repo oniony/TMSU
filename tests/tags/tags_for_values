@@ -8,7 +8,7 @@ tmsu tag /tmp/tmsu/file2 fruit=orange    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # test
 
-tmsu tags --value=orange                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags --value orange                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -23,8 +23,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff /tmp/tmsu/stdout - <<EOF
-color
-fruit
+orange: color fruit
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

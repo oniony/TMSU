@@ -559,7 +559,7 @@ func buildPathClause(path string, builder *SqlBuilder) {
 
 	if path == "." {
 		builder.AppendSql(" OR (directory LIKE ")
-		builder.AppendParam("." + string(filepath.Separator) + "%")
+		builder.AppendParam(filepath.Join(path, "%"))
 		builder.AppendSql(" AND NOT substr(directory, 1) == '/')")
 	} else {
 		builder.AppendSql(" OR directory LIKE ")

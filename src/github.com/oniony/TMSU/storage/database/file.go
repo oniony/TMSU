@@ -554,18 +554,28 @@ func buildPathClause(path string, builder *SqlBuilder) {
 
 	path = filepath.Clean(path)
 
-	dir, name := filepath.Split(path)
-	dir = filepath.Clean(dir)
-
 	builder.AppendSql("AND (directory = ")
 	builder.AppendParam(path)
-	builder.AppendSql(" OR directory LIKE ")
-	builder.AppendParam(filepath.Join(path, "%"))
-	builder.AppendSql(" OR (directory = ")
-	builder.AppendParam(dir)
-	builder.AppendSql(" AND name = ")
-	builder.AppendParam(name)
-	builder.AppendSql("))")
+
+	if path == "." {
+		builder.AppendSql(" OR (directory LIKE ")
+		builder.AppendParam("." + string(filepath.Separator) + "%")
+		builder.AppendSql(" AND NOT substr(directory, 1) == '/')")
+	} else {
+		builder.AppendSql(" OR directory LIKE ")
+		builder.AppendParam(filepath.Join(path, "%"))
+	}
+
+	dir, name := filepath.Split(path)
+	if dir != "" {
+		builder.AppendSql(" OR (directory = ")
+		builder.AppendParam(filepath.Clean(dir))
+		builder.AppendSql(" AND name = ")
+		builder.AppendParam(name)
+		builder.AppendSql(")")
+	}
+
+	builder.AppendSql(")")
 }
 
 func buildSort(sort string, builder *SqlBuilder) {

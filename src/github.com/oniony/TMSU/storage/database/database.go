@@ -104,27 +104,27 @@ type Tx struct {
 }
 
 func (tx *Tx) Exec(query string, args ...interface{}) (sql.Result, error) {
-	log.Infof(3, query)
+	log.Info(3, query)
 	log.Infof(3, "params: %v", args)
 
 	return tx.tx.Exec(query, args...)
 }
 
 func (tx *Tx) Query(query string, args ...interface{}) (*sql.Rows, error) {
-	log.Infof(3, query)
+	log.Info(3, query)
 	log.Infof(3, "params: %v", args)
 
 	return tx.tx.Query(query, args...)
 }
 
 func (tx *Tx) Commit() error {
-	log.Infof(2, "committing transaction")
+	log.Info(2, "committing transaction")
 
 	return tx.tx.Commit()
 }
 
 func (tx *Tx) Rollback() error {
-	log.Infof(2, "rolling back transaction")
+	log.Info(2, "rolling back transaction")
 
 	return tx.tx.Rollback()
 }

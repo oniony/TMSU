@@ -50,6 +50,7 @@ func (store *Storage) File(tx *Tx, id entities.FileId) (*entities.File, error) {
 // Retrieves the file with the specified path.
 func (store *Storage) FileByPath(tx *Tx, path string) (*entities.File, error) {
 	relPath := store.relPath(path)
+
 	file, err := database.FileByPath(tx.tx, relPath)
 	store.absPath(file)
 
@@ -59,7 +60,9 @@ func (store *Storage) FileByPath(tx *Tx, path string) (*entities.File, error) {
 // Retrieves all files that are under the specified directory.
 func (store *Storage) FilesByDirectory(tx *Tx, path string) (entities.Files, error) {
 	relPath := store.relPath(path)
-	files, err := database.FilesByDirectory(tx.tx, relPath)
+	pathContainsRoot := store.pathContainsRoot(relPath)
+
+	files, err := database.FilesByDirectory(tx.tx, relPath, pathContainsRoot)
 	store.absPaths(files)
 
 	return files, err
@@ -71,7 +74,9 @@ func (store *Storage) FilesByDirectories(tx *Tx, paths []string) (entities.Files
 
 	for _, path := range paths {
 		relPath := store.relPath(path)
-		pathFiles, err := database.FilesByDirectory(tx.tx, relPath)
+		pathContainsRoot := store.pathContainsRoot(relPath)
+
+		pathFiles, err := database.FilesByDirectory(tx.tx, relPath, pathContainsRoot)
 		if err != nil {
 			return nil, fmt.Errorf("'%v': could not retrieve files for directory: %v", path, err)
 		}
@@ -106,13 +111,19 @@ func (store *Storage) UntaggedFiles(tx *Tx) (entities.Files, error) {
 // Retrieves the count of files that match the specified query and matching the specified path.
 func (store *Storage) FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool) (uint, error) {
 	relPath := store.relPath(path)
-	return database.FileCountForQuery(tx.tx, expression, relPath, explicitOnly, ignoreCase)
+
+	pathContainsRoot := store.pathContainsRoot(relPath)
+
+	return database.FileCountForQuery(tx.tx, expression, relPath, pathContainsRoot, explicitOnly, ignoreCase)
 }
 
 // Retrieves the set of files that match the specified query.
 func (store *Storage) FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) (entities.Files, error) {
 	relPath := store.relPath(path)
-	files, err := database.FilesForQuery(tx.tx, expression, relPath, explicitOnly, ignoreCase, sort)
+
+	pathContainsRoot := store.pathContainsRoot(relPath)
+
+	files, err := database.FilesForQuery(tx.tx, expression, relPath, pathContainsRoot, explicitOnly, ignoreCase, sort)
 	store.absPaths(files)
 	return files, err
 }
@@ -193,4 +204,26 @@ func (store *Storage) absPath(file *entities.File) {
 	}
 
 	file.Directory = filepath.Join(store.RootPath, file.Directory)
+}
+
+func (store *Storage) pathContainsRoot(path string) bool {
+	if !filepath.IsAbs(path) {
+		return false
+	}
+
+	path = filepath.Clean(path)
+	checkPath := store.RootPath
+	file := ""
+
+	for {
+		if checkPath == path {
+			return true
+		}
+		if checkPath == string(filepath.Separator) && file == "" {
+			return false
+		}
+
+		checkPath, file = filepath.Split(checkPath)
+		checkPath = filepath.Clean(checkPath)
+	}
 }

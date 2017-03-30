@@ -93,11 +93,17 @@ WHERE directory = ? AND name = ?`
 }
 
 // Retrieves all files that are under the specified directory.
-func FilesByDirectory(tx *Tx, path string) (entities.Files, error) {
+func FilesByDirectory(tx *Tx, path string, pathContainsRoot bool) (entities.Files, error) {
 	sql := `
 SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file
-WHERE directory = ? OR directory LIKE ?
+WHERE directory = ? OR directory LIKE ?`
+
+	if pathContainsRoot {
+		sql += `OR directory = '.' OR directory LIKE './%`
+	}
+
+	sql += `
 ORDER BY directory || '/' || name`
 
 	path = filepath.Clean(path)
@@ -162,8 +168,8 @@ WHERE id NOT IN (SELECT distinct(file_id)
 }
 
 // Retrieves the count of files matching the specified query and matching the specified path.
-func FileCountForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool) (uint, error) {
-	builder := buildCountQuery(expression, path, explicitOnly, ignoreCase)
+func FileCountForQuery(tx *Tx, expression query.Expression, path string, pathContainsRoot, explicitOnly, ignoreCase bool) (uint, error) {
+	builder := buildCountQuery(expression, path, pathContainsRoot, explicitOnly, ignoreCase)
 
 	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
@@ -175,8 +181,8 @@ func FileCountForQuery(tx *Tx, expression query.Expression, path string, explici
 }
 
 // Retrieves the set of files matching the specified query and matching the specified path.
-func FilesForQuery(tx *Tx, expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) (entities.Files, error) {
-	builder := buildQuery(expression, path, explicitOnly, ignoreCase, sort)
+func FilesForQuery(tx *Tx, expression query.Expression, path string, pathContainsRoot, explicitOnly, ignoreCase bool, sort string) (entities.Files, error) {
+	builder := buildQuery(expression, path, pathContainsRoot, explicitOnly, ignoreCase, sort)
 
 	rows, err := tx.Query(builder.Sql(), builder.Params()...)
 	if err != nil {
@@ -385,7 +391,7 @@ func readFiles(rows *sql.Rows, files entities.Files) (entities.Files, error) {
 	return files, nil
 }
 
-func buildCountQuery(expression query.Expression, path string, explicitOnly, ignoreCase bool) *SqlBuilder {
+func buildCountQuery(expression query.Expression, path string, pathContainsRoot, explicitOnly, ignoreCase bool) *SqlBuilder {
 	builder := NewBuilder()
 
 	builder.AppendSql(`
@@ -393,12 +399,12 @@ SELECT count(id)
 FROM file
 WHERE`)
 	buildQueryBranch(expression, builder, explicitOnly, ignoreCase)
-	buildPathClause(path, builder)
+	buildPathClause(path, pathContainsRoot, builder)
 
 	return builder
 }
 
-func buildQuery(expression query.Expression, path string, explicitOnly, ignoreCase bool, sort string) *SqlBuilder {
+func buildQuery(expression query.Expression, path string, pathContainsRoot, explicitOnly, ignoreCase bool, sort string) *SqlBuilder {
 	builder := NewBuilder()
 
 	builder.AppendSql(`
@@ -406,7 +412,7 @@ SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file
 WHERE`)
 	buildQueryBranch(expression, builder, explicitOnly, ignoreCase)
-	buildPathClause(path, builder)
+	buildPathClause(path, pathContainsRoot, builder)
 	buildSort(sort, builder)
 
 	return builder
@@ -547,23 +553,26 @@ func buildOrQueryBranch(expression query.OrExpression, builder *SqlBuilder, expl
 	builder.AppendSql(")")
 }
 
-func buildPathClause(path string, builder *SqlBuilder) {
+func buildPathClause(path string, pathContainsRoot bool, builder *SqlBuilder) {
 	if path == "" {
 		return
 	}
 
 	path = filepath.Clean(path)
 
-	builder.AppendSql("AND (directory = ")
-	builder.AppendParam(path)
+	builder.AppendSql("AND (")
 
 	if path == "." {
-		builder.AppendSql(" OR (directory LIKE ")
-		builder.AppendParam(filepath.Join(path, "%"))
-		builder.AppendSql(" AND NOT substr(directory, 1) == '/')")
+		builder.AppendSql("directory NOT LIKE '/%'")
 	} else {
+		builder.AppendSql("directory = ")
+		builder.AppendParam(path)
 		builder.AppendSql(" OR directory LIKE ")
 		builder.AppendParam(filepath.Join(path, "%"))
+
+		if pathContainsRoot {
+			builder.AppendSql(" OR directory NOT LIKE '/%'")
+		}
 	}
 
 	dir, name := filepath.Split(path)

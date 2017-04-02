@@ -1,0 +1,9 @@
+language: go
+
+go:
+    - 1.7
+    - 1.8
+
+install:
+    - go get -u github.com/mattn/go-sqlite3
+    - go get -u github.com/hanwen/go-fuse/fuse

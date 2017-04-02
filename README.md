@@ -1,6 +1,6 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
-[![Build Status](https://drone.io/github.com/oniony/TMSU/status.png)](https://drone.io/github.com/oniony/TMSU/latest)
+[![Build Status](https://travis-ci.org/oniony/TMSU.svg?branch=master)](https://travis-ci.org/oniony/TMSU)
 [![Go Report Card](https://goreportcard.com/badge/github.com/oniony/TMSU)](https://goreportcard.com/report/github.com/oniony/TMSU)
 
 Overview

@@ -155,7 +155,7 @@ func directoryEntries(path string) ([]string, error) {
 			log.Warnf("%v: permission denied", path)
 			return []string{}, nil
 		default:
-			return nil, fmt.Errorf("%v: could not stat", path, err)
+			return nil, fmt.Errorf("%v: could not stat: %v", path, err)
 		}
 	}
 
@@ -165,13 +165,13 @@ func directoryEntries(path string) ([]string, error) {
 
 	dir, err := os.Open(path)
 	if err != nil {
-		return nil, fmt.Errorf("%v could not open directory", path, err)
+		return nil, fmt.Errorf("%v could not open directory: %v", path, err)
 	}
 
 	names, err := dir.Readdirnames(0)
 	dir.Close()
 	if err != nil {
-		return nil, fmt.Errorf("%v: could not read directory entries", path, err)
+		return nil, fmt.Errorf("%v: could not read directory entries: %v", path, err)
 	}
 
 	entries := make([]string, len(names))

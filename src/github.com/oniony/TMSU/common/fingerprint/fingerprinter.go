@@ -54,7 +54,7 @@ func Create(path, fileAlgorithm, directoryAlgorithm, symlinkAlgorithm string) (F
 	case stat.Mode().IsRegular():
 		return createFileFingerprint(path, fileAlgorithm, stat)
 	default:
-		return Empty, fmt.Errorf("unsupported file mode", stat.Mode())
+		return Empty, fmt.Errorf("unsupported file mode '%v'", stat.Mode())
 	}
 }
 

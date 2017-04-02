@@ -196,7 +196,7 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 		if recursive {
 			childFiles, err := store.FilesByDirectory(tx, file.Path())
 			if err != nil {
-				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path()), warnings
+				return fmt.Errorf("%v: could not retrieve files for directory: %v", file.Path(), err), warnings
 			}
 
 			files = append(files, childFiles...)

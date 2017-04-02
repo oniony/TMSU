@@ -403,7 +403,7 @@ func validateComparison(expression Expression, operator string, test *testing.T)
 func validateTag(expression Expression, expectedName string, test *testing.T) TagExpression {
 	tag := expression.(TagExpression)
 	if tag.Name != expectedName {
-		test.Fatalf("Expected '%v' tag but was '%v'.", tag.Name)
+		test.Fatalf("Expected '%v' tag but was '%v'.", expectedName, tag.Name)
 	}
 
 	return tag
@@ -412,7 +412,7 @@ func validateTag(expression Expression, expectedName string, test *testing.T) Ta
 func validateValue(expression Expression, expectedName string, test *testing.T) ValueExpression {
 	value := expression.(ValueExpression)
 	if value.Name != expectedName {
-		test.Fatalf("Expected '%v' value but was '%v'.", value.Name)
+		test.Fatalf("Expected '%v' value but was '%v'.", expectedName, value.Name)
 	}
 
 	return value

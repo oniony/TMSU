@@ -170,10 +170,6 @@ func manualRepairFile(store *storage.Storage, tx *storage.Tx, file *entities.Fil
 		default:
 			return err
 		}
-
-		modTime = file.ModTime
-		size = file.Size
-		isDir = file.IsDir
 	} else {
 		modTime = stat.ModTime()
 		size = stat.Size()

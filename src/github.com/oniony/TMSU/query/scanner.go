@@ -142,8 +142,6 @@ func (scanner *Scanner) readToken() (Token, error) {
 	default:
 		return nil, fmt.Errorf("Unepxected character '%v'.", r)
 	}
-
-	panic("unreachable")
 }
 
 func (scanner *Scanner) readTextToken() (Token, error) {

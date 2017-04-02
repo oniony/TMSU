@@ -141,7 +141,7 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 		return fmt.Errorf("%v: could not stat: %v", databasePath, err)
 	}
 	if stat == nil {
-		return fmt.Errorf("%v: database does not exist")
+		return fmt.Errorf("%v: database does not exist", databasePath)
 	}
 
 	log.Infof(2, "spawning daemon to mount VFS for database '%v' at '%v'", databasePath, mountPath)

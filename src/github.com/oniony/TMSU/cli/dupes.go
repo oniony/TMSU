@@ -61,8 +61,6 @@ func dupesExec(options Options, args []string, databasePath string) (error, warn
 	default:
 		return findDuplicatesOf(store, tx, args, recursive)
 	}
-
-	return nil, nil
 }
 
 func findDuplicatesInDb(store *storage.Storage, tx *storage.Tx) error {

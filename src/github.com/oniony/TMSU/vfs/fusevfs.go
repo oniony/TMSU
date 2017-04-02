@@ -842,7 +842,7 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 
 		valueNames, err = vfs.tagValueNamesForFiles(tx, tagName, files)
 		if err != nil {
-			log.Fatalf("could not retrieve values for '%v': %v", err)
+			log.Fatalf("could not retrieve values for '%v': %v", tagName, err)
 		}
 	} else {
 		valueNames = []string{}

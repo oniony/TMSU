@@ -27,8 +27,6 @@ import (
 	"strings"
 )
 
-// +build !windows
-
 type Mount struct {
 	DatabasePath string
 	MountPath    string

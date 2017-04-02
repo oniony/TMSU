@@ -1,6 +1,7 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
 [![Build Status](https://drone.io/github.com/oniony/TMSU/status.png)](https://drone.io/github.com/oniony/TMSU/latest)
+[![Go Report Card](https://goreportcard.com/badge/github.com/oniony/TMSU)](https://goreportcard.com/report/github.com/oniony/TMSU)
 
 Overview
 ========

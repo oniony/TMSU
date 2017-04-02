@@ -77,7 +77,7 @@ func RelTo(path, to string) string {
 
 func UnescapeOctal(path string) string {
 	decodeChar := func(match string) string {
-		code, err := strconv.ParseUint(match[1:len(match)], 8, 0)
+		code, err := strconv.ParseUint(match[1:], 8, 0)
 		if err != nil {
 			panic(fmt.Sprintf("invalid octal number %v", match)) // unreachable
 		}

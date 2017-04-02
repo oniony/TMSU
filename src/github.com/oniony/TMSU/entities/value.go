@@ -47,7 +47,7 @@ func (valueIds ValueIds) Uniq() ValueIds {
 	uniq := ValueIds{valueIds[0]}
 	previous := valueIds[0]
 
-	for _, valueId := range valueIds[1:len(valueIds)] {
+	for _, valueId := range valueIds[1:] {
 		if valueId != previous {
 			uniq = append(uniq, valueId)
 			previous = valueId

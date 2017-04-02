@@ -503,7 +503,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 		var tagName, valueName string
 		if dirName[0] == '=' {
 			tagName = unescape(path[len(path)-3])
-			valueName = unescape(dirName[1:len(dirName)])
+			valueName = unescape(dirName[1:])
 		} else {
 			tagName = unescape(dirName)
 			valueName = ""
@@ -577,9 +577,9 @@ func (vfs FuseVfs) topFiles() ([]fuse.DirEntry, fuse.Status) {
 	defer log.Infof(2, "END topFiles")
 
 	entries := []fuse.DirEntry{
-		fuse.DirEntry{Name: databaseFilename, Mode: fuse.S_IFLNK},
-		fuse.DirEntry{Name: tagsDir, Mode: fuse.S_IFDIR},
-		fuse.DirEntry{Name: queriesDir, Mode: fuse.S_IFDIR}}
+		{Name: databaseFilename, Mode: fuse.S_IFLNK},
+		{Name: tagsDir, Mode: fuse.S_IFDIR},
+		{Name: queriesDir, Mode: fuse.S_IFDIR}}
 	return entries, fuse.OK
 }
 
@@ -1087,7 +1087,7 @@ func pathToExpression(path []string) query.Expression {
 
 		if element[0] == '=' {
 			tagName := unescape(path[index-1])
-			valueName := unescape(element[1:len(element)])
+			valueName := unescape(element[1:])
 
 			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {

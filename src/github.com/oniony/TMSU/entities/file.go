@@ -47,7 +47,7 @@ func (fileIds FileIds) Uniq() FileIds {
 	uniq := FileIds{fileIds[0]}
 	previous := fileIds[0]
 
-	for _, fileId := range fileIds[1:len(fileIds)] {
+	for _, fileId := range fileIds[1:] {
 		if fileId != previous {
 			uniq = append(uniq, fileId)
 			previous = fileId

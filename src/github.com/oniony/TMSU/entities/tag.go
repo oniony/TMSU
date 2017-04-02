@@ -47,7 +47,7 @@ func (tagIds TagIds) Uniq() TagIds {
 	uniq := TagIds{tagIds[0]}
 	previous := tagIds[0]
 
-	for _, tagId := range tagIds[1:len(tagIds)] {
+	for _, tagId := range tagIds[1:] {
 		if tagId != previous {
 			uniq = append(uniq, tagId)
 			previous = tagId

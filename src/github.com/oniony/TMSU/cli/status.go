@@ -49,8 +49,8 @@ Note: The 'repair' subcommand can be used to fix problems caused by files that h
 		"$ tmsu status .",
 		"$ tmsu status --directory *"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
-	                Option{"--no-dereference", "-P", "do not follow symbolic links", false, ""}},
-	Exec:    statusExec,
+		Option{"--no-dereference", "-P", "do not follow symbolic links", false, ""}},
+	Exec: statusExec,
 }
 
 type Status byte
@@ -169,39 +169,39 @@ func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly
 			return nil, fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
 
-        log.Infof(2, "%v: resolving file", path)
+		log.Infof(2, "%v: resolving file", path)
 
-        resolvedPath := absPath
+		resolvedPath := absPath
 
-        stat, err := os.Lstat(absPath)
-        if err != nil {
-            switch {
-            case os.IsNotExist(err), os.IsPermission(err):
-                stat = emptyStat{}
-            default:
-                return nil, fmt.Errorf("%v: could not stat path: %v", path, err)
-            }
-        } else if stat.Mode()&os.ModeSymlink != 0 {
-            resolvedPath, err = _path.Dereference(absPath)
-            if err != nil {
-                return nil, fmt.Errorf("%v: could not dereference symbolic link: %v", path, err)
-            }
-        }
+		stat, err := os.Lstat(absPath)
+		if err != nil {
+			switch {
+			case os.IsNotExist(err), os.IsPermission(err):
+				stat = emptyStat{}
+			default:
+				return nil, fmt.Errorf("%v: could not stat path: %v", path, err)
+			}
+		} else if stat.Mode()&os.ModeSymlink != 0 {
+			resolvedPath, err = _path.Dereference(absPath)
+			if err != nil {
+				return nil, fmt.Errorf("%v: could not dereference symbolic link: %v", path, err)
+			}
+		}
 
-        log.Infof(2, "%v: checking file in database", path)
+		log.Infof(2, "%v: checking file in database", path)
 
-        file, err := store.FileByPath(tx, resolvedPath)
-        if err != nil {
-            return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
-        }
-        if file != nil {
-            err = statusCheckFile(absPath, file, report)
-            if err != nil {
-                return nil, err
-            }
-        }
+		file, err := store.FileByPath(tx, resolvedPath)
+		if err != nil {
+			return nil, fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		}
+		if file != nil {
+			err = statusCheckFile(absPath, file, report)
+			if err != nil {
+				return nil, err
+			}
+		}
 
-        if !dirOnly && (stat.Mode()&os.ModeSymlink == 0 || followSymlinks) {
+		if !dirOnly && (stat.Mode()&os.ModeSymlink == 0 || followSymlinks) {
 			log.Infof(2, "%v: retrieving files from database.", path)
 
 			files, err := store.FilesByDirectory(tx, resolvedPath)
@@ -334,6 +334,6 @@ func printRows(rows []Row, status Status) {
 }
 
 func printRow(row Row) {
-    relPath := _path.Rel(row.Path)
+	relPath := _path.Rel(row.Path)
 	fmt.Printf("%v %v\n", string(row.Status), relPath)
 }

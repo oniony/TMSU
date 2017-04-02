@@ -20,7 +20,7 @@ import (
 )
 
 func TestParseVanillaArguments(test *testing.T) {
-	parser := NewOptionParser(Options{}, []*Command{&Command{Name: "a"}})
+	parser := NewOptionParser(Options{}, []*Command{{Name: "a"}})
 
 	command, options, arguments, err := parser.Parse("a", "b", "c")
 	if err != nil {
@@ -41,7 +41,7 @@ func TestParseVanillaArguments(test *testing.T) {
 }
 
 func TestParseGlobalOptions(test *testing.T) {
-	parser := NewOptionParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, []*Command{&Command{Name: "a"}})
+	parser := NewOptionParser(Options{Option{"--verbose", "-v", "verbose", false, ""}}, []*Command{{Name: "a"}})
 
 	command, options, arguments, err := parser.Parse("--verbose", "a", "b")
 	if err != nil {

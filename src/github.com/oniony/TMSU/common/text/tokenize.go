@@ -18,7 +18,7 @@ package text
 func Tokenize(text string) []string {
 	tokens := make([]string, 0, 10)
 	token := make([]rune, 0, 100)
-	var quote rune = 0
+	var quote rune
 	escape := false
 
 	for _, char := range text {

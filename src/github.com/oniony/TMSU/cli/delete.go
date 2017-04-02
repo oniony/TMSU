@@ -53,9 +53,9 @@ func deleteExec(options Options, args []string, databasePath string) (error, war
 
 	if options.HasOption("--value") {
 		return deleteValue(store, tx, args)
-	} else {
-		return deleteTag(store, tx, args)
 	}
+
+	return deleteTag(store, tx, args)
 }
 
 func deleteTag(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {

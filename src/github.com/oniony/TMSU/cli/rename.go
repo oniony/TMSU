@@ -63,9 +63,9 @@ func renameExec(options Options, args []string, databasePath string) (error, war
 
 	if options.HasOption("--value") {
 		return renameValue(store, tx, currentName, newName), nil
-	} else {
-		return renameTag(store, tx, currentName, newName), nil
 	}
+
+	return renameTag(store, tx, currentName, newName), nil
 }
 
 func renameTag(store *storage.Storage, tx *storage.Tx, currentName, newName string) error {

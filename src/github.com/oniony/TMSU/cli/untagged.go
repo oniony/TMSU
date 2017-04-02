@@ -93,7 +93,7 @@ func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recurs
 }
 
 func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks bool) (uint, error) {
-	var count uint = 0
+	var count uint
 
 	var action = func(absPath string) {
 		count++

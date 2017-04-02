@@ -17,7 +17,6 @@ package database
 
 import (
 	"database/sql"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/oniony/TMSU/common"
 	"github.com/oniony/TMSU/common/log"
 )

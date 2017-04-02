@@ -189,16 +189,16 @@ func formatTagValueName(tagName, valueName string, useColour, implicit, explicit
 
 		if valueName == "" {
 			return colourCode + tagName + ansi.ResetCode
-		} else {
-			return colourCode + tagName + ansi.ResetCode + "=" + colourCode + valueName + ansi.ResetCode
 		}
+
+		return colourCode + tagName + ansi.ResetCode + "=" + colourCode + valueName + ansi.ResetCode
 	}
 
 	if valueName == "" {
 		return tagName
-	} else {
-		return tagName + "=" + valueName
 	}
+
+	return tagName + "=" + valueName
 }
 
 func colourCodeFor(implicit, explicit bool) string {

@@ -159,9 +159,9 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 	if err != nil {
 		if strings.Index(err.Error(), "parser stack overflow") > -1 {
 			return fmt.Errorf("the query is too complex (see the troubleshooting wiki for how to increase the stack size)"), warnings
-		} else {
-			return fmt.Errorf("could not query files: %v", err), warnings
 		}
+
+		return fmt.Errorf("could not query files: %v", err), warnings
 	}
 
 	if err = listFiles(tx, files, dirOnly, fileOnly, print0, showCount); err != nil {

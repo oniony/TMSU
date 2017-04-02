@@ -18,7 +18,6 @@ package database
 import (
 	"database/sql"
 	"errors"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/oniony/TMSU/common/log"
 	"os"
 )

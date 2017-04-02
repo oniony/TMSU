@@ -17,7 +17,6 @@ package cli
 
 import (
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 )
 
 type warnings []string

@@ -145,8 +145,8 @@ func symlinkTargetNameFingerprint(path string, includeExtension bool) (Fingerpri
 // Creates a crude directory fingerprint by add the size of the contained files
 func sumSizesFingerprint(path string, maxFiles uint) (Fingerprint, error) {
 	paths := []string{path}
-	var fileCount uint = 0
-	var totalSize int64 = 0
+	var fileCount uint
+	var totalSize int64
 
 out:
 	for index := 0; index < len(paths); index++ {

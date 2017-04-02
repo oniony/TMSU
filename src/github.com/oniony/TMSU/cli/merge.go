@@ -60,9 +60,9 @@ func mergeExec(options Options, args []string, databasePath string) (error, warn
 
 	if options.HasOption("--value") {
 		return mergeValues(store, tx, sourceNames, destName)
-	} else {
-		return mergeTags(store, tx, sourceNames, destName)
 	}
+
+	return mergeTags(store, tx, sourceNames, destName)
 }
 
 func mergeTags(store *storage.Storage, tx *storage.Tx, sourceTagNames []string, destTagName string) (error, warnings) {

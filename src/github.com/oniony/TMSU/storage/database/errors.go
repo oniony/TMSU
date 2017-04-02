@@ -17,7 +17,6 @@ package database
 
 import (
 	"fmt"
-	_ "github.com/mattn/go-sqlite3"
 	"github.com/oniony/TMSU/entities"
 )
 

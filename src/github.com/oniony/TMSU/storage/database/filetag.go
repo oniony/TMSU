@@ -21,13 +21,13 @@ import (
 )
 
 // Determines whether the specified file has the specified tag applied.
-func FileTagExists(tx *Tx, fileId entities.FileId, tagId entities.TagId, value_id entities.ValueId) (bool, error) {
+func FileTagExists(tx *Tx, fileId entities.FileId, tagId entities.TagId, valueId entities.ValueId) (bool, error) {
 	sql := `
 SELECT count(1)
 FROM file_tag
 WHERE file_id = ?1 AND tag_id = ?2 AND value_id = ?3`
 
-	rows, err := tx.Query(sql, fileId, tagId, value_id)
+	rows, err := tx.Query(sql, fileId, tagId, valueId)
 	if err != nil {
 		return false, err
 	}

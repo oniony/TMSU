@@ -137,9 +137,9 @@ func ValidateTagName(tagName string) error {
 		if !unicode.IsOneOf(validTagChars, ch) {
 			if unicode.IsPrint(ch) {
 				return fmt.Errorf("tag names cannot contain '%c'", ch)
-			} else {
-				return fmt.Errorf("tag names cannot contain %U", ch)
 			}
+
+			return fmt.Errorf("tag names cannot contain %U", ch)
 		}
 	}
 

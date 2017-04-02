@@ -45,7 +45,7 @@ Optionally tags applied to files may be attributed with a VALUE using the TAG=VA
 
 Tag and value names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names cannot contain the slash '/' or backslash '\' characters.
 
-Tags will not be applied if they are already implied by tag implications. This behaviour can be overriden with the --explicit option. See the 'imply' subcommand for more information.
+Tags will not be applied if they are already implied by tag implications. This behaviour can be overridden with the --explicit option. See the 'imply' subcommand for more information.
 
 If a single argument of - is passed, TMSU will read lines from standard input in the format 'FILE TAG[=VALUE]...'.
 
@@ -62,7 +62,7 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 		{"--where", "-w", "tags files matching QUERY", true, ""},
 		{"--create", "-c", "create tags or values without tagging any files", false, ""},
 		{"--explicit", "-e", "explicitly apply tags even if they are already implied", false, ""},
-		{"--force", "-F", "apply tags to non-existant or non-permissioned paths", false, ""},
+		{"--force", "-F", "apply tags to non-existent or non-permissioned paths", false, ""},
 		{"--no-dereference", "-P", "do not follow symbolic links (tag the link itself)", false, ""}},
 	Exec: tagExec,
 }
@@ -205,7 +205,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 		if err := tagPath(store, tx, path, pairs, explicit, recursive, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
 			switch {
 			case os.IsPermission(err):
-				warnings = append(warnings, fmt.Sprintf("%v: permisison denied", path))
+				warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
 			case os.IsNotExist(err):
 				warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
 			default:
@@ -260,7 +260,7 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 		if err := tagPath(store, tx, path, pairs, explicit, recursive, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
 			switch {
 			case os.IsPermission(err):
-				warnings = append(warnings, fmt.Sprintf("%v: permisison denied", path))
+				warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
 			case os.IsNotExist(err):
 				warnings = append(warnings, fmt.Sprintf("%v: no such file", path))
 			default:

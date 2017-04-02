@@ -119,7 +119,7 @@ func dynamicFingerprint(path string, h hash.Hash, fileSize int64) (Fingerprint, 
 	return calculateRegularFingerprint(path, h)
 }
 
-// Uses the symoblic target's filename as the fingerprint
+// Uses the symbolic target's filename as the fingerprint
 func symlinkTargetNameFingerprint(path string, includeExtension bool) (Fingerprint, error) {
 	target, err := os.Readlink(path)
 	if err != nil {

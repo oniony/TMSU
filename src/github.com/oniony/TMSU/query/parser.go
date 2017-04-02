@@ -84,6 +84,10 @@ func (parser Parser) expression() (Expression, error) {
 	}
 
 	token, err = parser.scanner.LookAhead()
+	if err != nil {
+		return nil, err
+	}
+
 	switch token.(type) {
 	case EndToken:
 		return expression, nil

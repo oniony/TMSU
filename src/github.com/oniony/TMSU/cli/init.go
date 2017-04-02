@@ -33,7 +33,7 @@ Creates a .tmsu directory under PATH and initialises a new empty database within
 
 If no PATH is specified then the current working directory is assumed.
 
-The new database is used automatically whenever TMSU is invoked from a directory under PATH (unless overriden by the global --database option or the TMSU_DB environment variable.`,
+The new database is used automatically whenever TMSU is invoked from a directory under PATH (unless overridden by the global --database option or the TMSU_DB environment variable.`,
 	Options: Options{},
 	Exec:    initExec,
 }

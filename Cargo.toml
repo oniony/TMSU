@@ -1,0 +1,7 @@
+[package]
+name = "tmsu"
+version = "0.1.0"
+authors = ["Paul Ruane <paul.ruane@oniony.com>"]
+
+[dependencies]
+clap = "2"

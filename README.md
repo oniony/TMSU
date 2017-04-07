@@ -1,4 +1,4 @@
-![TMSU](http://tmsu.org/images/tmsu.png)
+![TMSU](https://github.com/oniony/TMSU/raw/rust/tmsu-rust.png)
 
 Important
 =========

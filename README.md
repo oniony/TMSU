@@ -1,5 +1,7 @@
 ![TMSU](https://github.com/oniony/TMSU/raw/rust/tmsu-rust.png)
 
+[![Build Status](https://travis-ci.org/oniony/TMSU.svg?branch=master)](https://travis-ci.org/oniony/TMSU)
+
 Important
 =========
 

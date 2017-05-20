@@ -5,19 +5,20 @@ if [[ -z $1 ]]; then
     exit 1
 fi
 
-export PATH=$(dirname $_)/../bin:$PATH
+export TESTS_DIR=$(dirname $BASH_SOURCE[0])
+export PATH=$TESTS_DIR/../bin:$PATH
 
 for testcase in $*; do
-    . ./setup
+    . $TESTS_DIR/setup
 
-    ./$testcase
+    $testcase
     export RC=$?
 
     echo -n "$testcase "
     if [[ $RC -eq 0 ]]; then
         echo "[PASS]"
 
-        ./teardown
+        $TESTS_DIR/teardown
     else
         echo "[FAIL]"
         exit 1

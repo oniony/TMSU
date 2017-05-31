@@ -1,0 +1,8 @@
+#!/bin/sh
+
+usage="\
+Recursively tag all files under the current directory
+
+Usage: $(basename $0) TAG..."
+
+find . -type f -exec ls -b -Q --quoting-style=shell {} \; | xargs -i tmsu tag --tags "$1" {}

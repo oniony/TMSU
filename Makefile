@@ -35,13 +35,13 @@ compile:
 
 test: unit-test integration-test
 
-unit-test:
+unit-test: compile
 	@echo
 	@echo "RUNNING UNIT TESTS"
 	@echo
 	go test github.com/oniony/TMSU/...
 
-integration-test:
+integration-test: compile
 	@echo
 	@echo "RUNNING INTEGRATION TESTS"
 	@echo
@@ -63,7 +63,7 @@ dist: compile
 	cp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
-install:
+install: compile
 	@echo
 	@echo "INSTALLING"
 	@echo
@@ -84,3 +84,5 @@ uninstall:
 	rm $(INSTALL_DIR)/tmsu-*
 	rm $(MAN_INSTALL_DIR)/tmsu.1.gz
 	rm $(ZSH_COMP_INSTALL_DIR)/_tmsu
+
+.PHONY: all clean compile test unit-test integration-test dist install uninstall

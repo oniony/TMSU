@@ -55,7 +55,7 @@ dist: compile
 	@mkdir -p $(DIST_DIR)/bin
 	@mkdir -p $(DIST_DIR)/man
 	@mkdir -p $(DIST_DIR)/misc/zsh
-	cp -R bin -T $(DIST_DIR)
+	cp -R bin -t $(DIST_DIR)
 	cp README.md -t $(DIST_DIR)
 	cp COPYING.md -t $(DIST_DIR)
 	cp misc/bin/* -t $(DIST_DIR)/bin/
@@ -63,7 +63,7 @@ dist: compile
 	cp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
-install: compile
+install: 
 	@echo
 	@echo "INSTALLING"
 	@echo

@@ -105,8 +105,13 @@ func MountVfs(store *storage.Storage, mountPath string, options []string) (*Fuse
 		return nil, fmt.Errorf("could not mount virtual filesystem at '%v': %v", mountPath, err)
 	}
 
+	absMountPath, err := filepath.Abs(mountPath)
+	if err != nil {
+		return nil, fmt.Errorf("could not convert mount path '%v' to absolute: %v", mountPath, err)
+	}
+
 	fuseVfs.store = store
-	fuseVfs.mountPath = mountPath
+	fuseVfs.mountPath = absMountPath
 	fuseVfs.server = server
 
 	return &fuseVfs, nil
@@ -315,7 +320,7 @@ func (vfs FuseVfs) Readlink(name string, context *fuse.Context) (string, fuse.St
 	path := vfs.splitPath(name)
 	switch path[0] {
 	case tagsDir, queriesDir:
-		return vfs.readTaggedEntryLink(tx, path[1:])
+		return vfs.readTaggedEntryLink(tx, path)
 	}
 
 	return "", fuse.ENOENT
@@ -963,7 +968,14 @@ func (vfs FuseVfs) readTaggedEntryLink(tx *storage.Tx, path []string) (string, f
 		log.Fatalf("could not find file %v in database.", fileId)
 	}
 
-	return file.Path(), fuse.OK
+	// Absolute path is required for filepath.Rel.
+	absDirPath := filepath.Join(vfs.mountPath, filepath.Join(path[:len(path)-1]...))
+	relPath, err := filepath.Rel(absDirPath, file.Path())
+	if err != nil {
+		log.Fatalf("could not make relative path: %v", err)
+	}
+
+	return relPath, fuse.OK
 }
 
 func (vfs FuseVfs) getLinkName(file *entities.File) string {

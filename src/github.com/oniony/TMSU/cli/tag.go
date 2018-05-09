@@ -58,6 +58,7 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 		"$ tmsu tag sheep.jpg '<tag>'"},
 	Options: Options{{"--tags", "-t", "the set of tags to apply", true, ""},
 		{"--recursive", "-r", "recursively apply tags to directory contents", false, ""},
+		{"--include-hidden", "-H", "don't skip hidden files/directories when tagging recursively", false, ""},
 		{"--from", "-f", "copy tags from the SOURCE file", true, ""},
 		{"--where", "-w", "tags files matching QUERY", true, ""},
 		{"--create", "-c", "create tags or values without tagging any files", false, ""},
@@ -71,6 +72,7 @@ Note: The equals '=' and whitespace characters must be escaped with a backslash 
 
 func tagExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := options.HasOption("--recursive")
+	includeHidden := options.HasOption("--include-hidden")
 	explicit := options.HasOption("--explicit")
 	force := options.HasOption("--force")
 	followSymlinks := !options.HasOption("--no-dereference")
@@ -109,7 +111,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 			return fmt.Errorf("too few arguments"), nil
 		}
 
-		return tagPaths(store, tx, tagArgs, paths, explicit, recursive, force, followSymlinks)
+		return tagPaths(store, tx, tagArgs, paths, explicit, recursive, includeHidden, force, followSymlinks)
 	case options.HasOption("--from"):
 		if len(args) < 1 {
 			return fmt.Errorf("too few arguments"), nil
@@ -122,7 +124,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 
 		paths := args
 
-		return tagFrom(store, tx, fromPath, paths, explicit, recursive, force, followSymlinks)
+		return tagFrom(store, tx, fromPath, paths, explicit, recursive, includeHidden, force, followSymlinks)
 	case options.HasOption("--where"):
 		if len(args) < 1 {
 			return fmt.Errorf("too few arguments"), nil
@@ -133,7 +135,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 
 		return tagWhere(store, tx, query, explicit, tagArgs)
 	case len(args) == 1 && args[0] == "-":
-		return readStandardInput(store, tx, recursive, explicit, force, followSymlinks)
+		return readStandardInput(store, tx, recursive, includeHidden, explicit, force, followSymlinks)
 	default:
 		if len(args) < 2 {
 			return fmt.Errorf("too few arguments"), nil
@@ -142,7 +144,7 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 		paths := args[0:1]
 		tagArgs := args[1:]
 
-		return tagPaths(store, tx, tagArgs, paths, explicit, recursive, force, followSymlinks)
+		return tagPaths(store, tx, tagArgs, paths, explicit, recursive, includeHidden, force, followSymlinks)
 	}
 }
 
@@ -186,7 +188,7 @@ func createTagsValues(store *storage.Storage, tx *storage.Tx, tagArgs []string) 
 	return nil, warnings
 }
 
-func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, explicit, recursive, force, followSymlinks bool) (error, warnings) {
+func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, explicit, recursive, includeHidden, force, followSymlinks bool) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
 	log.Infof(2, "loading settings")
@@ -202,7 +204,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 	}
 
 	for _, path := range paths {
-		if err := tagPath(store, tx, path, pairs, explicit, recursive, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
+		if err := tagPath(store, tx, path, pairs, explicit, recursive, includeHidden, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
@@ -217,7 +219,7 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 	return nil, warnings
 }
 
-func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []string, explicit, recursive, force, followSymlinks bool) (error, warnings) {
+func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []string, explicit, recursive, includeHidden, force, followSymlinks bool) (error, warnings) {
 	log.Infof(2, "loading settings")
 
 	settings, err := store.Settings(tx)
@@ -257,7 +259,7 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 	warnings := make(warnings, 0, 10)
 
 	for _, path := range paths {
-		if err := tagPath(store, tx, path, pairs, explicit, recursive, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
+		if err := tagPath(store, tx, path, pairs, explicit, recursive, includeHidden, force, followSymlinks, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm(), settings.ReportDuplicates()); err != nil {
 			switch {
 			case os.IsPermission(err):
 				warnings = append(warnings, fmt.Sprintf("%v: permission denied", path))
@@ -314,7 +316,7 @@ func tagWhere(store *storage.Storage, tx *storage.Tx, queryText string, explicit
 	return nil, warnings
 }
 
-func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entities.TagIdValueIdPair, explicit, recursive, force, followSymlinks bool, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg string, reportDuplicates bool) error {
+func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entities.TagIdValueIdPair, explicit, recursive, includeHidden, force, followSymlinks bool, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg string, reportDuplicates bool) error {
 	absPath, err := filepath.Abs(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not get absolute path: %v", path, err)
@@ -400,7 +402,7 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 	}
 
 	if recursive && stat.IsDir() {
-		if err = tagRecursively(store, tx, absPath, pairs, explicit, force, followSymlinks, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg, reportDuplicates); err != nil {
+		if err = tagRecursively(store, tx, absPath, pairs, explicit, includeHidden, force, followSymlinks, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg, reportDuplicates); err != nil {
 			return err
 		}
 	}
@@ -454,7 +456,7 @@ func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entitie
 	return pairs, warnings, nil
 }
 
-func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explicit, force, followSymlinks bool) (error, warnings) {
+func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, includeHidden, explicit, force, followSymlinks bool) (error, warnings) {
 	reader := bufio.NewReader(os.Stdin)
 
 	warnings := make(warnings, 0, 10)
@@ -479,7 +481,7 @@ func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explic
 		path := words[0]
 		tagArgs := words[1:]
 
-		err, commandWarnings := tagPaths(store, tx, tagArgs, []string{path}, explicit, recursive, force, followSymlinks)
+		err, commandWarnings := tagPaths(store, tx, tagArgs, []string{path}, explicit, recursive, includeHidden, force, followSymlinks)
 		if err != nil {
 			warnings = append(warnings, err.Error())
 		}
@@ -491,7 +493,7 @@ func readStandardInput(store *storage.Storage, tx *storage.Tx, recursive, explic
 	return nil, warnings
 }
 
-func tagRecursively(store *storage.Storage, tx *storage.Tx, path string, pairs []entities.TagIdValueIdPair, explicit, force, followSymlinks bool, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg string, reportDuplicates bool) error {
+func tagRecursively(store *storage.Storage, tx *storage.Tx, path string, pairs []entities.TagIdValueIdPair, explicit, includeHidden, force, followSymlinks bool, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg string, reportDuplicates bool) error {
 	osFile, err := os.Open(path)
 	if err != nil {
 		return fmt.Errorf("%v: could not open path: %v", path, err)
@@ -505,8 +507,12 @@ func tagRecursively(store *storage.Storage, tx *storage.Tx, path string, pairs [
 
 	for _, childName := range childNames {
 		childPath := filepath.Join(path, childName)
+		if childName[0] == '.' && !includeHidden {
+			log.Infof(2, "%v: skipping hidden file/directory", childPath)
+			continue
+		}
 
-		if err = tagPath(store, tx, childPath, pairs, explicit, true, force, followSymlinks, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg, reportDuplicates); err != nil {
+		if err = tagPath(store, tx, childPath, pairs, explicit, true, includeHidden, force, followSymlinks, fileFingerprintAlg, dirFingerprintAlg, symlinkFingerprintAlg, reportDuplicates); err != nil {
 			return err
 		}
 	}

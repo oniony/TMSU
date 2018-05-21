@@ -131,6 +131,7 @@ v0.7.1
 ------
 
   * VFS now uses relative paths -- thanks to [foxcpp](https://github.com/foxcpp)
+  * Support for Blake2b-256 fingerprints -- thanks to [foxcpp](https://github.com/foxcpp)
 
 v0.7.0
 ------

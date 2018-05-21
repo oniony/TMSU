@@ -41,6 +41,11 @@ func TestSHA256Generation(test *testing.T) {
 	testCreateForLargeFile(test, "SHA256", "a4bd6407e40326c126f10412e245e4491c511636dbeddc3d2b16b41700017bc9")
 }
 
+func TestBLAKE2bGeneration(test *testing.T) {
+	testCreateForSmallFile(test, "BLAKE2b", "76b01099c5121e2436f3cb201f3917e4f46eae7dac8ac0c941b1729101e91de4")
+	testCreateForLargeFile(test, "BLAKE2b", "fdc4dc9cebbd6f162b3dad4d196646df430dbae8c547df01447285da55247087")
+}
+
 func TestDynamicMD5Generation(test *testing.T) {
 	testCreateForSmallFile(test, "dynamic:MD5", "a758071b3c2fe43c9a9b91db5077cd12")
 	testCreateForLargeFile(test, "dynamic:MD5", "668a4b622482b9fd30b1ad0eac4ab8f1")
@@ -54,6 +59,11 @@ func TestDynamicSHA1Generation(test *testing.T) {
 func TestDynamicSHA256Generation(test *testing.T) {
 	testCreateForSmallFile(test, "dynamic:SHA256", "cdf701ac9e4258a8efec453930c73d698d12d7e83c38a049a1f1a64375fbf776")
 	testCreateForLargeFile(test, "dynamic:SHA256", "0a9f9c7cd5939b04ad4bb7d14f801fe671c1b622d0e3b7769798b14dbdbf07f1")
+}
+
+func TestDynamicBLAKE2bGeneration(test *testing.T) {
+	testCreateForSmallFile(test, "dynamic:BLAKE2b", "76b01099c5121e2436f3cb201f3917e4f46eae7dac8ac0c941b1729101e91de4")
+	testCreateForLargeFile(test, "dynamic:BLAKE2b", "137c5b1e9e8107c176de7fb7a38f7670bb31364fadb2b5b883737c8732c78327")
 }
 
 func TestNoneGeneration(test *testing.T) {

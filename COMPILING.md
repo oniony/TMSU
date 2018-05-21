@@ -45,6 +45,7 @@ Linux
 
     These will be installed to your GOPATH directory (see previous step).
 
+        go get -u golang.org/x/crypto/blake2b
         go get -u github.com/mattn/go-sqlite3
         go get -u github.com/hanwen/go-fuse/fuse
 
@@ -83,13 +84,15 @@ Windows
     the graphical installer or package manager provided, if it is not installed by
     default.
 
-6. Install the dependent package
+6. Install the dependent packages
 
     This will be installed to your GOPATH directory (see step 2). The following
     command has to be run from the MinGW terminal (e.g. Msys2) otherwise it will fail
     to compile Sqlite3:
 
         go get -u github.com/mattn/go-sqlite3
+        go get -u golang.org/x/crypto/blake2b
+
 
 7. Set the path
 

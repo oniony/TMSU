@@ -26,6 +26,8 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+
+	"golang.org/x/crypto/blake2b"
 )
 
 const sparseFingerprintThreshold = 5 * 1024 * 1024
@@ -68,12 +70,26 @@ func createFileFingerprint(path, algorithm string, stat os.FileInfo) (Fingerprin
 		return dynamicFingerprint(path, sha1.New(), stat.Size())
 	case "dynamic:MD5":
 		return dynamicFingerprint(path, md5.New(), stat.Size())
+	case "dynamic:BLAKE2b":
+		hash, err := blake2b.New256(nil)
+		if err != nil {
+			// Should never happen actually.
+			return "", err
+		}
+		return dynamicFingerprint(path, hash, stat.Size())
 	case "SHA256":
 		return regularFingerprint(path, sha256.New())
 	case "SHA1":
 		return regularFingerprint(path, sha1.New())
 	case "MD5":
 		return regularFingerprint(path, md5.New())
+	case "BLAKE2b":
+		hash, err := blake2b.New256(nil)
+		if err != nil {
+			// Should never happen actually.
+			return "", err
+		}
+		return regularFingerprint(path, hash)
 	case "none":
 		return Empty, nil
 	default:

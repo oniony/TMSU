@@ -7,3 +7,4 @@ go:
 install:
     - go get -u github.com/mattn/go-sqlite3
     - go get -u github.com/hanwen/go-fuse/fuse
+    - go get -u golang.org/x/crypto/blake2b

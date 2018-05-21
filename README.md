@@ -127,6 +127,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.7.1
+------
+
+  * VFS now uses relative paths (thanks to foxcpp)
+
 v0.7.0
 ------
 

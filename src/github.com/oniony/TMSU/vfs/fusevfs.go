@@ -968,7 +968,6 @@ func (vfs FuseVfs) readTaggedEntryLink(tx *storage.Tx, path []string) (string, f
 		log.Fatalf("could not find file %v in database.", fileId)
 	}
 
-	// Absolute path is required for filepath.Rel.
 	absDirPath := filepath.Join(vfs.mountPath, filepath.Join(path[:len(path)-1]...))
 	relPath, err := filepath.Rel(absDirPath, file.Path())
 	if err != nil {

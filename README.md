@@ -130,7 +130,7 @@ Release Notes
 v0.7.1
 ------
 
-  * VFS now uses relative paths (thanks to foxcpp)
+  * VFS now uses relative paths -- thanks to [foxcpp](https://github.com/foxcpp)
 
 v0.7.0
 ------

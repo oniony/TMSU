@@ -132,6 +132,9 @@ v0.7.1
 
   * VFS now uses relative paths -- thanks to [foxcpp](https://github.com/foxcpp)
   * Support for Blake2b-256 fingerprints -- thanks to [foxcpp](https://github.com/foxcpp)
+  * Hidden files are no longer tagged by default when tagging recursively. To
+    include hidden files use the `--include-hidden` option -- thanks to
+    [foxcpp](https://github.com/foxcpp)
 
 v0.7.0
 ------

@@ -26,7 +26,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"time"
 )
 
 var RepairCommand = Command{
@@ -155,11 +154,6 @@ func manualRepair(store *storage.Storage, tx *storage.Tx, fromPath, toPath strin
 }
 
 func manualRepairFile(store *storage.Storage, tx *storage.Tx, file *entities.File, toPath string) error {
-	var fingerprint fingerprint.Fingerprint
-	var modTime time.Time
-	var size int64
-	var isDir bool
-
 	stat, err := os.Stat(toPath)
 	if err != nil {
 		switch {
@@ -171,15 +165,25 @@ func manualRepairFile(store *storage.Storage, tx *storage.Tx, file *entities.Fil
 			return err
 		}
 	} else {
-		fingerprint = file.Fingerprint
-		modTime = stat.ModTime()
-		size = stat.Size()
-		isDir = stat.IsDir()
+		settings, err := store.Settings(tx)
+		if err != nil {
+			return err
+		}
+
+		fingerprint, err := fingerprint.Create(toPath, settings.FileFingerprintAlgorithm(), settings.DirectoryFingerprintAlgorithm(), settings.SymlinkFingerprintAlgorithm())
+		if err != nil {
+			log.Warnf("%v: could not create fingerprint: %v", toPath, err)
+			fingerprint = file.Fingerprint
+		}
+
+		modTime := stat.ModTime()
+		size := stat.Size()
+		isDir := stat.IsDir()
+
+		_, err = store.UpdateFile(tx, file.Id, toPath, fingerprint, modTime, size, isDir)
+
+		return err
 	}
-
-	_, err = store.UpdateFile(tx, file.Id, toPath, fingerprint, modTime, size, isDir)
-
-	return err
 }
 
 func fullRepair(store *storage.Storage, tx *storage.Tx, searchPaths []string, limitPath string, removeMissing, recalcUnmodified, rationalize, pretend bool) error {

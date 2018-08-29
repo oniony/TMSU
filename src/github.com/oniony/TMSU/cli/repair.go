@@ -171,6 +171,7 @@ func manualRepairFile(store *storage.Storage, tx *storage.Tx, file *entities.Fil
 			return err
 		}
 	} else {
+		fingerprint = file.Fingerprint
 		modTime = stat.ModTime()
 		size = stat.Size()
 		isDir = stat.IsDir()

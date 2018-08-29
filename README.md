@@ -135,7 +135,8 @@ v0.7.1
   * Hidden files are no longer tagged by default when tagging recursively. To
     include hidden files use the `--include-hidden` option -- thanks to
     [foxcpp](https://github.com/foxcpp)
-  * Specifying empty FUSE options would cause Fusermount to fail -- thanks to [metafex](https://githum.com/metafex)
+  * Specifying empty FUSE options would cause Fusermount to fail -- thanks to [metafex](https://github.com/metafex)
+  * Manual repair would drop the file fingerprint -- thanks to [c7nh7r](https://github.com/c7nh7r)
 
 v0.7.0
 ------

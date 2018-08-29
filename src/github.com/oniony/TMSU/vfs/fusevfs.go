@@ -493,7 +493,7 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 	file, err := vfs.store.File(tx, fileId)
 	if err != nil {
-		log.Fatal("could not retrieve file '%v': %v", fileId, err)
+		log.Fatalf("could not retrieve file '%v': %v", fileId, err)
 	}
 	if file == nil {
 		// reply ok if file doesn't exist otherwise recursive deletes fail

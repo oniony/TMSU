@@ -455,22 +455,24 @@ id IN (SELECT file_id
 		builder.AppendSql(`
 id IN (SELECT file_id
        FROM file_tag
-       WHERE tag_id IN (WITH RECURSIVE working (tag_id, value_id) AS
-                        (
-                            SELECT id, 0
-                            FROM tag
-                            WHERE name ` + collation + ` = `)
+       INNER JOIN (WITH RECURSIVE working (tag_id, value_id) AS
+                   (
+                       SELECT id, 0
+                       FROM tag
+                       WHERE name ` + collation + ` = `)
 		builder.AppendParam(expression.Name)
 		builder.AppendSql(`
-                            UNION ALL
-                            SELECT b.tag_id, b.value_id
-                            FROM implication b, working
-                            WHERE b.implied_tag_id = working.tag_id AND
-                                  (working.value_id = 0 OR b.implied_value_id = working.value_id)
-                        )
-                        SELECT tag_id
-                        FROM working
-                       )
+                       UNION ALL
+                       SELECT b.tag_id, b.value_id
+                       FROM implication b, working
+                       WHERE b.implied_tag_id = working.tag_id AND
+                             (working.value_id = 0 OR b.implied_value_id = working.value_id)
+                   )
+                   SELECT tag_id, value_id
+                   FROM working
+                  ) imps
+       ON file_tag.tag_id = imps.tag_id AND
+          file_tag.value_id = imps.value_id
       )`)
 	}
 }

@@ -137,6 +137,7 @@ v0.7.1
     [foxcpp](https://github.com/foxcpp)
   * Specifying empty FUSE options would cause Fusermount to fail -- thanks to [metafex](https://github.com/metafex)
   * Manual repair would drop the file fingerprint -- thanks to [c7nh7r](https://github.com/c7nh7r)
+  * Fixed a bug where wrong files would be returned when an tag=value implied another tag -- thanks to [Fornost461](https://github.com/Fornost461)
 
 v0.7.0
 ------

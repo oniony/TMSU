@@ -2,7 +2,7 @@
 
 # setup
 
-touch /tmp/tmsu/{file1,file2,file3}
+touch /tmp/tmsu/file{1..4}
 
 tmsu imply a b                          >/dev/null 2>&1
 tmsu imply b c                          >/dev/null 2>&1
@@ -14,6 +14,7 @@ tmsu imply y z                          >/dev/null 2>&1
 tmsu tag /tmp/tmsu/file1 a              >/dev/null 2>&1
 tmsu tag /tmp/tmsu/file2 j=1            >/dev/null 2>&1
 tmsu tag /tmp/tmsu/file3 x              >/dev/null 2>&1
+tmsu tag /tmp/tmsu/file4 j=2            >/dev/null 2>&1
 
 # test
 
@@ -32,12 +33,16 @@ tmsu files y=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files z                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files x y=2 z                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
+tmsu files j=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
 tmsu tags /tmp/tmsu/file1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file1    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags /tmp/tmsu/file2               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file2    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags /tmp/tmsu/file3               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file3    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags /tmp/tmsu/file4               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu tags --explicit /tmp/tmsu/file4    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -60,12 +65,15 @@ diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/file3
 /tmp/tmsu/file3
 /tmp/tmsu/file3
+/tmp/tmsu/file4
 /tmp/tmsu/file1: a b c
 /tmp/tmsu/file1: a
 /tmp/tmsu/file2: j=1 k l
 /tmp/tmsu/file2: j=1
 /tmp/tmsu/file3: x y=2 z
 /tmp/tmsu/file3: x
+/tmp/tmsu/file4: j=2
+/tmp/tmsu/file4: j=2
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

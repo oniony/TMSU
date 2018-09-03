@@ -127,17 +127,19 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
-v0.7.1
+v0.8.0
 ------
 
   * VFS now uses relative paths -- thanks to [foxcpp](https://github.com/foxcpp)
   * Support for Blake2b-256 fingerprints -- thanks to [foxcpp](https://github.com/foxcpp)
-  * Hidden files are no longer tagged by default when tagging recursively. To
-    include hidden files use the `--include-hidden` option -- thanks to
-    [foxcpp](https://github.com/foxcpp)
+  * Hidden files are no longer tagged by default when tagging recursively. To include hidden files use the `--include-hidden` option -- thanks to [foxcpp](https://github.com/foxcpp)
+
+v0.7.1
+------
+
+  * Fixed a bug where wrong files would be returned when an tag=value implied another tag -- thanks to [Fornost461](https://github.com/Fornost461)
   * Specifying empty FUSE options would cause Fusermount to fail -- thanks to [metafex](https://github.com/metafex)
   * Manual repair would drop the file fingerprint -- thanks to [c7nh7r](https://github.com/c7nh7r)
-  * Fixed a bug where wrong files would be returned when an tag=value implied another tag -- thanks to [Fornost461](https://github.com/Fornost461)
 
 v0.7.0
 ------

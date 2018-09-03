@@ -127,6 +127,13 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.7.1
+------
+
+  * Fixed a bug where wrong files would be returned when an tag=value implied another tag -- thanks to [Fornost461](https://github.com/Fornost461)
+  * Specifying empty FUSE options would cause Fusermount to fail -- thanks to [metafex](https://github.com/metafex)
+  * Manual repair would drop the file fingerprint -- thanks to [c7nh7r](https://github.com/c7nh7r)
+
 v0.7.0
 ------
 

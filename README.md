@@ -351,7 +351,7 @@ v0.3.0
 
 - - -
 
-Copyright 2011–2017 Paul Ruane
+Copyright 2011-2018 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

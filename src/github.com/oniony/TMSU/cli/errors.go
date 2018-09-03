@@ -1,4 +1,4 @@
-// Copyright 2011-2017 Paul Ruane.
+// Copyright 2011-2018 Paul Ruane.
 
 // This program is free software: you can redistribute it and/or modify
 // it under the terms of the GNU General Public License as published by

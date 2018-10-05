@@ -843,6 +843,12 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 
 	var valueNames []string
 	if lastPathElement[0] != '=' {
+		expression := pathToExpression(path[:len(path)-1])
+		files, err := vfs.store.FilesForQuery(tx, expression, "", false, false, "name")
+		if err != nil {
+			log.Fatalf("could not query files: %v", err)
+		}
+
 		tagName := unescape(lastPathElement)
 
 		valueNames, err = vfs.tagValueNamesForFiles(tx, tagName, files)
@@ -1102,6 +1108,10 @@ func pathToExpression(path []string) query.Expression {
 
 			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {
+			if index+1 >= len(path) || path[index+1][0] == '=' {
+				continue
+			}
+
 			tagName := unescape(element)
 			elementExpression = query.TagExpression{tagName}
 		}

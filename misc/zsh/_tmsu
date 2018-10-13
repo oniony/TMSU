@@ -104,13 +104,24 @@ _tmsu_tag_values() {
     local tag=${PREFIX%=*}
     local escapedTag=$tag:gs/:/\\\:/:gs/=/\\\\=/
 
-    _call_program tmsu tmsu $db values 2>/dev/null | \
+    # set PREFIX to partial value
+    if (( ${(w)#PREFIX#*=} ))
+    then
+        PREFIX="${PREFIX#*=}"
+    # or an empty string
+    else
+        PREFIX=""
+    fi
+
+    IPREFIX="${IPREFIX}${tag}="
+
+    _call_program tmsu tmsu $db values $tag 2>/dev/null | \
     while read value
     do
         local escapedValue=$value:gs/:/\\\:/
         escapedValue=$escapedValue:gs/=/\\=/
 
-        value_list+=("$escapedTag=$escapedValue")
+        value_list+=("$escapedValue")
     done
 
     _describe -t values 'values' value_list
@@ -118,11 +129,46 @@ _tmsu_tag_values() {
 
 # the set of tags, or values for that tag if ending =
 _tmsu_tags_with_values() {
-    if [[ -prefix *= ]] 
+
+    # add quote to end of IPREFIX if missing.
+    if [[ $IPREFIX =~ '--.*' || IPREFIX =~ '.*\"' ]]
     then
-        _tmsu_tag_values
-    else
+        IPREFIX="${IPREFIX}\""
+    fi
+
+    if [[ ${PREFIX} == '' ]] # if prefix is empty
+    then
         _tmsu_tags
+        return
+    fi
+
+    # if following a space
+    if [[ ${(Q)PREFIX[-1]} == ' ' ]]
+    then
+        if (( ${(w)#PREFIX} >= 1 ))
+        then
+            IPREFIX="${(Q)IPREFIX}${(Q)PREFIX}"
+            PREFIX=""
+        fi
+
+        _tmsu_tags
+        return
+
+    else
+        # If theres more than one word, append to IPREFIX
+        if (( ${(w)#PREFIX} > 1 ))
+        then
+            IPREFIX="${(Q)IPREFIX}${(Q)PREFIX[1,(w)-2]} "
+            PREFIX="${PREFIX[(w)-1]}"
+        fi
+
+        # If last inputted word contains =
+        if [[ ${PREFIX} =~ '.+\=.*' ]]
+        then
+            _tmsu_tag_values
+        else
+            _tmsu_tags
+        fi
     fi
 }
 
@@ -236,7 +282,7 @@ _tmsu_query() {
 
 # set of files
 _tmsu_setting_names() {
-    if [[ -prefix *^= ]] 
+    if [[ -prefix *^= ]]
     then
         typeset -a setting_names
         local name
@@ -417,7 +463,7 @@ _tmsu_cmd_tags() {
             if (( ${+opt_args[--value]} ))
             then
                 _wanted values expl 'values' _tmsu_values
-            else 
+            else
                 _wanted files expl 'files' _files
             fi
     esac

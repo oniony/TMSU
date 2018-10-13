@@ -133,7 +133,7 @@ v0.8.0 (in development)
   * VFS now uses relative paths -- thanks to [foxcpp](https://github.com/foxcpp)
   * Support for Blake2b-256 fingerprints -- thanks to [foxcpp](https://github.com/foxcpp)
   * Hidden files are no longer tagged by default when tagging recursively. To include hidden files use the `--include-hidden` option -- thanks to [foxcpp](https://github.com/foxcpp)
-  * Fixes to Zsh completion -- thanks to [taiyu-len](https://github.com/taiyu-len)
+  * Fixes to Zsh completion -- thanks to [taiyu-len](https://github.com/taiyu-len) and [Shadoukan](https://github.com/Shadoukan)
 
 v0.7.3
 ------

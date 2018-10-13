@@ -1108,7 +1108,7 @@ func pathToExpression(path []string) query.Expression {
 
 			elementExpression = query.ComparisonExpression{query.TagExpression{tagName}, "==", query.ValueExpression{valueName}}
 		} else {
-			if index+1 >= len(path) || path[index+1][0] == '=' {
+			if index+1 < len(path) && path[index+1][0] == '=' {
 				continue
 			}
 

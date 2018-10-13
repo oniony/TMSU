@@ -134,6 +134,11 @@ v0.8.0 (in development)
   * Support for Blake2b-256 fingerprints -- thanks to [foxcpp](https://github.com/foxcpp)
   * Hidden files are no longer tagged by default when tagging recursively. To include hidden files use the `--include-hidden` option -- thanks to [foxcpp](https://github.com/foxcpp)
 
+v0.7.3
+------
+
+  * VFS directories were showing incorrect files and tags
+
 v0.7.2
 ------
 

@@ -127,6 +127,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.7.3
+------
+
+  * VFS directories were showing incorrect files and tags
+
 v0.7.2
 ------
 

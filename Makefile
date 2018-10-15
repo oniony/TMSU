@@ -55,12 +55,12 @@ dist: compile
 	@mkdir -p $(DIST_DIR)/bin
 	@mkdir -p $(DIST_DIR)/man
 	@mkdir -p $(DIST_DIR)/misc/zsh
-	cp -R bin -t $(DIST_DIR)
-	cp README.md -t $(DIST_DIR)
-	cp COPYING.md -t $(DIST_DIR)
-	cp misc/bin/* -t $(DIST_DIR)/bin/
+	cp -R bin $(DIST_DIR)
+	cp README.md $(DIST_DIR)
+	cp COPYING.md $(DIST_DIR)
+	cp misc/bin/* $(DIST_DIR)/bin/
 	gzip -fc misc/man/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
+	cp misc/zsh/_tmsu $(DIST_DIR)/misc/zsh/
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
 install: 
@@ -71,11 +71,11 @@ install:
 	mkdir -p $(MOUNT_INSTALL_DIR)
 	mkdir -p $(MAN_INSTALL_DIR)
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
-	cp bin/tmsu -t $(INSTALL_DIR)
-	cp misc/bin/mount.tmsu -t $(MOUNT_INSTALL_DIR)
-	cp misc/bin/tmsu-* -t $(INSTALL_DIR)
+	cp bin/tmsu $(INSTALL_DIR)
+	cp misc/bin/mount.tmsu $(MOUNT_INSTALL_DIR)
+	cp misc/bin/tmsu-* $(INSTALL_DIR)
 	gzip -fc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(ZSH_COMP_INSTALL_DIR)
+	cp misc/zsh/_tmsu $(ZSH_COMP_INSTALL_DIR)
 
 uninstall:
 	@echo "UNINSTALLING"

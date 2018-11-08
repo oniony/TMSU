@@ -135,6 +135,11 @@ v0.8.0 (in development)
   * Hidden files are no longer tagged by default when tagging recursively. To include hidden files use the `--include-hidden` option -- thanks to [foxcpp](https://github.com/foxcpp)
   * Fixes to Zsh completion -- thanks to [taiyu-len](https://github.com/taiyu-len) and [Shadoukan](https://github.com/Shadoukan)
 
+v0.7.4
+------
+
+  * Fixed further regressions with the set of files returned by `files` command. 
+
 v0.7.3
 ------
 

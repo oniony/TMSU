@@ -446,7 +446,7 @@ id IN (SELECT file_id
        FROM file_tag
        WHERE tag_id = (SELECT id
                        FROM tag
-                       WHERE name ` + collation + ` = `)
+                       WHERE name` + collation + ` = `)
 		builder.AppendParam(expression.Name)
 		builder.AppendSql(`
                        )
@@ -459,20 +459,20 @@ id IN (SELECT file_id
                    (
                        SELECT id, 0
                        FROM tag
-                       WHERE name ` + collation + ` = `)
+                       WHERE name` + collation + ` = `)
 		builder.AppendParam(expression.Name)
 		builder.AppendSql(`
                        UNION ALL
                        SELECT b.tag_id, b.value_id
                        FROM implication b, working
                        WHERE b.implied_tag_id = working.tag_id AND
-                             (working.value_id = 0 OR b.implied_value_id = working.value_id)
+                             (b.implied_value_id = working.value_id OR working.value_id = 0)
                    )
                    SELECT tag_id, value_id
                    FROM working
                   ) imps
-       ON file_tag.tag_id = imps.tag_id AND
-          file_tag.value_id = imps.value_id
+       ON file_tag.tag_id = imps.tag_id
+       AND (file_tag.value_id = imps.value_id OR imps.value_id = 0)
       )`)
 	}
 }
@@ -500,12 +500,12 @@ id IN (SELECT file_id
        FROM file_tag
        WHERE tag_id = (SELECT id
                        FROM tag
-                       WHERE name ` + collation + ` = `)
+                       WHERE name` + collation + ` = `)
 		builder.AppendParam(expression.Tag.Name)
 		builder.AppendSql(`) AND
              value_id = (SELECT id
                          FROM value
-                         WHERE name ` + collation + ` = `)
+                         WHERE name` + collation + ` = `)
 		builder.AppendParam(expression.Value.Name)
 		builder.AppendSql(`)
      )`)
@@ -515,16 +515,16 @@ id IN (WITH RECURSIVE impft (tag_id, value_id) AS
        (
            SELECT t.id, v.id
            FROM tag t, value v
-           WHERE t.name ` + collation + ` = `)
+           WHERE t.name` + collation + ` = `)
 		builder.AppendParam(expression.Tag.Name)
-		builder.AppendSql("AND " + valueTerm + " " + collation + " " + expression.Operator)
+		builder.AppendSql("AND " + valueTerm + collation + " " + expression.Operator + " ")
 		builder.AppendParam(expression.Value.Name)
 		builder.AppendSql(`
            UNION ALL
            SELECT b.tag_id, b.value_id
            FROM implication b, impft
            WHERE b.implied_tag_id = impft.tag_id AND
-                 (impft.value_id = 0 OR b.implied_value_id = impft.value_id)
+                 (b.implied_value_id = impft.value_id OR impft.value_id = 0)
        )
 
        SELECT file_id

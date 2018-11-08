@@ -150,7 +150,7 @@ func readCount(rows *sql.Rows) (uint, error) {
 
 func collationFor(ignoreCase bool) string {
 	if ignoreCase {
-		return "COLLATE NOCASE"
+		return " COLLATE NOCASE"
 	}
 
 	return ""

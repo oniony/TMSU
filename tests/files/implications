@@ -22,18 +22,39 @@ tmsu files a                            >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 tmsu files b                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files c                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files a b c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
 
 tmsu files j=1                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files k                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files l                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files j=1 k l                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
 
 tmsu files x                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files y=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files z                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files x y=2 z                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
 
 tmsu files j=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not a                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not b                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not j                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not j=1                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not k                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not l                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not x                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not y                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not y=2                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not z                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
 
 tmsu tags /tmp/tmsu/file1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu tags --explicit /tmp/tmsu/file1    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
@@ -57,15 +78,54 @@ diff /tmp/tmsu/stdout - <<EOF
 /tmp/tmsu/file1
 /tmp/tmsu/file1
 /tmp/tmsu/file1
+---
 /tmp/tmsu/file2
 /tmp/tmsu/file2
 /tmp/tmsu/file2
 /tmp/tmsu/file2
+---
 /tmp/tmsu/file3
 /tmp/tmsu/file3
 /tmp/tmsu/file3
+/tmp/tmsu/file3
+---
+/tmp/tmsu/file4
+---
+/tmp/tmsu/file2
 /tmp/tmsu/file3
 /tmp/tmsu/file4
+/tmp/tmsu/file2
+/tmp/tmsu/file3
+/tmp/tmsu/file4
+/tmp/tmsu/file2
+/tmp/tmsu/file3
+/tmp/tmsu/file4
+---
+/tmp/tmsu/file1
+/tmp/tmsu/file3
+/tmp/tmsu/file1
+/tmp/tmsu/file3
+/tmp/tmsu/file4
+/tmp/tmsu/file1
+/tmp/tmsu/file3
+/tmp/tmsu/file4
+/tmp/tmsu/file1
+/tmp/tmsu/file3
+/tmp/tmsu/file4
+---
+/tmp/tmsu/file1
+/tmp/tmsu/file2
+/tmp/tmsu/file4
+/tmp/tmsu/file1
+/tmp/tmsu/file2
+/tmp/tmsu/file4
+/tmp/tmsu/file1
+/tmp/tmsu/file2
+/tmp/tmsu/file4
+/tmp/tmsu/file1
+/tmp/tmsu/file2
+/tmp/tmsu/file4
+---
 /tmp/tmsu/file1: a b c
 /tmp/tmsu/file1: a
 /tmp/tmsu/file2: j=1 k l

@@ -127,6 +127,11 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.7.4
+------
+
+  * Fixed further regressions with the set of files returned by `files` command. 
+
 v0.7.3
 ------
 

@@ -49,7 +49,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
-		{"--name", "-n", "always print the file/value name", false, ""},
+        {"--name", "-n", "when to print the file/value name: auto, always, never", true, ""},
 		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""},
 		{"--value", "-u", "show tags which utilise values", false, ""}},
 	Exec: tagsExec,
@@ -61,12 +61,16 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	showCount := options.HasOption("--count")
 	onePerLine := options.HasOption("-1")
 	explicitOnly := options.HasOption("--explicit")
-	printName := options.HasOption("--name")
 	followSymlinks := !options.HasOption("--no-dereference")
 	colour, err := useColour(options)
 	if err != nil {
 		return err, nil
 	}
+
+    printName := "auto"
+    if options.HasOption("--name") {
+        printName = options.Get("--name").Argument
+    }
 
 	store, err := openDatabase(databasePath)
 	if err != nil {
@@ -81,14 +85,14 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 	defer tx.Commit()
 
 	if options.HasOption("--value") {
-		return listTagsForValues(store, tx, args, showCount, onePerLine, printName, colour)
+		return listTagsForValues(store, tx, args, showCount, onePerLine, colour, printName)
 	}
 
 	if len(args) == 0 {
 		return listAllTags(store, tx, showCount, onePerLine), nil
 	}
 
-	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, printName, colour, followSymlinks)
+	return listTagsForPaths(store, tx, args, showCount, onePerLine, explicitOnly, colour, followSymlinks, printName)
 }
 
 func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine bool) error {
@@ -124,10 +128,10 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 	return nil
 }
 
-func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, printPath, colour, followSymlinks bool) (error, warnings) {
+func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, colour, followSymlinks bool, printPathWhen string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	printPath = printPath || len(paths) > 1 || !stdoutIsCharDevice()
+    printPath := printPathWhen != "never" && (printPathWhen == "always" || len(paths) > 1 || !stdoutIsCharDevice())
 
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -222,10 +226,10 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 	return nil, warnings
 }
 
-func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []string, showCount, onePerLine, printTagName, colour bool) (error, warnings) {
+func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []string, showCount, onePerLine, colour bool, printTagWhen string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	printTagName = printTagName || len(valueNames) > 1 || !stdoutIsCharDevice()
+    printTag := printTagWhen != "never" && (printTagWhen == "always" || len(valueNames) > 1 || !stdoutIsCharDevice())
 
 	for index, valueName := range valueNames {
 		log.Infof(2, "%v: looking up value", valueName)
@@ -254,7 +258,7 @@ func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []stri
 
 		switch {
 		case showCount:
-			if printTagName {
+			if printTag {
 				fmt.Println(valueName + ":")
 			}
 
@@ -264,7 +268,7 @@ func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []stri
 				fmt.Println()
 			}
 
-			if printTagName {
+			if printTag {
 				fmt.Println(valueName + ":")
 			}
 
@@ -272,7 +276,7 @@ func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []stri
 				fmt.Println(tagName)
 			}
 		default:
-			if printTagName {
+			if printTag {
 				fmt.Print(valueName + ":")
 
 				for _, tagName := range tagNames {

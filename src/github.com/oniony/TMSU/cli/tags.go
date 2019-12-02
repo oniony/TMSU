@@ -49,7 +49,7 @@ See the 'imply' subcommand for more information on implied tags.`,
 	Options: Options{{"--count", "-c", "lists the number of tags rather than their names", false, ""},
 		{"", "-1", "list one tag per line", false, ""},
 		{"--explicit", "-e", "do not show implied tags", false, ""},
-        {"--name", "-n", "when to print the file/value name: auto, always, never", true, ""},
+		{"--name", "-n", "when to print the file/value name: auto, always, never", true, ""},
 		{"--no-dereference", "-P", "do not follow symlinks (show tags for symlink itself)", false, ""},
 		{"--value", "-u", "show tags which utilise values", false, ""}},
 	Exec: tagsExec,
@@ -67,10 +67,10 @@ func tagsExec(options Options, args []string, databasePath string) (error, warni
 		return err, nil
 	}
 
-    printName := "auto"
-    if options.HasOption("--name") {
-        printName = options.Get("--name").Argument
-    }
+	printName := "auto"
+	if options.HasOption("--name") {
+		printName = options.Get("--name").Argument
+	}
 
 	store, err := openDatabase(databasePath)
 	if err != nil {
@@ -131,7 +131,7 @@ func listAllTags(store *storage.Storage, tx *storage.Tx, showCount, onePerLine b
 func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, showCount, onePerLine, explicitOnly, colour, followSymlinks bool, printPathWhen string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-    printPath := printPathWhen != "never" && (printPathWhen == "always" || len(paths) > 1 || !stdoutIsCharDevice())
+	printPath := printPathWhen != "never" && (printPathWhen == "always" || len(paths) > 1 || !stdoutIsCharDevice())
 
 	for index, path := range paths {
 		absPath, err := filepath.Abs(path)
@@ -229,7 +229,7 @@ func listTagsForPaths(store *storage.Storage, tx *storage.Tx, paths []string, sh
 func listTagsForValues(store *storage.Storage, tx *storage.Tx, valueNames []string, showCount, onePerLine, colour bool, printTagWhen string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-    printTag := printTagWhen != "never" && (printTagWhen == "always" || len(valueNames) > 1 || !stdoutIsCharDevice())
+	printTag := printTagWhen != "never" && (printTagWhen == "always" || len(valueNames) > 1 || !stdoutIsCharDevice())
 
 	for index, valueName := range valueNames {
 		log.Infof(2, "%v: looking up value", valueName)

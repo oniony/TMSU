@@ -150,11 +150,11 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 	args := []string{"vfs", "--database=" + databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
 
-    tempFile, err := ioutil.TempFile("", "tmsu-vfs-")
-    if err != nil {
-        return fmt.Errorf("could not get a temporary file: %v", err)
-    }
-    daemon.Stderr = tempFile
+	tempFile, err := ioutil.TempFile("", "tmsu-vfs-")
+	if err != nil {
+		return fmt.Errorf("could not get a temporary file: %v", err)
+	}
+	daemon.Stderr = tempFile
 
 	err = daemon.Start()
 	if err != nil {
@@ -177,7 +177,7 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 
 	if waitStatus.Exited() {
 		if waitStatus.ExitStatus() != 0 {
-            return fmt.Errorf("virtual filesystem mount failed: see standard error output: %v", tempFile.Name())
+			return fmt.Errorf("virtual filesystem mount failed: see standard error output: %v", tempFile.Name())
 		}
 	}
 

@@ -135,6 +135,12 @@ v0.8.0 (in development)
   * Hidden files are no longer tagged by default when tagging recursively. To include hidden files use the `--include-hidden` option -- thanks to [foxcpp](https://github.com/foxcpp)
   * Fixes to Zsh completion -- thanks to [taiyu-len](https://github.com/taiyu-len) and [Shadoukan](https://github.com/Shadoukan)
 
+v0.7.5
+------
+
+  * Fixed issue with broken stderr pipe if VFS produces an error
+  * '--name' option on 'tags' subcommand now takes argument to control when file/value names are printed
+
 v0.7.4
 ------
 

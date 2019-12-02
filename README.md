@@ -127,6 +127,12 @@ Sqlite3 libraries, their Go bindings and the Go language standard library.
 Release Notes
 =============
 
+v0.7.5
+------
+
+  * Fixed issue with broken stderr pipe if VFS produces an error
+  * '--name' option on 'tags' subcommand now takes argument to control when file/value names are printed
+
 v0.7.4
 ------
 

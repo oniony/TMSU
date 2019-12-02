@@ -21,6 +21,7 @@ import (
 	"fmt"
 	"github.com/oniony/TMSU/common/log"
 	"github.com/oniony/TMSU/vfs"
+	"io/ioutil"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -149,10 +150,11 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 	args := []string{"vfs", "--database=" + databasePath, mountPath, "--options=" + mountOptions}
 	daemon := exec.Command(os.Args[0], args...)
 
-	errorPipe, err := daemon.StderrPipe()
+	tempFile, err := ioutil.TempFile("", "tmsu-vfs-")
 	if err != nil {
-		return fmt.Errorf("could not open standard error pipe: %v", err)
+		return fmt.Errorf("could not get a temporary file: %v", err)
 	}
+	daemon.Stderr = tempFile
 
 	err = daemon.Start()
 	if err != nil {
@@ -175,13 +177,7 @@ func mountExplicit(databasePath string, mountPath string, mountOptions string) e
 
 	if waitStatus.Exited() {
 		if waitStatus.ExitStatus() != 0 {
-			buffer := make([]byte, 1024)
-			count, err := errorPipe.Read(buffer)
-			if err != nil {
-				return fmt.Errorf("could not read from error pipe: %v", err)
-			}
-
-			return fmt.Errorf("virtual filesystem mount failed: %v", string(buffer[0:count]))
+			return fmt.Errorf("virtual filesystem mount failed: see standard error output: %v", tempFile.Name())
 		}
 	}
 

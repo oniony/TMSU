@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"github.com/oniony/TMSU/entities"
 	"strings"
+	"math/rand"
 )
 
 // Retrieves the count of values.
@@ -195,11 +196,13 @@ ORDER BY name`
 
 // Adds a value.
 func InsertValue(tx *Tx, name string) (*entities.Value, error) {
-	sql := `
-INSERT INTO value (name)
-VALUES (?)`
+	uuid := rand.Int()
 
-	result, err := tx.Exec(sql, name)
+	sql := `
+INSERT INTO value (id, name)
+VALUES (?, ?)`
+
+	result, err := tx.Exec(sql, uuid, name)
 	if err != nil {
 		return nil, err
 	}

@@ -19,6 +19,7 @@ import (
 	"database/sql"
 	"github.com/oniony/TMSU/entities"
 	"strings"
+	"math/rand"
 )
 
 // The number of tags in the database.
@@ -150,11 +151,13 @@ WHERE name ` + collation + ` IN (?`
 
 // Adds a tag.
 func InsertTag(tx *Tx, name string) (*entities.Tag, error) {
-	sql := `
-INSERT INTO tag (name)
-VALUES (?)`
+	uuid := rand.Int()
 
-	result, err := tx.Exec(sql, name)
+	sql := `
+INSERT INTO tag (id, name)
+VALUES (?, ?)`
+
+	result, err := tx.Exec(sql, uuid, name)
 	if err != nil {
 		return nil, err
 	}

@@ -17,8 +17,11 @@ package main
 
 import (
 	"github.com/oniony/TMSU/cli"
+	"math/rand"
+	"time"
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
 	cli.Run()
 }

@@ -54,7 +54,7 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	paths := args
 	if len(paths) == 0 {
 		var err error
-		paths, err = directoryEntries(".")
+		paths, err = directoryEntries(".", skipDirs)
 		if err != nil {
 			return err, nil
 		}
@@ -139,7 +139,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 		}
 
 		if recursive {
-			entries, err := directoryEntries(path)
+			entries, err := directoryEntries(path, skipDirs)
 			if err != nil {
 				return err
 			}
@@ -151,7 +151,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 	return nil
 }
 
-func directoryEntries(path string) ([]string, error) {
+func directoryEntries(path string, skipDirs bool) ([]string, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
 		switch {
@@ -178,6 +178,8 @@ func directoryEntries(path string) ([]string, error) {
 	}
 
 	names, err := dir.Readdirnames(0)
+        // readdir instead of readdirnames; then for each entry, check if it's a dir or not.
+        // If it's not, go ahead. If it is, and skipDir is set, skip IT and enter it.
 	dir.Close()
 	if err != nil {
 		return nil, fmt.Errorf("%v: could not read directory entries: %v", path, err)

@@ -52,6 +52,8 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	followSymlinks := !options.HasOption("--no-dereference")
 
 	paths := args
+        // If there aren't any paths passed in
+        // then, build paths based on what directoryEntries() returns.
 	if len(paths) == 0 {
 		var err error
 		paths, err = directoryEntries(".", skipDirs)
@@ -60,6 +62,7 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 		}
 	}
 
+        // Open up the database and prepare to commit transactions
 	store, err := openDatabase(databasePath)
 	if err != nil {
 		return err, nil
@@ -72,6 +75,8 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	}
 	defer tx.Commit()
 
+        // If we're merely counting..
+        // TODO: merge untagged and count functions.
 	if count {
 		count, err := findUntaggedCount(store, tx, paths, recursive, includeHidden, skipDirs, followSymlinks)
 		if err != nil {

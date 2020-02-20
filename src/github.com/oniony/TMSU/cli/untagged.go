@@ -153,7 +153,9 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 			} else {
 			    log.Infof(2, "Skipping %v due to skipDirs.", path)
 			}
-		    }
+		    } else {
+                        action(absPath)
+                    }
 		}
 
 		if recursive {

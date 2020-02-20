@@ -37,7 +37,7 @@ Where PATHs are not specified, untagged items under the current working director
 	Options: Options{
 		Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
 		Option{"--include-hidden", "-H", "don't skip hidden files/directories", false, ""},
-		Option{"--skip-dirs", "-s", "only return files, not directories", false, ""},
+		Option{"--file", "-f", "list only items that are files", false, ""},
 		Option{"--count", "-c", "list the number of files rather than their names", false, ""},
 		Option{"--no-dereference", "-P", "do not dereference symbolic links", false, ""}},
 	Exec: untaggedExec,
@@ -48,14 +48,14 @@ Where PATHs are not specified, untagged items under the current working director
 func untaggedExec(options Options, args []string, databasePath string) (error, warnings) {
 	recursive := !options.HasOption("--directory")
 	includeHidden := options.HasOption("--include-hidden")
-	skipDirs := options.HasOption("--skip-dirs")
+	fileOnly := options.HasOption("--file")
 	count := options.HasOption("--count")
 	followSymlinks := !options.HasOption("--no-dereference")
 
 	paths := args
 	if len(paths) == 0 {
 		var err error
-		paths, err = directoryEntries(".", skipDirs)
+		paths, err = directoryEntries(".", fileOnly)
 		if err != nil {
 			return err, nil
 		}
@@ -74,14 +74,14 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	defer tx.Commit()
 
 	if count {
-		count, err := findUntaggedCount(store, tx, paths, recursive, includeHidden, skipDirs, followSymlinks)
+		count, err := findUntaggedCount(store, tx, paths, recursive, includeHidden, fileOnly, followSymlinks)
 		if err != nil {
 			return err, nil
 		}
 
 		fmt.Println(count)
 	} else {
-		if err := findUntagged(store, tx, paths, recursive, includeHidden, skipDirs, followSymlinks); err != nil {
+		if err := findUntagged(store, tx, paths, recursive, includeHidden, fileOnly, followSymlinks); err != nil {
 			return err, nil
 		}
 	}
@@ -89,28 +89,28 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	return nil, nil
 }
 
-func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, skipDirs, followSymlinks bool) error {
+func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, fileOnly, followSymlinks bool) error {
 	var action = func(absPath string) {
 		relPath := _path.Rel(absPath)
 		fmt.Println(relPath)
 	}
 
-	return findUntaggedFunc(store, tx, paths, recursive, includeHidden, skipDirs, followSymlinks, action)
+	return findUntaggedFunc(store, tx, paths, recursive, includeHidden, fileOnly, followSymlinks, action)
 }
 
-func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, skipDirs, followSymlinks bool) (uint, error) {
+func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, fileOnly, followSymlinks bool) (uint, error) {
 	var count uint
 
 	var action = func(absPath string) {
 		count++
 	}
 
-	err := findUntaggedFunc(store, tx, paths, recursive, includeHidden, skipDirs, followSymlinks, action)
+	err := findUntaggedFunc(store, tx, paths, recursive, includeHidden, fileOnly, followSymlinks, action)
 
 	return count, err
 }
 
-func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, skipDirs, followSymlinks bool, action func(absPath string)) error {
+func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive, includeHidden, fileOnly, followSymlinks bool, action func(absPath string)) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 
@@ -143,7 +143,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 
 		// ... if there isn't one, then run the action on it.
 		if file == nil {
-		    if skipDirs {
+		    if fileOnly {
 			stat, err := os.Stat(path)
 			if err != nil {
 			    return fmt.Errorf("%v: could not stat: %v", path, err)
@@ -151,7 +151,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 			if !stat.IsDir() {
 			    action(absPath)
 			} else {
-			    log.Infof(2, "Skipping %v due to skipDirs.", path)
+			    log.Infof(2, "Skipping %v due to fileOnly.", path)
 			}
 		    } else {
 			action(absPath)
@@ -159,19 +159,19 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 		}
 
 		if recursive {
-			entries, err := directoryEntries(path, skipDirs)
+			entries, err := directoryEntries(path, fileOnly)
 			if err != nil {
 				return err
 			}
 
-			findUntaggedFunc(store, tx, entries, recursive, includeHidden, skipDirs, followSymlinks, action)
+			findUntaggedFunc(store, tx, entries, recursive, includeHidden, fileOnly, followSymlinks, action)
 		}
 	}
 
 	return nil
 }
 
-func directoryEntries(path string, skipDirs bool) ([]string, error) {
+func directoryEntries(path string, fileOnly bool) ([]string, error) {
 	stat, err := os.Stat(path)
 	if err != nil {
 		switch {

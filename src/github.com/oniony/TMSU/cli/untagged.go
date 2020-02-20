@@ -154,7 +154,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 			    log.Infof(2, "Skipping %v due to skipDirs.", path)
 			}
 		    } else {
-                        action(absPath)
+			action(absPath)
                     }
 		}
 

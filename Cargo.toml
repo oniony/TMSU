@@ -2,8 +2,20 @@
 name = "tmsu"
 version = "0.1.0"
 authors = ["Paul Ruane <paul.ruane@oniony.com>"]
+edition = "2018"
 
-[dependencies.clap]
-version = "~2.27" 
-default-features = false
-features = [ "suggestions", "wrap_help" ]
+# TODO: try to use fewer features of dependencies when possible
+[dependencies]
+# CLI dependencies
+structopt = "0.3.14"
+clap = "2.33.1"
+termion = "1.5.5"
+pretty_env_logger = "0.4.0"
+
+# Basic lib dependencies
+log = "0.4.8"
+dirs = "2.0.2"
+error-chain = "0.12.2"
+
+# DB
+rusqlite = "0.23.1"

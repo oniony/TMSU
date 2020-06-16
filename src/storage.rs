@@ -138,13 +138,11 @@ impl<'a> Transaction<'a> {
     }
 
     fn count_from_table(&mut self, table_name: &str) -> Result<u64> {
-        // TODO: use a SQL parameter instead?
-        let sql = "
+        let sql = format!("
 SELECT count(*)
-FROM :name";
+FROM {}", table_name);
 
-        let params = rusqlite::params!(table_name);
-        let value: u32 = self.tx.query_row(&sql, params, |row| row.get(0))?;
+        let value: u32 = self.tx.query_row(&sql, Self::NO_PARAMS, |row| row.get(0))?;
         Ok(value as u64)
     }
 }

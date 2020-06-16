@@ -54,7 +54,6 @@ enum SubCommands {
 /// CLI entry point, dispatching to subcommands
 pub fn run() -> Result<()> {
     let opt = TmsuOptions::from_args();
-    println!("{:?}", opt);
 
     match opt.cmd {
         SubCommands::Info(info_opts) => info_opts.execute(&opt.global_opts),

@@ -1,15 +1,18 @@
-extern crate clap;
+#[macro_use]
+extern crate log;
 
-use clap::{App, AppSettings, Arg, SubCommand};
+mod api;
+mod cli;
+mod errors;
+mod storage;
 
 fn main() {
-    let matches = App::new("TMSU").version("1.0.0")
-                                  .template("{bin}\n\n{subcommands}\n\nGlobal options:\n\n{flags}\n\n{after-help}")
-                                  .after_help("Specify subcommand name for detailed help on a particular subcommand, e.g. tmsu help files")
-                                  .arg(Arg::with_name("verbose").short("v")
-                                                                .long("verbose")
-                                                                .help("Show verbose messages"))
-                                  .subcommand(SubCommand::with_name("config").about("Views or amends database sesttings"))
-                                  .subcommand(SubCommand::with_name("files").about("Lists files with particular tags"))
-                                  .get_matches();
+    // Initialize the logging system
+    pretty_env_logger::init();
+
+    // Parse CLI args and dispatch to the right subcommand
+    let result = cli::run();
+
+    // If there is an error, print it and exit with a non-zero error code
+    cli::print_error(result);
 }

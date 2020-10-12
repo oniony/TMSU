@@ -51,12 +51,13 @@ Note: If your tag or value name contains whitespace, operators (e.g. '<') or par
 		`$ tmsu files '\<tag\>'`},
 	Options: Options{{"--directory", "-d", "list only items that are directories", false, ""},
 		{"--file", "-f", "list only items that are files", false, ""},
-		{"--print0", "-0", "delimit files with a NUL character rather than newline.", false, ""},
+		{"--print0", "-0", "delimit files with a NUL character rather than newline", false, ""},
 		{"--count", "-c", "lists the number of files rather than their names", false, ""},
 		{"--path", "-p", "list only items under PATH", true, ""},
 		{"--explicit", "-e", "list only explicitly tagged files", false, ""},
 		{"--sort", "-s", "sort output: id, none, name, size, time", true, ""},
-		{"--ignore-case", "-i", "ignore the case of tag and value names", false, ""}},
+		{"--ignore-case", "-i", "ignore the case of tag and value names", false, ""},
+		{"--show-tags", "-t", "shows the tags of the files returned", false, ""}},
 	Exec: filesExec,
 }
 
@@ -70,6 +71,7 @@ func filesExec(options Options, args []string, databasePath string) (error, warn
 	hasPath := options.HasOption("--path")
 	explicitOnly := options.HasOption("--explicit")
 	ignoreCase := options.HasOption("--ignore-case")
+	showTags := options.HasOption("--show-tags")
 
 	sort := "name"
 	if options.HasOption("--sort") {
@@ -100,12 +102,12 @@ func filesExec(options Options, args []string, databasePath string) (error, warn
 	defer tx.Commit()
 
 	queryText := strings.Join(args, " ")
-	return listFilesForQuery(store, tx, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase, sort)
+	return listFilesForQuery(store, tx, queryText, absPath, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase, showTags, sort)
 }
 
 // unexported
 
-func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase bool, sort string) (error, warnings) {
+func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path string, dirOnly, fileOnly, print0, showCount, explicitOnly, ignoreCase, showTags bool, sort string) (error, warnings) {
 	log.Info(2, "parsing query")
 
 	expression, err := query.Parse(queryText)
@@ -164,15 +166,15 @@ func listFilesForQuery(store *storage.Storage, tx *storage.Tx, queryText, path s
 		return fmt.Errorf("could not query files: %v", err), warnings
 	}
 
-	if err = listFiles(tx, files, dirOnly, fileOnly, print0, showCount); err != nil {
+	if err = listFiles(store, tx, files, dirOnly, fileOnly, print0, showCount, showTags); err != nil {
 		return err, warnings
 	}
 
 	return nil, warnings
 }
 
-func listFiles(tx *storage.Tx, files entities.Files, dirOnly, fileOnly, print0, showCount bool) error {
-	relPaths := make([]string, 0, len(files))
+func listFiles(store *storage.Storage, tx *storage.Tx, files entities.Files, dirOnly, fileOnly, print0, showCount, showTags bool) error {
+    relPaths := make([]string, 0, len(files))
 	for _, file := range files {
 		if fileOnly && file.IsDir {
 			continue
@@ -187,18 +189,26 @@ func listFiles(tx *storage.Tx, files entities.Files, dirOnly, fileOnly, print0, 
 		relPaths = append(relPaths, relPath)
 	}
 
-	if showCount {
-		fmt.Println(len(relPaths))
+	if showTags {
+		// TODO: add -0 option for outputting files with tags.
+		// TODO: handle -d better. Right now it lists the tag only, without the dir name.
+		colour := true
+		onePerLine, explicitOnly, followSymlinks := false, false, false
+		printPathWhen := ""
+		listTagsForPaths(store, tx, relPaths, showCount, onePerLine, explicitOnly, colour, followSymlinks, printPathWhen);
 	} else {
-		for _, relPath := range relPaths {
-			if print0 {
-				fmt.Printf("%v\000", relPath)
-			} else {
-				fmt.Println(relPath)
+		if showCount {
+			fmt.Println(len(relPaths))
+		} else {
+			for _, relPath := range relPaths {
+				if print0 {
+					fmt.Printf("%v\000", relPath)
+				} else {
+					fmt.Println(relPath)
+				}
 			}
 		}
 	}
-
 	return nil
 }
 

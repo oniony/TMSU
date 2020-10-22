@@ -100,18 +100,15 @@ FROM file
 WHERE directory = ? OR directory LIKE ?`
 
 	if pathContainsRoot {
-		sql += `OR directory = '.' OR directory LIKE './%'`
+		sql += `OR directory = '.' OR directory LIKE './%`
 	}
 
 	sql += `
 ORDER BY directory || '/' || name`
 
 	path = filepath.Clean(path)
-	cleanFilePath := filepath.Join(path, "%")
-	if !pathContainsRoot {
-		cleanFilePath = "." + cleanFilePath
-	}
-	rows, err := tx.Query(sql, path, cleanFilePath)
+
+	rows, err := tx.Query(sql, path, filepath.Join(path, "%"))
 	if err != nil {
 		return nil, err
 	}

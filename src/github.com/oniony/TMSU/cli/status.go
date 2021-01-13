@@ -181,8 +181,8 @@ func statusPaths(store *storage.Storage, tx *storage.Tx, paths []string, dirOnly
 			default:
 				return nil, fmt.Errorf("%v: could not stat path: %v", path, err)
 			}
-		} else if stat.Mode()&os.ModeSymlink != 0 {
-			resolvedPath, err = _path.Dereference(absPath)
+		} else {
+			resolvedPath, err = filepath.EvalSymlinks(absPath)
 			if err != nil {
 				return nil, fmt.Errorf("%v: could not dereference symbolic link: %v", path, err)
 			}

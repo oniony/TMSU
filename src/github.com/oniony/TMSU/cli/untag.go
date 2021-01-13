@@ -18,7 +18,6 @@ package cli
 import (
 	"fmt"
 	"github.com/oniony/TMSU/common/log"
-	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/common/text"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
@@ -108,18 +107,15 @@ func untagPathsAll(store *storage.Storage, tx *storage.Tx, paths []string, recur
 
 		log.Infof(2, "%v: resolving path", path)
 
-		stat, err := os.Lstat(absPath)
-		if err != nil {
-			switch {
-			case os.IsNotExist(err), os.IsPermission(err):
-				// ignore
-			default:
-				return err, nil
-			}
-		} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-			absPath, err = _path.Dereference(absPath)
+		if followSymlinks {
+			absPath, err = filepath.EvalSymlinks(absPath)
 			if err != nil {
-				return err, nil
+				switch {
+				case os.IsNotExist(err), os.IsPermission(err):
+					// ignore
+				default:
+					return err, nil
+				}
 			}
 		}
 
@@ -167,18 +163,15 @@ func untagPaths(store *storage.Storage, tx *storage.Tx, paths, tagArgs []string,
 
 		log.Infof(2, "%v: resolving path", path)
 
-		stat, err := os.Lstat(absPath)
-		if err != nil {
-			switch {
-			case os.IsNotExist(err), os.IsPermission(err):
-				// ignore
-			default:
-				return err, nil
-			}
-		} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-			absPath, err = _path.Dereference(absPath)
+		if followSymlinks {
+			absPath, err = filepath.EvalSymlinks(absPath)
 			if err != nil {
-				return err, nil
+				switch {
+				case os.IsNotExist(err), os.IsPermission(err):
+					// ignore
+				default:
+					return err, nil
+				}
 			}
 		}
 

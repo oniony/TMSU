@@ -20,7 +20,6 @@ import (
 	"fmt"
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/common/log"
-	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/common/text"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/query"
@@ -227,12 +226,8 @@ func tagFrom(store *storage.Storage, tx *storage.Tx, fromPath string, paths []st
 		return fmt.Errorf("could not retrieve settings: %v", err), nil
 	}
 
-	stat, err := os.Lstat(fromPath)
-	if err != nil {
-		return err, nil
-	}
-	if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-		fromPath, err = _path.Dereference(fromPath)
+	if followSymlinks {
+		fromPath, err = filepath.EvalSymlinks(fromPath)
 		if err != nil {
 			return err, nil
 		}
@@ -337,8 +332,9 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 		default:
 			return err
 		}
-	} else if stat.Mode()&os.ModeSymlink != 0 && followSymlinks {
-		absPath, err = _path.Dereference(absPath)
+	}
+	if followSymlinks {
+		absPath, err = filepath.EvalSymlinks(absPath)
 		if err != nil {
 			// can't honour 'force' as we don't know the target path
 			return err

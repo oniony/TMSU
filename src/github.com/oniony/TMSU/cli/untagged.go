@@ -114,7 +114,7 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 		if followSymlinks {
 			log.Infof(2, "%v: resolving path", path)
 
-			absPath, err = _path.Dereference(absPath)
+			absPath, err = filepath.EvalSymlinks(absPath)
 			if err != nil {
 				return fmt.Errorf("%v: could not dereference path: %v", path, err)
 			}

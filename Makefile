@@ -12,16 +12,13 @@ DIST_NAME=tmsu-$(ARCH)-$(VER)
 DIST_DIR=$(DIST_NAME)
 DIST_FILE=$(DIST_NAME).tgz
 
-export GOPATH ?= /usr/lib/go:/usr/share/gocode
-export GOPATH := $(CURDIR):$(GOPATH)
-
 all: clean compile dist test
 
 clean:
 	@echo
 	@echo "CLEANING"
 	@echo
-	go clean github.com/oniony/TMSU
+	go clean
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
@@ -31,7 +28,7 @@ compile:
 	@echo "COMPILING"
 	@echo
 	@mkdir -p bin
-	go build -o bin/tmsu github.com/oniony/TMSU
+	go build -o bin/tmsu
 
 test: unit-test integration-test
 

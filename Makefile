@@ -36,7 +36,7 @@ unit-test: compile
 	@echo
 	@echo "RUNNING UNIT TESTS"
 	@echo
-	go test github.com/oniony/TMSU/...
+	cd src/github.com/oniony/TMSU && go test github.com/oniony/TMSU/...
 
 integration-test: compile
 	@echo

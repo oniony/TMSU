@@ -43,7 +43,7 @@ var TagCommand = Command{
 
 Optionally tags applied to files may be attributed with a VALUE using the TAG=VALUE syntax.
 
-Tag and value names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names cannot contain the slash '/' or backslash '\' characters.
+Tag and value names may consist of one or more letter, number, punctuation and symbol characters (from the corresponding Unicode categories). Tag names cannot contain the slash '/' or backslash '\' characters. When tagging, if tag arguments contain path separators ('/' and '\'), the argument is split into parts -- this means that on Linux 'tmsu tag --tags="A/B" file.jpg' is synonymous with 'tmsu tag --tags="A B" file.jpg'.
 
 Tags will not be applied if they are already implied by tag implications. This behaviour can be overridden with the --explicit option. See the 'imply' subcommand for more information.
 
@@ -151,7 +151,13 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 func createTagsValues(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
+	processedTags := make([]string, len(tagArgs))
+	// Explode any paths
 	for _, tagArg := range tagArgs {
+		processedTags = append(processedTags, filepath.SplitList(tagArg)...)
+	}
+
+	for _, tagArg := range processedTags {
 		name := parseTagOrValueName(tagArg)
 
 		if name[0] == '=' {

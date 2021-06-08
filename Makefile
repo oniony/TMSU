@@ -21,7 +21,7 @@ clean:
 	@echo
 	@echo "CLEANING"
 	@echo
-	go clean github.com/oniony/TMSU
+	cd src/github.com/oniony/TMSU && go clean .
 	rm -Rf bin
 	rm -Rf $(DIST_DIR)
 	rm -f $(DIST_FILE)
@@ -31,7 +31,7 @@ compile:
 	@echo "COMPILING"
 	@echo
 	@mkdir -p bin
-	go build -o bin/tmsu github.com/oniony/TMSU
+	cd src/github.com/oniony/TMSU && go build -o ../../../../bin/tmsu github.com/oniony/TMSU
 
 test: unit-test integration-test
 
@@ -39,7 +39,7 @@ unit-test: compile
 	@echo
 	@echo "RUNNING UNIT TESTS"
 	@echo
-	go test github.com/oniony/TMSU/...
+	cd src/github.com/oniony/TMSU && go test github.com/oniony/TMSU/...
 
 integration-test: compile
 	@echo

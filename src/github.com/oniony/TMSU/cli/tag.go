@@ -28,6 +28,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 var TagCommand = Command{
@@ -151,10 +152,10 @@ func tagExec(options Options, args []string, databasePath string) (error, warnin
 func createTagsValues(store *storage.Storage, tx *storage.Tx, tagArgs []string) (error, warnings) {
 	warnings := make(warnings, 0, 10)
 
-	processedTags := make([]string, len(tagArgs))
+	processedTags := make([]string, 0, len(tagArgs))
 	// Explode any paths
 	for _, tagArg := range tagArgs {
-		processedTags = append(processedTags, filepath.SplitList(tagArg)...)
+		processedTags = append(processedTags, strings.Split(tagArg, "/")...)
 	}
 
 	for _, tagArg := range processedTags {
@@ -204,7 +205,13 @@ func tagPaths(store *storage.Storage, tx *storage.Tx, tagArgs, paths []string, e
 		return err, warnings
 	}
 
-	pairs, warnings, err := parseTagValuePairs(store, tx, settings, tagArgs, warnings)
+	processedTags := make([]string, 0, len(tagArgs))
+	// Explode any paths
+	for _, tagArg := range tagArgs {
+		processedTags = append(processedTags, strings.Split(tagArg, "/")...)
+	}
+
+	pairs, warnings, err := parseTagValuePairs(store, tx, settings, processedTags, warnings)
 	if err != nil {
 		return err, warnings
 	}
@@ -419,9 +426,15 @@ func tagPath(store *storage.Storage, tx *storage.Tx, path string, pairs []entiti
 func parseTagValuePairs(store *storage.Storage, tx *storage.Tx, settings entities.Settings, tagArgs []string, warnings warnings) (entities.TagIdValueIdPairs, warnings, error) {
 	log.Info(2, "parsing tag/value pairs")
 
-	pairs := make(entities.TagIdValueIdPairs, 0, len(tagArgs))
-
+	processedTags := make([]string, 0, len(tagArgs))
+	// Explode any paths
 	for _, tagArg := range tagArgs {
+		processedTags = append(processedTags, strings.Split(tagArg, "/")...)
+	}
+
+	pairs := make(entities.TagIdValueIdPairs, 0, len(processedTags))
+
+	for _, tagArg := range processedTags {
 		tagName, valueName := parseTagEqValueName(tagArg)
 
 		tag, err := store.TagByName(tx, tagName)

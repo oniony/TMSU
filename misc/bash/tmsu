@@ -1,0 +1,780 @@
+# This belongs to '/etc/bash_completion.d/tmsu' or '~/.bash_completion'
+# Based on work by 'tomassedovic' and 'Master-jim'
+# (https://github.com/oniony/TMSU/issues/78)
+
+
+_have tmsu &&
+
+complete -F _tmsu tmsu
+
+_tmsu() {
+    local DB LAST_OPT_I NON_DB_SUBCOMMANDS SUBCMD_I SUBCOMMANDS subcmd
+
+    # All subcommands + aliases
+    SUBCOMMANDS=( 'config' 'copy' 'cp' 'del' 'delete' 'dupes' 'files' 'fix'
+                  'help' 'imply' 'info' 'init' 'merge' 'mount' 'mv' 'query'
+                  'rename' 'repair' 'rm' 'stats' 'status' 'tag' 'tags' 'umount'
+                  'unmount' 'untag' 'untagged' 'values' 'version' 'vfs' )
+    # Subcommands that do not need an existing TMSU database
+    NON_DB_SUBCOMMANDS=( 'help' 'init' 'mount' 'umount' 'unmount' 'version'
+                         'vfs' )
+    SUBCMD_I="$(subcommand_i)"
+    DB="$(db_path)"
+    LAST_OPT_I="$(last_subcmd_opt_i)"
+
+    subcmd="${COMP_WORDS[$SUBCMD_I]}"
+    if [[ "$subcmd" == 'tmsu' || ! -z "$DB" \
+          || " ${NON_DB_SUBCOMMANDS[@]} " =~ " $subcmd " ]]; then
+        general_subcmd_completion "$subcmd"
+    fi
+}
+
+subcommand_i() {
+    local subcmd_i=0
+
+    for i in "${!COMP_WORDS[@]}"; do
+        # There is no need to check the potential subcommand for not being
+        # an option argument because the arguments are going to be either
+        # one of 'always auto never' (option 'color') or the path to the DB
+        # (option 'database') and its name cannot be set (only its root) so
+        # it always ends in '.tmsu/db'. None of these matches any of
+        # subcommand names.
+        # Also the word is being completed (COMP_CWORD) and potential
+        # subcommand (i) have not to be at the same position or the
+        # subcommand started being completed before its name itself has been
+        # completed
+        if [[ " ${SUBCOMMANDS[@]} " =~ " ${COMP_WORDS[$i]} " \
+              && "$i" != "$COMP_CWORD" ]]; then
+            subcmd_i="$i"
+            break
+        fi
+    done
+
+    echo "$subcmd_i"
+}
+
+db_path() {
+    local cur next path
+
+    for ((i=1;i<=$SUBCMD_I-1;i++)); do
+        cur="${COMP_WORDS[$i]}"
+        if [[ "$cur" == '-D' || "$cur" == '--database' ]]; then
+            next="${COMP_WORDS[$i+1]}"
+            if [[ "$next" == '=' ]]; then
+                echo "${COMP_WORDS[$i+2]}"
+            else
+                echo "$next"
+            fi
+            return
+        fi
+    done
+
+    path="$(tmsu info 2>&1 | sed -n -e "/Database/{s/Database: //;p}")"
+    if [[ -e "$path" ]]; then
+        echo "$path"
+    fi
+}
+
+last_subcmd_opt_i() {
+    # Print the index of the last subcommand option presented (-1 if none)
+
+    local opt_i=-1
+
+    for ((i=$COMP_CWORD-1;i>=$SUBCMD_I+1;i--)); do
+        if [[ "${COMP_WORDS[$i]::1}" == '-' ]]; then
+            opt_i="$i"
+            break
+        fi
+    done
+
+    echo "$opt_i"
+}
+
+general_subcmd_completion() {
+    # Complete subcommand $1
+    # $1 - subcommand to complete, str
+
+    local FIRST_NON_OPT_I args opts
+
+    opts="opts_$1"
+    args="args_$1"
+    FIRST_NON_OPT_I="$(first_non_opt_i "${!opts}" "${!args}")"
+
+    # There is an option with the arguments which should be completed
+    if [[ "$FIRST_NON_OPT_I" -gt "$COMP_CWORD" ]]; then
+        subcmd_gt_$1
+    fi
+
+    # The previous word is either a completed option or subcommand
+    if [[ "$FIRST_NON_OPT_I" -eq "$COMP_CWORD" ]]; then
+        subcmd_eq_$1
+    fi
+
+    if [[ "$FIRST_NON_OPT_I" -lt "$COMP_CWORD" ]]; then
+        subcmd_lt_$1
+    fi
+}
+
+last_opt_args_num() {
+    # Print the number of arguments the last presented option needs ('' if
+    # the option is not in $1).
+    # $1 - possible options separated with spaces, str, e.g. '-e --color'
+    # $2 - number of arguments for the corresponding options in $1 separated
+    # with spaces, str, e.g. '0 1'; -1 - as many arguments as you want
+
+    opts=( $1 )
+    args=( $2 )
+
+    for i in "${!opts[@]}"; do
+        if [[ "${opts[$i]}" == "${COMP_WORDS[$LAST_OPT_I]}" ]]; then
+            echo "${args[$i]}"
+            return
+        fi
+    done
+}
+
+first_non_opt_i() {
+    # Return the index of the first non-option word (e.g. 'tmsu --color',
+    # 3 is returned because the option has one argument and the next one is
+    # 3rd).
+    # $1 - possible options separated with spaces, str, e.g. '-e --color'
+    # $2 - number of arguments for the corresponding options in $1 separated
+    # with spaces, str, e.g. '0 1'; -1 - as many arguments as you want
+
+    local equal_sign
+
+    if [[ "$LAST_OPT_I" -eq -1 ]]; then
+        echo "$(($SUBCMD_I + 1))"
+        return
+    fi
+
+    args_num="$(last_opt_args_num "$1" "$2")"
+    case "$args_num" in
+    '')
+        echo "$COMP_CWORD"
+        ;;
+    -1)
+        echo "$(($COMP_CWORD + 1))"
+        ;;
+    *)
+        if [[ "${COMP_WORDS[$LAST_OPT_I+1]}" == '=' \
+              && "${COMP_WORDS[COMP_CWORD]}" != '=' ]]; then
+            equal_sign=1
+        else
+            equal_sign=0
+        fi
+        echo "$(($LAST_OPT_I + $args_num + $equal_sign + 1))"
+        ;;
+    esac
+}
+
+completion_generator() {
+    # Completion generator supporting spaces. 'Stolen' from
+    # https://stackoverflow.com/questions/26509260/bash-tab-completion-with-spaces/40944195#40944195
+    # $1 - possible completions separated with '\n', str
+    # $2 - pass '-f' if file names completion is needed, '-d' - for directories
+
+    local cur opts patterns
+
+    cur=${COMP_WORDS[COMP_CWORD]}
+    if [[ "$cur" == '=' ]]; then
+        cur=''
+    fi
+
+    opts='-W'
+    if [[ "$2" == '-f' || "$2" == '-d' ]]; then
+        opts="$2 $opts"
+    fi
+
+    mapfile -t patterns < <( printf "$1" )
+    mapfile -t COMPREPLY < \
+    <( compgen $opts "$( printf '%q ' "${patterns[@]}" )" -- "$cur" \
+    | awk '/ / { print "\""$0"\"" } /^[^ ]+$/ { print $0 }' )
+}
+
+complete_tag_values() {
+    # Check if one of the previous words is '=', extract the tag
+    # and print its values
+
+    local cur prev prev2
+
+    cur=${COMP_WORDS[COMP_CWORD]}
+    prev=${COMP_WORDS[COMP_CWORD-1]}
+    prev2=${COMP_WORDS[COMP_CWORD-2]}
+
+    if [[ "$cur" == '=' && "${prev::1}" != '-' ]]; then
+        completion_generator "$(tag_values "$prev")"
+        return
+    fi
+
+    if [[ "$prev" == '=' && "${prev2::1}" != '-' ]]; then
+        completion_generator "$(tag_values "$prev2")"
+        return
+    fi
+
+    return 1
+}
+
+mline() {
+    # Print string with space-delimeters as a multi-line string
+    # $1 - string to print, str
+
+    local parts=( $1 )
+    # New line character before the string is important!!!
+    # Some subcommands may not work correctly without it, e.g. 'dupes'
+    printf "\n%s" "${parts[@]}"
+}
+
+######################## FUNCTIONS MAKING DB QUERIES ##########################
+
+tags() {
+    # Print all tags
+
+    tmsu --database="$DB" tags
+}
+
+values() {
+    # Print all values
+
+    tmsu --database="$DB" values
+}
+
+tag_values() {
+    # Print values associated with tag $1
+
+    tmsu --database="$DB" values "$1"
+}
+
+implied_tags_parents() {
+    # Print 'parents' of implied tags, e.g. in pair 'mp3 -> music'
+    # 'mp3' will be printed
+
+    tmsu --database="$DB" imply | sed 's/^[[:space:]]*\(.*\) -> .*$/\1/'
+}
+
+implied_tags() {
+    # Print implied tags associated with tag $1, e.g. in pair 'mp3 -> music'
+    # 'music' will be printed
+    # $1 - 'parent' tag
+
+    tmsu --database="$DB" imply \
+    | sed -n 's/^[[:space:]]*'"$1"' -> \(.*\)$/\1/p'
+}
+
+query() {
+    local operators patterns prev prev2 prev3
+
+    #operators='and or not ( ) != == < > <= >= eq ne lt gt le ge'
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    prev2="${COMP_WORDS[COMP_CWORD-2]}"
+    prev3="${COMP_WORDS[COMP_CWORD-3]}"
+
+    case "$prev" in
+    '=='|'<'|'>'|'<='|'>='|'eq'|'ne'|'lt'|'gt'|'le'|'ge')
+        echo "$(tag_values "$prev2")"
+        return
+        ;;
+    '=')
+        # For some reason value operator '!=' is not parsed
+        # the same way as the other ones
+        if [[ "$prev2" == '!' ]]; then
+            echo "$(tag_values "$prev3")"
+            return
+        fi
+        ;;
+    esac
+
+    echo "$(tags)"
+}
+
+##################### FUNCTIONS IMPLEMENTING SUBCOMMANDS ######################
+
+opts_tmsu='-v --verbose -h --help -V --version -D --database --color'
+args_tmsu='0 0 0 0 0 0 1 1 1'
+subcmd_gt_tmsu() {
+    case "${COMP_WORDS[$LAST_OPT_I]}" in
+    -D|--database)
+        completion_generator '' '-f'
+        ;;
+    --color)
+        completion_generator "$(mline 'auto always never')"
+        ;;
+    esac
+}
+subcmd_eq_tmsu() {
+    local available_subcmds
+
+    # Only some subcommands can be used if there is no TMSU database yet
+    if [[ -z "$DB" ]]; then
+        available_subcmds=( "${NON_DB_SUBCOMMANDS[@]}" )
+    else
+        available_subcmds=( "${SUBCOMMANDS[@]}" )
+    fi
+    available_subcmds="$(printf "%s\n" "${available_subcmds[@]}")"
+    completion_generator "$available_subcmds$(mline "$opts_tmsu")"
+}
+subcmd_lt_tmsu() {
+    :
+}
+
+opts_config=''
+args_config=''
+subcmd_gt_config() {
+    :
+}
+subcmd_eq_config() {
+    completion_generator "$(tmsu --database="$DB" config \
+                            | awk -F '=' '{print $1}')"
+}
+subcmd_lt_config() {
+    subcmd_eq_config
+}
+
+opts_copy=''
+args_copy=''
+subcmd_gt_copy() {
+    :
+}
+subcmd_eq_copy() {
+    completion_generator "$(tags)"
+}
+subcmd_lt_copy() {
+    :
+}
+opts_cp="$opts_copy"
+args_cp="$args_copy"
+subcmd_gt_cp() {
+    subcmd_gt_copy
+}
+subcmd_eq_cp() {
+    subcmd_eq_copy
+}
+subcmd_lt_cp() {
+    subcmd_lt_copy
+}
+
+opts_delete='--value'
+args_delete='-1'
+subcmd_gt_delete() {
+    completion_generator "$(values)"
+}
+subcmd_eq_delete() {
+    completion_generator "$(tags)$(mline "$opts_delete")"
+}
+subcmd_lt_delete() {
+    completion_generator "$(tags)"
+}
+opts_del="$opts_delete"
+args_del="$args_delete"
+subcmd_gt_del() {
+    subcmd_gt_delete
+}
+subcmd_eq_del() {
+    subcmd_eq_delete
+}
+subcmd_lt_del() {
+    subcmd_lt_delete
+}
+opts_rm="$opts_delete"
+args_rm="$args_delete"
+subcmd_gt_rm() {
+    subcmd_gt_delete
+}
+subcmd_eq_rm() {
+    subcmd_eq_delete
+}
+subcmd_lt_rm() {
+    subcmd_lt_delete
+}
+
+opts_dupes='-r --recursive'
+args_dupes='0 0'
+subcmd_gt_dupes() {
+    :
+}
+subcmd_eq_dupes() {
+    completion_generator "$(mline "$opts_dupes")" '-f'
+}
+subcmd_lt_dupes() {
+    completion_generator '' '-f'
+}
+
+opts_files="-d --directory -f --file -0 --print0 -c --count -e --explicit \
+            -i --ignore-case -p --path -s --sort"
+args_files='0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1'
+subcmd_gt_files() {
+    case "${COMP_WORDS[$LAST_OPT_I]}" in
+    -p|--path)
+        completion_generator '' '-f'
+        ;;
+    -s|--sort)
+        completion_generator "$(mline 'id none name size time')"
+        ;;
+    esac
+}
+subcmd_eq_files() {
+    completion_generator "$(query)$(mline "$opts_files")"
+}
+subcmd_lt_files() {
+    completion_generator "$(query)"
+}
+opts_query="$opts_files"
+args_query="$args_files"
+subcmd_gt_query() {
+    subcmd_gt_files
+}
+subcmd_eq_query() {
+    subcmd_eq_files
+}
+subcmd_lt_query() {
+    subcmd_lt_files
+}
+
+opts_help='-l --list'
+# The option does not have arguments but we say as if it had and don't
+# implement 'subcmd_gt_help' so no completions is shown after it
+args_help='1 1'
+subcmd_gt_help() {
+    :
+}
+subcmd_eq_help() {
+    local subcmds="$(printf "%s\n" "${SUBCOMMANDS[@]}")"
+    completion_generator "$subcmds$(mline "$opts_help")"
+}
+subcmd_lt_help() {
+    :
+}
+
+opts_imply='-d --delete'
+args_imply='-1 -1'
+subcmd_gt_imply() {
+    local first_arg_i parent_tag
+
+    first_arg_i="$(($LAST_OPT_I+1))"
+    if [[ "$COMP_CWORD" -eq "$first_arg_i" ]]; then
+        completion_generator "$(implied_tags_parents)"
+    else
+        if [[ "${COMP_WORDS[$(($first_arg_i+1))]}" == '=' ]]; then
+            # Tag with a value, e.g. music=mp3
+            parent_tag="$(printf '%s' "${COMP_WORDS[@]:$first_arg_i:3}")"
+            completion_generator "$(implied_tags "$parent_tag")"
+        else
+            parent_tag="${COMP_WORDS[$first_arg_i]}"
+            completion_generator "$(implied_tags "$parent_tag")"
+        fi
+    fi
+}
+subcmd_eq_imply() {
+    if complete_tag_values; then
+        return
+    fi
+
+    completion_generator "$(tags)$(mline "$opts_imply")"
+}
+subcmd_lt_imply() {
+    if complete_tag_values; then
+        return
+    fi
+
+    completion_generator "$(tags)"
+}
+
+opts_info='-s --stats -u --usage'
+args_info='0 0 0 0'
+subcmd_gt_info() {
+    :
+}
+subcmd_eq_info() {
+    completion_generator "$(mline "$opts_info")"
+}
+subcmd_lt_info() {
+    :
+}
+opts_stats="$opts_info"
+args_stats="$args_info"
+subcmd_gt_stats() {
+    subcmd_gt_info
+}
+subcmd_eq_stats() {
+    subcmd_eq_info
+}
+subcmd_lt_stats() {
+    subcmd_lt_info
+}
+
+opts_init=''
+args_init=''
+subcmd_gt_init() {
+    :
+}
+subcmd_eq_init() {
+    completion_generator '' '-d'
+}
+subcmd_lt_init() {
+    :
+}
+
+opts_merge="$opts_delete"
+args_merge="$args_delete"
+subcmd_gt_merge() {
+    subcmd_gt_delete
+}
+subcmd_eq_merge() {
+    subcmd_eq_delete
+}
+subcmd_lt_merge() {
+    subcmd_lt_delete
+}
+
+opts_mount='-o --options'
+args_mount='1 1'
+subcmd_gt_mount() {
+    :
+}
+subcmd_eq_mount() {
+    completion_generator "$(mline "$opts_mount")" '-f'
+}
+subcmd_lt_mount() {
+    if [[ "$(($FIRST_NON_OPT_I + 1))" -eq "$COMP_CWORD" ]]; then
+        completion_generator '' '-d'
+    fi
+}
+
+opts_rename='--value'
+args_rename='1'
+subcmd_gt_rename() {
+    completion_generator "$(values)"
+}
+subcmd_eq_rename() {
+    if [[ "$LAST_OPT_I" -eq -1 ]]; then
+        completion_generator "$(tags)$(mline "$opts_rename")"
+    fi
+}
+subcmd_lt_rename() {
+    :
+}
+opts_mv="$opts_rename"
+args_mv="$args_rename"
+subcmd_gt_mv() {
+    subcmd_gt_rename
+}
+subcmd_eq_mv() {
+    subcmd_eq_rename
+}
+subcmd_lt_mv() {
+    subcmd_lt_rename
+}
+
+opts_repair="-P --pretend -R --remove -u --unmodified --rationalize -p --path \
+             -m --manual"
+args_repair='0 0 0 0 0 0 0 1 1 2 2'
+subcmd_gt_repair() {
+    completion_generator '' '-f'
+}
+subcmd_eq_repair() {
+    local last_opt="${COMP_WORDS[$LAST_OPT_I]}"
+    if [[ "$last_opt" != '-m' && "$last_opt" != '--manual' ]]; then
+        completion_generator "$(mline "$opts_repair")" '-f'
+    fi
+}
+subcmd_lt_repair() {
+    completion_generator '' '-f'
+}
+opts_fix="$opts_repair"
+args_fix="$args_repair"
+subcmd_gt_fix() {
+    subcmd_gt_repair
+}
+subcmd_eq_fix() {
+    subcmd_eq_repair
+}
+subcmd_lt_fix() {
+    subcmd_lt_repair
+}
+
+opts_status='-d --directory -P --no-dereference'
+args_status='0 0 0 0'
+subcmd_gt_status() {
+    :
+}
+subcmd_eq_status() {
+    completion_generator "$(mline "$opts_status")" '-f'
+}
+subcmd_lt_status() {
+    completion_generator '' '-f'
+}
+
+opts_tag="-r --recursive -e --explicit -F --force -P --no-dereference \
+          -c --create -f --from -t --tags -w --where -"
+args_tag='0 0 0 0 0 0 0 0 -1 -1 -1 -1 -1 -1 -1 -1 -1'
+subcmd_gt_tag() {
+    # At the moment it works correctly with options
+    # '-f/--from/-t/--tags/-w/--where' only if they are placed at the end
+    case "${COMP_WORDS[$LAST_OPT_I]}" in
+    # Though option '--from' has one argument, we set it as a multi-argument
+    # option to be able to fine-tune necessary completions depending on
+    # the position
+    -t|--tags)
+        if [[ ("${COMP_WORDS[$LAST_OPT_I+1]}" == '=' \
+               && "${COMP_WORDS[$LAST_OPT_I+2]: -1}" == '"') \
+              || ("${COMP_WORDS[$LAST_OPT_I+1]}" != '=' \
+                  && "${COMP_WORDS[$LAST_OPT_I+1]: -1}" == '"') ]]; then
+            completion_generator '' '-f'
+        else
+            if complete_tag_values; then
+                return
+            fi
+            completion_generator "$(tags)"
+        fi
+        ;;
+    # See the previous option comment...(to complete FILE... after the option)
+    -f|--from)
+        completion_generator '' '-f'
+        ;;
+    # See the previous option comment...(to form queries - bash completion
+    # thinks that two words separated with a space are different arguments
+    # and even "s do not help. Also after the query TAG[=VALUE]s should be set,
+    # so using 'query' this way is ok)
+    -w|--where)
+        if complete_tag_values; then
+            return
+        fi
+        completion_generator "$(query)"
+        ;;
+    esac
+}
+subcmd_eq_tag() {
+    completion_generator "$(mline "$opts_tag")" '-f'
+}
+subcmd_lt_tag() {
+    if complete_tag_values; then
+        return
+    fi
+    completion_generator "$(tags)"
+}
+
+opts_tags="-c --count -1 -e --explicit -P --no-dereference -n --name \
+           -u --value"
+args_tags='0 0 0 0 0 0 0 1 1 -1 -1'
+subcmd_gt_tags() {
+    case "${COMP_WORDS[$LAST_OPT_I]}" in
+    -n|--name)
+        completion_generator "$(mline 'auto always never')"
+        ;;
+    -u|--value)
+        completion_generator "$(values)"
+        ;;
+    esac
+}
+subcmd_eq_tags() {
+    completion_generator "$(mline "$opts_tags")" '-f'
+}
+subcmd_lt_tags() {
+    completion_generator '' '-f'
+}
+
+opts_unmount='-a --all'
+# See the comment to 'args_help'
+args_unmount='1 1'
+subcmd_gt_unmount() {
+    :
+}
+subcmd_eq_unmount() {
+    completion_generator "$(mline "$opts_unmount")" '-d'
+}
+subcmd_lt_unmount() {
+    :
+}
+opts_umount="$opts_unmount"
+args_umount="$args_unmount"
+subcmd_gt_umount() {
+    subcmd_gt_unmount
+}
+subcmd_eq_umount() {
+    subcmd_eq_unmount
+}
+subcmd_lt_umount() {
+    subcmd_lt_unmount
+}
+
+opts_untag='-r --recursive -P --no-dereference -a --all -t --tags'
+args_untag='0 0 0 0 -1 -1 -1 -1'
+subcmd_gt_untag() {
+    # At the moment it works correctly with option '-t/--tags' only
+    # if it is placed at the end
+    case "${COMP_WORDS[$LAST_OPT_I]}" in
+    # See the comment in 'subcmd_gt_tag' for the same option
+    -t|--tags)
+        if [[ ("${COMP_WORDS[$LAST_OPT_I+1]}" == '=' \
+               && "${COMP_WORDS[$LAST_OPT_I+2]: -1}" == '"') \
+              || ("${COMP_WORDS[$LAST_OPT_I+1]}" != '=' \
+                  && "${COMP_WORDS[$LAST_OPT_I+1]: -1}" == '"') ]]; then
+            completion_generator '' '-f'
+        else
+            if complete_tag_values; then
+                return
+            fi
+            completion_generator "$(tags)"
+        fi
+        ;;
+    -a|--all)
+        completion_generator '' '-f'
+        ;;
+    esac
+}
+subcmd_eq_untag() {
+    completion_generator "$(mline "$opts_untag")" '-f'
+}
+subcmd_lt_untag() {
+    subcmd_lt_tag
+}
+
+opts_untagged='-d --directory -c --count -P --no-dereference'
+args_untagged='0 0 0 0 0 0'
+subcmd_gt_untagged() {
+    :
+}
+subcmd_eq_untagged() {
+    completion_generator "$(mline "$opts_untagged")" '-f'
+}
+subcmd_lt_untagged() {
+    completion_generator '' '-f'
+}
+
+opts_values='-c --count -1'
+args_values='0 0 0'
+subcmd_gt_values() {
+    :
+}
+subcmd_eq_values() {
+    completion_generator "$(tags)$(mline "$opts_values")"
+}
+subcmd_lt_values() {
+    completion_generator "$(tags)"
+}
+
+opts_version=''
+args_version=''
+subcmd_gt_version() {
+    :
+}
+subcmd_eq_version() {
+    :
+}
+subcmd_lt_version() {
+    :
+}
+
+opts_vfs='-o --options'
+args_vfs='1 1'
+subcmd_gt_vfs() {
+    :
+}
+subcmd_eq_vfs() {
+    completion_generator "$(mline "$opts_vfs")" '-d'
+}
+subcmd_lt_vfs() {
+    if [[ "$FIRST_NON_OPT_I" -eq "$COMP_CWORD" ]]; then
+        completion_generator '' '-d'
+    fi
+}

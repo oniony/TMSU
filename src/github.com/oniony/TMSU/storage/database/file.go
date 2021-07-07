@@ -100,7 +100,7 @@ FROM file
 WHERE directory = ? OR directory LIKE ?`
 
 	if pathContainsRoot {
-		sql += `OR directory = '.' OR directory LIKE './%`
+		sql += `OR directory = '.' OR directory LIKE './%'`
 	}
 
 	sql += `

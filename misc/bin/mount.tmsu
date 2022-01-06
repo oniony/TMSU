@@ -6,4 +6,4 @@ export PATH
 # in /etc/fuse.conf and then pass the 'allow_other' option below.
 #tmsu mount options=allow_other $1 $2
 
-tmsu mount $1 $2
+tmsu mount "$1" "$2"

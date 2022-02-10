@@ -46,7 +46,7 @@ Linux
     These will be installed to your GOPATH directory (see previous step).
 
         go get -u golang.org/x/crypto/blake2b
-        go get -u github.com/mattn/go-sqlite3
+        go get -u modernc.org/sqlite
         go get -u github.com/hanwen/go-fuse/fuse
 
 5. Build and install
@@ -90,7 +90,7 @@ Windows
     command has to be run from the MinGW terminal (e.g. Msys2) otherwise it will fail
     to compile Sqlite3:
 
-        go get -u github.com/mattn/go-sqlite3
+        go get -u modernc.org/sqlite
         go get -u golang.org/x/crypto/blake2b
 
 

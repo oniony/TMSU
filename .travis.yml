@@ -4,6 +4,6 @@ go:
     - 1.13
 
 install:
-    - go get -u github.com/mattn/go-sqlite3
+    - go get -u modernc.org/sqlite
     - go get -u github.com/hanwen/go-fuse/fuse
     - go get -u golang.org/x/crypto/blake2b

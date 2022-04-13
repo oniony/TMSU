@@ -2,7 +2,7 @@
 
 export PATH
 
-debug=true
+debug=false
 
 # to allow other users access to the TMSU mount, enable the 'user_allow_other' option
 # in /etc/fuse.conf and then pass the 'allow_other' option below.
@@ -21,7 +21,6 @@ if [[ $4 = *"allow_other"* ]]; then
     MOUNT_OPTIONS='allow_other'
 fi
 
-# implementation based on option from #239
 if [[ $MOUNT_OPTIONS ]]; then
         tmsu mount --verbose --database "$1" "--options=${MOUNT_OPTIONS}" "$2"
     else

@@ -2,25 +2,6 @@
 
 export PATH
 
-# to allow other users access to the TMSU mount, enable the 'user_allow_other' option
-# in /etc/fuse.conf and then pass the 'allow_other' option below.
-#tmsu mount --options=allow_other $1 $2
-
-# Mount passes the options given after -o in the 4th argument
-if [[ $4 = *"allow_other"* ]]; then
-    MOUNT_OPTIONS='--options=allow_other'
-fi
-
-if [[ $MOUNT_OPTIONS ]]; then
-    tmsu mount "$MOUNT_OPTIONS" "$1" "$2"
-else
-    tmsu mount "$1" "$2"
-fi
-
-#!/usr/bin/env bash
-
-export PATH
-
 debug=true
 
 # to allow other users access to the TMSU mount, enable the 'user_allow_other' option
@@ -39,13 +20,6 @@ fi
 if [[ $4 = *"allow_other"* ]]; then
     MOUNT_OPTIONS='allow_other'
 fi
-
-## implementation based on `tmsu help mount` documentation
-#if [[ $MOUNT_OPTIONS ]]; then
-#    tmsu mount --verbose "--options=${MOUNT_OPTIONS}" "$1" "$2"
-#else
-#    tmsu mount --verbose "$1" "$2"
-#fi
 
 # implementation based on option from #239
 if [[ $MOUNT_OPTIONS ]]; then

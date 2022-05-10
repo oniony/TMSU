@@ -41,18 +41,16 @@ Now follow the next steps according to your operating system.
 Linux
 -----
 
-4. Install the dependent packages
+4. Build and install
 
-    These will be installed to your GOPATH directory (see previous step).
+    make
+    sudo make install
 
-        go get -u golang.org/x/crypto/blake2b
-        go get -u github.com/mattn/go-sqlite3
-        go get -u github.com/hanwen/go-fuse/fuse
+    or, to compile manually:
 
-5. Build and install
-
-        make
-        sudo make install
+    mkdir bin
+    cd src/github.com/oniony/TMSU
+    go build -o ../../../../bin/tmsu .
 
     This will build the binary and copy it to `/usr/bin`, aswell as installing
     Zsh completion, a `mount` wrapper and the manual page. To adjust the paths

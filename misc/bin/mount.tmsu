@@ -12,7 +12,7 @@ if [[ $4 = *"allow_other"* ]]; then
 fi
 
 if [[ $MOUNT_OPTIONS ]]; then
-        tmsu mount --verbose --database "$1" "--options=${MOUNT_OPTIONS}" "$2"
+        tmsu mount --verbose --database="$1" "--options=${MOUNT_OPTIONS}" "$2"
     else
-        tmsu mount --verbose --database "$1" "$2"
+        tmsu mount --verbose --database="$1" "$2"
 fi

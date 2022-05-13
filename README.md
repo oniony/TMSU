@@ -67,6 +67,9 @@ for the following GNU/Linux distributions:
     - Daily <https://launchpad.net/~tmsu/+archive/ubuntu/daily>
   * Arch
     - Stable <https://aur.archlinux.org/packages/tmsu/>
+  * Nix/NixOS
+    - Stable <https://search.nixos.org/packages?query=tmsu&show=tmsu>
+    - Unstable <https://search.nixos.org/packages?query=tmsu&show=tmsu&channel=unstable>
 
 These packages are not maintained by me and I cannot guarantee their content.
 

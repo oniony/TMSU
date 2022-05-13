@@ -5,7 +5,7 @@ MAN_INSTALL_DIR=$(DESTDIR)/usr/share/man/man1
 ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/share/zsh/site-functions
 
 # other vars
-VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" src/github.com/oniony/TMSU/version/version.go)
+VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" version/version.go)
 SHELL=/bin/sh
 ARCH=$(shell uname -m)
 DIST_NAME=tmsu-$(ARCH)-$(VER)
@@ -36,7 +36,7 @@ unit-test: compile
 	@echo
 	@echo "RUNNING UNIT TESTS"
 	@echo
-	cd src/github.com/oniony/TMSU && go test github.com/oniony/TMSU/...
+	go test ./...
 
 integration-test: compile
 	@echo

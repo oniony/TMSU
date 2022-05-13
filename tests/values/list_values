@@ -3,11 +3,11 @@
 # setup
 
 touch /tmp/tmsu/file1
-tmsu tag /tmp/tmsu/file1 year=2015 year=2016 'tag=v1\=v2'  >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu tag /tmp/tmsu/file1 year=2015 year=2016 'tag=MMXXII\=2022'  >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # test
 
-tmsu values                                                >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu values                                                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 
@@ -16,7 +16,7 @@ tmsu: new tag 'year'
 tmsu: new value '2015'
 tmsu: new value '2016'
 tmsu: new tag 'tag'
-tmsu: new value 'v1=v2'
+tmsu: new value 'MMXXII=2022'
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
@@ -25,7 +25,7 @@ fi
 diff /tmp/tmsu/stdout - <<EOF
 2015
 2016
-v1=v2
+MMXXII=2022
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

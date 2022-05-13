@@ -33,18 +33,18 @@ var MountCommand = Command{
 	Name:     "mount",
 	Synopsis: "Mount the virtual filesystem",
 	Usages: []string{"tmsu mount",
-		"tmsu mount [OPTION]... [FILE] MOUNTPOINT"},
+		"tmsu mount [OPTION]... MOUNTPOINT"},
 	Description: `Without arguments, lists the currently mounted file-systems, otherwise mounts a virtual file-system at the path MOUNTPOINT.
 
-Where FILE is specified, the database at FILE is mounted.
+Use the --database global option or TMSU_DB environment variable (in order of precedence) to specify the path of the database to be mounted.
 
-If FILE is not specified but the TMSU_DB environment variable is defined then the database at TMSU_DB is mounted.
+Where neither --database is specified nor TMSU_DB defined then the default database is mounted.
 
-Where neither FILE is specified nor TMSU_DB defined then the default database is mounted.
+To allow other users access to the mounted filesystem, pass the 'allow_other' FUSE option, e.g. 'tmsu mount --options=allow_other mp'. (FUSE only allows the root user to use this option unless 'user_allow_other' is present in '/etc/fuse.conf'.)
 
-To allow other users access to the mounted filesystem, pass the 'allow_other' FUSE option, e.g. 'tmsu mount --options=allow_other mp'. (FUSE only allows the root user to use this option unless 'user_allow_other' is present in '/etc/fuse.conf'.)`,
+For further documentation on the usage of the --database option, refer to 'tmsu help', without specifying a subcommand`,
 	Examples: []string{"$ tmsu mount mp",
-		"$ tmsu mount /tmp/db mp",
+		"$ tmsu mount --database=/tmp/db mp",
 		"$ tmsu mount --options=allow_other mp"},
 	Options: Options{Option{"--options", "-o", "mount options (passed to fusermount)", true, ""}},
 	Exec:    mountExec,

@@ -8,11 +8,11 @@ export PATH
 
 # Mount passes the options given after -o in the 4th argument
 if [[ $4 = *"allow_other"* ]]; then
-    MOUNT_OPTIONS='--options=allow_other'
+    MOUNT_OPTIONS='allow_other'
 fi
 
 if [[ $MOUNT_OPTIONS ]]; then
-    tmsu mount "$MOUNT_OPTIONS" "$1" "$2"
-else
-    tmsu mount "$1" "$2"
+        tmsu mount --verbose --database "$1" "--options=${MOUNT_OPTIONS}" "$2"
+    else
+        tmsu mount --verbose --database "$1" "$2"
 fi

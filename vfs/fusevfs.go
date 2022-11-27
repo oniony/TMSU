@@ -503,11 +503,11 @@ func (vfs FuseVfs) Unlink(name string, context *fuse.Context) fuse.Status {
 
 	switch path[0] {
 	case tagsDir:
-		dirName := path[len(path)-2]
+		dirName := path[len(path)-3]
 
 		var tagName, valueName string
 		if dirName[0] == '=' {
-			tagName = unescape(path[len(path)-3])
+			tagName = unescape(path[len(path)-4])
 			valueName = unescape(dirName[1:])
 		} else {
 			tagName = unescape(dirName)

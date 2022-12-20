@@ -841,8 +841,15 @@ func (vfs FuseVfs) openTaggedEntryDir(tx *storage.Tx, path []string) ([]fuse.Dir
 		log.Fatalf("could not query files: %v", err)
 	}
 
+	valueCount, err := vfs.store.ValueCount(tx)
+	if err != nil {
+		log.Fatalf("could not get value count: %v", err)
+	}
+
 	var valueNames []string
-	if lastPathElement[0] != '=' {
+	if err == nil && valueCount == 0 {
+		valueNames = []string{}
+	} else if lastPathElement[0] != '=' {
 		expression := pathToExpression(path[:len(path)-1])
 		files, err := vfs.store.FilesForQuery(tx, expression, "", false, false, "name")
 		if err != nil {

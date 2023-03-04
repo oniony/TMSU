@@ -13,25 +13,27 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !windows
 // +build !windows
 
 package vfs
 
 import (
 	"fmt"
-	"github.com/hanwen/go-fuse/fuse"
-	"github.com/hanwen/go-fuse/fuse/nodefs"
-	"github.com/hanwen/go-fuse/fuse/pathfs"
-	"github.com/oniony/TMSU/common/log"
-	"github.com/oniony/TMSU/entities"
-	"github.com/oniony/TMSU/query"
-	"github.com/oniony/TMSU/storage"
 	"os"
 	"path/filepath"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/hanwen/go-fuse/v2/fuse"
+	"github.com/hanwen/go-fuse/v2/fuse/nodefs"
+	"github.com/hanwen/go-fuse/v2/fuse/pathfs"
+	"github.com/oniony/TMSU/common/log"
+	"github.com/oniony/TMSU/entities"
+	"github.com/oniony/TMSU/query"
+	"github.com/oniony/TMSU/storage"
 )
 
 const helpFilename = "README.md"

@@ -13,16 +13,18 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+//go:build !windows
 // +build !windows
 
 package cli
 
 import (
 	"fmt"
-	"github.com/oniony/TMSU/common/log"
-	"github.com/oniony/TMSU/vfs"
 	"os"
 	"os/exec"
+
+	"github.com/oniony/TMSU/common/log"
+	"github.com/oniony/TMSU/vfs"
 )
 
 var UnmountCommand = Command{
@@ -51,16 +53,14 @@ func unmountExec(options Options, args []string, databasePath string) (error, wa
 }
 
 func unmount(path string) error {
-	log.Info(2, "searching path for fusermount.")
-
-	fusermountPath, err := exec.LookPath("fusermount")
+	argv, err := argv(path)
 	if err != nil {
-		return fmt.Errorf("could not find 'fusermount': ensure fuse is installed: %v", err)
+		return fmt.Errorf("error getting unmount args: %v", err)
 	}
 
-	log.Infof(2, "running: %v -u %v.", fusermountPath, path)
+	log.Infof(2, "running: %v", argv)
 
-	process, err := os.StartProcess(fusermountPath, []string{fusermountPath, "-u", path}, &os.ProcAttr{})
+	process, err := os.StartProcess(argv[0], argv, &os.ProcAttr{})
 	if err != nil {
 		return fmt.Errorf("could not start 'fusermount': %v", err)
 	}
@@ -98,4 +98,21 @@ func unmountAll() error {
 	}
 
 	return nil
+}
+
+func argv(path string) ([]string, error) {
+	log.Info(2, "searching path for fusermount.")
+
+	fusermountPath, err := exec.LookPath("fusermount")
+	if err == nil {
+		return []string{fusermountPath, "-u", path}, nil
+	}
+
+	log.Info(2, "searching path for umount.")
+	umountPath, err := exec.LookPath("umount")
+	if err == nil {
+		return []string{umountPath, path}, nil
+	}
+
+	return nil, fmt.Errorf("could not find 'fusermount' or 'umount': ensure fuse is installed: %v", err)
 }

@@ -1,8 +1,8 @@
 # installation paths
-INSTALL_DIR=$(DESTDIR)/usr/bin
-MOUNT_INSTALL_DIR=$(DESTDIR)/usr/sbin
-MAN_INSTALL_DIR=$(DESTDIR)/usr/share/man/man1
-ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/share/zsh/site-functions
+INSTALL_DIR=$(DESTDIR)/usr/local/bin
+MOUNT_INSTALL_DIR=$(DESTDIR)/usr/local/sbin
+MAN_INSTALL_DIR=$(DESTDIR)/usr/local/share/man/man1
+ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/local/share/zsh/site-functions
 BASH_COMP_INSTALL_DIR=$(DESTDIR)/etc/bash_completion.d
 
 # other vars
@@ -54,13 +54,13 @@ dist: compile
 	@mkdir -p $(DIST_DIR)/man
 	@mkdir -p $(DIST_DIR)/misc/zsh
 	@mkdir -p $(DIST_DIR)/misc/bash
-	cp -R bin -t $(DIST_DIR)
-	cp README.md -t $(DIST_DIR)
-	cp COPYING.md -t $(DIST_DIR)
-	cp misc/bin/* -t $(DIST_DIR)/bin/
+	gcp -R bin -t $(DIST_DIR)
+	gcp README.md -t $(DIST_DIR)
+	gcp COPYING.md -t $(DIST_DIR)
+	gcp misc/bin/* -t $(DIST_DIR)/bin/
 	gzip -fc misc/man/tmsu.1 >$(DIST_DIR)/man/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
-	cp misc/bash/tmsu -t $(DIST_DIR)/misc/bash/
+	gcp misc/zsh/_tmsu -t $(DIST_DIR)/misc/zsh/
+	gcp misc/bash/tmsu -t $(DIST_DIR)/misc/bash/
 	tar czf $(DIST_FILE) $(DIST_DIR)
 
 install: 
@@ -72,12 +72,12 @@ install:
 	mkdir -p $(MAN_INSTALL_DIR)
 	mkdir -p $(ZSH_COMP_INSTALL_DIR)
 	mkdir -p $(BASH_COMP_INSTALL_DIR)
-	cp bin/tmsu -t $(INSTALL_DIR)
-	cp misc/bin/mount.tmsu -t $(MOUNT_INSTALL_DIR)
-	cp misc/bin/tmsu-* -t $(INSTALL_DIR)
+	gcp bin/tmsu -t $(INSTALL_DIR)
+	gcp misc/bin/mount.tmsu -t $(MOUNT_INSTALL_DIR)
+	gcp misc/bin/tmsu-* -t $(INSTALL_DIR)
 	gzip -fc misc/man/tmsu.1 >$(MAN_INSTALL_DIR)/tmsu.1.gz
-	cp misc/zsh/_tmsu -t $(ZSH_COMP_INSTALL_DIR)
-	cp misc/bash/tmsu -t $(BASH_COMP_INSTALL_DIR)
+	gcp misc/zsh/_tmsu -t $(ZSH_COMP_INSTALL_DIR)
+	gcp misc/bash/tmsu -t $(BASH_COMP_INSTALL_DIR)
 
 uninstall:
 	@echo "UNINSTALLING"

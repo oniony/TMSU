@@ -3,7 +3,7 @@ INSTALL_DIR=$(DESTDIR)/usr/local/bin
 MOUNT_INSTALL_DIR=$(DESTDIR)/usr/local/sbin
 MAN_INSTALL_DIR=$(DESTDIR)/usr/local/share/man/man1
 ZSH_COMP_INSTALL_DIR=$(DESTDIR)/usr/local/share/zsh/site-functions
-BASH_COMP_INSTALL_DIR=$(DESTDIR)/etc/bash_completion.d
+BASH_COMP_INSTALL_DIR=$(DESTDIR)/usr/local/etc/bash_completion.d
 
 # other vars
 VER=$(shell grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+" version/version.go)

@@ -6,6 +6,9 @@ a downloaded binary then they can be safely ignored.
 
 1. Installing Go
 
+    * Note: macOS users can skip down to the macOS section as it includes
+      installing Go.
+
     TMSU is written in the Go programming language. To compile from source you must
     first install Go:
 
@@ -15,7 +18,7 @@ a downloaded binary then they can be safely ignored.
     available in the package management system that comes with your operating
     system.
 
-2. Set up the Go path
+3. Set up the Go path
 
     Go, as of verison 1.1, requires the `GOPATH` environment variable be set for
     the 'go get' command to function. You will need to set up a path for Go
@@ -24,7 +27,7 @@ a downloaded binary then they can be safely ignored.
 
     * <http://golang.org/cmd/go/#hdr-GOPATH_environment_variable>
 
-3. Clone the TMSU respository:
+4. Clone the TMSU respository:
 
     To clone the current stable release branch:
 
@@ -52,9 +55,54 @@ Linux
     cd src/github.com/oniony/TMSU
     go build -o ../../../../bin/tmsu .
 
-    This will build the binary and copy it to `/usr/bin`, aswell as installing
+    This will build the binary and copy it to `/usr/bin`, as well as installing
     Zsh completion, a `mount` wrapper and the manual page. To adjust the paths
     please edit the `Makefile`.
+
+macOS
+-----
+
+1. Install Homebrew
+
+    Homebrew allows you to install additional software and command-line tools
+    that macOS doesn't ship with. This is used to get GNU versions of cp and
+    find, and use them instead of macOS's BSD equivalents.
+
+    * <https://brew.sh/>
+
+    Homebrew will prompt for your password and install the Command Line Tools
+    for XCode if required. Conveniently, this also includes GNU `make` which
+    we'll also need to compile.
+
+    Homebrew will finish with instructions for putting the Homebrew downloaded
+    binaries into your local shell's PATH. Follow those instructions.
+    Note: `mount.tmsu`, a warpper for `tmsu mount`, installs into
+    `/usr/local/sbin`; you may need to adjust your `$PATH` if you'd like to use
+    it.
+
+2.  Install Go:
+
+    brew install go
+
+    Follow the instructions under Linux, for using `git clone` to pull in TMSU.
+    The source code will be pulled into the TMSU directory.
+
+3. Install GNU cp and find
+
+    These are utilities found in Homebrew's `coreutils` and `findutils`
+    packages:
+
+    brew install coreutils findutils
+
+4. Build and install
+
+    cd TMSU/
+    make
+    make install
+
+    This will build the binary and copy it to `/usr/local/bin`, as well as
+    installing Zsh completion, and a manual page. To adjust the paths please
+    edit the `Makefile`.
 
 Windows
 -------

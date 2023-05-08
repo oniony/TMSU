@@ -1,0 +1,15 @@
+[package]
+authors = [ "Paul Ruane <paul.ruane@oniony.com>" ]
+categories = [ "command-line-utilities", "filesystem" ]
+description = "A tool for tagging your files and accessing them via a virtual file system"
+documentation = "https://www.github.com/oniony/TMSU/wiki"
+edition = "2021"
+homepage = "https://tmsu.org/"
+keywords = [ "cli", "tag", "tagging", "virtual file system", "VFS" ]
+license = "GPL-3.0-or-later"
+name = "tmsu"
+readme = "https://github.com/oniony/TMSU/blob/master/README.md"
+repository = "https://github.com/oniony/TMSU"
+version = "1.0.0"
+
+[dependencies]

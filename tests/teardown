@@ -1,4 +1,0 @@
-#!/usr/bin/env bash
-
-# destroy the test directory
-rm -r /tmp/tmsu 2>/dev/null

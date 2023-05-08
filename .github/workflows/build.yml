@@ -1,0 +1,21 @@
+name: Rust
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+
+    - name: Build CLI
+      working-directory: crates/cli
+      run: cargo build --verbose
+

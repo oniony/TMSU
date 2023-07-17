@@ -1035,9 +1035,7 @@ func (vfs FuseVfs) tagValueNamesForFiles(tx *storage.Tx, tagName string, files e
 			return nil, fmt.Errorf("could not retrieve file-tags for file '%v': %v", file.Id, err)
 		}
 
-		for _, valueId := range fileTags.Where(predicate).ValueIds() {
-			valueIds = append(valueIds, valueId)
-		}
+		valueIds = append(valueIds, fileTags.Where(predicate).ValueIds()...)
 	}
 
 	values, err := vfs.store.ValuesByIds(tx, valueIds.Uniq())

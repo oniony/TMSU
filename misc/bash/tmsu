@@ -729,7 +729,7 @@ subcmd_lt_untag() {
     subcmd_lt_tag
 }
 
-opts_untagged='-d --directory -c --count -P --no-dereference'
+opts_untagged='-d --directory -c --count -P --no-dereference --no-directories'
 args_untagged='0 0 0 0 0 0'
 subcmd_gt_untagged() {
     :

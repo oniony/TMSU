@@ -17,11 +17,12 @@ package cli
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
+
 	"github.com/oniony/TMSU/common/log"
 	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/storage"
-	"os"
-	"path/filepath"
 )
 
 var UntaggedCommand = Command{
@@ -35,7 +36,8 @@ Where PATHs are not specified, untagged items under the current working director
 		"$ tmsu untagged /home/fred/drawings"},
 	Options: Options{Option{"--directory", "-d", "do not examine directory contents (non-recursive)", false, ""},
 		Option{"--count", "-c", "list the number of files rather than their names", false, ""},
-		Option{"--no-dereference", "-P", "do not dereference symbolic links", false, ""}},
+		Option{"--no-dereference", "-P", "do not dereference symbolic links", false, ""},
+		Option{"--no-directories", "", "do not show directories in output", false, ""}},
 	Exec: untaggedExec,
 }
 
@@ -45,6 +47,7 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	recursive := !options.HasOption("--directory")
 	count := options.HasOption("--count")
 	followSymlinks := !options.HasOption("--no-dereference")
+	considerDirectories := !options.HasOption("--no-directories")
 
 	paths := args
 	if len(paths) == 0 {
@@ -68,14 +71,14 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	defer tx.Commit()
 
 	if count {
-		count, err := findUntaggedCount(store, tx, paths, recursive, followSymlinks)
+		count, err := findUntaggedCount(store, tx, paths, recursive, followSymlinks, considerDirectories)
 		if err != nil {
 			return err, nil
 		}
 
 		fmt.Println(count)
 	} else {
-		if err := findUntagged(store, tx, paths, recursive, followSymlinks); err != nil {
+		if err := findUntagged(store, tx, paths, recursive, followSymlinks, considerDirectories); err != nil {
 			return err, nil
 		}
 	}
@@ -83,34 +86,37 @@ func untaggedExec(options Options, args []string, databasePath string) (error, w
 	return nil, nil
 }
 
-func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks bool) error {
+func findUntagged(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks, considerDirectories bool) error {
 	var action = func(absPath string) {
 		relPath := _path.Rel(absPath)
 		fmt.Println(relPath)
 	}
 
-	return findUntaggedFunc(store, tx, paths, recursive, followSymlinks, action)
+	return findUntaggedFunc(store, tx, paths, recursive, followSymlinks, considerDirectories, action)
 }
 
-func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks bool) (uint, error) {
+func findUntaggedCount(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks, considerDirectories bool) (uint, error) {
 	var count uint
 
 	var action = func(absPath string) {
 		count++
 	}
 
-	err := findUntaggedFunc(store, tx, paths, recursive, followSymlinks, action)
+	err := findUntaggedFunc(store, tx, paths, recursive, followSymlinks, considerDirectories, action)
 
 	return count, err
 }
 
-func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks bool, action func(absPath string)) error {
+func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, recursive, followSymlinks, considerDirectories bool, action func(absPath string)) error {
 	for _, path := range paths {
 		absPath, err := filepath.Abs(path)
 		if err != nil {
 			return fmt.Errorf("%v: could not get absolute path: %v", path, err)
 		}
-
+		stat, err := os.Stat(absPath)
+		if err != nil {
+			return fmt.Errorf("%v: could not stat path: %v", absPath, err)
+		}
 		if followSymlinks {
 			log.Infof(2, "%v: resolving path", path)
 
@@ -119,23 +125,23 @@ func findUntaggedFunc(store *storage.Storage, tx *storage.Tx, paths []string, re
 				return fmt.Errorf("%v: could not dereference path: %v", path, err)
 			}
 		}
-
-		//TODO PERF no need to retrieve file: we merely need to know it exists
-		file, err := store.FileByPath(tx, absPath)
-		if err != nil {
-			return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+		if !stat.IsDir() || considerDirectories {
+			//TODO PERF no need to retrieve file: we merely need to know it exists
+			file, err := store.FileByPath(tx, absPath)
+			if err != nil {
+				return fmt.Errorf("%v: could not retrieve file: %v", path, err)
+			}
+			if file == nil {
+				action(absPath)
+			}
 		}
-		if file == nil {
-			action(absPath)
-		}
-
 		if recursive {
 			entries, err := directoryEntries(path)
 			if err != nil {
 				return err
 			}
 
-			findUntaggedFunc(store, tx, entries, true, followSymlinks, action)
+			findUntaggedFunc(store, tx, entries, true, followSymlinks, considerDirectories, action)
 		}
 	}
 

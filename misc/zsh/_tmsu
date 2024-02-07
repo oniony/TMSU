@@ -503,6 +503,7 @@ _tmsu_cmd_untagged() {
     _arguments -s -w ''{--directory,-d}'[do not examine directory contents (non-recursive)]' \
                      ''{--count,-c}'[lists the number of files rather than their names]' \
                      ''{--no-dereference,-P}'[never follow symlinks (list untagged links)]' \
+                     '--no-directories[do not show directories in output]' \
                      '*:file:_files' \
     && ret=0
 }

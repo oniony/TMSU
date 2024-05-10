@@ -300,6 +300,7 @@ func findNewFiles(searchPath string, report *StatusReport, dirOnly, followSymlin
 		}
 
 		dirNames, err := dir.Readdirnames(0)
+		dir.Close()
 		if err != nil {
 			return fmt.Errorf("%v: could not read directory listing: %v", searchPath, err)
 		}

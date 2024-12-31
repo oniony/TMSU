@@ -18,14 +18,15 @@ package cli
 import (
 	"errors"
 	"fmt"
+	"os"
+	"path/filepath"
+	"strings"
+
 	"github.com/oniony/TMSU/common/fingerprint"
 	"github.com/oniony/TMSU/common/log"
 	_path "github.com/oniony/TMSU/common/path"
 	"github.com/oniony/TMSU/entities"
 	"github.com/oniony/TMSU/storage"
-	"os"
-	"path/filepath"
-	"strings"
 )
 
 var RepairCommand = Command{
@@ -33,7 +34,7 @@ var RepairCommand = Command{
 	Aliases:  []string{"fix"},
 	Synopsis: "Repair the database",
 	Usages: []string{"tmsu repair [OPTION]... [PATH]...",
-		"tmsu repair [OPTION]... repair --manual OLD NEW"},
+		"tmsu repair [OPTION]... --manual OLD NEW"},
 	Description: `Fixes broken paths and stale fingerprints in the database caused by file modifications and moves.
 
 Modified files are identified by a change to the file's modification time or file size. These files are repaired by updating the details in the database.

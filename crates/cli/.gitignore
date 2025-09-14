@@ -4,3 +4,4 @@ target/
 
 # Litter
 **/*.rs.bk
+**/.idea

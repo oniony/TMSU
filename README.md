@@ -3,36 +3,38 @@
 # Overview
 
 TMSU is a tool for tagging your files. It provides a simple command-line utility
-for applying tags and a virtual filesystem to give you a tag-based view of your
-files from any application.
+for applying and managing tags, and a virtual filesystem to allow you to access
+your files by tag, or combination of tags, from any application, even those with
+a graphical user interface.
 
 TMSU does not alter your files in any way: you simply gain an additional view,
-which you can mount where you like, based upon the tags you set up.
+which you can mount where you like, based upon the tags you set up. If you decide
+to stop using TMSU, your files will be exactly as they were before you started.
 
 # Usage
 
 ## Initialise Database
 
-Before you can get tagging, you'll need to initialise a TMSU database in a
+Before you can start tagging, you will need to initialise a TMSU database in the
 folder in which you wish to use tags:
 
     $ cd example
     $ tmsu init
 
-This will create a database under `.tmsu` that will be used automatically whenever
-you are under that directory.
+This will create a database under `.tmsu` in that directory that will be used
+automatically whenever you are under that directory (much like a version control
+system such as Git).
 
 ## Tagging
 
-You can tag a file by specifying the file and the list of tags to apply:
+One can tag a file by specifying the file and the list of tags to apply:
 
     $ tmsu tag banana.jpg fruit art year=2015
 
-This will tag your file, `banana.jpg` as `fruit`, `art` and `year`.
-Additionally, the `year` tag has a value `2015` that adds more detail. (We'll come
-back to tag values later.)
+This will tag the file, `banana.jpg` as `fruit`, `art` and `year`. Additionally,
+the `year` tag has a value `2015` that adds more detail.
 
-You can instead specify the tags first:
+Alternatively, one can instead specify the tags first:
 
     $ tmsu tag --tags="fruit still-life art" banana.jpg apple.png
 
@@ -40,65 +42,67 @@ This is particularly useful when piping a list of files:
 
     $ find . -name "*.mp3" | xargs tmsu tag --tags "music"
 
+Will tag all of the files with an `.mp3` extension `music`.
+
 ## Querying
 
-You can query for files with or without particular tags:
+One can query for files with or without particular tags using `and`, `or` and
+`not`:
 
     $ tmsu files fruit or still-life
     $ tmsu files fruit and art
     $ tmsu files not still-life and art
     $ tmsu files trippy and (art or music)
 
-The `and` keyword is implied, so you can just leave it out:
+The `and` keyword is actually implied, so it can be omitted:
 
+    $ tmsu files fruit still-life
     $ tmsu files fruit art
     $ tmsu files not still-life art
     $ tmsu files trippy (art or music)
 
-Where you've used values on your tags, you can query based upon the values of the tags:
+For tags that include values, it is also possible to query based upon the values
+of these tags:
 
     $ tmsu files author=somebody
     $ tmsu files "year < 2000"
 
+The `<`, `>`, `=`, `!=` operators can also be expressed as `lt`, `gt`, `eq` and `ne`.
+
 ## Virtual File System
 
-The virtual file system lets you mount your tagged files as a file system, allowing you to
-access your files by tags from any other application.
+TMSU lets a tagged database be mounted as a virtual file system, allowing the tagged
+files to be accessed by tag rather than directory from any application.
 
 Mount the virtual filesystem to an empty directory:
 
     $ mkdir mp
     $ tmsu mount mp
-    
+
+Query the files by tag:
+
+    $ ls "mp/queries/fruit and art"
+
+This will automatically create a `fruit and art` directory in the virtual file system
+containing links to all of the files in the database matching those tags.
+
+This can be accomplished in a graphical application too by navigating to the `queries`
+directory in the file chooser and typing in the query: the virtual file system will
+automatically detect this and create the directory containing links to the matching
+files.
+
 ## More Information
 
-A subcommand overview and detail on how to use each subcommand is available via the
-integrated help:
+The integrated help can be used to get usage information:
 
     $ tmsu help
     $ tmsu help tags
 
-Documentation is maintained online on the wiki:
-
-  * <https://github.com/oniony/TMSU/wiki>
-
 # Installing
 
-## Packages
+## Package
 
-Thanks to the efforts of contributors using these platforms, packages are available
-for the following GNU/Linux distributions:
-
-  * Ubuntu
-    - Stable <https://launchpad.net/~tmsu/+archive/ubuntu/ppa>
-    - Daily <https://launchpad.net/~tmsu/+archive/ubuntu/daily>
-  * Arch
-    - Stable <https://aur.archlinux.org/packages/tmsu/>
-  * Nix/NixOS
-    - Stable <https://search.nixos.org/packages?query=tmsu&show=tmsu>
-    - Unstable <https://search.nixos.org/packages?query=tmsu&show=tmsu&channel=unstable>
-
-These packages are not maintained by me and I cannot guarantee their content.
+TODO
 
 ## Binary
 
@@ -125,24 +129,21 @@ of the above packages, these should be installed automatically.)
 
         $ cp misc/zsh/_tmsu /usr/share/zsh/site-functions
 
-## From Source
+## Source
 
-If you would rather build from the source code then please see `COMPILING.md`
-in the root of the repository.
+If you would like to build from the source code then please see `COMPILING.md`.
 
 # About
 
-TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul@tmsu.org>).
+TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul.ruane@oniony.com>).
 
 # Release Notes
 
-The rewrite in Rust is currently underway. The result of this will be v1.0.0.
-
-Previous version history is available on the old `master` branch.
+See <https://github.com/oniony/TMSU/releases>.
 
 - - -
 
-Copyright 2011-2023 Paul Ruane
+Copyright 2011-2025 Paul Ruane
 
 Copying and distribution of this file, with or without modification,
 are permitted in any medium without royalty provided the copyright

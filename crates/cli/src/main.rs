@@ -1,16 +1,16 @@
 mod args;
-mod command_info;
+mod command;
 mod database;
 mod constants;
 
 use std::process;
-use crate::args::{Args, Commands};
+use args::{Args, Commands};
 
 fn main() {
     let args = Args::parse();
 
     let result = match args.command {
-        Commands::Info => command_info::execute(args.database),
+        Commands::Info => command::info::execute(args.database),
     };
 
     match result {

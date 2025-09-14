@@ -2,7 +2,8 @@ use std::path::PathBuf;
 use clap::{Parser, Subcommand};
 
 #[derive(Parser)]
-#[command(about, version, long_about = None)]
+#[command(about = "TMSU", version, long_about = None)]
+#[command(disable_colored_help = true)]
 pub struct Args {
     #[clap(short = 'D', long)]
     pub database: Option<PathBuf>,

@@ -5,6 +5,7 @@ mod constants;
 
 use std::process;
 use args::{Args, Commands};
+use crate::constants::APPLICATION_NAME;
 
 fn main() {
     let args = Args::parse();
@@ -16,7 +17,7 @@ fn main() {
     match result {
         Ok(_) => (),
         Err(e) => {
-            eprintln!("tmsu: {}", e);
+            eprintln!("{}: {}", APPLICATION_NAME, e);
             process::exit(1)
         },
     }

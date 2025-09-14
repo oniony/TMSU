@@ -5,11 +5,13 @@ description = "A tool for tagging your files and accessing them via a virtual fi
 documentation = "https://www.github.com/oniony/TMSU/wiki"
 edition = "2021"
 homepage = "https://tmsu.org/"
-keywords = [ "cli", "tag", "tagging", "virtual file system", "VFS" ]
+keywords = [ "cli", "tag", "tagging", "virtual-file-system", "VFS" ]
 license = "GPL-3.0-or-later"
 name = "tmsu"
-readme = "https://github.com/oniony/TMSU/blob/master/README.md"
+readme = "README.md"
 repository = "https://github.com/oniony/TMSU"
 version = "1.0.0"
 
 [dependencies]
+clap = { version = "4.5.47", features = ["derive"] }
+colored = "3.0.0"

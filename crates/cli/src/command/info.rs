@@ -1,15 +1,18 @@
 use std::{io, path};
+use std::error::Error;
 use std::path::PathBuf;
 use colored::Colorize;
-use crate::database;
 use crate::constants;
 
-pub fn execute(db_path: Option<PathBuf>) -> Result<(), io::Error> {
-    let db_path = database::resolve(db_path)?;
+pub fn execute(db_path: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
+    let db_path = db_path.ok_or("no database found")?;
     let root_path = determine_root(&db_path)?;
 
     println!("Database path: {}", db_path.display().to_string().green());
     println!("Root path: {}", root_path.display().to_string().green());
+
+    //TODO open database
+    //TODO gather stats
 
     Ok(())
 }
@@ -27,4 +30,3 @@ fn determine_root(path: &PathBuf) -> Result<PathBuf, io::Error> {
 
     Ok(PathBuf::from(path::MAIN_SEPARATOR_STR))
 }
-

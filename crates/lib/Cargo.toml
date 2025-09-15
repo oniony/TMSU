@@ -3,16 +3,13 @@ authors = [ "Paul Ruane <paul.ruane@oniony.com>" ]
 categories = [ "command-line-utilities", "filesystem" ]
 description = "A tool for tagging your files and accessing them via a virtual file system"
 documentation = "https://www.github.com/oniony/TMSU/wiki"
-edition = "2021"
 homepage = "https://tmsu.org/"
-keywords = [ "cli", "tag", "tagging", "virtual-file-system", "VFS" ]
 license = "GPL-3.0-or-later"
-name = "tmsu"
+name = "libtmsu"
 readme = "README.md"
 repository = "https://github.com/oniony/TMSU"
 version = "1.0.0"
+edition = "2024"
 
 [dependencies]
-libtmsu = { path = "../lib" }
-clap = { version = "4.5.47", features = ["derive"] }
-colored = "3.0.0"
+rusqlite = "0.37.0"

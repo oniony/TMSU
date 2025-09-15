@@ -20,6 +20,17 @@ impl Args {
 
 #[derive(Subcommand, Debug)]
 pub enum Commands {
-    #[command(about = "Show database information")]
+    #[command(
+        about = "Show database information",
+        long_about = "Show database paths and metrics.")]
     Info,
+
+    #[command(
+        about = "Initialize a new database",
+        long_about = "Initializes a new local database.
+
+Creates a .tmsu directory under PATH and initializes a new empty database within it.
+If no PATH is specified then the current working directory is assumed.
+")]
+    Init { path: Option<PathBuf> },
 }

@@ -1,11 +1,12 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
-# TMSU CLI
+# libtmsu
 
-This crate contains the TMSU command line interface: the binary tool
-that can be run from a terminal to manage tags and apply tags to files.
+This crate contains the TMSU backend library.
 
-The CLI delegates to the `libtmsu` backend wherever it can.
+It is used by the TMSU command line interface to provide the TMSU logic. It
+also facilitates the creation of other interfaces and integration with other
+programs.
 
 - - -
 

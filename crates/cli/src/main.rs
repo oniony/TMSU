@@ -17,8 +17,8 @@ async fn main() {
     };
 
     let result = match args.command {
-        Commands::Info => command::info::execute(db_path).await,
-        Commands::Init { path } => command::init::execute(path).await,
+        Commands::Info => command::info::execute(db_path),
+        Commands::Init { path } => command::init::execute(db_path, path),
     };
 
     match result {

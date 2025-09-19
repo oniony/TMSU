@@ -4,9 +4,9 @@ use std::path::PathBuf;
 use rusqlite::Connection;
 use crate::migrations;
 
-pub async fn create(path: PathBuf) -> Result<(), Box<dyn Error>> {
+pub fn create(path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if path.exists() {
-        return Err("database already exists".into())
+        return Err(format!("{}: Database already exists", path.to_str().unwrap()).into())
     }
 
     if let Some(parent) = path.parent() {

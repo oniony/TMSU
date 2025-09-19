@@ -4,13 +4,20 @@ use std::path::PathBuf;
 use libtmsu::database;
 use crate::constants::*;
 
-pub async fn execute(db_path: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
-    let db_path = match db_path {
-        Some(path) => path,
-        None => env::current_dir()?
+pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
+    let paths = if paths.len() > 0 {
+        paths
+    } else if let Some(path) = db_path {
+        vec![path]
+    } else {
+        vec![env::current_dir()?
             .join(APPLICATION_DIRECTORY)
-            .join(DEFAULT_DATABASE_NAME),
+            .join(DEFAULT_DATABASE_NAME)]
     };
 
-    database::create(db_path).await
+    for path in paths {
+        database::create(&path)?
+    }
+
+    Ok(())
 }

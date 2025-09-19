@@ -27,10 +27,19 @@ pub enum Commands {
 
     #[command(
         about = "Initialize a new database",
-        long_about = "Initializes a new local database.
+        long_about = "Initializes new, empty databases.
 
-Creates a .tmsu directory under PATH and initializes a new empty database within it.
-If no PATH is specified then the current working directory is assumed.
+Typically this command is run without arguments to create a new, local database at .tmsu/db in the
+current working directory. Such a database will be used automatically when TMSU is used at or
+below this directory.
+
+If PATH is specified, then a database will be created at this specific path instead. Such a database
+will only be subsequently used when TMSU is run with an explicit database path via the --database
+global option or the TMSU_DATABASE environment variable.
+
+If the command is run without arguments and the either the --database global option or the
+TMSU_DATABASE environment variable is set, then the database will be created at this path instead,
+with --database taking precedence.
 ")]
-    Init { path: Option<PathBuf> },
+    Init { path: Vec<PathBuf> },
 }

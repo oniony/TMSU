@@ -19,9 +19,10 @@ use std::path::PathBuf;
 use rusqlite::Connection;
 use crate::migrations;
 
+/// Creates a new, empty database at the specified path.
 pub fn create(path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if path.exists() {
-        return Err(format!("{}: Database already exists", path.to_str().unwrap()).into())
+        return Err(format!("{}: database already exists", path.to_str().unwrap()).into())
     }
 
     if let Some(parent) = path.parent() {

@@ -32,6 +32,17 @@ async fn main() {
     };
 
     let result = match args.command {
+        Commands::Files {
+            query,
+            directory,
+            file,
+            print0,
+            count,
+            path,
+            explicit,
+            sort,
+            ignore_case
+        } => command::files::execute(db_path, query, directory, file, print0, count, path, explicit, sort, ignore_case),
         Commands::Info => command::info::execute(db_path),
         Commands::Init { path } => command::init::execute(db_path, path),
     };

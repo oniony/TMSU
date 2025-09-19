@@ -57,4 +57,56 @@ TMSU_DB environment variable is set, then the database will be created at this p
 with --database taking precedence.
 ")]
     Init { path: Vec<PathBuf> },
+
+    #[command(
+        about = "List files with particular tags",
+        alias = "query",
+        long_about = "Lists files with particular tags.
+
+QUERY is a space-separated list of tags that files must be tagged with in order to be listed. More
+complex queries can also include operators and parentheses to further refine the results: see the
+examples below.
+
+Note: Queries match only tagged files. To identify untagged files use the 'untagged' subcommand.
+
+Note: If your tag or value name contains whitespace, operators or parentheses, these must be escaped
+with a backslash '\\', e.g. '\\<tag\\>' matches the tag name '<tag>'.
+
+Note: Your shell may use some punctuation for its own purposes: this can usually be avoided by
+enclosing the query in single quotation marks or by escaping the problematic characters with a
+backslash.
+
+Operators: and, or, not, ==, !=, <, >, <=, >=, eq, ne, lt, gt, le, ge.
+
+Examples:
+
+   $ tmsu files music mp3
+   $ tmsu files music not mp3
+   $ tmsu files 'music and (mp3 or flac)'
+   $ tmsu files 'year == 2025'
+   $ tmsu files 'year < 2020'
+   $ tmsu files year lt 2020
+   $ tmsu files --path=/some/path music
+"
+    )]
+    Files {
+        #[arg(help = "the query to run")]
+        query: Option<String>,
+        #[arg(short = 'd', long = "directory", help = "list only items that are directories", default_value_t = false)]
+        directory: bool,
+        #[arg(short = 'f', long = "file", help = "list only items that are files", default_value_t = false)]
+        file: bool,
+        #[arg(short = '0', long = "print0", help = "delimit files with a NUL character rather than newline", default_value_t = false)]
+        print0: bool,
+        #[arg(short = 'c', long = "count", help = "list the number of matching files rather than their names", default_value_t = false)]
+        count: bool,
+        #[arg(short = 'p', long = "path", help = "list only items under PATH")]
+        path: Option<PathBuf>,
+        #[arg(short = 'e', long = "explicit", help = "list only explicitly tagged items", default_value_t = false)]
+        explicit: bool,
+        #[arg(short = 's', long = "sort", help = "sort output: id, name, none, size, time")]
+        sort: Option<String>,
+        #[arg(short = 'i', long = "ignore-case", help = "ignore the case of tag and value names", default_value_t = false)]
+        ignore_case: bool,
+    },
 }

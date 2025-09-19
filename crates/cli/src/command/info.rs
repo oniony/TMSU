@@ -4,7 +4,7 @@ use std::path::PathBuf;
 use colored::Colorize;
 use crate::constants;
 
-pub fn execute(db_path: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
+pub async fn execute(db_path: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
     let db_path = db_path.ok_or("no database found")?;
     let root_path = determine_root(&db_path)?;
 

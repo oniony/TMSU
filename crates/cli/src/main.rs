@@ -7,7 +7,8 @@ use std::error::Error;
 use std::process;
 use args::{Args, Commands};
 
-fn main() {
+#[tokio::main]
+async fn main() {
     let args = Args::parse();
 
     let db_path = match database::resolve(args.database) {
@@ -16,8 +17,8 @@ fn main() {
     };
 
     let result = match args.command {
-        Commands::Info => command::info::execute(db_path),
-        Commands::Init { path } => command::init::execute(path),
+        Commands::Info => command::info::execute(db_path).await,
+        Commands::Init { path } => command::init::execute(path).await,
     };
 
     match result {

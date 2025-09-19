@@ -12,4 +12,5 @@ version = "1.0.0"
 edition = "2024"
 
 [dependencies]
-rusqlite = "0.37.0"
+rusqlite = { version = "0.37", features = ["bundled"] }
+tokio = {  version = "1.47", features = ["macros", "rt-multi-thread"] }

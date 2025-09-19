@@ -14,5 +14,6 @@ version = "1.0.0"
 
 [dependencies]
 libtmsu = { path = "../lib" }
-clap = { version = "4.5.47", features = ["derive"] }
-colored = "3.0.0"
+clap = { version = "4.5", features = ["derive"] }
+colored = "3.0"
+tokio = { version = "1.47", features = ["rt", "rt-multi-thread", "macros"] }

@@ -90,8 +90,8 @@ Examples:
 "
     )]
     Files {
-        #[arg(help = "the query to run")]
-        query: Option<String>,
+        #[arg(help = "the query to run", num_args = 0..)]
+        query: Vec<String>,
         #[arg(short = 'd', long = "directory", help = "list only items that are directories", default_value_t = false)]
         directory: bool,
         #[arg(short = 'f', long = "file", help = "list only items that are files", default_value_t = false)]

@@ -19,3 +19,6 @@ jobs:
       working-directory: crates/cli
       run: cargo build --verbose
 
+    - name: Run tests
+      working-directory: tests
+      run: ./runall

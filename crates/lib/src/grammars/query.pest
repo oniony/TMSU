@@ -1,0 +1,43 @@
+// query
+
+query = _{ SOI ~ maybe_or ~ EOI }
+
+// atoms
+
+tag = { !("and" | "or" | "not") ~ unquoted_tag | quoted_tag }
+value = { unquoted_value | quoted_value }
+
+// logical operators
+
+or = { maybe_and ~ ws ~ "or" ~ ws ~ maybe_or }
+and = { maybe_not ~ ws ~ ("and" ~ ws)? ~ maybe_and }
+not = { "not" ~ ws ~ operand }
+
+// comparison operators
+
+equal = { tag ~ (ws? ~ "==" ~ ws? | ws? ~ "=" ~ ws? | ws ~ "eq" ~ ws) ~ value }
+not_equal = { tag ~ "!=" ~ value }
+less_than = { tag ~ (ws? ~ "<" ~ ws? | ws ~ "lt" ~ ws) ~ value }
+greater_than = { tag ~ (ws? ~ ">" ~ ws? | ws ~ "gt" ~ ws) ~ value }
+less_or_equal = { tag ~ (ws? ~ "<=" ~ ws? | ws ~ "le" ~ ws) ~ value }
+greater_or_equal = { tag ~ (ws? ~ ">=" ~ ws? | ws ~ "ge" ~ ws) ~ value }
+
+// plumbing
+
+maybe_or = _{ or | maybe_and }
+maybe_and = _{ and | maybe_not }
+maybe_not = _{ not | operand }
+operand = _{ parenthesis | comparison | tag }
+parenthesis = _{ "(" ~ ws? ~ maybe_or ~ ws? ~ ")" }
+comparison = _{ equal | not_equal | less_than | greater_than | less_or_equal | greater_or_equal }
+
+unquoted_tag = _{ (alpha | digit | punctuation)+ }
+quoted_tag = _{ "\"" ~ (alpha | digit | punctuation | space)+ ~ "\"" }
+unquoted_value = _{ (alpha | digit | punctuation)+ }
+quoted_value = _{ "\"" ~ (alpha | digit | punctuation | space)+ ~ "\"" }
+
+alpha = _{ 'a'..'z' | 'A'..'Z' }
+digit = _{ '0'..'9' }
+punctuation = _{ ("_" | "-" | ":" ) }
+space = _{ " " }
+ws = _{ " "+ }

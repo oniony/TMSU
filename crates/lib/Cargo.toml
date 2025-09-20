@@ -13,4 +13,5 @@ edition = "2024"
 
 [dependencies]
 rusqlite = { version = "0.37", features = ["bundled"] }
-tokio = {  version = "1.47", features = ["macros", "rt-multi-thread"] }
+pest = "2.8"
+pest_derive = "2.8"

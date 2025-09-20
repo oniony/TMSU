@@ -1,10 +1,11 @@
 use std::error::Error;
 use std::{fs, path};
 use std::path::PathBuf;
+use libtmsu::query;
 
 pub fn execute(
     db_path: Option<PathBuf>,
-    query: Option<String>,
+    query: Vec<String>,
     directory: bool,
     file: bool,
     print0: bool,
@@ -16,7 +17,8 @@ pub fn execute(
 ) -> Result<(), Box<dyn Error>> {
     let path = path.map(|p| path::absolute(p));
 
-    //TODO parse query (pest? nom?)
+    let query_text = query.join(" ");
+    let query = query::parse_query(query_text.as_str())?;
     //TODO validate query tags
     //TODO validate query values
     //TODO run query

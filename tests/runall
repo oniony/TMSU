@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 if [[ -z $1 ]]; then
-    files=$( find . -mindepth 2 -perm /+x )
+    files=$( find . -mindepth 2 -perm -+x )
 else
-    files=$( find $1 -mindepth 1 -perm /+x )
+    files=$( find $1 -mindepth 1 -perm -+x )
 fi
 
 export RC=0

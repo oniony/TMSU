@@ -50,10 +50,10 @@ below this directory.
 
 If PATH is specified, then a database will be created at this specific path instead. Such a database
 will only be subsequently used when TMSU is run with an explicit database path via the --database
-global option or the TMSU_DATABASE environment variable.
+global option or the TMSU_DB environment variable.
 
 If the command is run without arguments and the either the --database global option or the
-TMSU_DATABASE environment variable is set, then the database will be created at this path instead,
+TMSU_DB environment variable is set, then the database will be created at this path instead,
 with --database taking precedence.
 ")]
     Init { path: Vec<PathBuf> },

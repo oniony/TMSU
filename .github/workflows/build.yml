@@ -15,12 +15,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Build CLI
-        working-directory: crates/cli
+      - name: Build
         run: cargo build --verbose
 
       - name: Unit tests
-        working-directory: tests
         run: cargo test
 
       - name: Integration tests

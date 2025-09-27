@@ -22,9 +22,11 @@ pub fn execute(
     println!("query: {:?}", query);
     if let Some(query) = query {
         let tag_names = query.tags();
-        let _value_names = query.values();
+        let value_names = query.values();
 
         println!("tag names: {:?}", tag_names);
+        println!("value names: {:?}", value_names);
+
         //TODO validate query tags
         //TODO validate query values
     }

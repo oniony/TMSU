@@ -1,4 +1,4 @@
-query = _{ SOI ~ maybe_or ~ EOI }
+query = _{ SOI ~ maybe_or? ~ EOI }
 
 tag   = @{ quoted_tag | unquoted_tag }
 value = @{ quoted_value | unquoted_value }

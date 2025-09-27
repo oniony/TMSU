@@ -81,7 +81,6 @@ struct QueryParser;
 
 /// Parse a query string into an expression tree.
 pub fn parse(text: &str) -> Result<Option<Expression>, Box<dyn Error>> {
-    println!("parsing {text}");
     let parsed_query = QueryParser::parse(Rule::query, text)?;
     let query = map_query(parsed_query);
 
@@ -90,23 +89,24 @@ pub fn parse(text: &str) -> Result<Option<Expression>, Box<dyn Error>> {
 
 fn map_query(mut parsed_query: Pairs<Rule>) -> Option<Expression> {
     match parsed_query.next() {
-        Some(pair) => Some(map_pair(pair)),
+        Some(pair) => map_pair(pair),
         None => None,
     }
 }
 
-fn map_pair(pair: Pair<Rule>) -> Expression {
+fn map_pair(pair: Pair<Rule>) -> Option<Expression> {
     match pair.as_rule() {
-        Rule::tag => map_tag(pair),
-        Rule::equal => map_comparison_operator(pair, Equal),
-        Rule::not_equal => map_comparison_operator(pair, NotEqual),
-        Rule::greater_than => map_comparison_operator(pair, GreaterThan),
-        Rule::less_than => map_comparison_operator(pair, LessThan),
-        Rule::greater_or_equal => map_comparison_operator(pair, GreaterOrEqual),
-        Rule::less_or_equal => map_comparison_operator(pair, LessOrEqual),
-        Rule::and => map_binary_logical_operator(pair, And),
-        Rule::or => map_binary_logical_operator(pair, Or),
-        Rule::not => map_unary_logical_operator(pair, Not),
+        Rule::tag => map_tag(pair).into(),
+        Rule::equal => map_comparison_operator(pair, Equal).into(),
+        Rule::not_equal => map_comparison_operator(pair, NotEqual).into(),
+        Rule::greater_than => map_comparison_operator(pair, GreaterThan).into(),
+        Rule::less_than => map_comparison_operator(pair, LessThan).into(),
+        Rule::greater_or_equal => map_comparison_operator(pair, GreaterOrEqual).into(),
+        Rule::less_or_equal => map_comparison_operator(pair, LessOrEqual).into(),
+        Rule::and => map_binary_logical_operator(pair, And).into(),
+        Rule::or => map_binary_logical_operator(pair, Or).into(),
+        Rule::not => map_unary_logical_operator(pair, Not).into(),
+        Rule::EOI => None,
         _ => panic!("unexpected token: {}", pair.as_str()),
     }
 }
@@ -131,8 +131,8 @@ where
     F: Fn(Box<Expression>, Box<Expression>) -> Expression,
 {
     let mut inner = pair.into_inner();
-    let left_operand = map_pair(inner.next().unwrap());
-    let right_operand = map_pair(inner.next().unwrap());
+    let left_operand = map_pair(inner.next().unwrap()).unwrap();
+    let right_operand = map_pair(inner.next().unwrap()).unwrap();
 
     factory(left_operand.into(), right_operand.into())
 }
@@ -142,7 +142,7 @@ where
     F: Fn(Box<Expression>) -> Expression,
 {
     let mut inner = pair.into_inner();
-    let operand = map_pair(inner.next().unwrap());
+    let operand = map_pair(inner.next().unwrap()).unwrap();
 
     factory(operand.into())
 }

@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::{io, path};
+use crate::constants;
+use colored::Colorize;
 use std::error::Error;
 use std::path::PathBuf;
-use colored::Colorize;
-use crate::constants;
+use std::{io, path};
 
 pub fn execute(db_path: Option<PathBuf>) -> Result<(), Box<dyn Error>> {
     let db_path = db_path.ok_or("no database found")?;

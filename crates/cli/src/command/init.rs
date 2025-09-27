@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::constants::*;
+use libtmsu::database;
 use std::env;
 use std::error::Error;
 use std::path::PathBuf;
-use libtmsu::database;
-use crate::constants::*;
 
 pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
     let paths = if paths.len() > 0 {

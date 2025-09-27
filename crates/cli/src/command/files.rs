@@ -1,7 +1,7 @@
-use std::error::Error;
-use std::{fs, path};
-use std::path::PathBuf;
 use libtmsu::query;
+use std::error::Error;
+use std::path::PathBuf;
+use std::{fs, path};
 
 pub fn execute(
     db_path: Option<PathBuf>,

@@ -13,16 +13,16 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::migrations;
+use rusqlite::Connection;
 use std::error::Error;
 use std::fs;
 use std::path::PathBuf;
-use rusqlite::Connection;
-use crate::migrations;
 
 /// Creates a new, empty database at the specified path.
 pub fn create(path: &PathBuf) -> Result<(), Box<dyn Error>> {
     if path.exists() {
-        return Err(format!("{}: database already exists", path.to_str().unwrap()).into())
+        return Err(format!("{}: database already exists", path.to_str().unwrap()).into());
     }
 
     if let Some(parent) = path.parent() {

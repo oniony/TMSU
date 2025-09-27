@@ -15,12 +15,12 @@
 
 mod args;
 mod command;
-mod database;
 mod constants;
+mod database;
 
+use args::{Args, Commands};
 use std::error::Error;
 use std::process;
-use args::{Args, Commands};
 
 #[tokio::main]
 async fn main() {
@@ -41,7 +41,7 @@ async fn main() {
             path,
             explicit,
             sort,
-            ignore_case
+            ignore_case,
         } => command::files::execute(
             db_path,
             args.verbosity,
@@ -53,16 +53,15 @@ async fn main() {
             path,
             explicit,
             sort,
-            ignore_case),
+            ignore_case,
+        ),
         Commands::Info => command::info::execute(db_path),
         Commands::Init { path } => command::init::execute(db_path, path),
     };
 
     match result {
         Ok(_) => (),
-        Err(error) => {
-            fatal(error)
-        }
+        Err(error) => fatal(error),
     }
 }
 

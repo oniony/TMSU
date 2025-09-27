@@ -13,8 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
-use clap::{Parser, Subcommand, ArgAction};
 
 #[derive(Parser)]
 #[command(about = "TMSU", version, long_about = None)]
@@ -40,7 +40,8 @@ impl Args {
 pub enum Commands {
     #[command(
         about = "Show database information",
-        long_about = "Show database paths and metrics.")]
+        long_about = "Show database paths and metrics."
+    )]
     Info,
 
     #[command(
@@ -58,7 +59,8 @@ global option or the TMSU_DB environment variable.
 If the command is run without arguments and the either the --database global option or the
 TMSU_DB environment variable is set, then the database will be created at this path instead,
 with --database taking precedence.
-")]
+"
+    )]
     Init { path: Vec<PathBuf> },
 
     #[command(
@@ -95,21 +97,55 @@ Examples:
     Files {
         #[arg(help = "the query to run", num_args = 0..)]
         query: Vec<String>,
-        #[arg(short = 'd', long = "directory", help = "list only items that are directories", default_value_t = false)]
+        #[arg(
+            short = 'd',
+            long = "directory",
+            help = "list only items that are directories",
+            default_value_t = false
+        )]
         directory: bool,
-        #[arg(short = 'f', long = "file", help = "list only items that are files", default_value_t = false)]
+        #[arg(
+            short = 'f',
+            long = "file",
+            help = "list only items that are files",
+            default_value_t = false
+        )]
         file: bool,
-        #[arg(short = '0', long = "print0", help = "delimit files with a NUL character rather than newline", default_value_t = false)]
+        #[arg(
+            short = '0',
+            long = "print0",
+            help = "delimit files with a NUL character rather than newline",
+            default_value_t = false
+        )]
         print0: bool,
-        #[arg(short = 'c', long = "count", help = "list the number of matching files rather than their names", default_value_t = false)]
+        #[arg(
+            short = 'c',
+            long = "count",
+            help = "list the number of matching files rather than their names",
+            default_value_t = false
+        )]
         count: bool,
         #[arg(short = 'p', long = "path", help = "list only items under PATH")]
         path: Option<PathBuf>,
-        #[arg(short = 'e', long = "explicit", help = "list only explicitly tagged items", default_value_t = false)]
+        #[arg(
+            short = 'e',
+            long = "explicit",
+            help = "list only explicitly tagged items",
+            default_value_t = false
+        )]
         explicit: bool,
-        #[arg(short = 's', long = "sort", help = "sort output: id, name, none, size, time")]
+        #[arg(
+            short = 's',
+            long = "sort",
+            help = "sort output: id, name, none, size, time"
+        )]
         sort: Option<String>,
-        #[arg(short = 'i', long = "ignore-case", help = "ignore the case of tag and value names", default_value_t = false)]
+        #[arg(
+            short = 'i',
+            long = "ignore-case",
+            help = "ignore the case of tag and value names",
+            default_value_t = false
+        )]
         ignore_case: bool,
     },
 }

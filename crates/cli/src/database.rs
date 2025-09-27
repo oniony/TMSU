@@ -13,11 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::constants;
 use std::env;
 use std::env::VarError;
 use std::error::Error;
 use std::path::PathBuf;
-use crate::constants;
 
 pub fn resolve(arg_db_path: Option<PathBuf>) -> Result<Option<PathBuf>, Box<dyn Error>> {
     match arg_db_path {
@@ -26,7 +26,7 @@ pub fn resolve(arg_db_path: Option<PathBuf>) -> Result<Option<PathBuf>, Box<dyn 
             Ok(path) => Ok(Some(PathBuf::from(path))),
             Err(VarError::NotPresent) => find(),
             Err(err) => Err(err.into()),
-        }
+        },
     }
 }
 
@@ -40,7 +40,7 @@ fn find() -> Result<Option<PathBuf>, Box<dyn Error>> {
             .join(constants::DEFAULT_DATABASE_NAME);
 
         if candidate.exists() {
-            return Ok(Some(candidate))
+            return Ok(Some(candidate));
         }
 
         if !search.pop() {

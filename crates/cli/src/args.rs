@@ -14,14 +14,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use std::path::PathBuf;
-use clap::{Parser, Subcommand};
+use clap::{Parser, Subcommand, ArgAction};
 
 #[derive(Parser)]
 #[command(about = "TMSU", version, long_about = None)]
 #[command(disable_colored_help = true)]
 pub struct Args {
-    #[clap(short = 'D', long)]
+    #[clap(short = 'D', long = "database")]
     pub database: Option<PathBuf>,
+
+    #[clap(short = 'v', long = "verbose", action = ArgAction::Count, default_value_t = 0)]
+    pub verbosity: u8,
 
     #[command(subcommand)]
     pub command: Commands,

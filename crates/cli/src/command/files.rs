@@ -5,6 +5,7 @@ use libtmsu::query;
 
 pub fn execute(
     db_path: Option<PathBuf>,
+    verbosity: u8,
     query: Vec<String>,
     directory: bool,
     file: bool,
@@ -16,11 +17,18 @@ pub fn execute(
     ignore_case: bool,
 ) -> Result<(), Box<dyn Error>> {
     let path = path.map(|p| path::absolute(p));
+    let query = query::parse(query.join(" ").as_str())?;
 
-    let query_text = query.join(" ");
-    let query = query::parse_query(query_text.as_str())?;
-    //TODO validate query tags
-    //TODO validate query values
+    println!("query: {:?}", query);
+    if let Some(query) = query {
+        let tag_names = query.tags();
+        let value_names = query.values();
+
+        println!("tag names: {:?}", tag_names);
+        //TODO validate query tags
+        //TODO validate query values
+    }
+
     //TODO run query
     //TODO handle parser stack overflow
     //TODO list the files

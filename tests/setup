@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-export PATH=$PATH:../crates/cli/target/debug
+export PATH=$PATH:../target/debug
 
 # (re)create the test directory
 rm -r /tmp/tmsu 2>/dev/null

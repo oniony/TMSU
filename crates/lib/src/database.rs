@@ -31,7 +31,6 @@ pub fn create(path: &PathBuf) -> Result<(), Box<dyn Error>> {
 
     let mut conn = Connection::open(path)?;
     let mut tx = conn.transaction()?;
-
     migrations::run(&mut tx)?;
     tx.commit()?;
 

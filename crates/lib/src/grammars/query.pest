@@ -1,43 +1,30 @@
-// query
-
 query = _{ SOI ~ maybe_or ~ EOI }
 
-// atoms
+tag   = @{ quoted_tag | unquoted_tag }
+value = @{ quoted_value | unquoted_value }
 
-tag = { !("and" | "or" | "not") ~ unquoted_tag | quoted_tag }
-value = { unquoted_value | quoted_value }
+or  = { maybe_and ~ " or " ~ maybe_or }
+and = { maybe_not ~ (" and " | SEPARATOR+) ~ maybe_and }
+not = { "not " ~ operand }
 
-// logical operators
+equal            = { tag ~ SEPARATOR* ~ ("==" | "=" | "eq" | "EQ") ~ SEPARATOR* ~ value }
+not_equal        = { tag ~ SEPARATOR* ~ ("!=" | "ne" | "NE") ~ SEPARATOR* ~ value }
+less_than        = { tag ~ SEPARATOR* ~ ("<" | "lt" | "LT") ~ SEPARATOR* ~ value }
+greater_than     = { tag ~ SEPARATOR* ~ (">" | "gt" | "GT") ~ SEPARATOR* ~ value }
+less_or_equal    = { tag ~ SEPARATOR* ~ ("<=" | "≤" | "le" | "LE") ~ SEPARATOR* ~ value }
+greater_or_equal = { tag ~ SEPARATOR* ~ (">=" | "≥" | "ge" | "GE") ~ SEPARATOR* ~ value }
 
-or = { maybe_and ~ ws ~ "or" ~ ws ~ maybe_or }
-and = { maybe_not ~ ws ~ ("and" ~ ws)? ~ maybe_and }
-not = { "not" ~ ws ~ operand }
+maybe_or    = _{ or | maybe_and }
+maybe_and   = _{ and | maybe_not }
+maybe_not   = _{ not | operand }
+operand     = _{ parenthesis | comparison | tag }
+parenthesis = _{ "(" ~ maybe_or ~ ")" }
+comparison  = _{ equal | not_equal | less_than | greater_than | less_or_equal | greater_or_equal }
 
-// comparison operators
+unquoted_tag   = _{ !("and" | "or" | "not") ~ unquoted_name_character+ }
+quoted_tag     = _{ "\"" ~ quoted_name_character+ ~ "\"" }
+unquoted_value = _{ unquoted_name_character+ }
+quoted_value   = _{ "\"" ~ quoted_name_character+ ~ "\"" }
 
-equal = { tag ~ (ws? ~ "==" ~ ws? | ws? ~ "=" ~ ws? | ws ~ "eq" ~ ws) ~ value }
-not_equal = { tag ~ "!=" ~ value }
-less_than = { tag ~ (ws? ~ "<" ~ ws? | ws ~ "lt" ~ ws) ~ value }
-greater_than = { tag ~ (ws? ~ ">" ~ ws? | ws ~ "gt" ~ ws) ~ value }
-less_or_equal = { tag ~ (ws? ~ "<=" ~ ws? | ws ~ "le" ~ ws) ~ value }
-greater_or_equal = { tag ~ (ws? ~ ">=" ~ ws? | ws ~ "ge" ~ ws) ~ value }
-
-// plumbing
-
-maybe_or = _{ or | maybe_and }
-maybe_and = _{ and | maybe_not }
-maybe_not = _{ not | operand }
-operand = _{ parenthesis | comparison | tag }
-parenthesis = _{ "(" ~ ws? ~ maybe_or ~ ws? ~ ")" }
-comparison = _{ equal | not_equal | less_than | greater_than | less_or_equal | greater_or_equal }
-
-unquoted_tag = _{ (alpha | digit | punctuation)+ }
-quoted_tag = _{ "\"" ~ (alpha | digit | punctuation | space)+ ~ "\"" }
-unquoted_value = _{ (alpha | digit | punctuation)+ }
-quoted_value = _{ "\"" ~ (alpha | digit | punctuation | space)+ ~ "\"" }
-
-alpha = _{ 'a'..'z' | 'A'..'Z' }
-digit = _{ '0'..'9' }
-punctuation = _{ ("_" | "-" | ":" ) }
-space = _{ " " }
-ws = _{ " "+ }
+quoted_name_character     = _{ !("\"") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL | SEPARATOR) }
+unquoted_name_character   = _{ !("=" | "<" | ">" | "≤" | "≥" | "(" | ")") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL) }

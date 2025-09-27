@@ -1,28 +1,28 @@
 use libtmsu::query;
 use std::error::Error;
+use std::path;
 use std::path::PathBuf;
-use std::{fs, path};
 
 pub fn execute(
-    db_path: Option<PathBuf>,
-    verbosity: u8,
+    _db_path: Option<PathBuf>,
+    _verbosity: u8,
     query: Vec<String>,
-    directory: bool,
-    file: bool,
-    print0: bool,
-    count: bool,
+    _directory: bool,
+    _file: bool,
+    _print0: bool,
+    _count: bool,
     path: Option<PathBuf>,
-    explicit: bool,
-    sort: Option<String>,
-    ignore_case: bool,
+    _explicit: bool,
+    _sort: Option<String>,
+    _ignore_case: bool,
 ) -> Result<(), Box<dyn Error>> {
-    let path = path.map(|p| path::absolute(p));
+    let _path = path.map(|p| path::absolute(p));
     let query = query::parse(query.join(" ").as_str())?;
 
     println!("query: {:?}", query);
     if let Some(query) = query {
         let tag_names = query.tags();
-        let value_names = query.values();
+        let _value_names = query.values();
 
         println!("tag names: {:?}", tag_names);
         //TODO validate query tags

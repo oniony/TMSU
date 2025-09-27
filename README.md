@@ -1,5 +1,7 @@
 ![TMSU](http://tmsu.org/images/tmsu.png)
 
+![Build](https://github.com/oniony/TMSU/actions/workflows/build.yml/badge.svg)
+
 # Overview
 
 TMSU is a tool for tagging your files. It provides a simple command-line utility

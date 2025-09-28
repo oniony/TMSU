@@ -1,16 +1,70 @@
+// Copyright 2011-2025 Paul Ruane.
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
 use crate::query::Expression::*;
-use pest::Parser;
 use pest::iterators::{Pair, Pairs};
+use pest::Parser;
 use pest_derive::Parser;
+use rusqlite::types::{FromSql, FromSqlError, ToSqlOutput};
+use rusqlite::ToSql;
 use std::error::Error;
+use std::fmt::Display;
 
 /// Tag name.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TagName(String);
 
+impl Display for TagName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl ToSql for TagName {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::from(self.0.as_str()))
+    }
+}
+
+impl FromSql for TagName {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
+        Ok(Self(value.as_str()?.to_string()))
+    }
+}
+
 // Tag value.
 #[derive(Debug, PartialEq, Eq, Clone)]
 pub struct TagValue(String);
+
+impl Display for TagValue {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl ToSql for TagValue {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::from(self.0.as_str()))
+    }
+}
+
+impl FromSql for TagValue {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
+        Ok(Self(value.as_str()?.to_string()))
+    }
+}
 
 /// A query expression.
 #[derive(Debug, PartialEq, Eq)]
@@ -48,12 +102,7 @@ impl Expression {
                 right.walk_tag_names(tag_names);
             }
             Not(operand) => operand.walk_tag_names(tag_names),
-            Equal(tag_name, _)
-            | NotEqual(tag_name, _)
-            | GreaterThan(tag_name, _)
-            | LessThan(tag_name, _)
-            | GreaterOrEqual(tag_name, _)
-            | LessOrEqual(tag_name, _) => tag_names.push(tag_name.clone()),
+            Equal(tag_name, _) | NotEqual(tag_name, _) | GreaterThan(tag_name, _) | LessThan(tag_name, _) | GreaterOrEqual(tag_name, _) | LessOrEqual(tag_name, _) => tag_names.push(tag_name.clone()),
         }
     }
 
@@ -64,12 +113,9 @@ impl Expression {
                 right.walk_value_names(value_names);
             }
             Not(operand) => operand.walk_value_names(value_names),
-            Equal(_, value_name)
-            | NotEqual(_, value_name)
-            | GreaterThan(_, value_name)
-            | LessThan(_, value_name)
-            | GreaterOrEqual(_, value_name)
-            | LessOrEqual(_, value_name) => value_names.push(value_name.clone()),
+            Equal(_, value_name) | NotEqual(_, value_name) | GreaterThan(_, value_name) | LessThan(_, value_name) | GreaterOrEqual(_, value_name) | LessOrEqual(_, value_name) => {
+                value_names.push(value_name.clone())
+            }
             _ => (),
         }
     }
@@ -162,10 +208,7 @@ mod tests {
     #[test]
     fn parse_implicit_and() {
         let actual = parse("left right").unwrap().unwrap();
-        let expected = And(
-            Tag(TagName("left".into())).into(),
-            Tag(TagName("right".into())).into(),
-        );
+        let expected = And(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into());
 
         assert_eq!(expected, actual);
     }
@@ -173,10 +216,7 @@ mod tests {
     #[test]
     fn parse_explicit_and() {
         let actual = parse("left and right").unwrap().unwrap();
-        let expected = And(
-            Tag(TagName("left".into())).into(),
-            Tag(TagName("right".into())).into(),
-        );
+        let expected = And(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into());
 
         assert_eq!(expected, actual);
     }
@@ -191,9 +231,7 @@ mod tests {
 
     #[test]
     fn parse_comparisons() {
-        let actual = parse("colour=red size == big wheels >= 4")
-            .unwrap()
-            .unwrap();
+        let actual = parse("colour=red size == big wheels >= 4").unwrap().unwrap();
         let expected = And(
             Equal(TagName("colour".into()), TagValue("red".into())).into(),
             And(
@@ -209,14 +247,7 @@ mod tests {
     #[test]
     fn parse_operator_precedence() {
         let actual = parse("left or right and wrong").unwrap().unwrap();
-        let expected = Or(
-            Tag(TagName("left".into())).into(),
-            And(
-                Tag(TagName("right".into())).into(),
-                Tag(TagName("wrong".into())).into(),
-            )
-            .into(),
-        );
+        let expected = Or(Tag(TagName("left".into())).into(), And(Tag(TagName("right".into())).into(), Tag(TagName("wrong".into())).into()).into());
 
         assert_eq!(expected, actual);
     }
@@ -224,47 +255,22 @@ mod tests {
     #[test]
     fn parse_parentheses() {
         let actual = parse("(left or right) and wrong").unwrap().unwrap();
-        let expected = And(
-            Or(
-                Tag(TagName("left".into())).into(),
-                Tag(TagName("right".into())).into(),
-            )
-            .into(),
-            Tag(TagName("wrong".into())).into(),
-        );
+        let expected = And(Or(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into()).into(), Tag(TagName("wrong".into())).into());
 
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn tag_names() {
-        let query = parse("colour == red and not (size == big or year < 2025)")
-            .unwrap()
-            .unwrap();
+        let query = parse("colour == red and not (size == big or year < 2025)").unwrap().unwrap();
 
-        assert_eq!(
-            query.tags(),
-            vec![
-                TagName("colour".into()),
-                TagName("size".into()),
-                TagName("year".into())
-            ]
-        );
+        assert_eq!(query.tags(), vec![TagName("colour".into()), TagName("size".into()), TagName("year".into())]);
     }
 
     #[test]
     fn value_names() {
-        let query = parse("colour == red and not (size == big or year < 2025)")
-            .unwrap()
-            .unwrap();
+        let query = parse("colour == red and not (size == big or year < 2025)").unwrap().unwrap();
 
-        assert_eq!(
-            query.values(),
-            vec![
-                TagValue("red".into()),
-                TagValue("big".into()),
-                TagValue("2025".into())
-            ]
-        );
+        assert_eq!(query.values(), vec![TagValue("red".into()), TagValue("big".into()), TagValue("2025".into())]);
     }
 }

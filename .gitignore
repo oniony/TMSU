@@ -5,3 +5,4 @@ target/
 # Litter
 **/*.rs.bk
 .idea
+.tmsu

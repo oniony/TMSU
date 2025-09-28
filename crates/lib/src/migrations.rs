@@ -34,9 +34,7 @@ fn create_version_table<'t>(tx: &mut Transaction<'t>) -> Result<(), Box<dyn std:
     Ok(())
 }
 
-fn get_schema_version<'t>(
-    tx: &mut Transaction<'t>,
-) -> Result<Option<u32>, Box<dyn std::error::Error>> {
+fn get_schema_version<'t>(tx: &mut Transaction<'t>) -> Result<Option<u32>, Box<dyn std::error::Error>> {
     let sql = "SELECT version FROM schema_version";
 
     let version = tx.query_row(sql, [], |row| row.get(0)).optional()?;

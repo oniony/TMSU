@@ -14,7 +14,7 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::constants::*;
-use libtmsu::database;
+use libtmsu::database::Database;
 use std::env;
 use std::error::Error;
 use std::path::PathBuf;
@@ -31,7 +31,7 @@ pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<
     };
 
     for path in paths {
-        database::create(&path)?
+        Database::create(&path)?
     }
 
     Ok(())

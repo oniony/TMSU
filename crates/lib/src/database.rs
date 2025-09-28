@@ -53,7 +53,9 @@ impl Database {
 
         let connection = Connection::open(path)?;
 
-        Ok(Database { connection: Some(connection) })
+        Ok(Database {
+            connection: Some(connection),
+        })
     }
 
     /// Validates the specified tags against the database, returning any that are invalid.
@@ -62,12 +64,17 @@ impl Database {
     }
 
     /// Validates the specified values against the database, returning any that are invalid.
-    pub fn invalid_values(&self, value_names: &[TagValue]) -> Result<Vec<TagValue>, Box<dyn Error>> {
+    pub fn invalid_values(
+        &self,
+        value_names: &[TagValue],
+    ) -> Result<Vec<TagValue>, Box<dyn Error>> {
         self.invalid_wotsits("value", value_names)
     }
 
     fn connection(&self) -> Result<&Connection, Box<dyn Error>> {
-        self.connection.as_ref().ok_or("database connection closed".into())
+        self.connection
+            .as_ref()
+            .ok_or("database connection closed".into())
     }
 
     fn invalid_wotsits<N>(&self, wotsit: &str, names: &[N]) -> Result<Vec<N>, Box<dyn Error>>
@@ -108,5 +115,8 @@ impl Drop for Database {
 
 #[inline]
 fn custom_placeholder_string(placeholder: &str, count: usize) -> String {
-    std::iter::repeat(placeholder).take(count).collect::<Vec<_>>().join(", ")
+    std::iter::repeat(placeholder)
+        .take(count)
+        .collect::<Vec<_>>()
+        .join(", ")
 }

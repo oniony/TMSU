@@ -3,16 +3,16 @@ query = _{ SOI ~ maybe_or? ~ EOI }
 tag   = @{ quoted_tag | unquoted_tag }
 value = @{ quoted_value | unquoted_value }
 
-or  = { maybe_and ~ ^" or " ~ maybe_or }
-and = { maybe_not ~ (^" and " | SEPARATOR+) ~ maybe_and }
-not = { ^"not " ~ operand }
+or  = { maybe_and ~ ^"or" ~ maybe_or }
+and = { maybe_not ~ (^"and"?) ~ maybe_and }
+not = { ^"not" ~ operand }
 
-equal            = { tag ~ SEPARATOR* ~ ("==" | "=" | ^"eq") ~ SEPARATOR* ~ value }
-not_equal        = { tag ~ SEPARATOR* ~ ("!=" | ^"ne") ~ SEPARATOR* ~ value }
-less_than        = { tag ~ SEPARATOR* ~ ("<" | ^"lt") ~ SEPARATOR* ~ value }
-greater_than     = { tag ~ SEPARATOR* ~ (">" | ^"gt") ~ SEPARATOR* ~ value }
-less_or_equal    = { tag ~ SEPARATOR* ~ ("<=" | "≤" | ^"le") ~ SEPARATOR* ~ value }
-greater_or_equal = { tag ~ SEPARATOR* ~ (">=" | "≥" | ^"ge") ~ SEPARATOR* ~ value }
+equal            = { tag ~ ("==" | "=" | ^"eq") ~ value }
+not_equal        = { tag ~ ("!=" | ^"ne") ~ value }
+less_than        = { tag ~ ("<" | ^"lt") ~ value }
+greater_than     = { tag ~ (">" | ^"gt") ~ value }
+less_or_equal    = { tag ~ ("<=" | "≤" | ^"le") ~ value }
+greater_or_equal = { tag ~ (">=" | "≥" | ^"ge") ~ value }
 
 maybe_or    = _{ or | maybe_and }
 maybe_and   = _{ and | maybe_not }
@@ -28,3 +28,5 @@ quoted_value   = _{ "\"" ~ quoted_name_character+ ~ "\"" }
 
 quoted_name_character     = _{ !("\"") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL | SEPARATOR) }
 unquoted_name_character   = _{ !("=" | "<" | ">" | "≤" | "≥" | "(" | ")") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL) }
+
+WHITESPACE = _{ " " }

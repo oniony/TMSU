@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::error::MultiError;
 use libtmsu::database::Database;
 use libtmsu::query;
 use std::error::Error;
@@ -20,7 +21,7 @@ use std::path;
 use std::path::PathBuf;
 
 pub fn execute(
-    db_path: Option<PathBuf>,
+    database: Database,
     _verbosity: u8,
     query: Vec<String>,
     _directory: bool,
@@ -32,22 +33,25 @@ pub fn execute(
     _sort: Option<String>,
     _ignore_case: bool,
 ) -> Result<(), Box<dyn Error>> {
-    let db_path = db_path.ok_or("no database found")?;
     let _path = path.map(|p| path::absolute(p));
     let query = query::parse(query.join(" ").as_str())?;
 
-    let database = Database::open(&db_path)?;
+    let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
 
     if let Some(query) = query {
         let tags = query.tags();
         for invalid_tag in database.invalid_tags(&tags)? {
-            eprintln!("unknown tag: {invalid_tag}")
+            errors.push(format!("unknown tag: {invalid_tag}").into());
         }
 
         let values = query.values();
         for invalid_value in database.invalid_values(&values)? {
-            eprintln!("unknown value: {invalid_value}")
+            errors.push(format!("unknown value: {invalid_value}").into());
         }
+    }
+
+    if !errors.is_empty() {
+        return Err(MultiError { errors }.into());
     }
 
     //TODO run query

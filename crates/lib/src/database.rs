@@ -16,19 +16,45 @@
 use crate::migrations;
 use crate::query::{TagName, TagValue};
 use rusqlite::types::FromSql;
-use rusqlite::{params_from_iter, Connection, ToSql};
+use rusqlite::{Connection, ToSql, params_from_iter};
 use std::error::Error;
+use std::fmt::Display;
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
+
+/// Application settings.
+pub enum Setting {
+    Root,
+}
+
+impl Display for Setting {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Setting::Root => write!(f, "database-root"),
+        }
+    }
+}
 
 // An application database.
 pub struct Database {
+    pub path: PathBuf,
+    pub root: PathBuf,
     connection: Option<Connection>,
 }
 
 impl Database {
+    /// The database file path.
+    pub fn path(&self) -> &Path {
+        &self.path
+    }
+
+    /// The database root, from which file paths are relative.
+    pub fn root(&self) -> &Path {
+        &self.root
+    }
+
     /// Creates a new, empty database at the specified path.
-    pub fn create(path: &PathBuf) -> Result<(), Box<dyn Error>> {
+    pub fn create(path: &Path, root: &Path) -> Result<(), Box<dyn Error>> {
         if path.exists() {
             return Err(format!("{}: database already exists", path.to_str().unwrap()).into());
         }
@@ -39,7 +65,10 @@ impl Database {
 
         let mut conn = Connection::open(path)?;
         let mut tx = conn.transaction()?;
+
         migrations::run(&mut tx)?;
+        Self::update_setting(&mut tx, Setting::Root, root.to_str().unwrap())?;
+
         tx.commit()?;
 
         Ok(())
@@ -52,8 +81,18 @@ impl Database {
         }
 
         let connection = Connection::open(path)?;
+        let path = path.clone();
+        let root_setting: PathBuf = Self::read_setting(&connection, Setting::Root)?.into();
+
+        let root = path
+            .parent()
+            .unwrap_or(&PathBuf::new())
+            .join(root_setting)
+            .canonicalize()?;
 
         Ok(Database {
+            path,
+            root,
             connection: Some(connection),
         })
     }
@@ -102,6 +141,35 @@ impl Database {
             .collect::<Result<Vec<_>, rusqlite::Error>>()?;
 
         Ok(invalid_names)
+    }
+
+    fn read_setting(connection: &Connection, setting: Setting) -> Result<String, Box<dyn Error>> {
+        let value = connection.query_one(
+            "\
+            SELECT value FROM setting WHERE name = ?;",
+            [setting.to_string()],
+            |r| r.get::<usize, String>(0),
+        )?;
+
+        Ok(value)
+    }
+
+    fn update_setting(
+        connection: &Connection,
+        setting: Setting,
+        value: &str,
+    ) -> Result<(), Box<dyn Error>> {
+        let _ = connection.execute(
+            "\
+        INSERT INTO setting (name ,value)
+        VALUES (?1, ?2)
+        ON CONFLICT DO UPDATE
+        SET value = ?2;
+        ",
+            (setting.to_string(), value),
+        )?;
+
+        Ok(())
     }
 }
 

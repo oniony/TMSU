@@ -15,9 +15,9 @@
 
 use crate::constants::*;
 use libtmsu::database::Database;
-use std::env;
 use std::error::Error;
 use std::path::PathBuf;
+use std::{env, io, path};
 
 pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
     let paths = if paths.len() > 0 {
@@ -30,9 +30,31 @@ pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<
             .join(DEFAULT_DATABASE_NAME)]
     };
 
-    for path in paths {
-        Database::create(&path)?
+    let pairs: Vec<(PathBuf, Result<PathBuf, io::Error>)> = paths
+        .iter()
+        .map(|p| (p.clone(), determine_root(p)))
+        .collect();
+
+    for (path, root) in pairs {
+        Database::create(&path, &root?)?
     }
 
     Ok(())
+}
+
+fn determine_root(path: &PathBuf) -> Result<PathBuf, io::Error> {
+    let abs_path = path::absolute(path)?;
+
+    // if the database is within a '.tmsu' directory, then root the database to this directory's relative parent
+    if let Some(parent) = abs_path.parent() {
+        if let Some(filename) = parent.file_name() {
+            if filename == APPLICATION_DIRECTORY {
+                if let Some(_) = parent.parent() {
+                    return Ok("..".into());
+                }
+            }
+        }
+    }
+
+    Ok(PathBuf::from(path::MAIN_SEPARATOR_STR))
 }

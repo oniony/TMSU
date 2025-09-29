@@ -17,21 +17,34 @@ mod args;
 mod command;
 mod constants;
 mod database;
+mod error;
 
+use crate::error::MultiError;
 use args::{Args, Commands};
 use std::error::Error;
 use std::process;
 
-#[tokio::main]
-async fn main() {
+fn main() {
+    let result = run();
+
+    if let Err(error) = result {
+        if let Some(validation_error) = error.downcast_ref::<MultiError>() {
+            for error in &validation_error.errors {
+                eprintln!("{}: {}", constants::APPLICATION_NAME, error);
+            }
+        } else {
+            eprintln!("{}: {}", constants::APPLICATION_NAME, error);
+        }
+
+        process::exit(1)
+    }
+}
+
+fn run() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
+    let db_path = database::resolve(args.database)?;
 
-    let db_path = match database::resolve(args.database) {
-        Ok(db_path) => db_path,
-        Err(error) => return fatal(error),
-    };
-
-    let result = match args.command {
+    match args.command {
         Commands::Files {
             query,
             directory,
@@ -43,7 +56,7 @@ async fn main() {
             sort,
             ignore_case,
         } => command::files::execute(
-            db_path,
+            database::open(db_path)?,
             args.verbosity,
             query,
             directory,
@@ -55,17 +68,7 @@ async fn main() {
             sort,
             ignore_case,
         ),
-        Commands::Info => command::info::execute(db_path),
+        Commands::Info => command::info::execute(database::open(db_path)?),
         Commands::Init { path } => command::init::execute(db_path, path),
-    };
-
-    match result {
-        Ok(_) => (),
-        Err(error) => fatal(error),
     }
-}
-
-fn fatal(error: Box<dyn Error>) {
-    eprintln!("{}: {}", constants::APPLICATION_NAME, error.to_string());
-    process::exit(1)
 }

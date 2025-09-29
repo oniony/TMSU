@@ -82,12 +82,14 @@ pub enum Expression {
 }
 
 impl Expression {
+    /// Identifies the tag names within the expression.
     pub fn tags(&self) -> Vec<TagName> {
         let mut tag_names = Vec::new();
         self.walk_tag_names(&mut tag_names);
         tag_names
     }
 
+    /// Identifies the value names within the expression.
     pub fn values(&self) -> Vec<TagValue> {
         let mut value_names = Vec::new();
         self.walk_value_names(&mut value_names);
@@ -102,7 +104,12 @@ impl Expression {
                 right.walk_tag_names(tag_names);
             }
             Not(operand) => operand.walk_tag_names(tag_names),
-            Equal(tag_name, _) | NotEqual(tag_name, _) | GreaterThan(tag_name, _) | LessThan(tag_name, _) | GreaterOrEqual(tag_name, _) | LessOrEqual(tag_name, _) => tag_names.push(tag_name.clone()),
+            Equal(tag_name, _)
+            | NotEqual(tag_name, _)
+            | GreaterThan(tag_name, _)
+            | LessThan(tag_name, _)
+            | GreaterOrEqual(tag_name, _)
+            | LessOrEqual(tag_name, _) => tag_names.push(tag_name.clone()),
         }
     }
 
@@ -113,9 +120,12 @@ impl Expression {
                 right.walk_value_names(value_names);
             }
             Not(operand) => operand.walk_value_names(value_names),
-            Equal(_, value_name) | NotEqual(_, value_name) | GreaterThan(_, value_name) | LessThan(_, value_name) | GreaterOrEqual(_, value_name) | LessOrEqual(_, value_name) => {
-                value_names.push(value_name.clone())
-            }
+            Equal(_, value_name)
+            | NotEqual(_, value_name)
+            | GreaterThan(_, value_name)
+            | LessThan(_, value_name)
+            | GreaterOrEqual(_, value_name)
+            | LessOrEqual(_, value_name) => value_names.push(value_name.clone()),
             _ => (),
         }
     }
@@ -208,7 +218,10 @@ mod tests {
     #[test]
     fn parse_implicit_and() {
         let actual = parse("left right").unwrap().unwrap();
-        let expected = And(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into());
+        let expected = And(
+            Tag(TagName("left".into())).into(),
+            Tag(TagName("right".into())).into(),
+        );
 
         assert_eq!(expected, actual);
     }
@@ -216,7 +229,10 @@ mod tests {
     #[test]
     fn parse_explicit_and() {
         let actual = parse("left and right").unwrap().unwrap();
-        let expected = And(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into());
+        let expected = And(
+            Tag(TagName("left".into())).into(),
+            Tag(TagName("right".into())).into(),
+        );
 
         assert_eq!(expected, actual);
     }
@@ -231,7 +247,9 @@ mod tests {
 
     #[test]
     fn parse_comparisons() {
-        let actual = parse("colour=red size == big wheels >= 4").unwrap().unwrap();
+        let actual = parse("colour=red size == big wheels >= 4")
+            .unwrap()
+            .unwrap();
         let expected = And(
             Equal(TagName("colour".into()), TagValue("red".into())).into(),
             And(
@@ -247,7 +265,14 @@ mod tests {
     #[test]
     fn parse_operator_precedence() {
         let actual = parse("left or right and wrong").unwrap().unwrap();
-        let expected = Or(Tag(TagName("left".into())).into(), And(Tag(TagName("right".into())).into(), Tag(TagName("wrong".into())).into()).into());
+        let expected = Or(
+            Tag(TagName("left".into())).into(),
+            And(
+                Tag(TagName("right".into())).into(),
+                Tag(TagName("wrong".into())).into(),
+            )
+            .into(),
+        );
 
         assert_eq!(expected, actual);
     }
@@ -255,22 +280,47 @@ mod tests {
     #[test]
     fn parse_parentheses() {
         let actual = parse("(left or right) and wrong").unwrap().unwrap();
-        let expected = And(Or(Tag(TagName("left".into())).into(), Tag(TagName("right".into())).into()).into(), Tag(TagName("wrong".into())).into());
+        let expected = And(
+            Or(
+                Tag(TagName("left".into())).into(),
+                Tag(TagName("right".into())).into(),
+            )
+            .into(),
+            Tag(TagName("wrong".into())).into(),
+        );
 
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn tag_names() {
-        let query = parse("colour == red and not (size == big or year < 2025)").unwrap().unwrap();
+        let query = parse("colour == red and not (size == big or year < 2025)")
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(query.tags(), vec![TagName("colour".into()), TagName("size".into()), TagName("year".into())]);
+        assert_eq!(
+            query.tags(),
+            vec![
+                TagName("colour".into()),
+                TagName("size".into()),
+                TagName("year".into())
+            ]
+        );
     }
 
     #[test]
     fn value_names() {
-        let query = parse("colour == red and not (size == big or year < 2025)").unwrap().unwrap();
+        let query = parse("colour == red and not (size == big or year < 2025)")
+            .unwrap()
+            .unwrap();
 
-        assert_eq!(query.values(), vec![TagValue("red".into()), TagValue("big".into()), TagValue("2025".into())]);
+        assert_eq!(
+            query.values(),
+            vec![
+                TagValue("red".into()),
+                TagValue("big".into()),
+                TagValue("2025".into())
+            ]
+        );
     }
 }

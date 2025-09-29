@@ -19,6 +19,7 @@ use std::error::Error;
 use std::path::PathBuf;
 use std::{env, io, path};
 
+/// Executes the 'init' command, which initialises new databases.
 pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
     let paths = if paths.len() > 0 {
         paths

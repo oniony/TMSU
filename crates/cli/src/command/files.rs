@@ -20,6 +20,7 @@ use std::error::Error;
 use std::path;
 use std::path::PathBuf;
 
+/// Executes the 'files' command, which allows files to be queried by tag.
 pub fn execute(
     database: Database,
     _verbosity: u8,

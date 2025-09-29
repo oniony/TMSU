@@ -17,6 +17,7 @@ use colored::Colorize;
 use libtmsu::database::Database;
 use std::error::Error;
 
+/// Executes the 'info' command, which provides database information.
 pub fn execute(database: Database) -> Result<(), Box<dyn Error>> {
     println!(
         "Database path: {}",

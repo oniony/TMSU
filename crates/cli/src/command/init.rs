@@ -58,3 +58,23 @@ fn determine_root(path: &PathBuf) -> Result<PathBuf, io::Error> {
 
     Ok(PathBuf::from(path::MAIN_SEPARATOR_STR))
 }
+
+#[cfg(test)]
+mod tests {
+    use crate::command::init::determine_root;
+    use std::path::PathBuf;
+
+    #[test]
+    fn determines_root() {
+        let tests = [
+            (PathBuf::from("/some/path"), PathBuf::from("/")),
+            (PathBuf::from("/some/path/.tmsu/db"), PathBuf::from("..")),
+        ];
+
+        for test in tests {
+            let actual_root = determine_root(&test.0).unwrap();
+            let expected_root = test.1;
+            assert_eq!(expected_root, actual_root);
+        }
+    }
+}

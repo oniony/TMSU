@@ -13,22 +13,31 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use colored::Colorize;
-use libtmsu::database::Database;
 use std::error::Error;
+use std::fmt::Display;
 
-pub fn execute(database: Database) -> Result<(), Box<dyn Error>> {
-    println!(
-        "Database path: {}",
-        database.path().display().to_string().green()
-    );
-    println!(
-        "Root path: {}",
-        database.root().display().to_string().green()
-    );
+/// Container for multiple errors.
+#[derive(Debug)]
+pub struct MultiError {
+    pub errors: Vec<Box<dyn Error + Send + Sync>>,
+}
 
-    //TODO open database
-    //TODO gather stats
+impl Iterator for MultiError {
+    type Item = Box<dyn Error + Send + Sync>;
 
-    Ok(())
+    fn next(&mut self) -> Option<Self::Item> {
+        self.errors.pop()
+    }
+}
+
+impl Error for MultiError {}
+
+impl Display for MultiError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for error in &self.errors {
+            f.write_fmt(format_args!("{}", error))?;
+        }
+
+        Ok(())
+    }
 }

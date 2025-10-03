@@ -41,12 +41,12 @@ pub fn execute(
 
     if let Some(query) = query {
         let tags = query.tags();
-        for invalid_tag in database.invalid_tags(&tags)? {
+        for invalid_tag in database.tags().missing(&tags)? {
             errors.push(format!("unknown tag: {invalid_tag}").into());
         }
 
         let values = query.values();
-        for invalid_value in database.invalid_values(&values)? {
+        for invalid_value in database.values().missing(&values)? {
             errors.push(format!("unknown value: {invalid_value}").into());
         }
     }

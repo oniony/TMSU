@@ -13,10 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+mod settings;
+mod tags;
+mod values;
+
 use crate::migrations;
-use crate::query::{TagName, TagValue};
-use rusqlite::types::FromSql;
-use rusqlite::{Connection, ToSql, params_from_iter};
+use rusqlite::Connection;
 use std::error::Error;
 use std::fmt::Display;
 use std::fs;
@@ -37,8 +39,8 @@ impl Display for Setting {
 
 // An application database.
 pub struct Database {
-    pub path: PathBuf,
-    pub root: PathBuf,
+    path: PathBuf,
+    root: PathBuf,
     connection: Option<Connection>,
 }
 
@@ -67,7 +69,9 @@ impl Database {
         let mut tx = conn.transaction()?;
 
         migrations::run(&mut tx)?;
-        Self::update_setting(&mut tx, Setting::Root, root.to_str().unwrap())?;
+
+        let settings = settings::Store::new(&mut tx);
+        settings.update(Setting::Root, root.to_str().unwrap())?;
 
         tx.commit()?;
 
@@ -82,7 +86,9 @@ impl Database {
 
         let connection = Connection::open(path)?;
         let path = path.clone();
-        let root_setting: PathBuf = Self::read_setting(&connection, Setting::Root)?.into();
+
+        let settings = settings::Store::new(&connection);
+        let root_setting: PathBuf = settings.read(Setting::Root)?.into();
 
         let root = path
             .parent()
@@ -97,79 +103,14 @@ impl Database {
         })
     }
 
-    /// Validates the specified tags against the database, returning any that are invalid.
-    pub fn invalid_tags(&self, tag_names: &[TagName]) -> Result<Vec<TagName>, Box<dyn Error>> {
-        self.invalid_wotsits("tag", tag_names)
+    /// Retrieves the tag store.
+    pub fn tags(&self) -> tags::Store {
+        tags::Store::new(&self.connection.as_ref().unwrap())
     }
 
-    /// Validates the specified values against the database, returning any that are invalid.
-    pub fn invalid_values(
-        &self,
-        value_names: &[TagValue],
-    ) -> Result<Vec<TagValue>, Box<dyn Error>> {
-        self.invalid_wotsits("value", value_names)
-    }
-
-    fn connection(&self) -> Result<&Connection, Box<dyn Error>> {
-        self.connection
-            .as_ref()
-            .ok_or("database connection closed".into())
-    }
-
-    fn invalid_wotsits<N>(&self, wotsit: &str, names: &[N]) -> Result<Vec<N>, Box<dyn Error>>
-    where
-        N: ToSql + FromSql,
-    {
-        if names.is_empty() {
-            return Ok(vec![]);
-        }
-
-        let connection = self.connection()?;
-
-        let mut statement = connection.prepare(&format!(
-            "\
-            SELECT c.column1
-            FROM (VALUES{}) AS c
-            LEFT JOIN {wotsit} v ON c.column1 = v.name
-            WHERE v.name IS NULL;",
-            custom_placeholder_string("(?)", names.len())
-        ))?;
-
-        let invalid_names = statement
-            .query_map(params_from_iter(names), |row| row.get::<usize, N>(0))?
-            .into_iter()
-            .collect::<Result<Vec<_>, rusqlite::Error>>()?;
-
-        Ok(invalid_names)
-    }
-
-    fn read_setting(connection: &Connection, setting: Setting) -> Result<String, Box<dyn Error>> {
-        let value = connection.query_one(
-            "\
-            SELECT value FROM setting WHERE name = ?;",
-            [setting.to_string()],
-            |r| r.get::<usize, String>(0),
-        )?;
-
-        Ok(value)
-    }
-
-    fn update_setting(
-        connection: &Connection,
-        setting: Setting,
-        value: &str,
-    ) -> Result<(), Box<dyn Error>> {
-        let _ = connection.execute(
-            "\
-        INSERT INTO setting (name ,value)
-        VALUES (?1, ?2)
-        ON CONFLICT DO UPDATE
-        SET value = ?2;
-        ",
-            (setting.to_string(), value),
-        )?;
-
-        Ok(())
+    /// Retrieves the value store.
+    pub fn values(&self) -> values::Store {
+        values::Store::new(&self.connection.as_ref().unwrap())
     }
 }
 

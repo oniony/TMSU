@@ -17,3 +17,4 @@ pub mod database;
 pub mod query;
 
 mod migrations;
+mod sql;

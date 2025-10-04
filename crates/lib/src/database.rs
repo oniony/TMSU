@@ -13,9 +13,11 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-mod settings;
-mod tags;
-mod values;
+pub mod file;
+pub mod query;
+pub mod setting;
+pub mod tag;
+pub mod value;
 
 use crate::migrations;
 use rusqlite::Connection;
@@ -70,7 +72,7 @@ impl Database {
 
         migrations::run(&mut tx)?;
 
-        let settings = settings::Store::new(&mut tx);
+        let settings = setting::Store::new(&mut tx);
         settings.update(Setting::Root, root.to_str().unwrap())?;
 
         tx.commit()?;
@@ -87,7 +89,7 @@ impl Database {
         let connection = Connection::open(path)?;
         let path = path.clone();
 
-        let settings = settings::Store::new(&connection);
+        let settings = setting::Store::new(&connection);
         let root_setting: PathBuf = settings.read(Setting::Root)?.into();
 
         let root = path
@@ -103,14 +105,19 @@ impl Database {
         })
     }
 
+    /// Retrieves the file store.
+    pub fn files(&self) -> file::Store {
+        file::Store::new(&self.connection.as_ref().unwrap())
+    }
+
     /// Retrieves the tag store.
-    pub fn tags(&self) -> tags::Store {
-        tags::Store::new(&self.connection.as_ref().unwrap())
+    pub fn tags(&self) -> tag::Store {
+        tag::Store::new(&self.connection.as_ref().unwrap())
     }
 
     /// Retrieves the value store.
-    pub fn values(&self) -> values::Store {
-        values::Store::new(&self.connection.as_ref().unwrap())
+    pub fn values(&self) -> value::Store {
+        value::Store::new(&self.connection.as_ref().unwrap())
     }
 }
 

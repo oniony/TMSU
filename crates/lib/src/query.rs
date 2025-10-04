@@ -256,7 +256,7 @@ mod tests {
                 Equal(TagName("size".into()), TagValue("big".into())).into(),
                 GreaterOrEqual(TagName("wheels".into()), TagValue("4".into())).into(),
             )
-            .into(),
+                .into(),
         );
 
         assert_eq!(expected, actual);
@@ -271,7 +271,7 @@ mod tests {
                 Tag(TagName("right".into())).into(),
                 Tag(TagName("wrong".into())).into(),
             )
-            .into(),
+                .into(),
         );
 
         assert_eq!(expected, actual);
@@ -285,7 +285,7 @@ mod tests {
                 Tag(TagName("left".into())).into(),
                 Tag(TagName("right".into())).into(),
             )
-            .into(),
+                .into(),
             Tag(TagName("wrong".into())).into(),
         );
 

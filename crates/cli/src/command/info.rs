@@ -13,18 +13,19 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::rendering::Separator;
 use colored::Colorize;
 use libtmsu::database::Database;
 use std::error::Error;
 
 /// Executes the 'info' command, which provides database information.
-pub fn execute(database: Database) -> Result<(), Box<dyn Error>> {
-    println!(
-        "Database path: {}",
+pub fn execute(database: Database, separator: Separator) -> Result<(), Box<dyn Error>> {
+    print!(
+        "Database path: {}{separator}",
         database.path().display().to_string().green()
     );
-    println!(
-        "Root path: {}",
+    print!(
+        "Root path: {}{separator}",
         database.root().display().to_string().green()
     );
 

@@ -13,6 +13,7 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use crate::rendering::Separator;
 use clap::{ArgAction, Parser, Subcommand};
 use std::path::PathBuf;
 
@@ -26,6 +27,14 @@ pub struct Args {
     #[clap(short = 'v', long = "verbose", action = ArgAction::Count, default_value_t = 0)]
     pub verbosity: u8,
 
+    #[arg(
+        short = '0',
+        long = "print0",
+        help = "delimit files with a NUL character rather than newline",
+        default_value_t = false
+    )]
+    print0: bool,
+
     #[command(subcommand)]
     pub command: Commands,
 }
@@ -33,6 +42,13 @@ pub struct Args {
 impl Args {
     pub fn parse() -> Self {
         Parser::parse()
+    }
+
+    pub fn separator(&self) -> Separator {
+        match self.print0 {
+            true => Separator::Nul,
+            false => Separator::Newline,
+        }
     }
 }
 
@@ -111,13 +127,6 @@ Examples:
             default_value_t = false
         )]
         file: bool,
-        #[arg(
-            short = '0',
-            long = "print0",
-            help = "delimit files with a NUL character rather than newline",
-            default_value_t = false
-        )]
-        print0: bool,
         #[arg(
             short = 'c',
             long = "count",

@@ -18,6 +18,7 @@ mod command;
 mod constants;
 mod database;
 mod error;
+mod rendering;
 
 use crate::error::MultiError;
 use args::{Args, Commands};
@@ -42,14 +43,14 @@ fn main() {
 
 fn run() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
-    let db_path = database::resolve(args.database)?;
+    let db_path = database::resolve(&args.database)?;
+    let separator = args.separator();
 
     match args.command {
         Commands::Files {
             query,
             directory,
             file,
-            print0,
             count,
             path,
             explicit,
@@ -61,14 +62,14 @@ fn run() -> Result<(), Box<dyn Error>> {
             query,
             directory,
             file,
-            print0,
+            separator,
             count,
             path,
             explicit,
             sort,
             ignore_case,
         ),
-        Commands::Info => command::info::execute(database::open(db_path)?),
+        Commands::Info => command::info::execute(database::open(db_path)?, separator),
         Commands::Init { path } => command::init::execute(db_path, path),
     }
 }

@@ -14,8 +14,11 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::error::MultiError;
+use crate::rendering::Separator;
+use libtmsu::database::file::File;
 use libtmsu::database::Database;
 use libtmsu::query;
+use libtmsu::query::Expression;
 use std::error::Error;
 use std::path;
 use std::path::PathBuf;
@@ -24,42 +27,72 @@ use std::path::PathBuf;
 pub fn execute(
     database: Database,
     _verbosity: u8,
-    query: Vec<String>,
+    args: Vec<String>,
     _directory: bool,
     _file: bool,
-    _print0: bool,
-    _count: bool,
+    separator: Separator,
+    count: bool,
     path: Option<PathBuf>,
-    _explicit: bool,
+    explicit_only: bool,
     _sort: Option<String>,
-    _ignore_case: bool,
+    ignore_case: bool,
 ) -> Result<(), Box<dyn Error>> {
     let _path = path.map(|p| path::absolute(p));
-    let query = query::parse(query.join(" ").as_str())?;
+    let query_text = args.join(" ").to_owned();
+    let expression = query::parse(&query_text)?;
 
-    let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
+    let files = if let Some(expression) = &expression {
+        query(database, expression, explicit_only, ignore_case)?
+    } else {
+        all(database)?
+    };
 
-    if let Some(query) = query {
-        let tags = query.tags();
-        for invalid_tag in database.tags().missing(&tags)? {
-            errors.push(format!("unknown tag: {invalid_tag}").into());
-        }
-
-        let values = query.values();
-        for invalid_value in database.values().missing(&values)? {
-            errors.push(format!("unknown value: {invalid_value}").into());
-        }
+    if count {
+        show_count(&files, separator);
+    } else {
+        list_files(&files, separator);
     }
 
-    if !errors.is_empty() {
+    Ok(())
+}
+
+fn query(
+    database: Database,
+    expression: &Expression,
+    explicit_only: bool,
+    ignore_case: bool)
+    -> Result<Vec<File>, Box<dyn Error>> {
+    let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
+
+    let tags = expression.tags();
+    let invalid_tags = database.tags().missing(&tags)?;
+    for invalid_tag in &invalid_tags {
+        errors.push(format!("unknown tag: {invalid_tag}").into());
+    }
+
+    let values = expression.values();
+    let invalid_values = database.values().missing(&values)?;
+    for invalid_value in &invalid_values {
+        errors.push(format!("unknown value: {invalid_value}").into());
+    }
+
+    if !invalid_tags.is_empty() || !invalid_values.is_empty() {
         return Err(MultiError { errors }.into());
     }
 
-    //TODO run query
-    //TODO handle parser stack overflow
-    //TODO list the files
+    database.files().query(expression, explicit_only, ignore_case)
+}
 
-    println!("not implemented");
+fn all(database: Database) -> Result<Vec<File>, Box<dyn Error>> {
+    database.files().all()
+}
 
-    Ok(())
+fn show_count(files: &Vec<File>, separator: Separator) {
+    print!("{}{separator}", files.len())
+}
+
+fn list_files(files: &Vec<File>, separator: Separator) {
+    for file in files {
+        print!("{}{separator}", file.path().to_str().unwrap_or(""));
+    }
 }

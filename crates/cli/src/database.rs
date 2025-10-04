@@ -21,9 +21,9 @@ use std::error::Error;
 use std::path::PathBuf;
 
 /// Resolves the database path considering the program argument, environment variable and working directory.
-pub fn resolve(arg_db_path: Option<PathBuf>) -> Result<Option<PathBuf>, Box<dyn Error>> {
+pub fn resolve(arg_db_path: &Option<PathBuf>) -> Result<Option<PathBuf>, Box<dyn Error>> {
     match arg_db_path {
-        Some(path) => Ok(Some(path)),
+        Some(path) => Ok(Some(path.to_owned())),
         None => match env::var(constants::DATABASE_ENV_VAR) {
             Ok(path) => Ok(Some(PathBuf::from(path))),
             Err(VarError::NotPresent) => find(),

@@ -28,9 +28,18 @@ jobs:
         working-directory: tests
         run: ./runall
 
-      - name: Tag
-        uses: TriPSs/conventional-changelog-action@v5
+      - name: Version
+        id: version
+        uses: ietf-tools/semver-action@v1
         with:
-          github-token: ${{ secrets.github_token }}
-          skip-commit: "true"
+          token: ${{ github.token }}
+          branch: main
+          minorList: feat
+          patchList: fix, perf, refactor, test, chore
 
+      - name: Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.next }}
+          git push origin ${{ steps.version.outputs.next }}

@@ -49,3 +49,5 @@ jobs:
           name: ${{ steps.version.outputs.next }}
           tag_name: ${{ steps.version.outputs.next }}
           generate_release_notes: true
+          prerelease: true
+          target_commitish: main

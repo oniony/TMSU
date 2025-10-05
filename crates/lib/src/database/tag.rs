@@ -3,6 +3,7 @@ use crate::sql::builder::SqlBuilder;
 use rusqlite::{params_from_iter, Connection};
 use std::error::Error;
 
+/// The tag store.
 pub struct Store<'s> {
     connection: &'s Connection,
 }

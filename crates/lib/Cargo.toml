@@ -16,3 +16,4 @@ chrono = "0.4"
 rusqlite = { version = "0.37", features = ["bundled", "chrono"] }
 pest = "2.8"
 pest_derive = "2.8"
+nuid = "0.6"

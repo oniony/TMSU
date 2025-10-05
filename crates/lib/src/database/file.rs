@@ -1,14 +1,13 @@
-use crate::database::query::QueryBuilder;
 use crate::query::Expression;
 use chrono::{DateTime, Utc};
+use query::QueryBuilder;
 use rusqlite::{params_from_iter, Connection, Rows};
 use std::error::Error;
 use std::path::PathBuf;
 
-pub struct Store<'s> {
-    connection: &'s Connection,
-}
+mod query;
 
+/// File in the database.
 pub struct File {
     _id: i64,
     directory: String,
@@ -23,6 +22,11 @@ impl File {
     pub fn path(&self) -> PathBuf {
         PathBuf::from(&self.directory).join(&self.name)
     }
+}
+
+/// The file store.
+pub struct Store<'s> {
+    connection: &'s Connection,
 }
 
 impl Store<'_> {
@@ -42,6 +46,17 @@ impl Store<'_> {
         Self::files_from_rows(&mut rows)
     }
 
+    /// Queries the file count by expression.
+    pub fn query_count(&self, query: &Expression, explicit_only: bool, ignore_case: bool) -> Result<u64, Box<dyn Error>> {
+        let mut builder = QueryBuilder::new(explicit_only, ignore_case);
+        let (sql, parameters) = builder.file_count_query(&query)?;
+
+        let mut statement = self.connection.prepare(&sql)?;
+        let count = statement.query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;
+
+        Ok(count)
+    }
+
     /// Retrieves all files.
     pub fn all(&self) -> Result<Vec<File>, Box<dyn Error>> {
         let mut statement = self.connection.prepare("\
@@ -51,6 +66,16 @@ FROM file;
         let mut rows = statement.query(())?;
 
         Self::files_from_rows(&mut rows)
+    }
+
+    pub fn all_count(&self) -> Result<u64, Box<dyn Error>> {
+        let mut statement = self.connection.prepare("\
+SELECT count(1)
+FROM file;
+")?;
+        let count = statement.query_one((), |row| row.get::<usize, u64>(0))?;
+
+        Ok(count)
     }
 
     fn files_from_rows(rows: &mut Rows) -> Result<Vec<File>, Box<dyn Error>> {

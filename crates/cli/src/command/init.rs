@@ -14,33 +14,47 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::constants::*;
+use crate::Executor;
 use libtmsu::database::Database;
 use std::error::Error;
 use std::path::PathBuf;
 use std::{env, io, path};
 
-/// Executes the 'init' command, which initialises new databases.
-pub fn execute(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> Result<(), Box<dyn Error>> {
-    let paths = if paths.len() > 0 {
-        paths
-    } else if let Some(path) = db_path {
-        vec![path]
-    } else {
-        vec![env::current_dir()?
-            .join(APPLICATION_DIRECTORY)
-            .join(DEFAULT_DATABASE_NAME)]
-    };
+/// Init command executor.
+pub struct InitCommand {
+    db_path: Option<PathBuf>,
+    paths: Vec<PathBuf>,
+}
 
-    let pairs: Vec<(PathBuf, Result<PathBuf, io::Error>)> = paths
-        .iter()
-        .map(|p| (p.clone(), determine_root(p)))
-        .collect();
-
-    for (path, root) in pairs {
-        Database::create(&path, &root?)?
+impl InitCommand {
+    pub fn new(db_path: Option<PathBuf>, paths: Vec<PathBuf>) -> InitCommand {
+        InitCommand { db_path, paths }
     }
+}
 
-    Ok(())
+impl Executor for InitCommand {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
+        let paths = if self.paths.len() > 0 {
+            &self.paths
+        } else if let Some(path) = &self.db_path {
+            &vec![path.clone()]
+        } else {
+            &vec![env::current_dir()?
+                .join(APPLICATION_DIRECTORY)
+                .join(DEFAULT_DATABASE_NAME)]
+        };
+
+        let pairs: Vec<(PathBuf, Result<PathBuf, io::Error>)> = paths
+            .iter()
+            .map(|p| (p.clone(), determine_root(p)))
+            .collect();
+
+        for (path, root) in pairs {
+            Database::create(&path, &root?)?
+        }
+
+        Ok(())
+    }
 }
 
 fn determine_root(path: &PathBuf) -> Result<PathBuf, io::Error> {
@@ -62,8 +76,7 @@ fn determine_root(path: &PathBuf) -> Result<PathBuf, io::Error> {
 
 #[cfg(test)]
 mod tests {
-    use crate::command::init::determine_root;
-    use std::path::PathBuf;
+    use super::*;
 
     #[test]
     fn determines_root() {

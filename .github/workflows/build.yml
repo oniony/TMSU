@@ -1,8 +1,6 @@
 name: Build
 
 on:
-  push:
-    branches: [ "main" ]
   pull_request:
 
 env:
@@ -27,19 +25,3 @@ jobs:
       - name: Integration tests
         working-directory: tests
         run: ./runall
-
-      - name: Version
-        id: version
-        uses: ietf-tools/semver-action@v1
-        with:
-          token: ${{ github.token }}
-          branch: main
-          minorList: feat
-          patchList: fix, perf, refactor, test, chore
-
-      - name: Tag
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.next }}
-          git push origin ${{ steps.version.outputs.next }}

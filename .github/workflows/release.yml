@@ -1,0 +1,51 @@
+name: Build
+
+on:
+  push:
+    branches: [ "main" ]
+
+env:
+  CARGO_TERM_COLOR: always
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Build
+        run: cargo build --verbose
+
+      - name: Unit tests
+        run: cargo test
+
+      - name: Integration tests
+        working-directory: tests
+        run: ./runall
+
+      - name: Version
+        id: version
+        uses: ietf-tools/semver-action@v1
+        with:
+          token: ${{ github.token }}
+          branch: main
+          minorList: feat
+          patchList: fix, perf, refactor, test, chore
+
+      - name: Tag
+        run: |
+          git config user.name "GitHub Actions"
+          git config user.email "github-actions@users.noreply.github.com"
+          git tag ${{ steps.version.outputs.next }}
+          git push origin ${{ steps.version.outputs.next }}
+
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with: 
+          name: ${{ steps.version.outputs.next }}
+          tag_name: ${{ steps.version.outputs.next }}
+          generate_release_notes: true

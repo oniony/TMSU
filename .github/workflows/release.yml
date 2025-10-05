@@ -35,19 +35,20 @@ jobs:
           branch: main
           minorList: feat
           patchList: fix, perf, refactor, test, chore
+          patchAll: true
 
       - name: Tag
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.next }}-alpha
-          git push origin ${{ steps.version.outputs.next }}-alpha
+          git tag ${{ steps.version.outputs.next }}
+          git push origin ${{ steps.version.outputs.next }}
 
-      - name: Release
-        uses: softprops/action-gh-release@v1
-        with: 
-          name: ${{ steps.version.outputs.next }}
-          tag_name: ${{ steps.version.outputs.next }}
-          generate_release_notes: true
-          prerelease: true
-          target_commitish: main
+#      - name: Release
+#        uses: softprops/action-gh-release@v1
+#        with: 
+#          name: ${{ steps.version.outputs.next }}
+#          tag_name: ${{ steps.version.outputs.next }}
+#          generate_release_notes: true
+#          prerelease: true
+#          target_commitish: main

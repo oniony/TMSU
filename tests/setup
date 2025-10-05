@@ -7,5 +7,5 @@ rm -r /tmp/tmsu 2>/dev/null
 mkdir -p /tmp/tmsu
 
 # create the database
-tmsu init /tmp/tmsu >/dev/null 2>/dev/null
+tmsu init /tmp/tmsu/.tmsu/db >/dev/null 2>/dev/null
 export TMSU_DB=/tmp/tmsu/.tmsu/db

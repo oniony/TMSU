@@ -19,25 +19,12 @@ pub mod setting;
 pub mod tag;
 pub mod value;
 
+use crate::database::setting::Setting;
 use crate::migrations;
 use rusqlite::Connection;
 use std::error::Error;
-use std::fmt::Display;
 use std::fs;
 use std::path::{Path, PathBuf};
-
-/// Application settings.
-pub enum Setting {
-    Root,
-}
-
-impl Display for Setting {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Setting::Root => write!(f, "database-root"),
-        }
-    }
-}
 
 // An application database.
 pub struct Database {
@@ -95,8 +82,7 @@ impl Database {
         let root = path
             .parent()
             .unwrap_or(&PathBuf::new())
-            .join(root_setting)
-            .canonicalize()?;
+            .join(root_setting);
 
         Ok(Database {
             path,
@@ -129,10 +115,57 @@ impl Drop for Database {
     }
 }
 
-#[inline]
-fn custom_placeholder_string(placeholder: &str, count: usize) -> String {
-    std::iter::repeat(placeholder)
-        .take(count)
-        .collect::<Vec<_>>()
-        .join(", ")
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use std::env;
+    use std::fs::OpenOptions;
+
+    #[test]
+    fn properties() {
+        let database = Database { path: PathBuf::from("some-path"), root: PathBuf::from("some-root"), connection: None };
+        assert_eq!("some-path", database.path().to_str().unwrap());
+        assert_eq!("some-root", database.root().to_str().unwrap());
+    }
+
+    #[test]
+    fn create() {
+        let path = env::temp_dir().join("tmsu-test");
+        let _ = fs::remove_file(&path);
+        let root = PathBuf::from("/some/root");
+
+        Database::create(&path, &root).unwrap();
+        assert!(path.exists());
+    }
+
+    #[test]
+    fn create_collision() {
+        let path = env::temp_dir().join("tmsu-test");
+        let root = PathBuf::from("/some/root");
+
+        OpenOptions::new()
+            .create(true)
+            .write(true)
+            .open(&path)
+            .unwrap();
+
+        let error = Database::create(&path, &root);
+
+        assert!(match error {
+            Err(ref e) if e.to_string().contains("database already exists") => true,
+            _ => false
+        });
+    }
+
+    #[test]
+    fn test_open() {
+        let path = env::temp_dir().join("tmsu-test");
+        let root = PathBuf::from("/some/root");
+        let _ = fs::remove_file(&path);
+        Database::create(&path, &root).unwrap();
+
+        let database = Database::open(&path).unwrap();
+        assert_eq!(path, database.path());
+        assert_eq!(root, database.root());
+    }
 }

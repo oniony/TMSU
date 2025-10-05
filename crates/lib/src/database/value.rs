@@ -1,5 +1,5 @@
-use crate::database::custom_placeholder_string;
 use crate::query::TagValue;
+use crate::sql::builder::SqlBuilder;
 use rusqlite::{params_from_iter, Connection};
 use std::error::Error;
 
@@ -19,17 +19,23 @@ impl Store<'_> {
             return Ok(vec![]);
         }
 
-        let mut statement = self.connection.prepare(&format!(
-            "\
-            SELECT c.column1
-            FROM (VALUES{}) AS c
-            LEFT JOIN value v ON c.column1 = v.name
-            WHERE v.name IS NULL;",
-            custom_placeholder_string("(?)", names.len())
-        ))?;
+        let mut builder = SqlBuilder::new();
+        builder
+            .push_sql("\
+SELECT c.column1
+FROM (
+    VALUES ")
+            .push_parameterised_values(names)?
+            .push_sql("\
+) AS c
+LEFT JOIN value v ON c.column1 = v.name
+WHERE v.name IS NULL;
+");
+
+        let mut statement = self.connection.prepare(&builder.to_string())?;
 
         let invalid = statement
-            .query_map(params_from_iter(names), |row| row.get::<usize, TagValue>(0))?
+            .query_map(params_from_iter(builder.parameters()), |row| row.get::<usize, TagValue>(0))?
             .into_iter()
             .collect::<Result<Vec<_>, rusqlite::Error>>()?;
 

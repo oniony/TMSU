@@ -10,6 +10,7 @@ pub struct SqlBuilder<'b> {
 }
 
 impl<'b> SqlBuilder<'b> {
+    /// Creates a new SQL builder.
     pub fn new() -> SqlBuilder<'b> {
         SqlBuilder {
             sql: String::new(),
@@ -17,11 +18,13 @@ impl<'b> SqlBuilder<'b> {
         }
     }
 
+    /// Retrieves the parameter values.
     pub fn parameters(&self) -> &Vec<ToSqlOutput<'b>> {
         &self.parameters
     }
 
-    pub fn sql(&mut self, sql: &str) -> &mut Self {
+    /// Pushes a SQL string.
+    pub fn push_sql(&mut self, sql: &str) -> &mut Self {
         if sql == "" {
             return self;
         }
@@ -36,7 +39,8 @@ impl<'b> SqlBuilder<'b> {
         self
     }
 
-    pub fn parameter<T>(&mut self, param: &'b T) -> Result<&mut Self, Box<dyn Error>>
+    /// Pushes a parameter.
+    pub fn push_parameter<T>(&mut self, param: &'b T) -> Result<&mut Self, Box<dyn Error>>
     where
         T: ToSql,
     {
@@ -45,6 +49,28 @@ impl<'b> SqlBuilder<'b> {
 
         self.sql.push_str("?");
         self.sql.push_str(index.to_string().as_str());
+
+        Ok(self)
+    }
+
+    /// Pushes a set of values.
+    pub fn push_parameterised_values<T>(&mut self, params: &'b [T]) -> Result<&mut Self, Box<dyn Error>>
+    where
+        T: ToSql,
+    {
+        let mut comma = false;
+        for param in params {
+            if comma {
+                self.sql.push_str(",");
+            }
+
+            self.parameters.push(param.to_sql()?);
+            let index = self.parameters.len();
+
+            self.push_sql(&format!("(?{index})"));
+
+            comma = true;
+        }
 
         Ok(self)
     }

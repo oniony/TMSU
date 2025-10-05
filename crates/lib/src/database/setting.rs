@@ -1,6 +1,19 @@
-use crate::database::Setting;
 use rusqlite::Connection;
 use std::error::Error;
+use std::fmt::Display;
+
+/// Application settings.
+pub enum Setting {
+    Root,
+}
+
+impl Display for Setting {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Setting::Root => write!(f, "database-root"),
+        }
+    }
+}
 
 pub struct Store<'s> {
     connection: &'s Connection,
@@ -35,5 +48,15 @@ impl Store<'_> {
         )?;
 
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::database::setting::Setting;
+
+    #[test]
+    fn setting_display() {
+        assert_eq!("database-root", format!("{}", Setting::Root));
     }
 }

@@ -158,3 +158,17 @@ Examples:
         ignore_case: bool,
     },
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn separator() {
+        let args = Args::parse_from(vec!["tmsu", "info"]);
+        assert_eq!(Separator::Newline, args.separator());
+
+        let args = Args::parse_from(vec!["tmsu", "--print0", "info"]);
+        assert_eq!(Separator::Nul, args.separator());
+    }
+}

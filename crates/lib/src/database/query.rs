@@ -47,7 +47,7 @@ impl<'q> QueryBuilder<'q> {
 
     fn select(&mut self) -> &mut Self {
         self
-            .builder.sql("\
+            .builder.push_sql("\
 SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file
 WHERE");
@@ -71,7 +71,7 @@ WHERE");
     }
 
     fn compare(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder.sql(&format!("-- {tag} {operator} {value}"));
+        self.builder.push_sql(&format!("-- {tag} {operator} {value}"));
 
         if self.explicit_only {
             self.compare_explicit(tag, operator, value)?;
@@ -85,18 +85,18 @@ WHERE");
     fn compare_explicit(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
-        self.builder.sql(&format!("\
+        self.builder.push_sql(&format!("\
 id IN (
     WITH ift (tag_id, value_id) AS
         (
             SELECT t.id, v.id
             FROM tag t, value v
             WHERE t.name {collation} = "))
-            .parameter(tag)?
-            .sql(&format!("\
+            .push_parameter(tag)?
+            .push_sql(&format!("\
             AND v.name {collation} {operator} "))
-            .parameter(value)?
-            .sql("\
+            .push_parameter(value)?
+            .push_sql("\
         )
 
     SELECT file_id
@@ -112,18 +112,18 @@ id IN (
     fn compare_indiscriminate(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
-        self.builder.sql(&format!("\
+        self.builder.push_sql(&format!("\
 id IN (
     WITH RECURSIVE ift (tag_id, value_id) AS
         (
             SELECT t.id, v.id
             FROM tag t, value v
             WHERE t.name {collation} = "))
-            .parameter(tag)?
-            .sql(&format!("\
+            .push_parameter(tag)?
+            .push_sql(&format!("\
             AND v.name {collation} {operator} "))
-            .parameter(value)?
-            .sql("\
+            .push_parameter(value)?
+            .push_sql("\
             UNION ALL
             SELECT i.tag_id, i.value_id
             FROM implication i, ift
@@ -150,7 +150,7 @@ id IN (
     }
 
     fn unary(&mut self, operator: &str, operand: &'q Expression) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder.sql(operator);
+        self.builder.push_sql(operator);
         self.expression(operand)?;
 
         Ok(self)
@@ -158,7 +158,7 @@ id IN (
 
     fn binary(&mut self, left: &'q Expression, operator: &str, right: &'q Expression) -> Result<&mut Self, Box<dyn Error>> {
         self.expression(left)?;
-        self.builder.sql(operator);
+        self.builder.push_sql(operator);
         self.expression(right)?;
 
         Ok(self)
@@ -167,7 +167,7 @@ id IN (
     fn tag_explicit(&mut self, tag: &'q TagName) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
-        self.builder.sql(&format!("\
+        self.builder.push_sql(&format!("\
 id IN (
     SELECT file_id
     FROM file_tag
@@ -175,8 +175,8 @@ id IN (
         SELECT id
         FROM tag
         WHERE name {collation} = "))
-            .parameter(tag)?
-            .sql("\
+            .push_parameter(tag)?
+            .push_sql("\
     )\
 )");
 
@@ -186,7 +186,7 @@ id IN (
     fn tag_indiscriminate(&mut self, tag: &'q TagName) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
-        self.builder.sql(&format!("\
+        self.builder.push_sql(&format!("\
 id IN (
     SELECT file_id
     FROM file_tag
@@ -195,8 +195,8 @@ id IN (
             SELECT id, 0
             FROM tag
             WHERE name {collation} = "))
-            .parameter(tag)?
-            .sql("\
+            .push_parameter(tag)?
+            .push_sql("\
             UNION ALL
             SELECT i.tag_id, i.value_id
             FROM implication i, working

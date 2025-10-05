@@ -40,8 +40,8 @@ jobs:
         run: |
           git config user.name "GitHub Actions"
           git config user.email "github-actions@users.noreply.github.com"
-          git tag ${{ steps.version.outputs.next }}
-          git push origin ${{ steps.version.outputs.next }}
+          git tag ${{ steps.version.outputs.next }}-alpha
+          git push origin ${{ steps.version.outputs.next }}-alpha
 
       - name: Release
         uses: softprops/action-gh-release@v1

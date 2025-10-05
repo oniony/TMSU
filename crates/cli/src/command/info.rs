@@ -14,23 +14,43 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 use crate::rendering::Separator;
+use crate::Executor;
 use colored::Colorize;
 use libtmsu::database::Database;
 use std::error::Error;
 
-/// Executes the 'info' command, which provides database information.
-pub fn execute(database: Database, separator: Separator) -> Result<(), Box<dyn Error>> {
-    print!(
-        "Database path: {}{separator}",
-        database.path().display().to_string().green()
-    );
-    print!(
-        "Root path: {}{separator}",
-        database.root().display().to_string().green()
-    );
+// Info command executor.
+pub struct InfoCommand {
+    database: Database,
+    separator: Separator,
+}
 
-    //TODO open database
-    //TODO gather stats
+impl InfoCommand {
+    /// Creates a new InfoCommand.
+    pub fn new(database: Database, separator: Separator) -> InfoCommand {
+        InfoCommand {
+            database,
+            separator,
+        }
+    }
+}
 
-    Ok(())
+impl Executor for InfoCommand {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
+        print!(
+            "Database path: {}{}",
+            self.database.path().display().to_string().green(),
+            self.separator,
+        );
+        print!(
+            "Root path: {}{}",
+            self.database.root().display().to_string().green(),
+            self.separator,
+        );
+
+        //TODO open database
+        //TODO gather stats
+
+        Ok(())
+    }
 }

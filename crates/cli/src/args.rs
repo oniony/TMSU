@@ -77,7 +77,7 @@ TMSU_DB environment variable is set, then the database will be created at this p
 with --database taking precedence.
 "
     )]
-    Init { path: Vec<PathBuf> },
+    Init { paths: Vec<PathBuf> },
 
     #[command(
         about = "List files with particular tags",
@@ -119,23 +119,23 @@ Examples:
             help = "list only items that are directories",
             default_value_t = false
         )]
-        directory: bool,
-        #[arg(
-            short = 'f',
-            long = "file",
-            help = "list only items that are files",
-            default_value_t = false
-        )]
-        file: bool,
-        #[arg(
-            short = 'c',
-            long = "count",
-            help = "list the number of matching files rather than their names",
-            default_value_t = false
-        )]
+        // directory: bool,
+        // #[arg(
+        //     short = 'f',
+        //     long = "file",
+        //     help = "list only items that are files",
+        //     default_value_t = false
+        // )]
+        // file: bool,
+        // #[arg(
+        //     short = 'c',
+        //     long = "count",
+        //     help = "list the number of matching files rather than their names",
+        //     default_value_t = false
+        // )]
         count: bool,
-        #[arg(short = 'p', long = "path", help = "list only items under PATH")]
-        path: Option<PathBuf>,
+        // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
+        // path: Option<PathBuf>,
         #[arg(
             short = 'e',
             long = "explicit",
@@ -143,12 +143,12 @@ Examples:
             default_value_t = false
         )]
         explicit: bool,
-        #[arg(
-            short = 's',
-            long = "sort",
-            help = "sort output: id, name, none, size, time"
-        )]
-        sort: Option<String>,
+        // #[arg(
+        //     short = 's',
+        //     long = "sort",
+        //     help = "sort output: id, name, none, size, time"
+        // )]
+        // sort: Option<String>,
         #[arg(
             short = 'i',
             long = "ignore-case",

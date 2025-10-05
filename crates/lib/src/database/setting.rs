@@ -2,7 +2,7 @@ use rusqlite::Connection;
 use std::error::Error;
 use std::fmt::Display;
 
-/// Application settings.
+/// Application setting.
 pub enum Setting {
     Root,
 }
@@ -15,6 +15,7 @@ impl Display for Setting {
     }
 }
 
+/// The setting store.
 pub struct Store<'s> {
     connection: &'s Connection,
 }

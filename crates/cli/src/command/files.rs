@@ -15,84 +15,108 @@
 
 use crate::error::MultiError;
 use crate::rendering::Separator;
-use libtmsu::database::file::File;
+use crate::Executor;
 use libtmsu::database::Database;
 use libtmsu::query;
 use libtmsu::query::Expression;
 use std::error::Error;
-use std::path;
-use std::path::PathBuf;
 
-/// Executes the 'files' command, which allows files to be queried by tag.
-pub fn execute(
+/// Files command executor.
+pub struct FilesCommand {
     database: Database,
-    _verbosity: u8,
     args: Vec<String>,
-    _directory: bool,
-    _file: bool,
     separator: Separator,
     count: bool,
-    path: Option<PathBuf>,
     explicit_only: bool,
-    _sort: Option<String>,
     ignore_case: bool,
-) -> Result<(), Box<dyn Error>> {
-    let _path = path.map(|p| path::absolute(p));
-    let query_text = args.join(" ").to_owned();
-    let expression = query::parse(&query_text)?;
-
-    let files = if let Some(expression) = &expression {
-        query(database, expression, explicit_only, ignore_case)?
-    } else {
-        all(database)?
-    };
-
-    if count {
-        show_count(&files, separator);
-    } else {
-        list_files(&files, separator);
-    }
-
-    Ok(())
 }
 
-fn query(
-    database: Database,
-    expression: &Expression,
-    explicit_only: bool,
-    ignore_case: bool)
-    -> Result<Vec<File>, Box<dyn Error>> {
-    let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
-
-    let tags = expression.tags();
-    let invalid_tags = database.tags().missing(&tags)?;
-    for invalid_tag in &invalid_tags {
-        errors.push(format!("unknown tag: {invalid_tag}").into());
+impl FilesCommand {
+    /// Creates a new FilesCommand.
+    pub fn new(
+        database: Database,
+        args: Vec<String>,
+        separator: Separator,
+        count: bool,
+        explicit_only: bool,
+        ignore_case: bool,
+    ) -> FilesCommand {
+        FilesCommand {
+            database,
+            args,
+            separator,
+            count,
+            explicit_only,
+            ignore_case,
+        }
     }
 
-    let values = expression.values();
-    let invalid_values = database.values().missing(&values)?;
-    for invalid_value in &invalid_values {
-        errors.push(format!("unknown value: {invalid_value}").into());
+    /// Shows the count of files matching the expression.
+    fn show_count(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
+        let count = if let Some(expression) = &expression {
+            self.validate_expression(&expression)?;
+            self.database
+                .files()
+                .query_count(expression, self.explicit_only, self.ignore_case)
+        } else {
+            self.database.files().all_count()
+        }?;
+
+        print!("{}{}", count, self.separator);
+
+        Ok(())
     }
 
-    if !invalid_tags.is_empty() || !invalid_values.is_empty() {
-        return Err(MultiError { errors }.into());
+    /// Shows the files matching the expression.
+    fn show_files(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
+        let files = if let Some(expression) = &expression {
+            self.validate_expression(&expression)?;
+            self.database
+                .files()
+                .query(expression, self.explicit_only, self.ignore_case)
+        } else {
+            self.database.files().all()
+        }?;
+
+        for file in files {
+            print!("{}{}", file.path().to_str().unwrap_or(""), self.separator);
+        }
+
+        Ok(())
     }
 
-    database.files().query(expression, explicit_only, ignore_case)
+    fn validate_expression(&self, expression: &Expression) -> Result<(), Box<dyn Error>> {
+        let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
+
+        let tags = expression.tags();
+        let invalid_tags = self.database.tags().missing(&tags)?;
+        for invalid_tag in &invalid_tags {
+            errors.push(format!("unknown tag: {invalid_tag}").into());
+        }
+
+        let values = expression.values();
+        let invalid_values = self.database.values().missing(&values)?;
+        for invalid_value in &invalid_values {
+            errors.push(format!("unknown value: {invalid_value}").into());
+        }
+
+        if errors.is_empty() {
+            Ok(())
+        } else {
+            Err(MultiError { errors }.into())
+        }
+    }
 }
 
-fn all(database: Database) -> Result<Vec<File>, Box<dyn Error>> {
-    database.files().all()
-}
+impl Executor for FilesCommand {
+    fn execute(&self) -> Result<(), Box<dyn Error>> {
+        let query_text = self.args.join(" ").to_owned();
+        let expression = query::parse(&query_text)?;
 
-fn show_count(files: &Vec<File>, separator: Separator) {
-    print!("{}{separator}", files.len())
-}
-
-fn list_files(files: &Vec<File>, separator: Separator) {
-    for file in files {
-        print!("{}{separator}", file.path().to_str().unwrap_or(""));
+        if self.count {
+            self.show_count(expression)
+        } else {
+            self.show_files(expression)
+        }
     }
 }

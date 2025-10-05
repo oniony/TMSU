@@ -20,6 +20,9 @@ mod database;
 mod error;
 mod rendering;
 
+use crate::command::files::FilesCommand;
+use crate::command::info::InfoCommand;
+use crate::command::init::InitCommand;
 use crate::error::MultiError;
 use args::{Args, Commands};
 use std::error::Error;
@@ -41,35 +44,32 @@ fn main() {
     }
 }
 
+trait Executor {
+    fn execute(&self) -> Result<(), Box<dyn Error>>;
+}
+
 fn run() -> Result<(), Box<dyn Error>> {
     let args = Args::parse();
     let db_path = database::resolve(&args.database)?;
     let separator = args.separator();
 
-    match args.command {
+    let executor: &dyn Executor = match args.command {
         Commands::Files {
             query,
-            directory,
-            file,
             count,
-            path,
             explicit,
-            sort,
             ignore_case,
-        } => command::files::execute(
+        } => &FilesCommand::new(
             database::open(db_path)?,
-            args.verbosity,
             query,
-            directory,
-            file,
             separator,
             count,
-            path,
             explicit,
-            sort,
             ignore_case,
         ),
-        Commands::Info => command::info::execute(database::open(db_path)?, separator),
-        Commands::Init { path } => command::init::execute(db_path, path),
-    }
+        Commands::Info => &InfoCommand::new(database::open(db_path)?, separator),
+        Commands::Init { paths } => &InitCommand::new(db_path, paths),
+    };
+
+    executor.execute()
 }

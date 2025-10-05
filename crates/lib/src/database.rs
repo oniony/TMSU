@@ -14,7 +14,6 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 pub mod file;
-pub mod query;
 pub mod setting;
 pub mod tag;
 pub mod value;
@@ -23,7 +22,6 @@ use crate::database::setting::Setting;
 use crate::migrations;
 use rusqlite::Connection;
 use std::error::Error;
-use std::fs;
 use std::path::{Path, PathBuf};
 
 // An application database.
@@ -45,13 +43,18 @@ impl Database {
     }
 
     /// Creates a new, empty database at the specified path.
-    pub fn create(path: &Path, root: &Path) -> Result<(), Box<dyn Error>> {
+    pub fn create<P>(path: P, root: &Path) -> Result<(), Box<dyn Error>>
+    where
+        P: AsRef<Path>,
+    {
+        let path = path.as_ref();
+
         if path.exists() {
             return Err(format!("{}: database already exists", path.to_str().unwrap()).into());
         }
 
         if let Some(parent) = path.parent() {
-            fs::create_dir_all(parent)?;
+            std::fs::create_dir_all(parent)?;
         }
 
         let mut conn = Connection::open(path)?;
@@ -121,6 +124,35 @@ mod tests {
     use std::env;
     use std::fs::OpenOptions;
 
+    struct TempFile {
+        path: PathBuf,
+    }
+
+    impl TempFile {
+        fn new() -> std::io::Result<TempFile> {
+            let dir = env::temp_dir().join("tmsu");
+            std::fs::create_dir_all(&dir)?;
+
+            let path = dir.join(nuid::next().to_string());
+
+            Ok(TempFile { path })
+        }
+    }
+
+    impl Drop for TempFile {
+        fn drop(&mut self) {
+            if self.path.exists() {
+                let _ = std::fs::remove_file(&self.path);
+            }
+        }
+    }
+
+    impl AsRef<Path> for TempFile {
+        fn as_ref(&self) -> &Path {
+            &self.path
+        }
+    }
+
     #[test]
     fn properties() {
         let database = Database { path: PathBuf::from("some-path"), root: PathBuf::from("some-root"), connection: None };
@@ -130,17 +162,16 @@ mod tests {
 
     #[test]
     fn create() {
-        let path = env::temp_dir().join("tmsu-test");
-        let _ = fs::remove_file(&path);
+        let path = TempFile::new().unwrap();
         let root = PathBuf::from("/some/root");
 
         Database::create(&path, &root).unwrap();
-        assert!(path.exists());
+        assert!(path.path.exists());
     }
 
     #[test]
     fn create_collision() {
-        let path = env::temp_dir().join("tmsu-test");
+        let path = TempFile::new().unwrap();
         let root = PathBuf::from("/some/root");
 
         OpenOptions::new()
@@ -159,13 +190,12 @@ mod tests {
 
     #[test]
     fn test_open() {
-        let path = env::temp_dir().join("tmsu-test");
+        let path = TempFile::new().unwrap();
         let root = PathBuf::from("/some/root");
-        let _ = fs::remove_file(&path);
         Database::create(&path, &root).unwrap();
 
-        let database = Database::open(&path).unwrap();
-        assert_eq!(path, database.path());
+        let database = Database::open(&path.path).unwrap();
+        assert_eq!(path.path, database.path());
         assert_eq!(root, database.root());
     }
 }

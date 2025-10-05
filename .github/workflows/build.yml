@@ -15,6 +15,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       - name: Build
         run: cargo build --verbose
@@ -25,3 +27,10 @@ jobs:
       - name: Integration tests
         working-directory: tests
         run: ./runall
+
+      - name: Tag
+        uses: TriPSs/conventional-changelog-action@v5
+        with:
+          github-token: ${{ secrets.github_token }}
+          skip-commit: "true"
+

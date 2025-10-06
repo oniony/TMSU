@@ -27,34 +27,3 @@ jobs:
         working-directory: tests
         run: ./runall
 
-#      - name: Version
-#        id: version
-#        uses: ietf-tools/semver-action@v1
-#        with:
-#          token: ${{ github.token }}
-#          branch: main
-#          minorList: feat
-#          patchList: fix, perf, refactor, test, chore
-
-      - name: Version
-        id: version
-        run: |
-          current=$(git tag | grep "v1.0.0-alpha." | sed "s/.*\.//" | sort -rn | head -1)
-          next=$((current + 1))
-          echo "version=$next" >> $GITHUB_OUTPUT
-
-      - name: Tag
-        run: |
-          git config user.name "GitHub Actions"
-          git config user.email "github-actions@users.noreply.github.com"
-          git tag v1.0.0-alpha.${{ steps.version.outputs.version }}
-          git push origin v1.0.0-alpha.${{ steps.version.outputs.version }}
-
-#      - name: Release
-#        uses: softprops/action-gh-release@v1
-#        with: 
-#          name: ${{ steps.version.outputs.next }}
-#          tag_name: ${{ steps.version.outputs.next }}
-#          generate_release_notes: true
-#          prerelease: true
-#          target_commitish: main

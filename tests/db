@@ -1,10 +1,10 @@
 #!/usr/bin/env bash
 
 add_file() {
-  id=$1
-  path="$2"
-  directory=$(dirname "$2")
-  filename=$(basename "$2")
+  local id=$1
+  local path="$2"
+  directory=$(dirname "$path")
+  filename=$(basename "$path")
 
   sqlite3 $TMSU_DB <<EOF
 INSERT INTO file (id, directory, name, fingerprint, mod_time, size, is_dir)
@@ -13,9 +13,22 @@ VALUES
 EOF
 }
 
+add_dir() {
+  local id=$1
+  local path="$2"
+  directory=$(dirname "$path")
+  filename=$(basename "$path")
+
+  sqlite3 $TMSU_DB <<EOF
+INSERT INTO file (id, directory, name, fingerprint, mod_time, size, is_dir)
+VALUES
+    ($id, '$directory', '$filename', '', datetime(), 0, true);
+EOF
+}
+
 add_tag() {
-    id=$1
-    name="$2"
+    local id=$1
+    local name="$2"
 
     sqlite3 $TMSU_DB <<EOF
 INSERT INTO tag (id, name)
@@ -24,8 +37,8 @@ EOF
 }
 
 add_value() {
-    id=$1
-    name="$2"
+    local id=$1
+    local name="$2"
 
     sqlite3 $TMSU_DB <<EOF
 INSERT INTO value (id, name)
@@ -34,9 +47,9 @@ EOF
 }
 
 add_file_tag() {
-    file_id=$1
-    tag_id=$2
-    value_id=$3
+    local file_id=$1
+    local tag_id=$2
+    local value_id=$3
 
     sqlite3 $TMSU_DB <<EOF
 INSERT INTO file_tag (file_id, tag_id, value_id)
@@ -46,10 +59,10 @@ EOF
 }
 
 add_implication() {
-	tag_id=$1
-	value_id=$2
-	implied_tag_id=$3
-	implied_value_id=$4
+	local tag_id=$1
+	local value_id=$2
+	local implied_tag_id=$3
+	local implied_value_id=$4
 
 	sqlite3 $TMSU_DB <<EOF
 INSERT INTO implication (tag_id, value_id, implied_tag_id, implied_value_id)

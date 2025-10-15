@@ -1,0 +1,98 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file1'
+add_file 2 '/file2'
+add_file 3 '/file3'
+add_file 4 '/file4'
+add_file 5 '/file5'
+add_file 6 '/file6'
+add_tag 1 'j'
+add_tag 2 'k'
+add_tag 3 'l'
+add_tag 4 'x'
+add_tag 5 'y'
+add_tag 6 'z'
+add_value 1 '1'
+add_value 2 '2'
+add_value 3 '3'
+add_implication 1 1 2 0 # j=1 -> k
+add_implication 2 0 3 0 # k -> l
+add_implication 4 0 5 2 # x -> y=2
+add_implication 5 0 6 0 # y -> z
+add_file_tag 1 1 1 		# /file1 j=1 (k l)
+add_file_tag 2 2 2 		# /file2 k=2 (l)
+add_file_tag 3 3 0 		# /file3 l
+add_file_tag 4 4 1 		# /file4 x=1 (y=2 z)
+add_file_tag 5 5 3 		# /file5 y=3 (z)
+add_file_tag 6 6 0      # /file6 z
+
+# test
+
+echo -1-                                >|/tmp/tmsu/stdout
+tmsu files j=1                          >>/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+echo -2-                                >>/tmp/tmsu/stdout
+tmsu files k                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -3-                                >>/tmp/tmsu/stdout
+tmsu files l                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -4-                                >>/tmp/tmsu/stdout
+tmsu files --explicit j=1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -5-                                >>/tmp/tmsu/stdout
+tmsu files --explicit k                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -6-                                >>/tmp/tmsu/stdout
+tmsu files --explicit l                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -7-                                >>/tmp/tmsu/stdout
+tmsu files x                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -8-                                >>/tmp/tmsu/stdout
+tmsu files y=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -9-                                >>/tmp/tmsu/stdout
+tmsu files z                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -10-                               >>/tmp/tmsu/stdout
+tmsu files --explicit x                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -11-                               >>/tmp/tmsu/stdout
+tmsu files --explicit y=2               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -12-                               >>/tmp/tmsu/stdout
+tmsu files --explicit z                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff - <<EOF /tmp/tmsu/stderr
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF /tmp/tmsu/stdout
+-1-
+/file1
+-2-
+/file1
+/file2
+-3-
+/file1
+/file2
+/file3
+-4-
+/file1
+-5-
+/file2
+-6-
+/file3
+-7-
+/file4
+-8-
+/file4
+-9-
+/file4
+/file5
+/file6
+-10-
+/file4
+-11-
+-12-
+/file6
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

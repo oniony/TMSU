@@ -27,6 +27,8 @@ use crate::error::MultiError;
 use args::{Args, Commands};
 use std::error::Error;
 use std::process;
+use libtmsu::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
+use crate::args::FileType;
 
 fn main() {
     let result = run();
@@ -55,17 +57,31 @@ fn run() -> Result<(), Box<dyn Error>> {
 
     let executor: &dyn Executor = match args.command {
         Commands::Files {
-            query,
             count,
             explicit,
+            file_type, 
             ignore_case,
+            query,
         } => &FilesCommand::new(
             database::open(db_path)?,
             query,
             separator,
             count,
-            explicit,
-            ignore_case,
+            if explicit {
+                TagSpecificity::ExplicitOnly
+            } else {
+                TagSpecificity::All
+            },
+            match file_type {
+                FileType::Any => FileTypeSpecificity::Any,
+                FileType::FileOnly => FileTypeSpecificity::FileOnly,
+                FileType::DirectoryOnly => FileTypeSpecificity::DirectoryOnly,
+            },
+            if ignore_case {
+                Casing::Insensitive
+            } else {
+                Casing::Sensitive
+            },
         ),
         Commands::Info => &InfoCommand::new(database::open(db_path)?, separator),
         Commands::Init { paths } => &InitCommand::new(db_path, paths),

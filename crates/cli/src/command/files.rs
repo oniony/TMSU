@@ -20,6 +20,7 @@ use libtmsu::database::Database;
 use libtmsu::query;
 use libtmsu::query::Expression;
 use std::error::Error;
+use libtmsu::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
 
 /// Files command executor.
 pub struct FilesCommand {
@@ -27,8 +28,9 @@ pub struct FilesCommand {
     args: Vec<String>,
     separator: Separator,
     count: bool,
-    explicit_only: bool,
-    ignore_case: bool,
+    tag_specificity: TagSpecificity,
+    file_type: FileTypeSpecificity,
+    casing: Casing,
 }
 
 impl FilesCommand {
@@ -38,16 +40,18 @@ impl FilesCommand {
         args: Vec<String>,
         separator: Separator,
         count: bool,
-        explicit_only: bool,
-        ignore_case: bool,
+        tag_specificity: TagSpecificity,
+        file_type: FileTypeSpecificity,
+        casing: Casing,
     ) -> FilesCommand {
         FilesCommand {
             database,
             args,
             separator,
             count,
-            explicit_only,
-            ignore_case,
+            tag_specificity,
+            file_type,
+            casing,
         }
     }
 
@@ -57,7 +61,7 @@ impl FilesCommand {
             self.validate_expression(&expression)?;
             self.database
                 .files()
-                .query_count(expression, self.explicit_only, self.ignore_case)
+                .query_count(expression, &self.tag_specificity, &self.file_type, &self.casing)
         } else {
             self.database.files().all_count()
         }?;
@@ -73,7 +77,7 @@ impl FilesCommand {
             self.validate_expression(&expression)?;
             self.database
                 .files()
-                .query(expression, self.explicit_only, self.ignore_case)
+                .query(expression, &self.tag_specificity, &self.file_type, &self.casing)
         } else {
             self.database.files().all()
         }?;
@@ -89,13 +93,13 @@ impl FilesCommand {
         let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
 
         let tags = expression.tags();
-        let invalid_tags = self.database.tags().missing(&tags)?;
+        let invalid_tags = self.database.tags().missing(&tags, &self.casing)?;
         for invalid_tag in &invalid_tags {
             errors.push(format!("unknown tag: {invalid_tag}").into());
         }
 
         let values = expression.values();
-        let invalid_values = self.database.values().missing(&values)?;
+        let invalid_values = self.database.values().missing(&values, &self.casing)?;
         for invalid_value in &invalid_values {
             errors.push(format!("unknown value: {invalid_value}").into());
         }

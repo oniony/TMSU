@@ -13,8 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
+use std::fmt::{Display, Formatter};
 use crate::rendering::Separator;
-use clap::{ArgAction, Parser, Subcommand};
+use clap::{ArgAction, Parser, Subcommand, ValueEnum};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -111,22 +112,6 @@ Examples:
 "
     )]
     Files {
-        #[arg(help = "the query to run", num_args = 0..)]
-        query: Vec<String>,
-        #[arg(
-            short = 'd',
-            long = "directory",
-            help = "list only items that are directories",
-            default_value_t = false
-        )]
-        // directory: bool,
-        // #[arg(
-        //     short = 'f',
-        //     long = "file",
-        //     help = "list only items that are files",
-        //     default_value_t = false
-        // )]
-        // file: bool,
         #[arg(
             short = 'c',
             long = "count",
@@ -134,8 +119,15 @@ Examples:
             default_value_t = false
         )]
         count: bool,
-        // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
-        // path: Option<PathBuf>,
+
+        #[arg(
+            short = 't',
+            long = "type",
+            help = "list only items of the specified type",
+            default_value_t = FileType::Any,
+        )]
+        file_type: FileType,
+
         #[arg(
             short = 'e',
             long = "explicit",
@@ -143,12 +135,7 @@ Examples:
             default_value_t = false
         )]
         explicit: bool,
-        // #[arg(
-        //     short = 's',
-        //     long = "sort",
-        //     help = "sort output: id, name, none, size, time"
-        // )]
-        // sort: Option<String>,
+
         #[arg(
             short = 'i',
             long = "ignore-case",
@@ -156,7 +143,40 @@ Examples:
             default_value_t = false
         )]
         ignore_case: bool,
+
+        // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
+        // path: Option<PathBuf>,
+
+        #[arg(help = "the query to run", num_args = 0..)]
+        query: Vec<String>,
+
+        // #[arg(
+        //     short = 's',
+        //     long = "sort",
+        //     help = "sort output: id, name, none, size, time"
+        // )]
+        // sort: Option<String>,
     },
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum FileType {
+    #[value(name = "any")]
+    Any,
+    #[value(name = "file")]
+    FileOnly,
+    #[value(name = "directory")]
+    DirectoryOnly,
+}
+
+impl Display for FileType {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            FileType::Any => write!(f, "any"),
+            FileType::FileOnly => write!(f, "file"),
+            FileType::DirectoryOnly => write!(f, "directory"),
+        }
+    }
 }
 
 #[cfg(test)]

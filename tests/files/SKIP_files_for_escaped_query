@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file1'
+add_tag 1 '<\=([!$%&!])\=>'
+add_file_tag 1 1 0
+
+# test
+
+tmsu files \\\<\\=\\\(\[\\\!\$%\&\\\!\]\\\)\\=\\\>    >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files '\<\=\([\!$%&\!]\)\=\>'                    >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff - <<EOF /tmp/tmsu/stderr
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF /tmp/tmsu/stdout
+/file1
+/file1
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

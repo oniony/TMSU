@@ -127,12 +127,12 @@ Examples:
         //     default_value_t = false
         // )]
         // file: bool,
-        // #[arg(
-        //     short = 'c',
-        //     long = "count",
-        //     help = "list the number of matching files rather than their names",
-        //     default_value_t = false
-        // )]
+        #[arg(
+            short = 'c',
+            long = "count",
+            help = "list the number of matching files rather than their names",
+            default_value_t = false
+        )]
         count: bool,
         // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
         // path: Option<PathBuf>,

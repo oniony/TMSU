@@ -4,6 +4,7 @@ use query::QueryBuilder;
 use rusqlite::{params_from_iter, Connection, Rows};
 use std::error::Error;
 use std::path::PathBuf;
+use crate::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
 
 mod query;
 
@@ -36,8 +37,8 @@ impl Store<'_> {
     }
 
     /// Queries for files by expression.
-    pub fn query(&self, query: &Expression, explicit_only: bool, ignore_case: bool) -> Result<Vec<File>, Box<dyn Error>> {
-        let mut builder = QueryBuilder::new(explicit_only, ignore_case);
+    pub fn query(&self, query: &Expression, tag_specificity: &TagSpecificity, file_type: &FileTypeSpecificity, casing: &Casing) -> Result<Vec<File>, Box<dyn Error>> {
+        let mut builder = QueryBuilder::new(tag_specificity, file_type, casing);
         let (sql, parameters) = builder.file_query(&query)?;
 
         let mut statement = self.connection.prepare(&sql)?;
@@ -47,8 +48,8 @@ impl Store<'_> {
     }
 
     /// Queries the file count by expression.
-    pub fn query_count(&self, query: &Expression, explicit_only: bool, ignore_case: bool) -> Result<u64, Box<dyn Error>> {
-        let mut builder = QueryBuilder::new(explicit_only, ignore_case);
+    pub fn query_count(&self, query: &Expression, tag_specificity: &TagSpecificity, file_type: &FileTypeSpecificity, casing: &Casing) -> Result<u64, Box<dyn Error>> {
+        let mut builder = QueryBuilder::new(tag_specificity, file_type, casing);
         let (sql, parameters) = builder.file_count_query(&query)?;
 
         let mut statement = self.connection.prepare(&sql)?;

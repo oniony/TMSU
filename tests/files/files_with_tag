@@ -3,14 +3,14 @@
 # setup
 
 add_file 1 '/file1'
-add_file 2 '/dir1'
+add_dir 2 '/dir1'
 add_tag 1 'aubergine'
 add_file_tag 1 1 0
-add_file_tag 1 2 0
+add_file_tag 2 1 0
 
 # test
 
-tmsu files --file aubergine                                   >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files --type=file aubergine                                   >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 

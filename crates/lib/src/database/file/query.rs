@@ -3,20 +3,23 @@ use crate::query::{Expression, TagName, TagValue};
 use crate::sql::builder::SqlBuilder;
 use rusqlite::types::ToSqlOutput;
 use std::error::Error;
+use crate::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
 
 /// Builds a SQL query from a query expression.
 pub struct QueryBuilder<'q> {
-    explicit_only: bool,
-    ignore_case: bool,
+    tag_specificity: TagSpecificity,
+    file_type: FileTypeSpecificity,
+    casing: Casing,
     builder: SqlBuilder<'q>,
 }
 
 impl<'q> QueryBuilder<'q> {
     /// Creates a new QueryBuilder.
-    pub fn new(explicit_only: bool, ignore_case: bool) -> QueryBuilder<'q> {
+    pub fn new(tag_specificity: &TagSpecificity, file_type: &FileTypeSpecificity, casing: &Casing) -> QueryBuilder<'q> {
         QueryBuilder {
-            explicit_only,
-            ignore_case,
+            tag_specificity: tag_specificity.clone(),
+            file_type: file_type.clone(),
+            casing: casing.clone(),
             builder: SqlBuilder::new(),
         }
     }
@@ -28,7 +31,8 @@ impl<'q> QueryBuilder<'q> {
     ) -> Result<(String, &Vec<ToSqlOutput>), Box<dyn Error>> {
         self
             .select()
-            .expression(&query)?;
+            .expression(&query)?
+            .file_type();
 
         Ok((self.builder.to_string(), self.builder.parameters()))
     }
@@ -73,13 +77,10 @@ WHERE");
     fn compare(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         self.builder.push_sql(&format!("-- {tag} {operator} {value}"));
 
-        if self.explicit_only {
-            self.compare_explicit(tag, operator, value)?;
-        } else {
-            self.compare_indiscriminate(tag, operator, value)?;
+        match self.tag_specificity {
+            TagSpecificity::ExplicitOnly => self.compare_explicit(tag, operator, value),
+            TagSpecificity::All => self.compare_all(tag, operator, value),
         }
-
-        Ok(self)
     }
 
     fn compare_explicit(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
@@ -98,7 +99,7 @@ WHERE");
         };
 
         self.builder.push_sql(&format!("\
-id {negation} IN (
+id {negation} IN(
     WITH ift (tag_id, value_id) AS
         (
             SELECT t.id, v.id
@@ -121,7 +122,7 @@ id {negation} IN (
         Ok(self)
     }
 
-    fn compare_indiscriminate(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
+    fn compare_all(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
         let negation = if operator == "!=" {
@@ -152,24 +153,23 @@ id {negation} IN (
             SELECT i.tag_id, i.value_id
             FROM implication i, ift
             WHERE i.implied_tag_id = ift.tag_id
-            AND (i.implied_value_id = ift.value_id OR ift.value_id = 0)
+            AND (ift.value_id = 0 OR i.implied_value_id = ift.value_id)
         )
 
     SELECT file_id
     FROM file_tag
     INNER JOIN ift
     ON file_tag.tag_id = ift.tag_id
-    AND file_tag.value_id = ift.value_id
+    AND (file_tag.value_id = ift.value_id OR ift.value_id = 0)
 )");
 
         Ok(self)
     }
 
     fn tag(&mut self, tag: &'q TagName) -> Result<&mut Self, Box<dyn Error>> {
-        if self.explicit_only {
-            self.tag_explicit(tag)
-        } else {
-            self.tag_indiscriminate(tag)
+        match self.tag_specificity {
+            TagSpecificity::ExplicitOnly => self.tag_explicit(tag),
+            TagSpecificity::All => self.tag_all(tag),
         }
     }
 
@@ -207,41 +207,50 @@ id IN (
         Ok(self)
     }
 
-    fn tag_indiscriminate(&mut self, tag: &'q TagName) -> Result<&mut Self, Box<dyn Error>> {
+    fn tag_all(&mut self, tag: &'q TagName) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
         self.builder.push_sql(&format!("\
 id IN (
-    SELECT file_id
-    FROM file_tag
-    INNER JOIN (
-        WITH RECURSIVE working (tag_id, value_id) AS (
-            SELECT id, 0
-            FROM tag
-            WHERE name {collation} = "))
+    WITH RECURSIVE ift (tag_id, value_id) AS
+        (
+            SELECT t.id, 0
+            FROM tag t
+            WHERE t.name {collation} = "))
             .push_parameter(tag)?
             .push_sql("\
             UNION ALL
             SELECT i.tag_id, i.value_id
-            FROM implication i, working
-            WHERE i.implied_tag_id = working.tag_id
-              AND (i.implied_value_id = working.value_id OR working.value_id = 0)
+            FROM implication i, ift
+            WHERE i.implied_tag_id = ift.tag_id
+            AND (ift.value_id = 0 OR i.implied_value_id = ift.value_id)
         )
-        SELECT tag_id, value_id
-        FROM working
-    ) imps
-    ON file_tag.tag_id = imps.tag_id
-    AND (file_tag.value_id = imps.value_id OR imps.value_id = 0)
-)");
+
+    SELECT file_id
+    FROM file_tag
+    INNER JOIN ift
+    ON file_tag.tag_id = ift.tag_id
+    AND (file_tag.value_id = ift.value_id OR ift.value_id = 0)
+)
+");
 
         Ok(self)
     }
 
     fn collation(&self) -> &'static str {
-        if self.ignore_case {
-            "COLLATE NOCASE"
-        } else {
-            ""
+        match self.casing {
+            Casing::Insensitive => "COLLATE NOCASE",
+            Casing::Sensitive => "",
         }
+    }
+
+    fn file_type(&mut self) -> &mut Self {
+        self.builder.push_sql(match self.file_type {
+            FileTypeSpecificity::Any => "",
+            FileTypeSpecificity::FileOnly => "AND NOT is_dir",
+            FileTypeSpecificity::DirectoryOnly => "AND is_dir",
+        });
+
+        self
     }
 }

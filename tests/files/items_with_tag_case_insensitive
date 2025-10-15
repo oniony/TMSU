@@ -3,14 +3,14 @@
 # setup
 
 add_file 1 '/file1'
-add_file 2 '/dir1'
+add_file 2 '/file2'
 add_tag 1 'aubergine'
 add_file_tag 1 1 0
-add_file_tag 1 2 0
+add_file_tag 2 1 0
 
 # test
 
-tmsu files --directory aubergine                      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files --ignore-case aUbErGiNe                  >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
 
 # verify
 
@@ -21,7 +21,8 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff - <<EOF /tmp/tmsu/stdout
-/dir1
+/file1
+/file2
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

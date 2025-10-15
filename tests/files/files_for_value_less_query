@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file1'
+add_file 2 '/file2'
+add_tag 1 'year'
+add_value 1 '2015'
+add_value 2 '2016'
+add_file_tag 1 1 1
+add_file_tag 2 1 2
+
+# test
+
+tmsu files "year < 2016"                       >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# verify
+
+diff - <<EOF /tmp/tmsu/stderr
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF /tmp/tmsu/stdout
+/file1
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

@@ -1,4 +1,3 @@
-#!/usr/bin/env bash
 
 if [[ -z $1 ]]; then
     echo "no testcase paths specified" >&2
@@ -8,19 +7,32 @@ fi
 export TESTS_DIR=$(dirname $BASH_SOURCE[0])
 export PATH=$TESTS_DIR/../bin:$PATH
 
+failed=0
+
 for testcase in $*; do
+	if [[ "$testcase" =~ SKIP_ ]]; then
+		continue
+	fi
+
     . $TESTS_DIR/setup
 
-    $testcase
+    bash <<EOF
+source db
+source $testcase
+EOF
     export RC=$?
 
-    echo -n "$testcase "
+	echo -n "$testcase"
     if [[ $RC -eq 0 ]]; then
-        echo "[PASS]"
+        echo " [PASS]"
 
         $TESTS_DIR/teardown
     else
-        echo "[FAIL]"
-        exit 1
+        echo " [FAIL]"
+        failed=1
     fi
 done
+
+if (( $failed)); then
+	exit 1
+fi

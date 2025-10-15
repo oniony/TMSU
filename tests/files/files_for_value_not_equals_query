@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file1'
+add_file 2 '/file2'
+add_file 3 '/file3'
+add_file 4 '/file4'
+add_tag 1 'month'
+add_tag 2 'blah'
+add_value 1 'June'
+add_value 2 'July'
+add_file_tag 1 1 1
+add_file_tag 2 1 2
+add_file_tag 3 2 0
+add_file_tag 4 1 1
+add_file_tag 4 1 2
+
+# test
+
+tmsu files "month != June"                                 >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+
+# verify
+
+diff - <<EOF /tmp/tmsu/stderr
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF /tmp/tmsu/stdout 
+/file2
+/file3
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

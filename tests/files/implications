@@ -1,0 +1,134 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file1'
+add_file 2 '/file2'
+add_file 3 '/file3'
+add_file 4 '/file4'
+add_tag 1 'a'
+add_tag 2 'b'
+add_tag 3 'c'
+add_tag 4 'j'
+add_tag 5 'k'
+add_tag 6 'l'
+add_tag 7 'x'
+add_tag 8 'y'
+add_tag 9 'z'
+add_value 1 '1'
+add_value 2 '2'
+add_implication 1 0 2 0
+add_implication 2 0 3 0
+add_implication 4 1 5 0
+add_implication 5 0 6 0
+add_implication 7 0 8 2
+add_implication 8 0 9 0
+
+add_file_tag 1 1 0
+add_file_tag 2 4 1
+add_file_tag 3 7 0
+add_file_tag 4 4 2
+
+# test
+
+tmsu files a                            >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files b                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files c                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files a b c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files j=1                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files k                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files l                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files j=1 k l                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files x                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files y=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files z                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files x y=2 z                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files j=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not a                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not b                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not j                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not j=1                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not k                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not l                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo ---                                >>/tmp/tmsu/stdout
+
+tmsu files not x                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not y                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not y=2                      >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files not z                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+
+# verify
+
+diff - <<EOF /tmp/tmsu/stderr
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF /tmp/tmsu/stdout
+/file1
+/file1
+/file1
+/file1
+---
+/file2
+/file2
+/file2
+/file2
+---
+/file3
+/file3
+/file3
+/file3
+---
+/file4
+---
+/file2
+/file3
+/file4
+/file2
+/file3
+/file4
+/file2
+/file3
+/file4
+---
+/file1
+/file3
+/file1
+/file3
+/file4
+/file1
+/file3
+/file4
+/file1
+/file3
+/file4
+---
+/file1
+/file2
+/file4
+/file1
+/file2
+/file4
+/file1
+/file2
+/file4
+/file1
+/file2
+/file4
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

@@ -85,8 +85,20 @@ WHERE");
     fn compare_explicit(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
+        let negation = if operator == "!=" {
+            "NOT"
+        } else {
+            ""
+        };
+
+        let operator = if operator == "!=" {
+            "="
+        } else {
+            operator
+        };
+
         self.builder.push_sql(&format!("\
-id IN (
+id {negation} IN (
     WITH ift (tag_id, value_id) AS
         (
             SELECT t.id, v.id
@@ -104,7 +116,7 @@ id IN (
     INNER JOIN ift
     ON file_tag.tag_id = ift.tag_id
     AND file_tag.value_id = ift.value_id
-);");
+)");
 
         Ok(self)
     }
@@ -112,8 +124,20 @@ id IN (
     fn compare_indiscriminate(&mut self, tag: &'q TagName, operator: &str, value: &'q TagValue) -> Result<&mut Self, Box<dyn Error>> {
         let collation = self.collation();
 
+        let negation = if operator == "!=" {
+            "NOT"
+        } else {
+            ""
+        };
+
+        let operator = if operator == "!=" {
+            "="
+        } else {
+            operator
+        };
+
         self.builder.push_sql(&format!("\
-id IN (
+id {negation} IN (
     WITH RECURSIVE ift (tag_id, value_id) AS
         (
             SELECT t.id, v.id
@@ -136,7 +160,7 @@ id IN (
     INNER JOIN ift
     ON file_tag.tag_id = ift.tag_id
     AND file_tag.value_id = ift.value_id
-);");
+)");
 
         Ok(self)
     }
@@ -208,7 +232,7 @@ id IN (
     ) imps
     ON file_tag.tag_id = imps.tag_id
     AND (file_tag.value_id = imps.value_id OR imps.value_id = 0)
-);");
+)");
 
         Ok(self)
     }

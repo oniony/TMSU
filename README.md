@@ -2,6 +2,11 @@
 
 ![Build](https://github.com/oniony/TMSU/actions/workflows/build.yml/badge.svg)
 
+NOTE: TMSU has moved to ![Codeberg](https://codeberg.org/oniony/TMSU).
+
+The ![Github repository](https://github.com/oniony/TMSU) is now a mirror of the
+Codeberg repository.
+
 # Overview
 
 TMSU is a tool for tagging your files. It provides a simple command-line utility
@@ -109,14 +114,10 @@ TODO
 ## Binary
 
 Binary builds for a limited number of architectures and operating system
-combinations are available:
-
-  * <https://github.com/oniony/TMSU/releases>
+combinations are available at <https://codeberg.org/oniony/TMSU/releases>.
 
 You will need to ensure that both FUSE and Sqlite3 are installed for the
-program to function. These packages are typically available with your
-operating system's package management system. (If you install TMSU using one
-of the above packages, these should be installed automatically.)
+program to function.
 
 1. Install the binary
 
@@ -141,7 +142,7 @@ TMSU itself is written and maintained by [Paul Ruane](mailto:Paul Ruane <paul.ru
 
 # Release Notes
 
-See <https://github.com/oniony/TMSU/releases>.
+See <https://codeberg.org/oniony/TMSU/releases>.
 
 - - -
 

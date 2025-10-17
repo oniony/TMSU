@@ -16,5 +16,10 @@
 pub mod database;
 pub mod query;
 
+pub mod common;
+pub mod file;
 mod migrations;
+pub mod setting;
 mod sql;
+pub mod tag;
+pub mod value;

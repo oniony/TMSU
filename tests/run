@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 
 if [[ -z $1 ]]; then
     echo "no testcase paths specified" >&2

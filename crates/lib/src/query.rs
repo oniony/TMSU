@@ -22,23 +22,23 @@ use rusqlite::ToSql;
 use std::error::Error;
 use std::fmt::Display;
 
-/// Tag name.
+/// Tag.
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct TagName(String);
+pub struct Tag(String);
 
-impl Display for TagName {
+impl Display for Tag {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl ToSql for TagName {
+impl ToSql for Tag {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(ToSqlOutput::from(self.0.as_str()))
     }
 }
 
-impl FromSql for TagName {
+impl FromSql for Tag {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
         Ok(Self(value.as_str()?.to_string()))
     }
@@ -46,21 +46,21 @@ impl FromSql for TagName {
 
 // Tag value.
 #[derive(Debug, PartialEq, Eq, Clone)]
-pub struct TagValue(String);
+pub struct Value(String);
 
-impl Display for TagValue {
+impl Display for Value {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.0)
     }
 }
 
-impl ToSql for TagValue {
+impl ToSql for Value {
     fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
         Ok(ToSqlOutput::from(self.0.as_str()))
     }
 }
 
-impl FromSql for TagValue {
+impl FromSql for Value {
     fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
         Ok(Self(value.as_str()?.to_string()))
     }
@@ -69,63 +69,63 @@ impl FromSql for TagValue {
 /// A query expression.
 #[derive(Debug, PartialEq, Eq)]
 pub enum Expression {
-    Tag(TagName),
+    Tagged(Tag),
     And(Box<Expression>, Box<Expression>),
     Or(Box<Expression>, Box<Expression>),
     Not(Box<Expression>),
-    Equal(TagName, TagValue),
-    NotEqual(TagName, TagValue),
-    GreaterThan(TagName, TagValue),
-    LessThan(TagName, TagValue),
-    GreaterOrEqual(TagName, TagValue),
-    LessOrEqual(TagName, TagValue),
+    Equal(Tag, Value),
+    NotEqual(Tag, Value),
+    GreaterThan(Tag, Value),
+    LessThan(Tag, Value),
+    GreaterOrEqual(Tag, Value),
+    LessOrEqual(Tag, Value),
 }
 
 impl Expression {
     /// Identifies the tag names within the expression.
-    pub fn tags(&self) -> Vec<TagName> {
+    pub fn tags(&self) -> Vec<Tag> {
         let mut tag_names = Vec::new();
-        self.walk_tag_names(&mut tag_names);
+        self.walk_tags(&mut tag_names);
         tag_names
     }
 
     /// Identifies the value names within the expression.
-    pub fn values(&self) -> Vec<TagValue> {
+    pub fn values(&self) -> Vec<Value> {
         let mut value_names = Vec::new();
-        self.walk_value_names(&mut value_names);
+        self.walk_values(&mut value_names);
         value_names
     }
 
-    fn walk_tag_names(&self, tag_names: &mut Vec<TagName>) {
+    fn walk_tags(&self, tags: &mut Vec<Tag>) {
         match &self {
-            Tag(tag_name) => tag_names.push(tag_name.clone()),
+            Tagged(tag) => tags.push(tag.clone()),
             And(left, right) | Or(left, right) => {
-                left.walk_tag_names(tag_names);
-                right.walk_tag_names(tag_names);
+                left.walk_tags(tags);
+                right.walk_tags(tags);
             }
-            Not(operand) => operand.walk_tag_names(tag_names),
+            Not(operand) => operand.walk_tags(tags),
             Equal(tag_name, _)
             | NotEqual(tag_name, _)
             | GreaterThan(tag_name, _)
             | LessThan(tag_name, _)
             | GreaterOrEqual(tag_name, _)
-            | LessOrEqual(tag_name, _) => tag_names.push(tag_name.clone()),
+            | LessOrEqual(tag_name, _) => tags.push(tag_name.clone()),
         }
     }
 
-    fn walk_value_names(&self, value_names: &mut Vec<TagValue>) {
+    fn walk_values(&self, values: &mut Vec<Value>) {
         match &self {
             And(left, right) | Or(left, right) => {
-                left.walk_value_names(value_names);
-                right.walk_value_names(value_names);
+                left.walk_values(values);
+                right.walk_values(values);
             }
-            Not(operand) => operand.walk_value_names(value_names),
+            Not(operand) => operand.walk_values(values),
             Equal(_, value_name)
             | NotEqual(_, value_name)
             | GreaterThan(_, value_name)
             | LessThan(_, value_name)
             | GreaterOrEqual(_, value_name)
-            | LessOrEqual(_, value_name) => value_names.push(value_name.clone()),
+            | LessOrEqual(_, value_name) => values.push(value_name.clone()),
             _ => (),
         }
     }
@@ -168,16 +168,16 @@ fn map_pair(pair: Pair<Rule>) -> Option<Expression> {
 }
 
 fn map_tag(pair: Pair<Rule>) -> Expression {
-    Tag(TagName(pair.as_str().into()))
+    Tagged(Tag(pair.as_str().into()))
 }
 
 fn map_comparison_operator<F>(pair: Pair<Rule>, factory: F) -> Expression
 where
-    F: Fn(TagName, TagValue) -> Expression,
+    F: Fn(Tag, Value) -> Expression,
 {
     let mut inner = pair.into_inner();
-    let tag = TagName(inner.next().unwrap().as_str().into());
-    let value = TagValue(inner.next().unwrap().as_str().into());
+    let tag = Tag(inner.next().unwrap().as_str().into());
+    let value = Value(inner.next().unwrap().as_str().into());
 
     factory(tag, value)
 }
@@ -210,7 +210,7 @@ mod tests {
     #[test]
     fn parse_single_tag_query() {
         let actual = parse("single").unwrap().unwrap();
-        let expected = Tag(TagName("single".into()).into());
+        let expected = Tagged(Tag("single".into()).into());
 
         assert_eq!(expected, actual);
     }
@@ -219,8 +219,8 @@ mod tests {
     fn parse_implicit_and() {
         let actual = parse("left right").unwrap().unwrap();
         let expected = And(
-            Tag(TagName("left".into())).into(),
-            Tag(TagName("right".into())).into(),
+            Tagged(Tag("left".into())).into(),
+            Tagged(Tag("right".into())).into(),
         );
 
         assert_eq!(expected, actual);
@@ -230,8 +230,8 @@ mod tests {
     fn parse_explicit_and() {
         let actual = parse("left and right").unwrap().unwrap();
         let expected = And(
-            Tag(TagName("left".into())).into(),
-            Tag(TagName("right".into())).into(),
+            Tagged(Tag("left".into())).into(),
+            Tagged(Tag("right".into())).into(),
         );
 
         assert_eq!(expected, actual);
@@ -240,7 +240,7 @@ mod tests {
     #[test]
     fn parse_quoted_tag() {
         let actual = parse("\"left and right\"").unwrap().unwrap();
-        let expected = Tag(TagName("\"left and right\"".into()).into());
+        let expected = Tagged(Tag("\"left and right\"".into()).into());
 
         assert_eq!(expected, actual);
     }
@@ -251,12 +251,12 @@ mod tests {
             .unwrap()
             .unwrap();
         let expected = And(
-            Equal(TagName("colour".into()), TagValue("red".into())).into(),
+            Equal(Tag("colour".into()), Value("red".into())).into(),
             And(
-                Equal(TagName("size".into()), TagValue("big".into())).into(),
-                GreaterOrEqual(TagName("wheels".into()), TagValue("4".into())).into(),
+                Equal(Tag("size".into()), Value("big".into())).into(),
+                GreaterOrEqual(Tag("wheels".into()), Value("4".into())).into(),
             )
-                .into(),
+            .into(),
         );
 
         assert_eq!(expected, actual);
@@ -266,12 +266,12 @@ mod tests {
     fn parse_operator_precedence() {
         let actual = parse("left or right and wrong").unwrap().unwrap();
         let expected = Or(
-            Tag(TagName("left".into())).into(),
+            Tagged(Tag("left".into())).into(),
             And(
-                Tag(TagName("right".into())).into(),
-                Tag(TagName("wrong".into())).into(),
+                Tagged(Tag("right".into())).into(),
+                Tagged(Tag("wrong".into())).into(),
             )
-                .into(),
+            .into(),
         );
 
         assert_eq!(expected, actual);
@@ -282,11 +282,11 @@ mod tests {
         let actual = parse("(left or right) and wrong").unwrap().unwrap();
         let expected = And(
             Or(
-                Tag(TagName("left".into())).into(),
-                Tag(TagName("right".into())).into(),
+                Tagged(Tag("left".into())).into(),
+                Tagged(Tag("right".into())).into(),
             )
-                .into(),
-            Tag(TagName("wrong".into())).into(),
+            .into(),
+            Tagged(Tag("wrong".into())).into(),
         );
 
         assert_eq!(expected, actual);
@@ -300,11 +300,7 @@ mod tests {
 
         assert_eq!(
             query.tags(),
-            vec![
-                TagName("colour".into()),
-                TagName("size".into()),
-                TagName("year".into())
-            ]
+            vec![Tag("colour".into()), Tag("size".into()), Tag("year".into())]
         );
     }
 
@@ -317,9 +313,9 @@ mod tests {
         assert_eq!(
             query.values(),
             vec![
-                TagValue("red".into()),
-                TagValue("big".into()),
-                TagValue("2025".into())
+                Value("red".into()),
+                Value("big".into()),
+                Value("2025".into())
             ]
         );
     }

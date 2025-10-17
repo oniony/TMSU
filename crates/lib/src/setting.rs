@@ -54,7 +54,7 @@ impl Store<'_> {
 
 #[cfg(test)]
 mod tests {
-    use crate::database::setting::Setting;
+    use crate::setting::Setting;
 
     #[test]
     fn setting_display() {

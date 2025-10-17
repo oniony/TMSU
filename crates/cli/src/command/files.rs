@@ -16,11 +16,11 @@
 use crate::error::MultiError;
 use crate::rendering::Separator;
 use crate::Executor;
+use libtmsu::common::{Casing, FileTypeSpecificity, TagSpecificity};
 use libtmsu::database::Database;
 use libtmsu::query;
 use libtmsu::query::Expression;
 use std::error::Error;
-use libtmsu::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
 
 /// Files command executor.
 pub struct FilesCommand {
@@ -59,9 +59,12 @@ impl FilesCommand {
     fn show_count(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
         let count = if let Some(expression) = &expression {
             self.validate_expression(&expression)?;
-            self.database
-                .files()
-                .query_count(expression, &self.tag_specificity, &self.file_type, &self.casing)
+            self.database.files().query_count(
+                expression,
+                &self.tag_specificity,
+                &self.file_type,
+                &self.casing,
+            )
         } else {
             self.database.files().all_count()
         }?;
@@ -75,9 +78,12 @@ impl FilesCommand {
     fn show_files(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
         let files = if let Some(expression) = &expression {
             self.validate_expression(&expression)?;
-            self.database
-                .files()
-                .query(expression, &self.tag_specificity, &self.file_type, &self.casing)
+            self.database.files().query(
+                expression,
+                &self.tag_specificity,
+                &self.file_type,
+                &self.casing,
+            )
         } else {
             self.database.files().all()
         }?;

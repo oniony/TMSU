@@ -13,14 +13,8 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod common;
-pub mod file;
-pub mod setting;
-pub mod tag;
-pub mod value;
-
-use crate::database::setting::Setting;
-use crate::migrations;
+use crate::setting::Setting;
+use crate::{file, migrations, setting, tag, value};
 use rusqlite::Connection;
 use std::error::Error;
 use std::path::{Path, PathBuf};
@@ -83,10 +77,7 @@ impl Database {
         let settings = setting::Store::new(&connection);
         let root_setting: PathBuf = settings.read(Setting::Root)?.into();
 
-        let root = path
-            .parent()
-            .unwrap_or(&PathBuf::new())
-            .join(root_setting);
+        let root = path.parent().unwrap_or(&PathBuf::new()).join(root_setting);
 
         Ok(Database {
             path,
@@ -156,7 +147,11 @@ mod tests {
 
     #[test]
     fn properties() {
-        let database = Database { path: PathBuf::from("some-path"), root: PathBuf::from("some-root"), connection: None };
+        let database = Database {
+            path: PathBuf::from("some-path"),
+            root: PathBuf::from("some-root"),
+            connection: None,
+        };
         assert_eq!("some-path", database.path().to_str().unwrap());
         assert_eq!("some-root", database.root().to_str().unwrap());
     }
@@ -185,7 +180,7 @@ mod tests {
 
         assert!(match error {
             Err(ref e) if e.to_string().contains("database already exists") => true,
-            _ => false
+            _ => false,
         });
     }
 

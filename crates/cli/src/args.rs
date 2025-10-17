@@ -13,9 +13,9 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use std::fmt::{Display, Formatter};
 use crate::rendering::Separator;
 use clap::{ArgAction, Parser, Subcommand, ValueEnum};
+use std::fmt::{Display, Formatter};
 use std::path::PathBuf;
 
 #[derive(Parser)]
@@ -85,20 +85,17 @@ with --database taking precedence.
         alias = "query",
         long_about = "Lists files with particular tags.
 
-QUERY is a space-separated list of tags that files must be tagged with in order to be listed. More
-complex queries can also include operators and parentheses to further refine the results: see the
-examples below.
+QUERY is a query in the TMSU query language, but at its simplest can be a space-separated list of tags
+that a file must be tagged with in order to be listed. More complex queries can also include logical
+operators, parentheses and tag-value comparisons.
 
 Note: Queries match only tagged files. To identify untagged files use the 'untagged' subcommand.
+Note: If your tag or value name contains whitespace, operators or parentheses, these must be escaped with
+a backslash '\\', e.g. '\\<tag\\>' matches the tag name '<tag>'.
+Note: Your shell may use some punctuation for its own purposes: this can usually be avoided by enclosing
+the query in single quotation marks or by escaping the problematic characters with a backslash.
 
-Note: If your tag or value name contains whitespace, operators or parentheses, these must be escaped
-with a backslash '\\', e.g. '\\<tag\\>' matches the tag name '<tag>'.
-
-Note: Your shell may use some punctuation for its own purposes: this can usually be avoided by
-enclosing the query in single quotation marks or by escaping the problematic characters with a
-backslash.
-
-Operators: and, or, not, ==, !=, <, >, <=, >=, eq, ne, lt, gt, le, ge.
+Operators: and, or, not, eq, ne, lt, gt, le, ge, =, ==, !=, <, >, <=, >=
 
 Examples:
 
@@ -146,10 +143,8 @@ Examples:
 
         // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
         // path: Option<PathBuf>,
-
         #[arg(help = "the query to run", num_args = 0..)]
         query: Vec<String>,
-
         // #[arg(
         //     short = 's',
         //     long = "sort",

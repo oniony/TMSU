@@ -13,13 +13,12 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-use crate::error::MultiError;
 use crate::rendering::Separator;
 use crate::Executor;
-use libtmsu::common::{Casing, FileTypeSpecificity, TagSpecificity};
+use libtmsu::common::Casing;
 use libtmsu::database::Database;
-use libtmsu::query;
-use libtmsu::query::Expression;
+use libtmsu::file::FileTypeSpecificity;
+use libtmsu::tag::TagSpecificity;
 use std::error::Error;
 
 /// Files command executor.
@@ -56,18 +55,13 @@ impl FilesCommand {
     }
 
     /// Shows the count of files matching the expression.
-    fn show_count(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
-        let count = if let Some(expression) = &expression {
-            self.validate_expression(&expression)?;
-            self.database.files().query_count(
-                expression,
-                &self.tag_specificity,
-                &self.file_type,
-                &self.casing,
-            )
-        } else {
-            self.database.files().all_count()
-        }?;
+    fn show_count(&self, query: &str) -> Result<(), Box<dyn Error>> {
+        let count = self.database.files().query_count(
+            query,
+            &self.tag_specificity,
+            &self.file_type,
+            &self.casing,
+        )?;
 
         print!("{}{}", count, self.separator);
 
@@ -75,18 +69,13 @@ impl FilesCommand {
     }
 
     /// Shows the files matching the expression.
-    fn show_files(&self, expression: Option<Expression>) -> Result<(), Box<dyn Error>> {
-        let files = if let Some(expression) = &expression {
-            self.validate_expression(&expression)?;
-            self.database.files().query(
-                expression,
-                &self.tag_specificity,
-                &self.file_type,
-                &self.casing,
-            )
-        } else {
-            self.database.files().all()
-        }?;
+    fn show_files(&self, query: &str) -> Result<(), Box<dyn Error>> {
+        let files = self.database.files().query(
+            query,
+            &self.tag_specificity,
+            &self.file_type,
+            &self.casing,
+        )?;
 
         for file in files {
             print!("{}{}", file.path().to_str().unwrap_or(""), self.separator);
@@ -94,39 +83,16 @@ impl FilesCommand {
 
         Ok(())
     }
-
-    fn validate_expression(&self, expression: &Expression) -> Result<(), Box<dyn Error>> {
-        let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
-
-        let tags = expression.tags();
-        let invalid_tags = self.database.tags().missing(&tags, &self.casing)?;
-        for invalid_tag in &invalid_tags {
-            errors.push(format!("unknown tag: {invalid_tag}").into());
-        }
-
-        let values = expression.values();
-        let invalid_values = self.database.values().missing(&values, &self.casing)?;
-        for invalid_value in &invalid_values {
-            errors.push(format!("unknown value: {invalid_value}").into());
-        }
-
-        if errors.is_empty() {
-            Ok(())
-        } else {
-            Err(MultiError { errors }.into())
-        }
-    }
 }
 
 impl Executor for FilesCommand {
     fn execute(&self) -> Result<(), Box<dyn Error>> {
-        let query_text = self.args.join(" ").to_owned();
-        let expression = query::parse(&query_text)?;
+        let query = self.args.join(" ").to_owned();
 
         if self.count {
-            self.show_count(expression)
+            self.show_count(&query)
         } else {
-            self.show_files(expression)
+            self.show_files(&query)
         }
     }
 }

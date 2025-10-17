@@ -1,144 +1,24 @@
-// Copyright 2011-2025 Paul Ruane.
-
-// This program is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-
-// This program is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-
-// You should have received a copy of the GNU General Public License
-// along with this program.  If not, see <http://www.gnu.org/licenses/>.
-
-use crate::query::Expression::*;
-use pest::iterators::{Pair, Pairs};
-use pest::Parser;
+use crate::file::query::{
+    Expression,
+    {And, Equal, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, Not, NotEqual, Or, Tagged},
+};
+use crate::tag::Tag;
+use crate::value::Value;
+use pest::{
+    Parser,
+    iterators::{Pair, Pairs},
+};
 use pest_derive::Parser;
-use rusqlite::types::{FromSql, FromSqlError, ToSqlOutput};
-use rusqlite::ToSql;
 use std::error::Error;
-use std::fmt::Display;
-
-/// Tag.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Tag(String);
-
-impl Display for Tag {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl ToSql for Tag {
-    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
-        Ok(ToSqlOutput::from(self.0.as_str()))
-    }
-}
-
-impl FromSql for Tag {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
-        Ok(Self(value.as_str()?.to_string()))
-    }
-}
-
-// Tag value.
-#[derive(Debug, PartialEq, Eq, Clone)]
-pub struct Value(String);
-
-impl Display for Value {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.0)
-    }
-}
-
-impl ToSql for Value {
-    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
-        Ok(ToSqlOutput::from(self.0.as_str()))
-    }
-}
-
-impl FromSql for Value {
-    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
-        Ok(Self(value.as_str()?.to_string()))
-    }
-}
-
-/// A query expression.
-#[derive(Debug, PartialEq, Eq)]
-pub enum Expression {
-    Tagged(Tag),
-    And(Box<Expression>, Box<Expression>),
-    Or(Box<Expression>, Box<Expression>),
-    Not(Box<Expression>),
-    Equal(Tag, Value),
-    NotEqual(Tag, Value),
-    GreaterThan(Tag, Value),
-    LessThan(Tag, Value),
-    GreaterOrEqual(Tag, Value),
-    LessOrEqual(Tag, Value),
-}
-
-impl Expression {
-    /// Identifies the tag names within the expression.
-    pub fn tags(&self) -> Vec<Tag> {
-        let mut tag_names = Vec::new();
-        self.walk_tags(&mut tag_names);
-        tag_names
-    }
-
-    /// Identifies the value names within the expression.
-    pub fn values(&self) -> Vec<Value> {
-        let mut value_names = Vec::new();
-        self.walk_values(&mut value_names);
-        value_names
-    }
-
-    fn walk_tags(&self, tags: &mut Vec<Tag>) {
-        match &self {
-            Tagged(tag) => tags.push(tag.clone()),
-            And(left, right) | Or(left, right) => {
-                left.walk_tags(tags);
-                right.walk_tags(tags);
-            }
-            Not(operand) => operand.walk_tags(tags),
-            Equal(tag_name, _)
-            | NotEqual(tag_name, _)
-            | GreaterThan(tag_name, _)
-            | LessThan(tag_name, _)
-            | GreaterOrEqual(tag_name, _)
-            | LessOrEqual(tag_name, _) => tags.push(tag_name.clone()),
-        }
-    }
-
-    fn walk_values(&self, values: &mut Vec<Value>) {
-        match &self {
-            And(left, right) | Or(left, right) => {
-                left.walk_values(values);
-                right.walk_values(values);
-            }
-            Not(operand) => operand.walk_values(values),
-            Equal(_, value_name)
-            | NotEqual(_, value_name)
-            | GreaterThan(_, value_name)
-            | LessThan(_, value_name)
-            | GreaterOrEqual(_, value_name)
-            | LessOrEqual(_, value_name) => values.push(value_name.clone()),
-            _ => (),
-        }
-    }
-}
 
 #[derive(Parser)]
-#[grammar = "grammars/query.pest"]
-struct QueryParser;
+#[grammar = "file/query/query.pest"]
+pub struct QueryParser;
 
-/// Parse a query string into an expression tree.
+/// Parses the specified query text as an expression.
 pub fn parse(text: &str) -> Result<Option<Expression>, Box<dyn Error>> {
-    let parsed_query = QueryParser::parse(Rule::query, text)?;
-    let query = map_query(parsed_query);
+    let pairs = QueryParser::parse(Rule::query, text)?;
+    let query = map_query(pairs);
 
     Ok(query)
 }

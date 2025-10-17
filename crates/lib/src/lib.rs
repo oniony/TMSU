@@ -13,13 +13,13 @@
 // You should have received a copy of the GNU General Public License
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-pub mod database;
-pub mod query;
-
 pub mod common;
+pub mod database;
+pub mod error;
 pub mod file;
-mod migrations;
 pub mod setting;
-mod sql;
 pub mod tag;
 pub mod value;
+
+mod migrations;
+mod sql;

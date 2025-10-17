@@ -1,291 +1,128 @@
-use crate::common::{Casing, FileTypeSpecificity, TagSpecificity};
-use crate::query::Expression::{
-    And, Equal, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, Not, NotEqual, Or, Tagged,
-};
-use crate::query::{Expression, Tag, Value};
-use crate::sql::builder::SqlBuilder;
+// Copyright 2011-2025 Paul Ruane.
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+mod builder;
+mod parser;
+
+use crate::common::Casing;
+use crate::file::query::builder::QueryBuilder;
+use crate::file::query::Expression::*;
+use crate::file::FileTypeSpecificity;
+use crate::tag::{Tag, TagSpecificity};
+use crate::value::Value;
 use rusqlite::types::ToSqlOutput;
 use std::error::Error;
 
-/// Builds a SQL query from a query expression.
-pub struct QueryBuilder<'q> {
-    tag_specificity: TagSpecificity,
-    file_type: FileTypeSpecificity,
-    casing: Casing,
-    builder: SqlBuilder<'q>,
+/// Parse a textual query.
+pub fn parse(text: &str) -> Result<Option<Query>, Box<dyn Error>> {
+    let expression = parser::parse(text)?;
+    let query = expression.map(|e| Query(e));
+
+    Ok(query)
 }
 
-impl<'q> QueryBuilder<'q> {
-    /// Creates a new QueryBuilder.
-    pub fn new(
-        tag_specificity: &TagSpecificity,
-        file_type: &FileTypeSpecificity,
-        casing: &Casing,
-    ) -> QueryBuilder<'q> {
-        QueryBuilder {
-            tag_specificity: tag_specificity.clone(),
-            file_type: file_type.clone(),
-            casing: casing.clone(),
-            builder: SqlBuilder::new(),
+/// Builds SQL for a files query.
+pub fn files_sql<'q>(
+    query: &'q Query,
+    tag_specificity: &'q TagSpecificity,
+    file_type_specificity: &'q FileTypeSpecificity,
+    casing: &'q Casing,
+) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
+    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
+    let sql_and_params = qb.file_query(query)?;
+
+    Ok(sql_and_params)
+}
+
+/// Builds SQL for a file count query.
+pub fn file_count_sql<'q>(
+    query: &'q Query,
+    tag_specificity: &'q TagSpecificity,
+    file_type_specificity: &'q FileTypeSpecificity,
+    casing: &'q Casing,
+) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
+    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
+    let sql_and_params = qb.file_count_query(query)?;
+
+    Ok(sql_and_params)
+}
+
+/// A parsed query.
+pub struct Query(pub Expression);
+
+/// A query expression.
+#[derive(Debug, PartialEq, Eq)]
+pub enum Expression {
+    Tagged(Tag),
+    And(Box<Expression>, Box<Expression>),
+    Or(Box<Expression>, Box<Expression>),
+    Not(Box<Expression>),
+    Equal(Tag, Value),
+    NotEqual(Tag, Value),
+    GreaterThan(Tag, Value),
+    LessThan(Tag, Value),
+    GreaterOrEqual(Tag, Value),
+    LessOrEqual(Tag, Value),
+}
+
+impl Expression {
+    /// Identifies the tag names within the expression.
+    pub fn tags(&self) -> Vec<Tag> {
+        let mut tag_names = Vec::new();
+        self.walk_tags(&mut tag_names);
+        tag_names
+    }
+
+    /// Identifies the value names within the expression.
+    pub fn values(&self) -> Vec<Value> {
+        let mut value_names = Vec::new();
+        self.walk_values(&mut value_names);
+        value_names
+    }
+
+    fn walk_tags(&self, tags: &mut Vec<Tag>) {
+        match &self {
+            Tagged(tag) => tags.push(tag.clone()),
+            And(left, right) | Or(left, right) => {
+                left.walk_tags(tags);
+                right.walk_tags(tags);
+            }
+            Not(operand) => operand.walk_tags(tags),
+            Equal(tag_name, _)
+            | NotEqual(tag_name, _)
+            | GreaterThan(tag_name, _)
+            | LessThan(tag_name, _)
+            | GreaterOrEqual(tag_name, _)
+            | LessOrEqual(tag_name, _) => tags.push(tag_name.clone()),
         }
     }
 
-    /// Builds a SQL file query from the specified expression.
-    pub fn file_query(
-        &mut self,
-        query: &'q Expression,
-    ) -> Result<(String, &Vec<ToSqlOutput>), Box<dyn Error>> {
-        self.select().expression(&query)?.file_type();
-
-        Ok((self.builder.to_string(), self.builder.parameters()))
-    }
-
-    /// Builds a SQL file count query from the specified expression.
-    pub fn file_count_query(
-        &mut self,
-        query: &'q Expression,
-    ) -> Result<(String, &Vec<ToSqlOutput>), Box<dyn Error>> {
-        self.select().expression(&query)?;
-
-        Ok((self.builder.to_string(), self.builder.parameters()))
-    }
-
-    fn select(&mut self) -> &mut Self {
-        self.builder.push_sql(
-            "\
-SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-FROM file
-WHERE",
-        );
-
-        self
-    }
-
-    fn expression(&mut self, query: &'q Expression) -> Result<&mut Self, Box<dyn Error>> {
-        match query {
-            And(left, right) => self.binary(left, "AND", right),
-            Equal(tag, value) => self.compare(tag, "=", value),
-            GreaterThan(tag, value) => self.compare(tag, ">", value),
-            GreaterOrEqual(tag, value) => self.compare(tag, ">=", value),
-            LessThan(tag, value) => self.compare(tag, "<", value),
-            LessOrEqual(tag, value) => self.compare(tag, "<=", value),
-            NotEqual(tag, value) => self.compare(tag, "!=", value),
-            Not(operand) => self.unary("NOT", operand),
-            Or(left, right) => self.binary(left, "OR", right),
-            Tagged(tag) => self.tag(tag),
+    fn walk_values(&self, values: &mut Vec<Value>) {
+        match &self {
+            And(left, right) | Or(left, right) => {
+                left.walk_values(values);
+                right.walk_values(values);
+            }
+            Not(operand) => operand.walk_values(values),
+            Equal(_, value_name)
+            | NotEqual(_, value_name)
+            | GreaterThan(_, value_name)
+            | LessThan(_, value_name)
+            | GreaterOrEqual(_, value_name)
+            | LessOrEqual(_, value_name) => values.push(value_name.clone()),
+            _ => (),
         }
-    }
-
-    fn compare(
-        &mut self,
-        tag: &'q Tag,
-        operator: &str,
-        value: &'q Value,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder
-            .push_sql(&format!("-- {tag} {operator} {value}"));
-
-        match self.tag_specificity {
-            TagSpecificity::ExplicitOnly => self.compare_explicit(tag, operator, value),
-            TagSpecificity::All => self.compare_all(tag, operator, value),
-        }
-    }
-
-    fn compare_explicit(
-        &mut self,
-        tag: &'q Tag,
-        operator: &str,
-        value: &'q Value,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        let collation = self.collation();
-
-        let negation = if operator == "!=" { "NOT" } else { "" };
-
-        let operator = if operator == "!=" { "=" } else { operator };
-
-        self.builder
-            .push_sql(&format!(
-                "\
-id {negation} IN(
-    WITH ift (tag_id, value_id) AS
-        (
-            SELECT t.id, v.id
-            FROM tag t, value v
-            WHERE t.name {collation} = "
-            ))
-            .push_parameter(tag)?
-            .push_sql(&format!(
-                "\
-            AND v.name {collation} {operator} "
-            ))
-            .push_parameter(value)?
-            .push_sql(
-                "\
-        )
-
-    SELECT file_id
-    FROM file_tag
-    INNER JOIN ift
-    ON file_tag.tag_id = ift.tag_id
-    AND file_tag.value_id = ift.value_id
-)",
-            );
-
-        Ok(self)
-    }
-
-    fn compare_all(
-        &mut self,
-        tag: &'q Tag,
-        operator: &str,
-        value: &'q Value,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        let collation = self.collation();
-
-        let negation = if operator == "!=" { "NOT" } else { "" };
-
-        let operator = if operator == "!=" { "=" } else { operator };
-
-        self.builder
-            .push_sql(&format!(
-                "\
-id {negation} IN (
-    WITH RECURSIVE ift (tag_id, value_id) AS
-        (
-            SELECT t.id, v.id
-            FROM tag t, value v
-            WHERE t.name {collation} = "
-            ))
-            .push_parameter(tag)?
-            .push_sql(&format!(
-                "\
-            AND v.name {collation} {operator} "
-            ))
-            .push_parameter(value)?
-            .push_sql(
-                "\
-            UNION ALL
-            SELECT i.tag_id, i.value_id
-            FROM implication i, ift
-            WHERE i.implied_tag_id = ift.tag_id
-            AND (ift.value_id = 0 OR i.implied_value_id = ift.value_id)
-        )
-
-    SELECT file_id
-    FROM file_tag
-    INNER JOIN ift
-    ON file_tag.tag_id = ift.tag_id
-    AND (file_tag.value_id = ift.value_id OR ift.value_id = 0)
-)",
-            );
-
-        Ok(self)
-    }
-
-    fn tag(&mut self, tag: &'q Tag) -> Result<&mut Self, Box<dyn Error>> {
-        match self.tag_specificity {
-            TagSpecificity::ExplicitOnly => self.tag_explicit(tag),
-            TagSpecificity::All => self.tag_all(tag),
-        }
-    }
-
-    fn unary(
-        &mut self,
-        operator: &str,
-        operand: &'q Expression,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder.push_sql(operator);
-        self.expression(operand)?;
-
-        Ok(self)
-    }
-
-    fn binary(
-        &mut self,
-        left: &'q Expression,
-        operator: &str,
-        right: &'q Expression,
-    ) -> Result<&mut Self, Box<dyn Error>> {
-        self.expression(left)?;
-        self.builder.push_sql(operator);
-        self.expression(right)?;
-
-        Ok(self)
-    }
-
-    fn tag_explicit(&mut self, tag: &'q Tag) -> Result<&mut Self, Box<dyn Error>> {
-        let collation = self.collation();
-
-        self.builder
-            .push_sql(&format!(
-                "\
-id IN (
-    SELECT file_id
-    FROM file_tag
-    WHERE tag_id = (
-        SELECT id
-        FROM tag
-        WHERE name {collation} = "
-            ))
-            .push_parameter(tag)?
-            .push_sql(
-                "\
-    )\
-)",
-            );
-
-        Ok(self)
-    }
-
-    fn tag_all(&mut self, tag: &'q Tag) -> Result<&mut Self, Box<dyn Error>> {
-        let collation = self.collation();
-
-        self.builder
-            .push_sql(&format!(
-                "\
-id IN (
-    WITH RECURSIVE ift (tag_id, value_id) AS
-        (
-            SELECT t.id, 0
-            FROM tag t
-            WHERE t.name {collation} = "
-            ))
-            .push_parameter(tag)?
-            .push_sql(
-                "\
-            UNION ALL
-            SELECT i.tag_id, i.value_id
-            FROM implication i, ift
-            WHERE i.implied_tag_id = ift.tag_id
-            AND (ift.value_id = 0 OR i.implied_value_id = ift.value_id)
-        )
-
-    SELECT file_id
-    FROM file_tag
-    INNER JOIN ift
-    ON file_tag.tag_id = ift.tag_id
-    AND (file_tag.value_id = ift.value_id OR ift.value_id = 0)
-)
-",
-            );
-
-        Ok(self)
-    }
-
-    fn collation(&self) -> &'static str {
-        match self.casing {
-            Casing::Insensitive => "COLLATE NOCASE",
-            Casing::Sensitive => "",
-        }
-    }
-
-    fn file_type(&mut self) -> &mut Self {
-        self.builder.push_sql(match self.file_type {
-            FileTypeSpecificity::Any => "",
-            FileTypeSpecificity::FileOnly => "AND NOT is_dir",
-            FileTypeSpecificity::DirectoryOnly => "AND is_dir",
-        });
-
-        self
     }
 }

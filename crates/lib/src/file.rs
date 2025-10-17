@@ -1,10 +1,10 @@
+use crate::common::{Casing, FileTypeSpecificity, TagSpecificity};
 use crate::query::Expression;
 use chrono::{DateTime, Utc};
 use query::QueryBuilder;
 use rusqlite::{params_from_iter, Connection, Rows};
 use std::error::Error;
 use std::path::PathBuf;
-use crate::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
 
 mod query;
 
@@ -37,7 +37,13 @@ impl Store<'_> {
     }
 
     /// Queries for files by expression.
-    pub fn query(&self, query: &Expression, tag_specificity: &TagSpecificity, file_type: &FileTypeSpecificity, casing: &Casing) -> Result<Vec<File>, Box<dyn Error>> {
+    pub fn query(
+        &self,
+        query: &Expression,
+        tag_specificity: &TagSpecificity,
+        file_type: &FileTypeSpecificity,
+        casing: &Casing,
+    ) -> Result<Vec<File>, Box<dyn Error>> {
         let mut builder = QueryBuilder::new(tag_specificity, file_type, casing);
         let (sql, parameters) = builder.file_query(&query)?;
 
@@ -48,32 +54,43 @@ impl Store<'_> {
     }
 
     /// Queries the file count by expression.
-    pub fn query_count(&self, query: &Expression, tag_specificity: &TagSpecificity, file_type: &FileTypeSpecificity, casing: &Casing) -> Result<u64, Box<dyn Error>> {
+    pub fn query_count(
+        &self,
+        query: &Expression,
+        tag_specificity: &TagSpecificity,
+        file_type: &FileTypeSpecificity,
+        casing: &Casing,
+    ) -> Result<u64, Box<dyn Error>> {
         let mut builder = QueryBuilder::new(tag_specificity, file_type, casing);
         let (sql, parameters) = builder.file_count_query(&query)?;
 
         let mut statement = self.connection.prepare(&sql)?;
-        let count = statement.query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;
+        let count =
+            statement.query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;
 
         Ok(count)
     }
 
     /// Retrieves all files.
     pub fn all(&self) -> Result<Vec<File>, Box<dyn Error>> {
-        let mut statement = self.connection.prepare("\
+        let mut statement = self.connection.prepare(
+            "\
 SELECT id, directory, name, fingerprint, mod_time, size, is_dir
 FROM file;
-")?;
+",
+        )?;
         let mut rows = statement.query(())?;
 
         Self::files_from_rows(&mut rows)
     }
 
     pub fn all_count(&self) -> Result<u64, Box<dyn Error>> {
-        let mut statement = self.connection.prepare("\
+        let mut statement = self.connection.prepare(
+            "\
 SELECT count(1)
 FROM file;
-")?;
+",
+        )?;
         let count = statement.query_one((), |row| row.get::<usize, u64>(0))?;
 
         Ok(count)

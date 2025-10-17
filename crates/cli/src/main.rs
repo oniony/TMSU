@@ -20,15 +20,15 @@ mod database;
 mod error;
 mod rendering;
 
+use crate::args::FileType;
 use crate::command::files::FilesCommand;
 use crate::command::info::InfoCommand;
 use crate::command::init::InitCommand;
 use crate::error::MultiError;
 use args::{Args, Commands};
+use libtmsu::common::{Casing, FileTypeSpecificity, TagSpecificity};
 use std::error::Error;
 use std::process;
-use libtmsu::database::common::{Casing, FileTypeSpecificity, TagSpecificity};
-use crate::args::FileType;
 
 fn main() {
     let result = run();
@@ -59,7 +59,7 @@ fn run() -> Result<(), Box<dyn Error>> {
         Commands::Files {
             count,
             explicit,
-            file_type, 
+            file_type,
             ignore_case,
             query,
         } => &FilesCommand::new(

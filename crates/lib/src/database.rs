@@ -76,7 +76,6 @@ impl Database {
 
         let settings = setting::Store::new(&connection);
         let root_setting: PathBuf = settings.read(Setting::Root)?.into();
-
         let root = path.parent().unwrap_or(&PathBuf::new()).join(root_setting);
 
         Ok(Database {
@@ -86,17 +85,17 @@ impl Database {
         })
     }
 
-    /// Retrieves the file store.
+    /// The file store.
     pub fn files(&self) -> file::Store {
         file::Store::new(&self.connection.as_ref().unwrap())
     }
 
-    /// Retrieves the tag store.
+    /// The tag store.
     pub fn tags(&self) -> tag::Store {
         tag::Store::new(&self.connection.as_ref().unwrap())
     }
 
-    /// Retrieves the value store.
+    /// The value store.
     pub fn values(&self) -> value::Store {
         value::Store::new(&self.connection.as_ref().unwrap())
     }

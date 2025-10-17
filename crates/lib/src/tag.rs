@@ -1,8 +1,37 @@
 use crate::common::Casing;
-use crate::query::Tag;
 use crate::sql::builder::SqlBuilder;
-use rusqlite::{params_from_iter, Connection};
+use rusqlite::types::{FromSql, FromSqlError, ToSqlOutput};
+use rusqlite::{params_from_iter, Connection, ToSql};
 use std::error::Error;
+use std::fmt::Display;
+
+/// Tag.
+#[derive(Debug, PartialEq, Eq, Clone)]
+pub struct Tag(pub String);
+
+impl Display for Tag {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self.0)
+    }
+}
+
+impl ToSql for Tag {
+    fn to_sql(&self) -> rusqlite::Result<ToSqlOutput<'_>> {
+        Ok(ToSqlOutput::from(self.0.as_str()))
+    }
+}
+
+impl FromSql for Tag {
+    fn column_result(value: rusqlite::types::ValueRef<'_>) -> rusqlite::Result<Self, FromSqlError> {
+        Ok(Self(value.as_str()?.to_string()))
+    }
+}
+
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum TagSpecificity {
+    All,
+    ExplicitOnly,
+}
 
 /// The tag store.
 pub struct Store<'s> {

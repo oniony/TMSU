@@ -17,16 +17,17 @@ mod args;
 mod command;
 mod constants;
 mod database;
-mod error;
 mod rendering;
 
 use crate::args::FileType;
 use crate::command::files::FilesCommand;
 use crate::command::info::InfoCommand;
 use crate::command::init::InitCommand;
-use crate::error::MultiError;
 use args::{Args, Commands};
-use libtmsu::common::{Casing, FileTypeSpecificity, TagSpecificity};
+use libtmsu::common::Casing;
+use libtmsu::error::MultiError;
+use libtmsu::file::FileTypeSpecificity;
+use libtmsu::tag::TagSpecificity;
 use std::error::Error;
 use std::process;
 

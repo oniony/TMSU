@@ -19,8 +19,8 @@ impl<'b> SqlBuilder<'b> {
     }
 
     /// Retrieves the parameter values.
-    pub fn parameters(&self) -> &Vec<ToSqlOutput<'b>> {
-        &self.parameters
+    pub fn parameters(self) -> Vec<ToSqlOutput<'b>> {
+        self.parameters
     }
 
     /// Pushes a SQL string.
@@ -29,10 +29,12 @@ impl<'b> SqlBuilder<'b> {
             return self;
         }
 
-        match &sql[0..1] {
-            " " | "\n" => (),
-            _ => self.sql.push('\n'),
-        };
+        if !self.sql.is_empty() {
+            match &self.sql[0..1] {
+                " " | "\n" => (),
+                _ => self.sql.push(' '),
+            };
+        }
 
         self.sql.push_str(sql);
 
@@ -54,7 +56,10 @@ impl<'b> SqlBuilder<'b> {
     }
 
     /// Pushes a set of values.
-    pub fn push_parameterised_values<T>(&mut self, params: &'b [T]) -> Result<&mut Self, Box<dyn Error>>
+    pub fn push_parameterised_values<T>(
+        &mut self,
+        params: &'b [T],
+    ) -> Result<&mut Self, Box<dyn Error>>
     where
         T: ToSql,
     {
@@ -82,3 +87,31 @@ impl Display for SqlBuilder<'_> {
     }
 }
 
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_sql_builder() {
+        let mut builder = SqlBuilder::new();
+
+        let values = vec!["hello", "there"];
+
+        builder
+            .push_sql("SELECT (")
+            .push_parameterised_values(&values)
+            .unwrap()
+            .push_sql(") FROM users")
+            .push_sql("WHERE id = ")
+            .push_parameter(&1)
+            .unwrap();
+
+        assert_eq!(
+            "SELECT ( (?1), (?2) ) FROM users WHERE id = ?3",
+            builder.sql
+        );
+
+        let expected_parameters: Vec<ToSqlOutput> = vec!["hello".into(), "there".into(), 1.into()];
+        assert_eq!(expected_parameters, builder.parameters)
+    }
+}

@@ -86,17 +86,17 @@ impl Database {
     }
 
     /// The file store.
-    pub fn files(&self) -> file::Store {
+    pub fn files(&self) -> file::Store<'_> {
         file::Store::new(&self.connection.as_ref().unwrap())
     }
 
     /// The tag store.
-    pub fn tags(&self) -> tag::Store {
+    pub fn tags(&self) -> tag::Store<'_> {
         tag::Store::new(&self.connection.as_ref().unwrap())
     }
 
     /// The value store.
-    pub fn values(&self) -> value::Store {
+    pub fn values(&self) -> value::Store<'_> {
         value::Store::new(&self.connection.as_ref().unwrap())
     }
 }

@@ -29,10 +29,12 @@ impl<'b> SqlBuilder<'b> {
             return self;
         }
 
-        match &sql[0..1] {
-            " " | "\n" => (),
-            _ => self.sql.push(' '),
-        };
+        if !self.sql.is_empty() {
+            match &sql[0..1] {
+                " " | "\n" => (),
+                _ => self.sql.push(' '),
+            };
+        }
 
         self.sql.push_str(sql);
 

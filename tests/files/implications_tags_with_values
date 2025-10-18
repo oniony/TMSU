@@ -30,8 +30,8 @@ add_file_tag 6 6 0      # /file6 z
 
 # test
 
-echo -1-                                >|/tmp/tmsu/stdout
-tmsu files j=1                          >>/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+echo -1-                                >>/tmp/tmsu/stdout
+tmsu files j=1                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 echo -2-                                >>/tmp/tmsu/stdout
 tmsu files k                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 echo -3-                                >>/tmp/tmsu/stdout

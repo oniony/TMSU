@@ -17,8 +17,8 @@ add_file_tag 3 3 0 		# /file3 c
 
 # test
 
-echo -1-                                >|/tmp/tmsu/stdout
-tmsu files a                            >>/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+echo -1-                                >>/tmp/tmsu/stdout
+tmsu files a                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 echo -2-                                >>/tmp/tmsu/stdout
 tmsu files b                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 echo -3-                                >>/tmp/tmsu/stdout

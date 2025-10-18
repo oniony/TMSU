@@ -12,7 +12,7 @@ add_file_tag 2 1 2
 
 # test
 
-tmsu files "year >= 2015"                      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files "year >= 2015"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

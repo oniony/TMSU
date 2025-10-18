@@ -18,7 +18,7 @@ add_file_tag 4 1 2
 
 # test
 
-tmsu files "month != June"                                 >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files "month != June"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

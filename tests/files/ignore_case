@@ -14,7 +14,10 @@ add_file_tag 2 2 2
 
 # test
 
-tmsu files --ignore-case "yEaR = 2015 and mOnTh = June"                      >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+echo -1-													>>/tmp/tmsu/stdout
+tmsu files --ignore-case yEaR								>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -2-													>>/tmp/tmsu/stdout
+tmsu files --ignore-case "yEaR = 2015 and mOnTh = June"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr                 
 
 # verify
 
@@ -25,6 +28,10 @@ if [[ $? -ne 0 ]]; then
 fi
 
 diff - <<EOF /tmp/tmsu/stdout
+-1-
+/file1
+/file2
+-2-
 /file2
 EOF
 if [[ $? -ne 0 ]]; then

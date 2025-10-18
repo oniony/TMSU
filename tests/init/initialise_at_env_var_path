@@ -7,7 +7,7 @@ mkdir -p /tmp/tmsu
 
 # test
 
-TMSU_DB=/tmp/tmsu/init_test tmsu init  >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+TMSU_DB=/tmp/tmsu/init_test tmsu init  >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

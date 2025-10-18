@@ -2,10 +2,14 @@
 
 export PATH=$PATH:../target/debug
 
-# (re)create the test directory
+# create the test directory
 rm -r /tmp/tmsu 2>/dev/null
 mkdir -p /tmp/tmsu
 
 # create the database
 tmsu init /tmp/tmsu/db >/dev/null 2>/dev/null
 export TMSU_DB=/tmp/tmsu/db
+
+# create the output files
+rm /tmp/tmsu/{stdout,stderr} 2>/dev/null
+touch /tmp/tmsu/{stdout,stderr}

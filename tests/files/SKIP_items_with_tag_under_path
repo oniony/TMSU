@@ -9,7 +9,7 @@ tmsu tag --tags="aubergine" /tmp/tmsu/file1 /tmp/tmsu/dir1/file1    >/dev/null 2
 
 # test
 
-tmsu files --path="/tmp/tmsu/dir1" aubergine                        >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files --path="/tmp/tmsu/dir1" aubergine        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

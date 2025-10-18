@@ -3,16 +3,13 @@
 # setup
 
 add_file 1 '/file1'
-add_file 2 '/file2'
-add_tag 1 'year'
-add_value 1 '2015'
-add_value 2 '2016'
-add_file_tag 1 1 1
-add_file_tag 2 1 2
+add_tag 1 '<==([!$%&!])==>'
+add_file_tag 1 1 0
 
 # test
 
-tmsu files "year >= 2015"		>>$OUT 2>>$ERR
+tmsu files '"<==([!$%&!])==>"'                >>$OUT 2>>$ERR
+tmsu files '\<\=\=\([\!$%&\!]\)\=\=\>'        >>$OUT 2>>$ERR
 
 # verify
 
@@ -24,7 +21,7 @@ fi
 
 diff - <<EOF $OUT
 /file1
-/file2
+/file1
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1

@@ -24,33 +24,69 @@ use std::error::Error;
 /// Files command executor.
 pub struct FilesCommand {
     database: Database,
-    args: Vec<String>,
     separator: Separator,
+    verbosity: u8,
+    args: Vec<String>,
     count: bool,
-    tag_specificity: TagSpecificity,
-    file_type: FileTypeSpecificity,
-    casing: Casing,
+    directory: bool,
+    explicit: bool,
+    file: bool,
+    ignore_case: bool,
 }
 
 impl FilesCommand {
     /// Creates a new FilesCommand.
     pub fn new(
         database: Database,
-        args: Vec<String>,
         separator: Separator,
+        verbosity: u8,
+        args: Vec<String>,
         count: bool,
-        tag_specificity: TagSpecificity,
-        file_type: FileTypeSpecificity,
-        casing: Casing,
+        directory: bool,
+        explicit: bool,
+        file: bool,
+        ignore_case: bool,
     ) -> FilesCommand {
         FilesCommand {
             database,
-            args,
             separator,
+            verbosity,
+            args,
             count,
-            tag_specificity,
-            file_type,
-            casing,
+            file,
+            directory,
+            explicit,
+            ignore_case,
+        }
+    }
+
+    fn query(&self) -> String {
+        self.args.join(" ")
+    }
+
+    fn casing(&self) -> Casing {
+        if self.ignore_case {
+            Casing::Insensitive
+        } else {
+            Casing::Sensitive
+        }
+    }
+
+    fn tag_specificity(&self) -> TagSpecificity {
+        if self.explicit {
+            TagSpecificity::ExplicitOnly
+        } else {
+            TagSpecificity::All
+        }
+    }
+
+    fn file_type(&self) -> FileTypeSpecificity {
+        if self.file && !self.directory {
+            FileTypeSpecificity::FileOnly
+        } else if self.directory && !self.file {
+            FileTypeSpecificity::DirectoryOnly
+        } else {
+            FileTypeSpecificity::Any
         }
     }
 
@@ -58,9 +94,9 @@ impl FilesCommand {
     fn show_count(&self, query: &str) -> Result<(), Box<dyn Error>> {
         let count = self.database.files().query_count(
             query,
-            &self.tag_specificity,
-            &self.file_type,
-            &self.casing,
+            &self.tag_specificity(),
+            &self.file_type(),
+            &self.casing(),
         )?;
 
         print!("{}{}", count, self.separator);
@@ -72,9 +108,9 @@ impl FilesCommand {
     fn show_files(&self, query: &str) -> Result<(), Box<dyn Error>> {
         let files = self.database.files().query(
             query,
-            &self.tag_specificity,
-            &self.file_type,
-            &self.casing,
+            &self.tag_specificity(),
+            &self.file_type(),
+            &self.casing(),
         )?;
 
         for file in files {
@@ -87,7 +123,11 @@ impl FilesCommand {
 
 impl Executor for FilesCommand {
     fn execute(&self) -> Result<(), Box<dyn Error>> {
-        let query = self.args.join(" ").to_owned();
+        let query = self.query();
+
+        if self.verbosity > 0 {
+            println!("query: {}", query);
+        }
 
         if self.count {
             self.show_count(&query)

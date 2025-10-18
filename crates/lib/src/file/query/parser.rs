@@ -1,12 +1,12 @@
 use crate::file::query::{
-    Expression,
+    Expression, Query,
     {And, Equal, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, Not, NotEqual, Or, Tagged},
 };
 use crate::tag::Tag;
 use crate::value::Value;
 use pest::{
-    Parser,
     iterators::{Pair, Pairs},
+    Parser,
 };
 use pest_derive::Parser;
 use std::error::Error;
@@ -16,18 +16,20 @@ use std::error::Error;
 pub struct QueryParser;
 
 /// Parses the specified query text as an expression.
-pub fn parse(text: &str) -> Result<Option<Expression>, Box<dyn Error>> {
+pub fn parse(text: &str) -> Result<Option<Query>, Box<dyn Error>> {
     let pairs = QueryParser::parse(Rule::query, text)?;
     let query = map_query(pairs);
 
     Ok(query)
 }
 
-fn map_query(mut parsed_query: Pairs<Rule>) -> Option<Expression> {
-    match parsed_query.next() {
+fn map_query(mut parsed_query: Pairs<Rule>) -> Option<Query> {
+    let expression = match parsed_query.next() {
         Some(pair) => map_pair(pair),
         None => None,
-    }
+    };
+
+    expression.map(|e| Query(e))
 }
 
 fn map_pair(pair: Pair<Rule>) -> Option<Expression> {
@@ -48,7 +50,32 @@ fn map_pair(pair: Pair<Rule>) -> Option<Expression> {
 }
 
 fn map_tag(pair: Pair<Rule>) -> Expression {
-    Tagged(Tag(pair.as_str().into()))
+    let mut inner = pair.into_inner();
+    let pair = inner.next().unwrap();
+
+    match pair.as_rule() {
+        Rule::unquoted_tag => map_unquoted_tag(pair).into(),
+        Rule::quoted_tag => map_quoted_tag(pair).into(),
+        _ => panic!("unexpected token: {}", pair.as_str()),
+    }
+}
+
+fn map_unquoted_tag(pair: Pair<Rule>) -> Expression {
+    let escaped = pair.as_str();
+    let unescaped = escaped.replace("\\", "");
+
+    Tagged(Tag(unescaped))
+}
+
+fn map_quoted_tag(pair: Pair<Rule>) -> Expression {
+    let quoted_escaped = pair.as_str();
+    let unescaped = quoted_escaped
+        .chars()
+        .skip(1)
+        .take(quoted_escaped.len() - 2)
+        .collect();
+
+    Tagged(Tag(unescaped))
 }
 
 fn map_comparison_operator<F>(pair: Pair<Rule>, factory: F) -> Expression
@@ -90,7 +117,7 @@ mod tests {
     #[test]
     fn parse_single_tag_query() {
         let actual = parse("single").unwrap().unwrap();
-        let expected = Tagged(Tag("single".into()).into());
+        let expected = Query(Tagged(Tag("single".into()).into()));
 
         assert_eq!(expected, actual);
     }
@@ -98,10 +125,10 @@ mod tests {
     #[test]
     fn parse_implicit_and() {
         let actual = parse("left right").unwrap().unwrap();
-        let expected = And(
+        let expected = Query(And(
             Tagged(Tag("left".into())).into(),
             Tagged(Tag("right".into())).into(),
-        );
+        ));
 
         assert_eq!(expected, actual);
     }
@@ -109,10 +136,10 @@ mod tests {
     #[test]
     fn parse_explicit_and() {
         let actual = parse("left and right").unwrap().unwrap();
-        let expected = And(
+        let expected = Query(And(
             Tagged(Tag("left".into())).into(),
             Tagged(Tag("right".into())).into(),
-        );
+        ));
 
         assert_eq!(expected, actual);
     }
@@ -120,7 +147,7 @@ mod tests {
     #[test]
     fn parse_quoted_tag() {
         let actual = parse("\"left and right\"").unwrap().unwrap();
-        let expected = Tagged(Tag("\"left and right\"".into()).into());
+        let expected = Query(Tagged(Tag("left and right".into()).into()));
 
         assert_eq!(expected, actual);
     }
@@ -130,14 +157,14 @@ mod tests {
         let actual = parse("colour=red size == big wheels >= 4")
             .unwrap()
             .unwrap();
-        let expected = And(
+        let expected = Query(And(
             Equal(Tag("colour".into()), Value("red".into())).into(),
             And(
                 Equal(Tag("size".into()), Value("big".into())).into(),
                 GreaterOrEqual(Tag("wheels".into()), Value("4".into())).into(),
             )
             .into(),
-        );
+        ));
 
         assert_eq!(expected, actual);
     }
@@ -145,14 +172,14 @@ mod tests {
     #[test]
     fn parse_operator_precedence() {
         let actual = parse("left or right and wrong").unwrap().unwrap();
-        let expected = Or(
+        let expected = Query(Or(
             Tagged(Tag("left".into())).into(),
             And(
                 Tagged(Tag("right".into())).into(),
                 Tagged(Tag("wrong".into())).into(),
             )
             .into(),
-        );
+        ));
 
         assert_eq!(expected, actual);
     }
@@ -160,26 +187,26 @@ mod tests {
     #[test]
     fn parse_parentheses() {
         let actual = parse("(left or right) and wrong").unwrap().unwrap();
-        let expected = And(
+        let expected = Query(And(
             Or(
                 Tagged(Tag("left".into())).into(),
                 Tagged(Tag("right".into())).into(),
             )
             .into(),
             Tagged(Tag("wrong".into())).into(),
-        );
+        ));
 
         assert_eq!(expected, actual);
     }
 
     #[test]
     fn tag_names() {
-        let query = parse("colour == red and not (size == big or year < 2025)")
+        let actual = parse("colour == red and not (size == big or year < 2025)")
             .unwrap()
             .unwrap();
 
         assert_eq!(
-            query.tags(),
+            actual.tags(),
             vec![Tag("colour".into()), Tag("size".into()), Tag("year".into())]
         );
     }

@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 
 export PATH=$PATH:../target/debug
+export OUT=/tmp/tmsu/stdout
+export ERR=/tmp/tmsu/stderr
 
 # create the test directory
 rm -r /tmp/tmsu 2>/dev/null
@@ -11,5 +13,5 @@ tmsu init /tmp/tmsu/db >/dev/null 2>/dev/null
 export TMSU_DB=/tmp/tmsu/db
 
 # create the output files
-rm /tmp/tmsu/{stdout,stderr} 2>/dev/null
-touch /tmp/tmsu/{stdout,stderr}
+rm $OUT $ERR 2>/dev/null
+touch $OUT $ERR 

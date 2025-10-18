@@ -27,10 +27,7 @@ use std::error::Error;
 
 /// Parse a textual query.
 pub fn parse(text: &str) -> Result<Option<Query>, Box<dyn Error>> {
-    let expression = parser::parse(text)?;
-    let query = expression.map(|e| Query(e));
-
-    Ok(query)
+    parser::parse(text)
 }
 
 /// Builds SQL for a files query.
@@ -60,7 +57,20 @@ pub fn file_count_sql<'q>(
 }
 
 /// A parsed query.
-pub struct Query(pub Expression);
+#[derive(Debug, PartialEq, Eq)]
+pub struct Query(Expression);
+
+impl Query {
+    /// Identifies the tags within the query.
+    pub fn tags(&self) -> Vec<Tag> {
+        self.0.tags()
+    }
+
+    /// Identifies the values within the query.
+    pub fn values(&self) -> Vec<Value> {
+        self.0.values()
+    }
+}
 
 /// A query expression.
 #[derive(Debug, PartialEq, Eq)]

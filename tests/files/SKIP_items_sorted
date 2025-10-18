@@ -10,7 +10,7 @@ add_file_tag 2 1 0
 
 # test
 
-tmsu files --sort=name aubergine                               >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files --sort=name aubergine                               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 tmsu files --sort=id aubergine                                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify

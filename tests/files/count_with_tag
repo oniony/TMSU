@@ -11,7 +11,7 @@ add_file_tag 2 2 0
 
 # test
 
-tmsu files --count aubergine          >|/tmp/tmsu/stdout 2>|/tmp/tmsu/stderr
+tmsu files --count aubergine          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
 
 # verify
 

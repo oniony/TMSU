@@ -22,7 +22,7 @@ pub struct Store<'s> {
 
 impl Store<'_> {
     /// Creates a new setting store.
-    pub fn new(connection: &Connection) -> Store {
+    pub fn new(connection: &Connection) -> Store<'_> {
         Store { connection }
     }
 

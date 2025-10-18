@@ -1,7 +1,7 @@
 use crate::common::Casing;
 use crate::sql::builder::SqlBuilder;
 use rusqlite::types::{FromSql, FromSqlError, ToSqlOutput};
-use rusqlite::{Connection, ToSql, params_from_iter};
+use rusqlite::{params_from_iter, Connection, ToSql};
 use std::error::Error;
 use std::fmt::Display;
 
@@ -33,7 +33,7 @@ pub struct Store<'s> {
 
 impl Store<'_> {
     /// Creates a new value store.
-    pub fn new(connection: &Connection) -> Store {
+    pub fn new(connection: &Connection) -> Store<'_> {
         Store { connection }
     }
 

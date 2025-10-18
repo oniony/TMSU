@@ -18,17 +18,17 @@ add_file_tag 4 1 2
 
 # test
 
-tmsu files "month != June"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files "month != June"		>>$OUT 2>>$ERR
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout 
+diff - <<EOF $OUT 
 /file2
 /file3
 EOF

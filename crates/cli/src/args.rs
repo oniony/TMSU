@@ -118,12 +118,12 @@ Examples:
         count: bool,
 
         #[arg(
-            short = 't',
-            long = "type",
-            help = "list only items of the specified type",
-            default_value_t = FileType::Any,
+            short = 'd',
+            long = "directory",
+            help = "list only directories",
+            default_value_t = false
         )]
-        file_type: FileType,
+        directory: bool,
 
         #[arg(
             short = 'e',
@@ -132,6 +132,14 @@ Examples:
             default_value_t = false
         )]
         explicit: bool,
+
+        #[arg(
+            short = 'f',
+            long = "file",
+            help = "list only files",
+            default_value_t = false
+        )]
+        file: bool,
 
         #[arg(
             short = 'i',

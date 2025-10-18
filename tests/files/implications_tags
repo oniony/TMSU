@@ -17,32 +17,32 @@ add_file_tag 3 3 0 		# /file3 c
 
 # test
 
-echo -1-                                >>/tmp/tmsu/stdout
-tmsu files a                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -2-                                >>/tmp/tmsu/stdout
-tmsu files b                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -3-                                >>/tmp/tmsu/stdout
-tmsu files c                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -4-                                >>/tmp/tmsu/stdout
-tmsu files a b c                        >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -5-                                >>/tmp/tmsu/stdout
-tmsu files b c                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -6-                                >>/tmp/tmsu/stdout
-tmsu files --explicit a                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -7-                                >>/tmp/tmsu/stdout
-tmsu files --explicit b                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -8-                                >>/tmp/tmsu/stdout
-tmsu files --explicit c                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -1-                                >>$OUT
+tmsu files a                            >>$OUT 2>>$ERR
+echo -2-                                >>$OUT
+tmsu files b                            >>$OUT 2>>$ERR
+echo -3-                                >>$OUT
+tmsu files c                            >>$OUT 2>>$ERR
+echo -4-                                >>$OUT
+tmsu files a b c                        >>$OUT 2>>$ERR
+echo -5-                                >>$OUT
+tmsu files b c                          >>$OUT 2>>$ERR
+echo -6-                                >>$OUT
+tmsu files --explicit a                 >>$OUT 2>>$ERR
+echo -7-                                >>$OUT
+tmsu files --explicit b                 >>$OUT 2>>$ERR
+echo -8-                                >>$OUT
+tmsu files --explicit c                 >>$OUT 2>>$ERR
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout
+diff - <<EOF $OUT
 -1-
 /file1
 -2-

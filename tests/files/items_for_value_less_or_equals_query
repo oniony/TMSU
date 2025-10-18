@@ -12,17 +12,17 @@ add_file_tag 2 1 2
 
 # test
 
-tmsu files "year <= 2016"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files "year <= 2016"		>>$OUT 2>>$ERR
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout
+diff - <<EOF $OUT
 /file1
 /file2
 EOF

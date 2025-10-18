@@ -140,15 +140,14 @@ FROM file;
 
     fn validate_query(&self, query: &Query, casing: &Casing) -> Result<(), Box<dyn Error>> {
         let mut errors: Vec<Box<dyn Error + Send + Sync>> = Vec::new();
-        let expression = &query.0;
 
-        let tags = expression.tags();
+        let tags = query.tags();
         let invalid_tags = tag::Store::new(self.connection).missing(&tags, &casing)?;
         for invalid_tag in &invalid_tags {
             errors.push(format!("unknown tag: {invalid_tag}").into());
         }
 
-        let values = expression.values();
+        let values = query.values();
         let invalid_values = value::Store::new(self.connection).missing(&values, &casing)?;
         for invalid_value in &invalid_values {
             errors.push(format!("unknown value: {invalid_value}").into());

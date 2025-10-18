@@ -14,20 +14,20 @@ add_file_tag 2 2 2
 
 # test
 
-echo -1-													>>/tmp/tmsu/stdout
-tmsu files --ignore-case yEaR								>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -2-													>>/tmp/tmsu/stdout
-tmsu files --ignore-case "yEaR = 2015 and mOnTh = June"		>>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr                 
+echo -1-													>>$OUT
+tmsu files --ignore-case yEaR								>>$OUT 2>>$ERR
+echo -2-													>>$OUT
+tmsu files --ignore-case "yEaR = 2015 and mOnTh = June"		>>$OUT 2>>$ERR                 
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout
+diff - <<EOF $OUT
 -1-
 /file1
 /file2

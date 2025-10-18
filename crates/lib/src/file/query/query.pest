@@ -15,8 +15,8 @@
 
 query = _{ SOI ~ maybe_or? ~ EOI }
 
-tag   = @{ quoted_tag | unquoted_tag }
-value = @{ quoted_value | unquoted_value }
+tag   = { quoted_tag | unquoted_tag }
+value = { quoted_value | unquoted_value }
 
 or  = { maybe_and ~ ^"or" ~ maybe_or }
 and = { maybe_not ~ (^"and"?) ~ maybe_and }
@@ -36,12 +36,14 @@ operand     = _{ parenthesis | comparison | tag }
 parenthesis = _{ "(" ~ maybe_or ~ ")" }
 comparison  = _{ equal | not_equal | less_than | greater_than | less_or_equal | greater_or_equal }
 
-unquoted_tag   = _{ !(^"and" | ^"or" | ^"not") ~ unquoted_name_character+ }
-quoted_tag     = _{ "\"" ~ quoted_name_character+ ~ "\"" }
-unquoted_value = _{ unquoted_name_character+ }
-quoted_value   = _{ "\"" ~ quoted_name_character+ ~ "\"" }
+unquoted_tag   = @{ !(^"and" | ^"or" | ^"not") ~ (unquoted_escape | unquoted_name_character)+ }
+quoted_tag     = @{ "\"" ~ (quoted_escape | quoted_name_character)+ ~ "\"" }
+unquoted_value = @{ unquoted_name_character+ }
+quoted_value   = @{ "\"" ~ quoted_name_character+ ~ "\"" }
 
-quoted_name_character     = _{ !("\"") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL | SEPARATOR) }
-unquoted_name_character   = _{ !("=" | "<" | ">" | "≤" | "≥" | "(" | ")") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL) }
+quoted_escape             = _{ ("\\\"" | "\\\\") }
+quoted_name_character     = _{ !("\"" | "\\") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL | SEPARATOR | "\\\"") }
+unquoted_escape           = _{ ("\\\"" | "\\ " | "\\\n" | "\\!" | "\\=" | "\\<" | "\\>" | "\\(" | "\\)" | "\\\\" ) }
+unquoted_name_character   = _{ !("=" | "<" | ">" | "≤" | "≥" | "(" | ")" | "\\") ~ (LETTER | NUMBER | MARK | PUNCTUATION | SYMBOL) }
 
 WHITESPACE = _{ " " }

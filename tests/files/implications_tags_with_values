@@ -30,40 +30,40 @@ add_file_tag 6 6 0      # /file6 z
 
 # test
 
-echo -1-                                >>/tmp/tmsu/stdout
-tmsu files j=1                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -2-                                >>/tmp/tmsu/stdout
-tmsu files k                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -3-                                >>/tmp/tmsu/stdout
-tmsu files l                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -4-                                >>/tmp/tmsu/stdout
-tmsu files --explicit j=1               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -5-                                >>/tmp/tmsu/stdout
-tmsu files --explicit k                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -6-                                >>/tmp/tmsu/stdout
-tmsu files --explicit l                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -7-                                >>/tmp/tmsu/stdout
-tmsu files x                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -8-                                >>/tmp/tmsu/stdout
-tmsu files y=2                          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -9-                                >>/tmp/tmsu/stdout
-tmsu files z                            >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -10-                               >>/tmp/tmsu/stdout
-tmsu files --explicit x                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -11-                               >>/tmp/tmsu/stdout
-tmsu files --explicit y=2               >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
-echo -12-                               >>/tmp/tmsu/stdout
-tmsu files --explicit z                 >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+echo -1-                                >>$OUT
+tmsu files j=1                          >>$OUT 2>>$ERR
+echo -2-                                >>$OUT
+tmsu files k                            >>$OUT 2>>$ERR
+echo -3-                                >>$OUT
+tmsu files l                            >>$OUT 2>>$ERR
+echo -4-                                >>$OUT
+tmsu files --explicit j=1               >>$OUT 2>>$ERR
+echo -5-                                >>$OUT
+tmsu files --explicit k                 >>$OUT 2>>$ERR
+echo -6-                                >>$OUT
+tmsu files --explicit l                 >>$OUT 2>>$ERR
+echo -7-                                >>$OUT
+tmsu files x                            >>$OUT 2>>$ERR
+echo -8-                                >>$OUT
+tmsu files y=2                          >>$OUT 2>>$ERR
+echo -9-                                >>$OUT
+tmsu files z                            >>$OUT 2>>$ERR
+echo -10-                               >>$OUT
+tmsu files --explicit x                 >>$OUT 2>>$ERR
+echo -11-                               >>$OUT
+tmsu files --explicit y=2               >>$OUT 2>>$ERR
+echo -12-                               >>$OUT
+tmsu files --explicit z                 >>$OUT 2>>$ERR
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout
+diff - <<EOF $OUT
 -1-
 /file1
 -2-

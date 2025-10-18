@@ -11,17 +11,17 @@ add_file_tag 2 2 0
 
 # test
 
-tmsu files --count aubergine          >>/tmp/tmsu/stdout 2>>/tmp/tmsu/stderr
+tmsu files --count aubergine          >>$OUT 2>>$ERR
 
 # verify
 
-diff - <<EOF /tmp/tmsu/stderr
+diff - <<EOF $ERR
 EOF
 if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-diff - <<EOF /tmp/tmsu/stdout
+diff - <<EOF $OUT
 1
 EOF
 if [[ $? -ne 0 ]]; then

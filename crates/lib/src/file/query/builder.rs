@@ -89,9 +89,6 @@ WHERE",
         operator: &str,
         value: &'q Value,
     ) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder
-            .push_sql(&format!("-- {tag} {operator} {value}"));
-
         match self.tag_specificity {
             TagSpecificity::ExplicitOnly => self.compare_explicit(tag, operator, value),
             TagSpecificity::All => self.compare_all(tag, operator, value),

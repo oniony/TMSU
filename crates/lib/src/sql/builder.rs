@@ -1,7 +1,8 @@
-use rusqlite::types::ToSqlOutput;
+use rusqlite::types::{ToSqlOutput, Value};
 use rusqlite::ToSql;
 use std::error::Error;
 use std::fmt::Display;
+use ToSqlOutput::Owned;
 
 /// Allows composition of SQL statements with parameters.
 pub struct SqlBuilder<'b> {
@@ -29,11 +30,12 @@ impl<'b> SqlBuilder<'b> {
             return self;
         }
 
-        if !self.sql.is_empty() {
-            match &sql[0..1] {
-                " " | "\n" => (),
-                _ => self.sql.push(' '),
-            };
+        // add whitespace only if necessary
+        if !self.sql.is_empty()
+            && !self.sql.chars().last().unwrap().is_whitespace()
+            && !sql.chars().next().unwrap().is_whitespace()
+        {
+            self.sql.push(' ');
         }
 
         self.sql.push_str(sql);
@@ -47,8 +49,19 @@ impl<'b> SqlBuilder<'b> {
         T: ToSql,
     {
         self.parameters.push(param.to_sql()?);
-        let index = self.parameters.len();
 
+        let index = self.parameters.len();
+        self.sql.push_str("?");
+        self.sql.push_str(index.to_string().as_str());
+
+        Ok(self)
+    }
+
+    /// Pushes a string parameter.
+    pub fn push_parameter_string(&mut self, param: String) -> Result<&mut Self, Box<dyn Error>> {
+        self.parameters.push(Owned(Value::Text(param)));
+
+        let index = self.parameters.len();
         self.sql.push_str("?");
         self.sql.push_str(index.to_string().as_str());
 

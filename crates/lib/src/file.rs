@@ -45,20 +45,22 @@ impl Store<'_> {
         Store { connection }
     }
 
-    /// Queries for files by expression.
+    /// Retrieves the set of files for a textual query.
     pub fn query(
         &self,
         query_text: &str,
         tag_specificity: &TagSpecificity,
         file_type: &FileTypeSpecificity,
         casing: &Casing,
+        path: Option<&PathBuf>,
     ) -> Result<Vec<File>, Box<dyn Error>> {
         let query = query::parse(query_text)?;
 
         if let Some(query) = query {
             self.validate_query(&query, casing)?;
 
-            let (sql, parameters) = query::files_sql(&query, tag_specificity, file_type, casing)?;
+            let (sql, parameters) =
+                query::files_sql(&query, tag_specificity, file_type, casing, path)?;
             let mut statement = self.connection.prepare(&sql)?;
             let mut rows = statement.query(params_from_iter(parameters.iter()))?;
 
@@ -68,13 +70,14 @@ impl Store<'_> {
         }
     }
 
-    /// Queries the file count by expression.
+    /// Retrieves the file count for a textual query.0
     pub fn query_count(
         &self,
         query_text: &str,
         tag_specificity: &TagSpecificity,
         file_type: &FileTypeSpecificity,
         casing: &Casing,
+        path: Option<&PathBuf>,
     ) -> Result<u64, Box<dyn Error>> {
         let query = query::parse(query_text)?;
 
@@ -82,7 +85,7 @@ impl Store<'_> {
             self.validate_query(&query, casing)?;
 
             let (sql, parameters) =
-                query::file_count_sql(&query, tag_specificity, file_type, casing)?;
+                query::file_count_sql(&query, tag_specificity, file_type, casing, path)?;
             let mut statement = self.connection.prepare(&sql)?;
             let count = statement
                 .query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;

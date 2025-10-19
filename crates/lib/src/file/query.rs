@@ -36,9 +36,10 @@ pub fn files_sql<'q>(
     tag_specificity: &'q TagSpecificity,
     file_type_specificity: &'q FileTypeSpecificity,
     casing: &'q Casing,
+    path: Option<&std::path::PathBuf>,
 ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
-    let sql_and_params = qb.file_query(query)?;
+    let qb = QueryBuilder::new(&tag_specificity, &casing);
+    let sql_and_params = qb.file_query(query, file_type_specificity, path)?;
 
     Ok(sql_and_params)
 }
@@ -49,9 +50,10 @@ pub fn file_count_sql<'q>(
     tag_specificity: &'q TagSpecificity,
     file_type_specificity: &'q FileTypeSpecificity,
     casing: &'q Casing,
+    path: Option<&std::path::PathBuf>,
 ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
-    let sql_and_params = qb.file_count_query(query)?;
+    let qb = QueryBuilder::new(&tag_specificity, &casing);
+    let sql_and_params = qb.file_count_query(query, file_type_specificity, path)?;
 
     Ok(sql_and_params)
 }

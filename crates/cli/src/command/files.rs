@@ -20,6 +20,7 @@ use libtmsu::database::Database;
 use libtmsu::file::FileTypeSpecificity;
 use libtmsu::tag::TagSpecificity;
 use std::error::Error;
+use std::path::PathBuf;
 
 /// Files command executor.
 pub struct FilesCommand {
@@ -32,6 +33,7 @@ pub struct FilesCommand {
     explicit: bool,
     file: bool,
     ignore_case: bool,
+    path: Option<PathBuf>,
 }
 
 impl FilesCommand {
@@ -46,6 +48,7 @@ impl FilesCommand {
         explicit: bool,
         file: bool,
         ignore_case: bool,
+        path: Option<PathBuf>,
     ) -> FilesCommand {
         FilesCommand {
             database,
@@ -57,6 +60,7 @@ impl FilesCommand {
             directory,
             explicit,
             ignore_case,
+            path,
         }
     }
 
@@ -97,6 +101,7 @@ impl FilesCommand {
             &self.tag_specificity(),
             &self.file_type(),
             &self.casing(),
+            self.path.as_ref(),
         )?;
 
         print!("{}{}", count, self.separator);
@@ -111,6 +116,7 @@ impl FilesCommand {
             &self.tag_specificity(),
             &self.file_type(),
             &self.casing(),
+            self.path.as_ref(),
         )?;
 
         for file in files {

@@ -32,26 +32,28 @@ pub fn parse(text: &str) -> Result<Option<Query>, Box<dyn Error>> {
 
 /// Builds SQL for a files query.
 pub fn files_sql<'q>(
-    query: &'q Query,
+    query: Option<&'q Query>,
     tag_specificity: &'q TagSpecificity,
     file_type_specificity: &'q FileTypeSpecificity,
     casing: &'q Casing,
+    path: Option<&std::path::PathBuf>,
 ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
-    let sql_and_params = qb.file_query(query)?;
+    let qb = QueryBuilder::new(&tag_specificity, &casing);
+    let sql_and_params = qb.file_query(query, file_type_specificity, path)?;
 
     Ok(sql_and_params)
 }
 
 /// Builds SQL for a file count query.
 pub fn file_count_sql<'q>(
-    query: &'q Query,
+    query: Option<&'q Query>,
     tag_specificity: &'q TagSpecificity,
     file_type_specificity: &'q FileTypeSpecificity,
     casing: &'q Casing,
+    path: Option<&std::path::PathBuf>,
 ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-    let qb = QueryBuilder::new(&tag_specificity, &file_type_specificity, &casing);
-    let sql_and_params = qb.file_count_query(query)?;
+    let qb = QueryBuilder::new(&tag_specificity, &casing);
+    let sql_and_params = qb.file_count_query(query, file_type_specificity, path)?;
 
     Ok(sql_and_params)
 }

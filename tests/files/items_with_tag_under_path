@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 /apple/banana/cucumber
+add_dir 2 /apple/banana
+add_tag 1 aubergine
+add_file_tag 1 1 0
+add_file_tag 2 1 0
+
+# test
+
+echo "-1-"                                                  >>$OUT
+tmsu files --path="/apple/banana/cucumber" aubergine        >>$OUT 2>>$ERR
+echo "-2-"                                                  >>$OUT
+tmsu files --path="/apple/banana/" aubergine                >>$OUT 2>>$ERR
+echo "-3-"                                                  >>$OUT
+tmsu files --path="/apple/banana" aubergine                 >>$OUT 2>>$ERR
+echo "-4-"                                                  >>$OUT
+tmsu files --path="/apple/" aubergine                       >>$OUT 2>>$ERR
+echo "-5-"                                                  >>$OUT
+tmsu files --path="/apple" aubergine                        >>$OUT 2>>$ERR
+echo "-6-"                                                  >>$OUT
+tmsu files --path="/" aubergine                             >>$OUT 2>>$ERR
+
+# verify
+
+diff - <<EOF $ERR
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF $OUT
+-1-
+/apple/banana/cucumber
+-2-
+/apple/banana
+/apple/banana/cucumber
+-3-
+/apple/banana
+/apple/banana/cucumber
+-4-
+/apple/banana
+/apple/banana/cucumber
+-5-
+/apple/banana
+/apple/banana/cucumber
+-6-
+/apple/banana
+/apple/banana/cucumber
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

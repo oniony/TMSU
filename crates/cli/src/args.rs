@@ -90,8 +90,11 @@ that a file must be tagged with in order to be listed. More complex queries can 
 operators, parentheses and tag-value comparisons.
 
 Note: Queries match only tagged files. To identify untagged files use the 'untagged' subcommand.
+
 Note: If your tag or value name contains whitespace, operators or parentheses, these must be escaped with
-a backslash '\\', e.g. '\\<tag\\>' matches the tag name '<tag>'.
+a backslash '\\', e.g. '\\<tag\\>' matches the tag name '<tag>'. Alternatively, the name can be enclosed
+in double quotation marks, e.g. '\"<tag>\"'.
+
 Note: Your shell may use some punctuation for its own purposes: this can usually be avoided by enclosing
 the query in single quotation marks or by escaping the problematic characters with a backslash.
 
@@ -149,8 +152,9 @@ Examples:
         )]
         ignore_case: bool,
 
-        // #[arg(short = 'p', long = "path", help = "list only items under PATH")]
-        // path: Option<PathBuf>,
+        #[arg(short = 'p', long = "path", help = "list only items under PATH")]
+        path: Option<PathBuf>,
+
         #[arg(help = "the query to run", num_args = 0..)]
         query: Vec<String>,
         // #[arg(

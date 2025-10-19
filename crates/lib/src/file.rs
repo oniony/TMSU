@@ -45,75 +45,49 @@ impl Store<'_> {
         Store { connection }
     }
 
-    /// Queries for files by expression.
+    /// Retrieves the set of files for a textual query.
     pub fn query(
         &self,
         query_text: &str,
         tag_specificity: &TagSpecificity,
         file_type: &FileTypeSpecificity,
         casing: &Casing,
+        path: Option<&PathBuf>,
     ) -> Result<Vec<File>, Box<dyn Error>> {
         let query = query::parse(query_text)?;
 
-        if let Some(query) = query {
+        if let Some(query) = &query {
             self.validate_query(&query, casing)?;
-
-            let (sql, parameters) = query::files_sql(&query, tag_specificity, file_type, casing)?;
-            let mut statement = self.connection.prepare(&sql)?;
-            let mut rows = statement.query(params_from_iter(parameters.iter()))?;
-
-            Self::files_from_rows(&mut rows)
-        } else {
-            self.all()
         }
+
+        let (sql, parameters) =
+            query::files_sql(query.as_ref(), tag_specificity, file_type, casing, path)?;
+        let mut statement = self.connection.prepare(&sql)?;
+        let mut rows = statement.query(params_from_iter(parameters.iter()))?;
+
+        Self::files_from_rows(&mut rows)
     }
 
-    /// Queries the file count by expression.
+    /// Retrieves the file count for a textual query.
     pub fn query_count(
         &self,
         query_text: &str,
         tag_specificity: &TagSpecificity,
         file_type: &FileTypeSpecificity,
         casing: &Casing,
+        path: Option<&PathBuf>,
     ) -> Result<u64, Box<dyn Error>> {
         let query = query::parse(query_text)?;
 
-        if let Some(query) = query {
+        if let Some(query) = &query {
             self.validate_query(&query, casing)?;
-
-            let (sql, parameters) =
-                query::file_count_sql(&query, tag_specificity, file_type, casing)?;
-            let mut statement = self.connection.prepare(&sql)?;
-            let count = statement
-                .query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;
-
-            Ok(count)
-        } else {
-            self.all_count()
         }
-    }
 
-    /// Retrieves all files.
-    pub fn all(&self) -> Result<Vec<File>, Box<dyn Error>> {
-        let mut statement = self.connection.prepare(
-            "\
-SELECT id, directory, name, fingerprint, mod_time, size, is_dir
-FROM file;
-",
-        )?;
-        let mut rows = statement.query(())?;
-
-        Self::files_from_rows(&mut rows)
-    }
-
-    pub fn all_count(&self) -> Result<u64, Box<dyn Error>> {
-        let mut statement = self.connection.prepare(
-            "\
-SELECT count(1)
-FROM file;
-",
-        )?;
-        let count = statement.query_one((), |row| row.get::<usize, u64>(0))?;
+        let (sql, parameters) =
+            query::file_count_sql(query.as_ref(), tag_specificity, file_type, casing, path)?;
+        let mut statement = self.connection.prepare(&sql)?;
+        let count =
+            statement.query_one(params_from_iter(parameters), |row| row.get::<usize, u64>(0))?;
 
         Ok(count)
     }

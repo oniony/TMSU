@@ -60,6 +60,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             explicit,
             file,
             ignore_case,
+            path,
             query,
         } => &FilesCommand::new(
             database::open(db_path)?,
@@ -71,6 +72,7 @@ fn run() -> Result<(), Box<dyn Error>> {
             explicit,
             file,
             ignore_case,
+            path,
         ),
         Commands::Info => &InfoCommand::new(database::open(db_path)?, separator),
         Commands::Init { paths } => &InitCommand::new(db_path, paths),

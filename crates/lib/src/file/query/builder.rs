@@ -9,25 +9,20 @@ use crate::tag::{Tag, TagSpecificity};
 use crate::value::Value;
 use rusqlite::types::ToSqlOutput;
 use std::error::Error;
+use std::path::PathBuf;
 
 /// Builds a SQL query from a query expression.
 pub struct QueryBuilder<'q> {
     tag_specificity: &'q TagSpecificity,
-    file_type: &'q FileTypeSpecificity,
     casing: &'q Casing,
     builder: SqlBuilder<'q>,
 }
 
 impl<'q> QueryBuilder<'q> {
     /// Creates a new QueryBuilder.
-    pub fn new(
-        tag_specificity: &'q TagSpecificity,
-        file_type: &'q FileTypeSpecificity,
-        casing: &'q Casing,
-    ) -> QueryBuilder<'q> {
+    pub fn new(tag_specificity: &'q TagSpecificity, casing: &'q Casing) -> QueryBuilder<'q> {
         QueryBuilder {
             tag_specificity,
-            file_type,
             casing,
             builder: SqlBuilder::new(),
         }
@@ -36,9 +31,15 @@ impl<'q> QueryBuilder<'q> {
     /// Builds a SQL file query from the specified expression.
     pub fn file_query(
         mut self,
-        query: &'q Query,
+        query: Option<&'q Query>,
+        file_type_specificity: &FileTypeSpecificity,
+        path: Option<&PathBuf>,
     ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-        self.select().query(&query)?.file_type();
+        self.select()
+            .query(query)?
+            .file_type(file_type_specificity)
+            .path(path)?
+            .sort()?;
 
         Ok((self.builder.to_string(), self.builder.parameters()))
     }
@@ -46,9 +47,14 @@ impl<'q> QueryBuilder<'q> {
     /// Builds a SQL file count query from the specified expression.
     pub fn file_count_query(
         mut self,
-        query: &'q Query,
+        query: Option<&'q Query>,
+        file_type_specificity: &FileTypeSpecificity,
+        path: Option<&std::path::PathBuf>,
     ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
-        self.select().query(&query)?;
+        self.select()
+            .query(query)?
+            .file_type(file_type_specificity)
+            .path(path)?;
 
         Ok((self.builder.to_string(), self.builder.parameters()))
     }
@@ -64,8 +70,13 @@ WHERE",
         self
     }
 
-    fn query(&mut self, query: &'q Query) -> Result<&mut Self, Box<dyn Error>> {
-        self.expression(&query.0)
+    fn query(&mut self, query: Option<&'q Query>) -> Result<&mut Self, Box<dyn Error>> {
+        if let Some(query) = query {
+            self.expression(&query.0)
+        } else {
+            self.builder.push_sql("true");
+            Ok(self)
+        }
     }
 
     fn expression(&mut self, expression: &'q Expression) -> Result<&mut Self, Box<dyn Error>> {
@@ -283,13 +294,56 @@ id IN (
         }
     }
 
-    fn file_type(&mut self) -> &mut Self {
-        self.builder.push_sql(match self.file_type {
+    fn file_type(&mut self, file_type: &FileTypeSpecificity) -> &mut Self {
+        self.builder.push_sql(match file_type {
             FileTypeSpecificity::Any => "",
             FileTypeSpecificity::FileOnly => "AND NOT is_dir",
             FileTypeSpecificity::DirectoryOnly => "AND is_dir",
         });
 
         self
+    }
+
+    fn path(&mut self, path: Option<&PathBuf>) -> Result<&mut Self, Box<dyn Error>> {
+        if let Some(path) = path {
+            // normalise
+            let path = path.components().as_path();
+
+            if path.components().count() == 1 {
+                return Ok(self);
+            }
+
+            let directory = path.parent();
+            let base = path.file_name();
+
+            self.builder
+                .push_sql("AND (")
+
+                // path exact matches item directory
+                .push_sql("directory =")
+                .push_parameter_string(path.to_str().unwrap().to_string())? //TODO unwrap
+
+                // path exact matches item directory and file
+                .push_sql("OR (")
+                .push_sql("directory=")
+                .push_parameter_string(directory.unwrap().to_str().unwrap().to_string())? //TODO unwrap
+                .push_sql("AND name=")
+                .push_parameter_string(base.unwrap().to_str().unwrap().to_string())? // TODO unwrap
+                .push_sql(")")
+
+                // path matches parent of item directory
+                .push_sql("OR directory LIKE ")
+                .push_parameter_string(format!("{}/%", path.to_str().unwrap()))? //TODO unwrap
+
+                .push_sql(")");
+        }
+
+        Ok(self)
+    }
+
+    fn sort(&mut self) -> Result<&mut Self, Box<dyn Error>> {
+        self.builder.push_sql("ORDER BY directory, name");
+
+        Ok(self)
     }
 }

@@ -18,7 +18,7 @@ tmsu files --path="/apple/"                       >>$OUT 2>>$ERR
 echo "-5-"                                        >>$OUT
 tmsu files --path="/apple"                        >>$OUT 2>>$ERR
 echo "-6-"                                        >>$OUT
-tmsu files --path="/apple"                        >>$OUT 2>>$ERR
+tmsu files --path="/"                             >>$OUT 2>>$ERR
 
 # verify
 

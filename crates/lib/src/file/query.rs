@@ -19,7 +19,7 @@ mod parser;
 use crate::common::Casing;
 use crate::file::query::builder::QueryBuilder;
 use crate::file::query::Expression::*;
-use crate::file::FileTypeSpecificity;
+use crate::file::{FileSort, FileTypeSpecificity};
 use crate::tag::{Tag, TagSpecificity};
 use crate::value::Value;
 use rusqlite::types::ToSqlOutput;
@@ -37,9 +37,10 @@ pub fn files_sql<'q>(
     file_type_specificity: &'q FileTypeSpecificity,
     casing: &'q Casing,
     path: Option<&std::path::PathBuf>,
+    sort: Option<&'q FileSort>,
 ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
     let qb = QueryBuilder::new(&tag_specificity, &casing);
-    let sql_and_params = qb.file_query(query, file_type_specificity, path)?;
+    let sql_and_params = qb.file_query(query, file_type_specificity, path, sort)?;
 
     Ok(sql_and_params)
 }

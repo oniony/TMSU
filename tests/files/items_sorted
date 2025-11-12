@@ -1,0 +1,48 @@
+#!/usr/bin/env bash
+
+# setup
+
+add_file 1 '/file2' '2025-01-01T00:03:00Z' 3
+add_file 2 '/file1' '2025-01-01T00:02:00Z' 1
+add_file 3 '/file3' '2025-01-01T00:01:00Z' 2
+
+# test
+
+echo "-id-"                   >>$OUT
+tmsu files --sort=id          >>$OUT 2>>$ERR
+echo "-name-"                 >>$OUT
+tmsu files --sort=name        >>$OUT 2>>$ERR
+echo "-size-"                 >>$OUT
+tmsu files --sort=size        >>$OUT 2>>$ERR
+echo "-time-"                 >>$OUT
+tmsu files --sort=time        >>$OUT 2>>$ERR
+
+# verify
+
+diff - <<EOF $ERR
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi
+
+diff - <<EOF $OUT
+-id-
+/file2
+/file1
+/file3
+-name-
+/file1
+/file2
+/file3
+-size-
+/file1
+/file3
+/file2
+-time-
+/file3
+/file1
+/file2
+EOF
+if [[ $? -ne 0 ]]; then
+    exit 1
+fi

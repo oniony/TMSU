@@ -21,6 +21,7 @@ use libtmsu::file::FileTypeSpecificity;
 use libtmsu::tag::TagSpecificity;
 use std::error::Error;
 use std::path::PathBuf;
+use crate::args::FileSort;
 
 /// Files command executor.
 pub struct FilesCommand {
@@ -34,6 +35,7 @@ pub struct FilesCommand {
     file: bool,
     ignore_case: bool,
     path: Option<PathBuf>,
+    sort: FileSort,
 }
 
 impl FilesCommand {
@@ -49,6 +51,7 @@ impl FilesCommand {
         file: bool,
         ignore_case: bool,
         path: Option<PathBuf>,
+        sort: FileSort
     ) -> FilesCommand {
         FilesCommand {
             database,
@@ -61,6 +64,7 @@ impl FilesCommand {
             explicit,
             ignore_case,
             path,
+            sort,
         }
     }
 
@@ -94,6 +98,16 @@ impl FilesCommand {
         }
     }
 
+    fn file_sort(&self) -> Option<libtmsu::file::FileSort> {
+        match self.sort {
+            FileSort::None => None,
+            FileSort::Id => Some(libtmsu::file::FileSort::Id),
+            FileSort::Name => Some(libtmsu::file::FileSort::Name),
+            FileSort::Size => Some(libtmsu::file::FileSort::Size),
+            FileSort::Time => Some(libtmsu::file::FileSort::Time),
+        }
+    }
+
     /// Shows the count of files matching the expression.
     fn show_count(&self, query: &str) -> Result<(), Box<dyn Error>> {
         let count = self.database.files().query_count(
@@ -117,6 +131,7 @@ impl FilesCommand {
             &self.file_type(),
             &self.casing(),
             self.path.as_ref(),
+            self.file_sort().as_ref(),
         )?;
 
         for file in files {

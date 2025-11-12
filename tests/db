@@ -3,19 +3,23 @@
 add_file() {
   local id=$1
   local path="$2"
+  local mod_time="${3:-2025-01-01T00:00:00Z}"
+  local size="${4:-0}"
+
   directory=$(dirname "$path")
   filename=$(basename "$path")
 
   sqlite3 $TMSU_DB <<EOF
 INSERT INTO file (id, directory, name, fingerprint, mod_time, size, is_dir)
 VALUES
-    ($id, '$directory', '$filename', '', datetime(), 0, false);
+    ($id, '$directory', '$filename', '', '$mod_time', $size, false);
 EOF
 }
 
 add_dir() {
   local id=$1
   local path="$2"
+
   directory=$(dirname "$path")
   filename=$(basename "$path")
 

@@ -157,12 +157,9 @@ Examples:
 
         #[arg(help = "the query to run", num_args = 0..)]
         query: Vec<String>,
-        // #[arg(
-        //     short = 's',
-        //     long = "sort",
-        //     help = "sort output: id, name, none, size, time"
-        // )]
-        // sort: Option<String>,
+
+        #[arg(short = 's', long = "sort", help = "sort output: id, name, none, size, time", default_value_t = FileSort::Name)]
+        sort: FileSort,
     },
 }
 
@@ -178,11 +175,29 @@ pub enum FileType {
 
 impl Display for FileType {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
-            FileType::Any => write!(f, "any"),
-            FileType::FileOnly => write!(f, "file"),
-            FileType::DirectoryOnly => write!(f, "directory"),
-        }
+        let value = self.to_possible_value().expect("no value defined");
+        write!(f, "{}", value.get_name())
+    }
+}
+
+#[derive(ValueEnum, Clone, Debug)]
+pub enum FileSort {
+    #[value(name = "none")]
+    None,
+    #[value(name = "id")]
+    Id,
+    #[value(name = "name")]
+    Name,
+    #[value(name = "size")]
+    Size,
+    #[value(name = "time")]
+    Time,
+}
+
+impl Display for FileSort {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let value = self.to_possible_value().expect("no value defined");
+        write!(f, "{}", value.get_name())
     }
 }
 

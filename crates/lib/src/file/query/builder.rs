@@ -3,7 +3,7 @@ use crate::file::query::Expression::{
     And, Equal, GreaterOrEqual, GreaterThan, LessOrEqual, LessThan, Not, NotEqual, Or, Tagged,
 };
 use crate::file::query::{Expression, Query};
-use crate::file::FileTypeSpecificity;
+use crate::file::{FileSort, FileTypeSpecificity};
 use crate::sql::builder::SqlBuilder;
 use crate::tag::{Tag, TagSpecificity};
 use crate::value::Value;
@@ -34,12 +34,13 @@ impl<'q> QueryBuilder<'q> {
         query: Option<&'q Query>,
         file_type_specificity: &FileTypeSpecificity,
         path: Option<&PathBuf>,
+        sort: Option<&FileSort>,
     ) -> Result<(String, Vec<ToSqlOutput<'q>>), Box<dyn Error>> {
         self.select()
             .query(query)?
             .file_type(file_type_specificity)
             .path(path)?
-            .sort()?;
+            .sort(sort)?;
 
         Ok((self.builder.to_string(), self.builder.parameters()))
     }
@@ -341,8 +342,18 @@ id IN (
         Ok(self)
     }
 
-    fn sort(&mut self) -> Result<&mut Self, Box<dyn Error>> {
-        self.builder.push_sql("ORDER BY directory, name");
+    fn sort(&mut self, sort: Option<&FileSort>) -> Result<&mut Self, Box<dyn Error>> {
+        match sort {
+            None => {},
+            Some(sort) => {
+                self.builder.push_sql(match sort {
+                    FileSort::Id => "ORDER BY id",
+                    FileSort::Name => "ORDER BY directory, name",
+                    FileSort::Size => "ORDER BY size",
+                    FileSort::Time => "ORDER BY mod_time",
+                });
+            },
+        };
 
         Ok(self)
     }

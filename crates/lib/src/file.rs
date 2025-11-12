@@ -34,6 +34,14 @@ pub enum FileTypeSpecificity {
     DirectoryOnly,
 }
 
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub enum FileSort {
+    Id,
+    Name,
+    Size,
+    Time,
+}
+
 /// The file store.
 pub struct Store<'s> {
     connection: &'s Connection,
@@ -53,6 +61,7 @@ impl Store<'_> {
         file_type: &FileTypeSpecificity,
         casing: &Casing,
         path: Option<&PathBuf>,
+        sort: Option<&FileSort>,
     ) -> Result<Vec<File>, Box<dyn Error>> {
         let query = query::parse(query_text)?;
 
@@ -61,7 +70,7 @@ impl Store<'_> {
         }
 
         let (sql, parameters) =
-            query::files_sql(query.as_ref(), tag_specificity, file_type, casing, path)?;
+            query::files_sql(query.as_ref(), tag_specificity, file_type, casing, path, sort)?;
         let mut statement = self.connection.prepare(&sql)?;
         let mut rows = statement.query(params_from_iter(parameters.iter()))?;
 
